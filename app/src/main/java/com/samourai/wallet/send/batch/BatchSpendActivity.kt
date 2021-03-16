@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.*
 import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -54,6 +55,7 @@ import kotlinx.android.synthetic.main.batch_spend_compose.*
 import kotlinx.android.synthetic.main.batch_spend_review.*
 import kotlinx.android.synthetic.main.fee_selector.*
 import kotlinx.android.synthetic.main.item_send_review_details.*
+import kotlinx.coroutines.*
 import org.bitcoinj.core.Transaction
 import org.bouncycastle.util.encoders.Hex
 import java.io.UnsupportedEncodingException
@@ -88,8 +90,9 @@ class BatchSpendActivity : SamouraiActivity() {
     private var fee: BigInteger = BigInteger.ZERO
     private var change_idx: Int = 0
     private var change_address: String? = null
-    private val outpoints: MutableList<MyTransactionOutPoint> = mutableListOf()
-    private val receivers: HashMap<String, BigInteger> = hashMapOf()
+    private var composeJob:Job? = null
+    private var outpoints: MutableList<MyTransactionOutPoint> = mutableListOf()
+    private var receivers: HashMap<String, BigInteger> = hashMapOf()
     private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -247,6 +250,10 @@ class BatchSpendActivity : SamouraiActivity() {
     override fun onDestroy() {
         if(!compositeDisposable.isDisposed){
             compositeDisposable.dispose()
+        }
+        composeJob?.let {
+            if(it.isActive)
+                it.cancel()
         }
         super.onDestroy()
     }
@@ -615,7 +622,12 @@ class BatchSpendActivity : SamouraiActivity() {
         isInReviewMode = true
         this.doSpend()
         reviewFragment.setOnFeeChangeListener {
-            this.doSpend()
+            composeJob =  viewModel.viewModelScope.launch(Dispatchers.Default) {
+                delay(300)
+                withContext(Dispatchers.Main){
+                    doSpend()
+                }
+            }
         }
         reviewFragment.setOnClickListener {
             this.initiateSpend()
@@ -673,6 +685,7 @@ class BatchSpendActivity : SamouraiActivity() {
 
     }
 
+    @Synchronized
     fun doSpend() {
         //Resets current receivers,outpoints etc..
         this.reset()
@@ -748,6 +761,11 @@ class BatchSpendActivity : SamouraiActivity() {
             receivers[change_address!!] = BigInteger.valueOf(changeAmount!!)
               LogUtil.debug("BatchSendActivity", "change output:$changeAmount")
               LogUtil.debug("BatchSendActivity", "change output:$change_address")
+        }
+        else    {
+            reviewFragment.setTotalMinerFees(BigInteger.ZERO)
+            Toast.makeText(applicationContext, R.string.error_change_output, Toast.LENGTH_SHORT).show()
+            return
         }
 
         tx = SendFactory.getInstance(applicationContext).makeTransaction(0, outpoints, receivers)
@@ -858,8 +876,8 @@ class BatchSpendActivity : SamouraiActivity() {
         fee = BigInteger.ZERO
         change_idx = 0
         change_address = null
-        outpoints.clear()
-        receivers.clear()
+        outpoints = mutableListOf()
+        receivers = hashMapOf()
     }
 
     override fun onBackPressed() {
