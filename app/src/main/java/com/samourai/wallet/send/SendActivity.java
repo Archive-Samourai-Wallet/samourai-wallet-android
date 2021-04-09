@@ -35,6 +35,7 @@ import android.widget.ViewSwitcher;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.slider.Slider;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Splitter;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
@@ -80,6 +81,7 @@ import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.DecimalDigitsInputFilter;
 import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.MonetaryUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.SendAddressUtil;
@@ -93,6 +95,7 @@ import com.samourai.wallet.widgets.SendTransactionDetailsView;
 import com.samourai.xmanager.client.XManagerClient;
 import com.samourai.xmanager.protocol.XManagerService;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -126,10 +129,12 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
 
+import ch.boye.httpclientandroidlib.protocol.HttpProcessorBuilder;
 import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -149,7 +154,7 @@ public class SendActivity extends SamouraiActivity {
     private SwitchCompat ricochetHopsSwitch, ricochetStaggeredDelivery;
     private ViewGroup totalMinerFeeLayout;
     private SwitchCompat cahootsSwitch;
-    private SeekBar feeSeekBar;
+    private Slider feeSeekBar;
     private Group ricochetStaggeredOptionGroup;
     private boolean shownWalletLoadingMessage = false;
     private long balance = 0L;
@@ -187,6 +192,7 @@ public class SendActivity extends SamouraiActivity {
     private int change_index;
     private String ricochetMessage;
     private JSONObject ricochetJsonObj = null;
+    private boolean stoneWallChecked = true;
 
     private int idxBIP44Internal = 0;
     private int idxBIP49Internal = 0;
@@ -197,6 +203,7 @@ public class SendActivity extends SamouraiActivity {
     public static String[] stubAddress = {"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", "1HLoD9E4SDFFPDiYfNYnkBLQ85Y51J3Zb1", "1FvzCLoTPGANNjWoUo6jUGuAG3wg1w4YjR", "15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG", "1JfbZRwdDHKZmuiZgYArJZhcuuzuw2HuMu", "1GkQmKAmHtNfnD3LHhTkewJxKHVSta4m2a", "16LoW7y83wtawMg5XmT4M3Q7EdjjUmenjM", "1J6PYEzr4CUoGbnXrELyHszoTSz3wCsCaj", "12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S", "15yN7NPEpu82sHhB6TzCW5z5aXoamiKeGy ", "1dyoBoF5vDmPCxwSsUZbbYhA5qjAfBTx9", "1PYELM7jXHy5HhatbXGXfRpGrgMMxmpobu", "17abzUBJr7cnqfnxnmznn8W38s9f9EoXiq", "1DMGtVnRrgZaji7C9noZS3a1QtoaAN2uRG", "1CYG7y3fukVLdobqgUtbknwWKUZ5p1HVmV", "16kktFTqsruEfPPphW4YgjktRF28iT8Dby", "1LPBetDzQ3cYwqQepg4teFwR7FnR1TkMCM", "1DJkjSqW9cX9XWdU71WX3Aw6s6Mk4C3TtN", "1P9VmZogiic8d5ZUVZofrdtzXgtpbG9fop", "15ubjFzmWVvj3TqcpJ1bSsb8joJ6gF6dZa"};
     private CompositeDisposable compositeDisposables = new CompositeDisposable();
     private SelectCahootsType.type selectedCahootsType = SelectCahootsType.type.NONE;
+    private final DecimalFormat decimalFormatSatPerByte = new DecimalFormat("##");
 
     private List<UTXOCoin> preselectedUTXOs = null;
 
@@ -238,10 +245,8 @@ public class SendActivity extends SamouraiActivity {
         ricochetStaggeredOptionGroup = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_staggered_option_group);
         tvSelectedFeeRate = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.selected_fee_rate);
         tvSelectedFeeRateLayman = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.selected_fee_rate_in_layman);
-        satbText = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.sat_b);
         tvTotalFee = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.total_fee);
         btnSend = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.send_btn);
-        feeSeekBar = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.fee_seekbar);
         tvEstimatedBlockWait = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.est_block_time);
         feeSeekBar = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.fee_seekbar);
         cahootsGroup = sendTransactionDetailsView.findViewById(R.id.cohoots_options);
@@ -317,12 +322,12 @@ public class SendActivity extends SamouraiActivity {
             compositeDisposables.add(disposable);
 
 
+
             // Update fee
             Disposable feeDisposable = Observable.fromCallable(() -> APIFactory.getInstance(getApplicationContext()).getDynamicFees())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(t -> {
-                        Log.i(TAG, "Fees : ".concat(t.toString()));
                         setUpFee();
                     }, Throwable::printStackTrace);
 
@@ -453,6 +458,7 @@ public class SendActivity extends SamouraiActivity {
     private CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (compoundButton, checked) -> {
         if (compoundButton.isPressed()) {
             SPEND_TYPE = checked ? SPEND_BOLTZMANN : SPEND_SIMPLE;
+            stoneWallChecked = checked;
             compoundButton.setChecked(checked);
             new Handler().postDelayed(this::prepareSpend, 100);
         }
@@ -525,7 +531,7 @@ public class SendActivity extends SamouraiActivity {
         int feeMedSliderValue = (int) (feeMed * multiplier);
 
 
-        feeSeekBar.setMax(feeHighSliderValue - multiplier);
+        feeSeekBar.setValueTo(feeHighSliderValue - multiplier);
 
         if (feeLow == feeMed && feeMed == feeHigh) {
             feeLow = (long) ((double) feeMed * 0.85);
@@ -568,91 +574,83 @@ public class SendActivity extends SamouraiActivity {
 
         FeeUtil.getInstance().sanitizeFee();
 
-        tvSelectedFeeRate.setText((String.valueOf((int) feeMed)));
+        tvSelectedFeeRate.setText((String.valueOf((int) feeMed)).concat(" sat/b"));
 
-        feeSeekBar.setProgress((feeMedSliderValue - multiplier) + 1);
+        feeSeekBar.setValue((feeMedSliderValue - multiplier) + 1);
         DecimalFormat decimalFormat = new DecimalFormat("##.##");
         decimalFormat.setDecimalSeparatorAlwaysShown(false);
         setFeeLabels();
 
-        View.OnClickListener inputFeeListener = v -> {
-            tvSelectedFeeRate.requestFocus();
-            tvSelectedFeeRate.setFocusableInTouchMode(true);
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            assert imm != null;
-            imm.showSoftInput(tvSelectedFeeRate, InputMethodManager.SHOW_FORCED);
-        };
+//        View.OnClickListener inputFeeListener = v -> {
+//            tvSelectedFeeRate.requestFocus();
+//            tvSelectedFeeRate.setFocusableInTouchMode(true);
+//            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//            assert imm != null;
+//            imm.showSoftInput(tvSelectedFeeRate, InputMethodManager.SHOW_FORCED);
+//        };
 
-        tvSelectedFeeRateLayman.setOnClickListener(inputFeeListener);
-        satbText.setOnClickListener(inputFeeListener);
+//        tvSelectedFeeRateLayman.setOnClickListener(inputFeeListener);
+//        satbText.setOnClickListener(inputFeeListener);
 
-        tvSelectedFeeRate.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//        tvSelectedFeeRate.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                try {
+//                    int i = (int) ((Double.parseDouble(tvSelectedFeeRate.getText().toString())*multiplier) - multiplier);
+//                    //feeSeekBar.setMax(feeHighSliderValue - multiplier);
+//                    feeSeekBar.setProgress(i);
+//                } catch(NumberFormatException nfe) {
+//                    System.out.println("Could not parse " + nfe);
+//                }
+////                int position = tvSelectedFeeRate.length();
+////                Editable etext = (Editable) tvSelectedFeeRate.getText();
+////                Selection.setSelection(etext, position);
+//            }
+//        });
 
+        feeSeekBar.setLabelFormatter(i -> tvSelectedFeeRate.getText().toString());
+
+        feeSeekBar.addOnChangeListener((slider, i, fromUser) -> {
+
+            double value = ((double) i + multiplier) / (double) multiplier;
+
+            if(selectedCahootsType != SelectCahootsType.type.NONE || SPEND_TYPE == SPEND_RICOCHET){
+                 tvSelectedFeeRate.setText(String.valueOf(decimalFormat.format(value).concat(" sat/b")));
             }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+            if (value == 0.0) {
+                value = 1.0;
             }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                try {
-                    int i = (int) ((Double.parseDouble(tvSelectedFeeRate.getText().toString())*multiplier) - multiplier);
-                    //feeSeekBar.setMax(feeHighSliderValue - multiplier);
-                    feeSeekBar.setProgress(i);
-                } catch(NumberFormatException nfe) {
-                    System.out.println("Could not parse " + nfe);
+            double pct = 0.0;
+            int nbBlocks = 6;
+            if (value <= (double) feeLow) {
+                pct = ((double) feeLow / value);
+                nbBlocks = ((Double) Math.ceil(pct * 24.0)).intValue();
+            } else if (value >= (double) feeHigh) {
+                pct = ((double) feeHigh / value);
+                nbBlocks = ((Double) Math.ceil(pct * 2.0)).intValue();
+                if (nbBlocks < 1) {
+                    nbBlocks = 1;
                 }
-                int position = tvSelectedFeeRate.length();
-                Editable etext = (Editable) tvSelectedFeeRate.getText();
-                Selection.setSelection(etext, position);
+            } else {
+                pct = ((double) feeMed / value);
+                nbBlocks = ((Double) Math.ceil(pct * 6.0)).intValue();
             }
-        });
+            tvEstimatedBlockWait.setText(nbBlocks + " blocks");
+            setFee(value);
+            setFeeLabels();
 
-        feeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+            restoreChangeIndexes();
 
-                double value = ((double) i + multiplier) / (double) multiplier;
-
-                tvSelectedFeeRate.setText(String.valueOf(decimalFormat.format(value)));
-                if (value == 0.0) {
-                    value = 1.0;
-                }
-                double pct = 0.0;
-                int nbBlocks = 6;
-                if (value <= (double) feeLow) {
-                    pct = ((double) feeLow / value);
-                    nbBlocks = ((Double) Math.ceil(pct * 24.0)).intValue();
-                } else if (value >= (double) feeHigh) {
-                    pct = ((double) feeHigh / value);
-                    nbBlocks = ((Double) Math.ceil(pct * 2.0)).intValue();
-                    if (nbBlocks < 1) {
-                        nbBlocks = 1;
-                    }
-                } else {
-                    pct = ((double) feeMed / value);
-                    nbBlocks = ((Double) Math.ceil(pct * 6.0)).intValue();
-                }
-                tvEstimatedBlockWait.setText(nbBlocks + " blocks");
-                setFee(value);
-                setFeeLabels();
-
-                restoreChangeIndexes();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                restoreChangeIndexes();
-            }
         });
 
 
@@ -675,7 +673,7 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void setFeeLabels() {
-        float sliderValue = (((float) feeSeekBar.getProgress()) / feeSeekBar.getMax());
+        float sliderValue = (((float) feeSeekBar.getValue()) / feeSeekBar.getValueTo());
 
         float sliderInPercentage = sliderValue * 100;
 
@@ -1167,7 +1165,11 @@ public class SendActivity extends SamouraiActivity {
             compositeDisposables.dispose();
     }
 
-    private boolean prepareSpend() {
+    synchronized private boolean prepareSpend() {
+
+        if(SPEND_TYPE == SPEND_SIMPLE && stoneWallChecked){
+            SPEND_TYPE = SPEND_BOLTZMANN;
+        }
 
         restoreChangeIndexes();
 
@@ -1283,7 +1285,6 @@ public class SendActivity extends SamouraiActivity {
                 SPEND_TYPE = SPEND_SIMPLE;
             }
         }
-
         // entire balance (can only be simple spend)
         else if (amount == balance) {
             // make sure we are using simple spend
@@ -1580,7 +1581,6 @@ public class SendActivity extends SamouraiActivity {
             return false;
         }
 
-//         do spend here
         if (selectedUTXO.size() > 0) {
 
             // estimate fee for simple spend, already done if boltzmann
@@ -1664,16 +1664,16 @@ public class SendActivity extends SamouraiActivity {
             } else {
                 strPrivacyWarning = "";
             }
+
+            if(SPEND_TYPE == SPEND_BOLTZMANN){
+                sendTransactionDetailsView.enableStonewall(canDoBoltzmann);
+                sendTransactionDetailsView.getStoneWallSwitch().setChecked(canDoBoltzmann);
+            }else{
+                sendTransactionDetailsView.enableStonewall(false);
+            }
+
             if (!canDoBoltzmann) {
                 restoreChangeIndexes();
-                sendTransactionDetailsView.getStoneWallSwitch().setOnClickListener(null);
-                sendTransactionDetailsView.getStoneWallSwitch().setOnCheckedChangeListener(null);
-                sendTransactionDetailsView.getStoneWallSwitch().setEnabled(false);
-                sendTransactionDetailsView.getStoneWallSwitch().setChecked(false);
-                sendTransactionDetailsView.enableStonewall(false);
-                sendTransactionDetailsView.setEntropyBarStoneWallX1(null);
-                sendTransactionDetailsView.getStoneWallSwitch().setOnCheckedChangeListener(onCheckedChangeListener);
-
                 if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
                     strCannotDoBoltzmann = getString(R.string.boltzmann_cannot) + "\n\n";
                 }
@@ -1687,11 +1687,11 @@ public class SendActivity extends SamouraiActivity {
             message = strCannotDoBoltzmann + strPrivacyWarning + "Send " + Coin.valueOf(amount).toPlainString() + " to " + dest + " (fee:" + Coin.valueOf(_fee.longValue()).toPlainString() + ")?\n";
 
             if (selectedCahootsType == SelectCahootsType.type.NONE) {
-                tvTotalFee.setText(Coin.valueOf(_fee.longValue()).toPlainString().concat(" BTC"));
+                tvTotalFee.setText(String.format(Locale.ENGLISH, "%.8f", getBtcValue(fee.doubleValue())).concat(" BTC"));
+                calculateTransactionSize(_fee);
             } else {
                 tvTotalFee.setText("__");
             }
-
 
             double value = Double.parseDouble(String.valueOf(_fee.add(BigInteger.valueOf(amount))));
 
@@ -1998,12 +1998,61 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void backToTransactionView() {
-        SPEND_TYPE = SPEND_BOLTZMANN;
+        if (SPEND_TYPE == SPEND_SIMPLE)
+            SPEND_TYPE = SPEND_BOLTZMANN;
         //Revert to default
         selectedUTXO = new ArrayList<>();
         receivers = new HashMap<>();
         amountViewSwitcher.showPrevious();
         sendTransactionDetailsView.showTransaction();
+
+    }
+
+    private void calculateTransactionSize(BigInteger _fee) {
+
+        Disposable disposable = Single.fromCallable(() -> {
+
+            final List<MyTransactionOutPoint> outPoints = new ArrayList<>();
+            for (UTXO u : selectedUTXO) {
+                outPoints.addAll(u.getOutpoints());
+            }
+
+            HashMap<String, BigInteger> _receivers = SerializationUtils.clone(receivers);
+
+            // add change
+            if (_change > 0L) {
+                if (SPEND_TYPE == SPEND_SIMPLE) {
+                    if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, AddressFactory.getInstance(SendActivity.this).getHighestPostChangeIdx()).getBech32AsString();
+                        _receivers.put(change_address, BigInteger.valueOf(_change));
+                    } else if (changeType == 84) {
+                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getBech32AsString();
+                        _receivers.put(change_address, BigInteger.valueOf(_change));
+                    } else if (changeType == 49) {
+                        String change_address = BIP49Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getAddressAsString();
+                        _receivers.put(change_address, BigInteger.valueOf(_change));
+                    } else {
+                        String change_address = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddressAt(HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddrIdx()).getAddressString();
+                        _receivers.put(change_address, BigInteger.valueOf(_change));
+                    }
+                }
+            }
+            final Transaction tx = SendFactory.getInstance(getApplication()).makeTransaction(account,
+                    outPoints, _receivers);
+            return SendFactory.getInstance(getApplication()).signTransaction(tx, account);
+        })
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((transaction, throwable) -> {
+                    if (throwable == null && transaction != null) {
+                        decimalFormatSatPerByte.setDecimalSeparatorAlwaysShown(false);
+                        tvSelectedFeeRate.setText(decimalFormatSatPerByte.format((_fee.doubleValue()) / transaction.getVirtualTransactionSize()).concat(" sat/b"));
+                    }else{
+                        tvSelectedFeeRate.setText("_");
+                    }
+                });
+
+        compositeDisposables.add(disposable);
 
     }
 
@@ -2277,7 +2326,6 @@ public class SendActivity extends SamouraiActivity {
         if (insufficientFunds) {
             Toast.makeText(this, getString(R.string.insufficient_funds), Toast.LENGTH_SHORT).show();
         }
-        Log.i(TAG, "validateSpend: ".concat(String.valueOf(isValid)).concat(" ").concat(String.valueOf(insufficientFunds)));
         if (!isValid || insufficientFunds) {
             enableReviewButton(false);
             return false;
@@ -2312,6 +2360,9 @@ public class SendActivity extends SamouraiActivity {
             menu.findItem(R.id.action_batch).setVisible(false);
             menu.findItem(R.id.action_ricochet).setVisible(false);
             menu.findItem(R.id.action_empty_ricochet).setVisible(false);
+        }
+        if(preselectedUTXOs!=null){
+            menu.findItem(R.id.action_batch).setVisible(false);
         }
 
         if (account == WhirlpoolMeta.getInstance(getApplication()).getWhirlpoolPostmix()) {

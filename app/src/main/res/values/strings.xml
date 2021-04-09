@@ -293,7 +293,7 @@
     <string name="ricochet_hopping">Ricocheted to</string>
     <string name="ricochet_spend1">Ricochet spend to</string>
     <string name="ricochet_spend2">for a total amount of</string>
-    <string name="ricochet_spend3">(includes 0.002 BTC fee to Samourai and miners\' fees)?</string>
+    <string name="ricochet_spend3">(includes 0.001 BTC fee to Samourai and miners\' fees)?</string>
 
     <string name="action_ricochet">Replay Ricochet</string>
     <string name="action_empty_ricochet">Empty Ricochet queue</string>
@@ -769,7 +769,7 @@
     <string name="privacy_addons">Privacy Addons</string>
     <string name="ricochet_">Ricochet</string>
     <string name="staggered_delivery">Staggered delivery</string>
-    <string name="for_extra_privacy_message">For extra privacy and analysis resistance, each hop will appear in mempool 1 block apart. Final delivery can take between 30 min and 2 hours.</string>
+    <string name="for_extra_privacy_message">For extra privacy and analysis resistance, each hop will appear in mempool 1 block apart.  Designed to be slow. Do not enable for urgent sends.</string>
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>
     <string name="sync_header">Sync</string>
@@ -798,7 +798,7 @@
         transactions and balances</string>
     <string name="enter_backup_password">Enter backup password</string>
     <string name="restore_backup">Restore backup</string>
-    <string name="whirlpool_paring">Whirlpool Paring</string>
+    <string name="whirlpool_pairing">Whirlpool Pairing</string>
     <string name="enter_pairing_password">Enter pairing password</string>
     <string name="add_to_batch">Add to batch</string>
     <string name="update_to_batch">Update batch</string>
@@ -806,5 +806,8 @@
     <string name="have_your_mixing_partner">Have your mixing partner scan the QR to start.</string>
     <string name="broadcast_transaction">Broadcast Transaction</string>
     <string name="broadcasting_transaction">Broadcasting Transaction</string>
+    <string name="recipients">Recipients</string>
+    <string name="clear_batch_list">Clear batch list</string>
+    <string name="confirm_batch_list_clear">Are you sure want to clear batch list?</string>
 
 </resources>

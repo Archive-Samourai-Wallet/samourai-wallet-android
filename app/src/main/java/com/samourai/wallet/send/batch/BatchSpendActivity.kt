@@ -19,6 +19,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.*
 import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.common.base.Splitter
@@ -26,6 +28,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.TxAnimUIActivity
+import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
@@ -36,6 +39,7 @@ import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.fragments.PaynymSelectModalFragment
 import com.samourai.wallet.fragments.PaynymSelectModalFragment.Companion.newInstance
 import com.samourai.wallet.hd.HD_WalletFactory
+import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.SegwitAddress
@@ -114,7 +118,9 @@ class BatchSpendActivity : SamouraiActivity() {
 
         btcEditText.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8, 8))
 
-        setBalance()
+        listenBalance()
+
+        viewModel.setBalance(applicationContext,account)
 
         showCompose()
 
@@ -156,26 +162,25 @@ class BatchSpendActivity : SamouraiActivity() {
             }
         }
 
-        to_address_review.setOnClickListener {
-
-        }
         viewModel.getBatchListLive().observe(this, {
-            to_address_review.text = "${it.size} Recipients"
+            to_address_review.text = "${it.size} ${getString(R.string.recipients)}"
             send_review_amount.text = "${FormatsUtil.getBTCDecimalFormat(viewModel.getBatchAmount())} BTC"
-
         })
 
         val disposable = APIFactory.getInstance(applicationContext)
                 .walletBalanceObserver
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ setBalance() }) { obj: Throwable -> obj.printStackTrace() }
+                .subscribe({
+                    viewModel.setBalance(applicationContext,account)
+                }) { obj: Throwable -> obj.printStackTrace() }
         compositeDisposable.add(disposable)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.send_menu, menu)
         menu.findItem(R.id.action_batch).isVisible = false
+        menu.findItem(R.id.action_clear_batch).isVisible = true
         menu.findItem(R.id.action_ricochet).isVisible = false
         menu.findItem(R.id.action_empty_ricochet).isVisible = false
         this.menu = menu
@@ -205,7 +210,8 @@ class BatchSpendActivity : SamouraiActivity() {
         }
         val dAmount: Double = btcAmount
         val amountRounded = (dAmount * 1e8)
-        if (amountRounded > balance) {
+        val walletBalance =  viewModel.totalWalletBalance() ?: 0
+        if (amountRounded > walletBalance) {
             insufficientFunds = true
         }
 
@@ -225,31 +231,24 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun setBalance() {
+    private fun listenBalance() {
         viewModel.getBalance().observe(this, {
-            balance = it
-            totalBTC.text = "${FormatsUtil.getBTCDecimalFormat(it)} BTC"
-            batchCurrentAmount.text = getString(R.string.current_batch) + " (${FormatsUtil.getBTCDecimalFormat(viewModel.getBatchAmount())} BTC)"
-        })
-        try {
-            var balance = 0L
-            if (account == WhirlpoolConst.WHIRLPOOL_POSTMIX_ACCOUNT) {
-                balance = APIFactory.getInstance(applicationContext).xpubPostMixBalance
-            } else {
-                val tempBalance = APIFactory.getInstance(applicationContext).xpubAmounts[HD_WalletFactory.getInstance(this).get().getAccount(0).xpubstr()]
-                if (tempBalance != null && tempBalance != 0L) {
-                    balance = tempBalance
-                }
+            it?.let{
+                balance = it
+                totalBTC.text = "${FormatsUtil.getBTCDecimalFormat(it)} BTC"
+                batchCurrentAmount.text = getString(R.string.current_batch) + " (${FormatsUtil.getBTCDecimalFormat(viewModel.getBatchAmount())} BTC)"
             }
-            viewModel.setBalance(balance);
-        } catch (npe: NullPointerException) {
-            npe.printStackTrace()
-        }
+        })
     }
 
     override fun onDestroy() {
         if(!compositeDisposable.isDisposed){
             compositeDisposable.dispose()
+        }
+        try {
+            PayloadUtil.getInstance(applicationContext)
+                    .saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(applicationContext).guid + AccessFactory.getInstance(applicationContext).pin))
+        } catch (e: Exception) {
         }
         composeJob?.let {
             if(it.isActive)
@@ -373,6 +372,14 @@ class BatchSpendActivity : SamouraiActivity() {
         val id = item.itemId
         if (item.itemId == android.R.id.home) {
             onBackPressed()
+            return true
+        }
+        if (item.itemId == R.id.action_clear_batch) {
+         MaterialAlertDialogBuilder(this)
+                  .setMessage(getString(R.string.confirm_batch_list_clear))
+                  .setPositiveButton(R.string.ok) { _, _ ->
+                          viewModel.clearBatch()
+                  }.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }.show()
             return true
         }
         if (item.itemId == R.id.select_paynym) {
@@ -620,12 +627,12 @@ class BatchSpendActivity : SamouraiActivity() {
                 .replace(R.id.batchDetailContainer, reviewFragment)
                 .commit()
         isInReviewMode = true
-        this.doSpend()
+
         reviewFragment.setOnFeeChangeListener {
             composeJob =  viewModel.viewModelScope.launch(Dispatchers.Default) {
                 delay(300)
                 withContext(Dispatchers.Main){
-                    doSpend()
+                    prepareSpend()
                 }
             }
         }
@@ -686,7 +693,7 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     @Synchronized
-    fun doSpend() {
+    fun prepareSpend() {
         //Resets current receivers,outpoints etc..
         this.reset()
         for (_data in viewModel.getBatchList()) {
@@ -719,7 +726,7 @@ class BatchSpendActivity : SamouraiActivity() {
         var totalSelected = 0
 
         for (utxo in utxos) {
-              LogUtil.debug("BatchSendActivity", "utxo value:" + utxo.value)
+            LogUtil.debug("BatchSendActivity", "utxo value:" + utxo.value)
             selectedUTXO.add(utxo)
             totalValueSelected += utxo.value
             totalSelected += utxo.outpoints.size
@@ -745,13 +752,17 @@ class BatchSpendActivity : SamouraiActivity() {
         }
         val outpointTypes = FeeUtil.getInstance().getOutpointCount(Vector(outpoints))
         fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, receivers.size + 1)
-          LogUtil.debug("BatchSendActivity", "fee:" + fee.toLong())
-
-        if (amount + fee.toLong() > balance) {
+        val walletBalance =  viewModel.totalWalletBalance() ?: 0L
+        if (amount + fee.toLong() > walletBalance) {
             reviewFragment.setTotalMinerFees(BigInteger.ZERO)
-            Toast.makeText(applicationContext, R.string.insufficient_funds, Toast.LENGTH_SHORT).show()
+            Snackbar
+                    .make(appBarLayoutBatch.rootView,R.string.insufficient_funds, Snackbar.LENGTH_SHORT)
+                    .setAnchorView(reviewFragment.getSendButton())
+                    .show()
+            reviewFragment.enableSendButton(false)
             return
         }
+        reviewFragment.enableSendButton(true)
 
         val changeAmount: Long = totalValueSelected - (amount + fee.toLong())
         change_idx = 0
@@ -817,7 +828,8 @@ class BatchSpendActivity : SamouraiActivity() {
             } else {
                 rbf = null
             }
-
+            val signedTx = SendFactory.getInstance(application).signTransaction(tx, account)
+            reviewFragment.setFeeRate(fee.toDouble() / signedTx.virtualTransactionSize)
             reviewFragment.setTotalMinerFees(fee)
         }
     }
@@ -826,12 +838,10 @@ class BatchSpendActivity : SamouraiActivity() {
     private fun initiateSpend() {
         val strMessage = "Send ${FormatsUtil.getBTCDecimalFormat(amount.toLong())} BTC. (fee: ${FormatsUtil.getBTCDecimalFormat(fee.toLong())})"
 
-        val _change_address = change_address
         val _change_idx = change_idx
         val _amount = amount
         var SignedTx = SendFactory.getInstance(applicationContext).signTransaction(tx, 0)
         val hexTx = String(Hex.encode(SignedTx.bitcoinSerialize()))
-        val strTxHash = SignedTx.hashAsString
 
         val dlg = MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.app_name)
