@@ -31,10 +31,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.samourai.wallet.R;
+import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.api.backend.beans.UnspentResponse;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.SendFactory;
+import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.MonetaryUtil;
 import com.samourai.wallet.utxos.PreSelectUtil;
@@ -58,6 +60,7 @@ import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.TransactionOutput;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -111,7 +114,7 @@ public class NewPoolActivity extends AppCompatActivity {
         }
 
         cycleTotalAmount = findViewById(R.id.cycle_total_amount);
-        cycleTotalAmount.setText(MonetaryUtil.getInstance().getBTCFormat().format(((double) getCycleTotalAmount(new ArrayList<UTXOCoin>())) / 1e8) + " BTC");
+        cycleTotalAmount.setText(FormatsUtil.formatBTC(0L));
 
         fees.add(FeeUtil.getInstance().getLowFee().getDefaultPerKB().longValue() / 1000L);
         fees.add(FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue() / 1000L);
@@ -185,7 +188,7 @@ public class NewPoolActivity extends AppCompatActivity {
                     confirmButton.setText(getString(R.string.begin_cycle));
                     confirmButton.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(),R.color.green_ui_2));
 
-                    reviewPoolFragment.setTx0(tx0,tx0FeeTarget,selectedPoolViewModel);
+                    reviewPoolFragment.setTx0(tx0,tx0FeeTarget,tx0FeeTarget,selectedPoolViewModel);
                     break;
                 }
                 case 2: {
@@ -243,7 +246,7 @@ public class NewPoolActivity extends AppCompatActivity {
         } else {
             long mediumFee = FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue() / 1000L;
 
-            cycleTotalAmount.setText(MonetaryUtil.getInstance().getBTCFormat().format(((double) getCycleTotalAmount(coins)) / 1e8) + " BTC");
+            cycleTotalAmount.setText(FormatsUtil.formatBTC(getCycleTotalAmount(coins)));
             // default set to lowest pool
             calculateTx0(WhirlpoolMeta.getInstance(NewPoolActivity.this).getMinimumPoolDenomination(), mediumFee);
         }
@@ -271,7 +274,7 @@ public class NewPoolActivity extends AppCompatActivity {
     private void processWhirlPool() {
 
         try {
-            if (AndroidWhirlpoolWalletService.getInstance(getApplicationContext()).listenConnectionStatus().getValue() != AndroidWhirlpoolWalletService.ConnectionStates.CONNECTED) {
+            if (AndroidWhirlpoolWalletService.getInstance().listenConnectionStatus().getValue() != AndroidWhirlpoolWalletService.ConnectionStates.CONNECTED) {
                 WhirlpoolNotificationService.startService(getApplicationContext());
             } else {
                 tx0Progress.setVisibility(View.VISIBLE);
@@ -304,21 +307,21 @@ public class NewPoolActivity extends AppCompatActivity {
 
     private Completable beginTx0(List<UTXOCoin> coins) {
         return Completable.fromCallable(() -> {
-            WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance(getApplicationContext()).getWhirlpoolWalletOrNull();
+            WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
             if (whirlpoolWallet == null) {
                 return true;
             }
             Collection<UnspentOutputWithKey> spendFroms = new ArrayList<UnspentOutputWithKey>();
 
             for (UTXOCoin coin : coins) {
-                UnspentResponse.UnspentOutput unspentOutput = new UnspentResponse.UnspentOutput();
+                UnspentOutput unspentOutput = new UnspentOutput();
                 unspentOutput.addr = coin.address;
                 unspentOutput.script = Hex.toHexString(coin.getOutPoint().getScriptBytes());
                 unspentOutput.confirmations = coin.getOutPoint().getConfirmations();
                 unspentOutput.tx_hash = coin.getOutPoint().getTxHash().toString();
                 unspentOutput.tx_output_n = coin.getOutPoint().getTxOutputN();
                 unspentOutput.value = coin.amount;
-                unspentOutput.xpub = new UnspentResponse.UnspentOutput.Xpub();
+                unspentOutput.xpub = new UnspentOutput.Xpub();
                 unspentOutput.xpub.path = "M/0/0";
 
                 ECKey eckey = SendFactory.getPrivKey(coin.address, account);
@@ -343,19 +346,21 @@ public class NewPoolActivity extends AppCompatActivity {
             }
             try {
                 com.samourai.whirlpool.client.whirlpool.beans.Pool pool = whirlpoolWallet.getPoolSupplier().findPoolById(selectedPoolViewModel.getPoolId());
-                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, pool, tx0Config, tx0FeeTarget);
+                Tx0FeeTarget mixFeeTarget = Tx0FeeTarget.BLOCKS_12;
+                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, pool, tx0Config, tx0FeeTarget, mixFeeTarget);
                 final String txHash = tx0.getTx().getHashAsString();
                 // tx0 success
-                if (tx0.getChangeOutput() != null) {
-                    Log.i("NewPoolActivity", "change:" + tx0.getChangeOutput().toString());
-                    Log.i("NewPoolActivity", "change index:" + tx0.getChangeOutput().getIndex());
-                    UTXOUtil.getInstance().add(txHash + "-" + tx0.getChangeOutput().getIndex(), "\u2623 tx0 change\u2623");
+                if (tx0.getChangeOutputs() != null && !tx0.getChangeOutputs().isEmpty()) {
+                    TransactionOutput changeOutput = tx0.getChangeOutputs().get(0);
+                    Log.i("NewPoolActivity", "change:" + changeOutput.toString());
+                    Log.i("NewPoolActivity", "change index:" + changeOutput.getIndex());
+                    UTXOUtil.getInstance().add(txHash + "-" + changeOutput.getIndex(), "\u2623 tx0 change\u2623");
                     UTXOUtil.getInstance().addNote(txHash, "tx0");
                     if (blockChangeOutput) {
                         if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
-                            BlockedUTXO.getInstance().addPostMix(txHash, tx0.getChangeOutput().getIndex(), tx0.getChangeValue());
+                            BlockedUTXO.getInstance().addPostMix(txHash, changeOutput.getIndex(), tx0.getChangeValue());
                         } else {
-                            BlockedUTXO.getInstance().add(txHash, tx0.getChangeOutput().getIndex(), tx0.getChangeValue());
+                            BlockedUTXO.getInstance().add(txHash, changeOutput.getIndex(), tx0.getChangeValue());
                         }
                     }
                 }
@@ -431,7 +436,7 @@ public class NewPoolActivity extends AppCompatActivity {
 
         String reviewMessage = getString(R.string.review_cycle_details).concat("\n");
         String reviewAmountMessage = getString(R.string.total_whirlpool_balance).concat(" ");
-        String amount = MonetaryUtil.getInstance().getBTCFormat().format(((double) getCycleTotalAmount(coins)) / 1e8) + " BTC";
+        String amount = FormatsUtil.formatBTC(getCycleTotalAmount(coins));
 
         SpannableString spannable = new SpannableString(reviewMessage.concat(reviewAmountMessage).concat(amount));
         spannable.setSpan(
@@ -623,12 +628,5 @@ public class NewPoolActivity extends AppCompatActivity {
         disposables.dispose();
         super.onDestroy();
     }
-
-    /*
-    private void displayCycleTotalAmount(List<Coin> coins)   {
-
-        cycleTotalAmount.setText(MonetaryUtil.getInstance().getBTCFormat().format(((double)getCycleTotalAmount(coins)) / 1e8) + " BTC");
-
-    }
-*/
+    
 }

@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.InputFilter;
-import android.text.Selection;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
@@ -28,7 +27,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
@@ -81,8 +79,6 @@ import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.DecimalDigitsInputFilter;
 import com.samourai.wallet.util.FormatsUtil;
-import com.samourai.wallet.util.LogUtil;
-import com.samourai.wallet.util.MonetaryUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.SendAddressUtil;
 import com.samourai.wallet.util.WebUtil;
@@ -125,6 +121,7 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
@@ -364,12 +361,6 @@ public class SendActivity extends SamouraiActivity {
                             if(type.getCahootsType() == CahootsType.STOWAWAY){
                                 strPCode = pcode;
                             }
-                            if(type.getCahootsMode() == CahootsMode.SOROBAN){
-                                if(!TorManager.INSTANCE.isConnected()){
-                                    TorServiceController.startTor();
-                                    PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.ENABLE_TOR, true);
-                                }
-                            }
                         }
                         chosen[0] = true;
                         selectedCahootsType = type;
@@ -408,6 +399,7 @@ public class SendActivity extends SamouraiActivity {
             } else {
                 selectedCahootsType = SelectCahootsType.type.NONE;
                 cahootsStatusText.setText("Off");
+                strPCode =null;
                 cahootsStatusText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.warning_yellow));
                 hideToAddressForStowaway();
                 validateSpend();
@@ -838,16 +830,11 @@ public class SendActivity extends SamouraiActivity {
 
 
         final String strAmount;
-        NumberFormat nf = NumberFormat.getInstance(Locale.US);
-        nf.setMaximumFractionDigits(8);
-        nf.setMinimumFractionDigits(1);
-        nf.setMinimumIntegerDigits(1);
-
-        strAmount = nf.format(balance / 1e8);
+        strAmount = FormatsUtil.formatBTC(balance);
 
         if (account == 0) {
             tvMaxAmount.setOnClickListener(view -> {
-                btcEditText.setText(strAmount);
+                btcEditText.setText(strAmount.replace("BTC","").trim());
             });
         }
         tvMaxAmount.setOnLongClickListener(view -> {
@@ -855,7 +842,7 @@ public class SendActivity extends SamouraiActivity {
             return true;
         });
 
-        tvMaxAmount.setText(strAmount + " " + getDisplayUnits());
+        tvMaxAmount.setText(strAmount);
 
         if(!AppUtil.getInstance(getApplication()).isOfflineMode())
             if (balance == 0L && !APIFactory.getInstance(getApplicationContext()).walletInit) {
@@ -1135,7 +1122,7 @@ public class SendActivity extends SamouraiActivity {
     private void _review() {
         setUpBoltzman();
         if (validateSpend() && prepareSpend()) {
-            tvReviewSpendAmount.setText(btcEditText.getText().toString().concat(" BTC"));
+            tvReviewSpendAmount.setText(FormatsUtil.formatBTC(amount));
             try {
 
                 tvReviewSpendAmountInSats.setText(formattedSatValue(getSatValue(Double.valueOf(btcEditText.getText().toString()))).concat(" sats"));
@@ -1145,6 +1132,7 @@ public class SendActivity extends SamouraiActivity {
             }
             amountViewSwitcher.showNext();
             hideKeyboard();
+            hideMenus(true);
             sendTransactionDetailsView.showReview(ricochetHopsSwitch.isChecked());
 
         }
@@ -1155,6 +1143,11 @@ public class SendActivity extends SamouraiActivity {
         if (imm != null) {
             imm.hideSoftInputFromWindow(amountViewSwitcher.getWindowToken(), 0);
         }
+    }
+    private void hideMenus(boolean hide) {
+        Toolbar toolbar =  findViewById(R.id.toolbar_send);
+        toolbar.getMenu().findItem(R.id.action_scan_qr).setVisible(!hide);
+        toolbar.getMenu().findItem(R.id.select_paynym).setVisible(!hide);
     }
 
     @Override
@@ -1334,14 +1327,14 @@ public class SendActivity extends SamouraiActivity {
                     long ricochetFee = hop0Fee + (RicochetMeta.defaultNbHops * perHopFee);
 
                     if (selectedCahootsType == SelectCahootsType.type.NONE) {
-                        tvTotalFee.setText(Coin.valueOf(ricochetFee).toPlainString().concat(" BTC"));
+                        tvTotalFee.setText(FormatsUtil.formatBTC(ricochetFee));
                     } else {
                         tvTotalFee.setText("__");
                     }
 
-                    ricochetMessage = getText(R.string.ricochet_spend1) + " " + address + " " + getText(R.string.ricochet_spend2) + " " + Coin.valueOf(totalAmount).toPlainString() + " " + getText(R.string.ricochet_spend3);
+                    ricochetMessage = getText(R.string.ricochet_spend1) + " " + address + " " + getText(R.string.ricochet_spend2) + " " + FormatsUtil.formatBTC(totalAmount) + " " + getText(R.string.ricochet_spend3);
 
-                    btnSend.setText("send ".concat(String.format(Locale.ENGLISH, "%.8f", getBtcValue((double) totalAmount)).concat(" BTC")));
+                    btnSend.setText("send ".concat(FormatsUtil.formatBTC(totalAmount)));
                     return true;
 
                 } catch (JSONException je) {
@@ -1684,18 +1677,17 @@ public class SendActivity extends SamouraiActivity {
                     strCannotDoBoltzmann = getString(R.string.boltzmann_cannot) + "\n\n";
                 }
             }
-            message = strCannotDoBoltzmann + strPrivacyWarning + "Send " + Coin.valueOf(amount).toPlainString() + " to " + dest + " (fee:" + Coin.valueOf(_fee.longValue()).toPlainString() + ")?\n";
+            message = strCannotDoBoltzmann + strPrivacyWarning + "Send " + FormatsUtil.formatBTCWithoutUnit(amount) + " to " + dest + " (fee:" + FormatsUtil.formatBTCWithoutUnit(_fee.longValue()) + ")?\n";
 
             if (selectedCahootsType == SelectCahootsType.type.NONE) {
-                tvTotalFee.setText(String.format(Locale.ENGLISH, "%.8f", getBtcValue(fee.doubleValue())).concat(" BTC"));
+                tvTotalFee.setText(FormatsUtil.formatBTC(fee.longValue()));
                 calculateTransactionSize(_fee);
             } else {
                 tvTotalFee.setText("__");
             }
 
-            double value = Double.parseDouble(String.valueOf(_fee.add(BigInteger.valueOf(amount))));
 
-            btnSend.setText("send ".concat(String.format(Locale.ENGLISH, "%.8f", getBtcValue(value))).concat(" BTC"));
+            btnSend.setText("send ".concat(FormatsUtil.formatBTC(_fee.add(BigInteger.valueOf(amount)).longValue())));
 
             switch (selectedCahootsType) {
                 case NONE: {
@@ -1758,7 +1750,7 @@ public class SendActivity extends SamouraiActivity {
 
                         default:
                             btnSend.setBackgroundResource(R.drawable.button_green);
-                            btnSend.setText("send ".concat(String.format(Locale.ENGLISH, "%.8f", getBtcValue((double) amount))).concat(" BTC"));
+                            btnSend.setText("send ".concat(FormatsUtil.formatBTC(amount)));
                     }
                 }
             }
@@ -2005,7 +1997,7 @@ public class SendActivity extends SamouraiActivity {
         receivers = new HashMap<>();
         amountViewSwitcher.showPrevious();
         sendTransactionDetailsView.showTransaction();
-
+        hideMenus(false);
     }
 
     private void calculateTransactionSize(BigInteger _fee) {
@@ -2149,13 +2141,8 @@ public class SendActivity extends SamouraiActivity {
                 }
             }
 
-            final String strAmount;
-            NumberFormat nf = NumberFormat.getInstance(Locale.US);
-            nf.setMinimumIntegerDigits(1);
-            nf.setMinimumFractionDigits(1);
-            nf.setMaximumFractionDigits(8);
-            strAmount = nf.format(balance / 1e8);
-            tvMaxAmount.setText(strAmount + " " + getDisplayUnits());
+            final String strAmount = FormatsUtil.formatBTCWithoutUnit(balance);
+            tvMaxAmount.setText(strAmount);
 
             try {
                 if (amount != null && Double.parseDouble(amount) != 0.0) {
@@ -2198,11 +2185,6 @@ public class SendActivity extends SamouraiActivity {
         validateSpend();
     }
 
-    public String getDisplayUnits() {
-
-        return MonetaryUtil.getInstance().getBTCUnits();
-
-    }
 
     private void processPCode(String pcode, String meta) {
 

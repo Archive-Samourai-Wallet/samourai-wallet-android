@@ -18,7 +18,6 @@ import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.crypto.DecryptionException;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
@@ -46,7 +45,6 @@ import com.samourai.wallet.util.WebUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
-import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Address;
@@ -61,7 +59,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.security.InvalidKeyException;
@@ -108,9 +105,6 @@ public class APIFactory {
     private static HashMap<String,UTXO> utxosPreMix = null;
     private static HashMap<String,UTXO> utxosPostMix = null;
     private static HashMap<String,UTXO> utxosBadBank = null;
-
-    private static JSONObject utxoObj0 = null;
-    private static JSONObject utxoObj1 = null;
 
     private static HashMap<String, Long> bip47_amounts = null;
     public boolean walletInit = false;
@@ -207,7 +201,7 @@ public class APIFactory {
         UTXOFactory.getInstance().clear();
     }
 
-    public String getAccessTokenNotExpired() {
+    public String getAccessTokenNotExpired() throws Exception {
         boolean setupDojo = DojoUtil.getInstance(context).getDojoParams() != null;
 
         String currentAccessToken = getAccessToken();
@@ -237,7 +231,11 @@ public class APIFactory {
 
     public String getAccessToken() {
         if(ACCESS_TOKEN == null && APIFactory.getInstance(context).APITokenRequired())    {
-            getToken(true);
+            try {
+                getToken(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return DojoUtil.getInstance(context).getDojoParams() == null ? "" : ACCESS_TOKEN;
     }
@@ -298,16 +296,25 @@ public class APIFactory {
         if(!AppUtil.getInstance(context).isOfflineMode() && APITokenRequired())    {
 
             if(APIFactory.getInstance(context).getAccessToken() == null)    {
-                APIFactory.getInstance(context).getToken(false);
+                try {
+                    APIFactory.getInstance(context).getToken(false);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             if(APIFactory.getInstance(context).getAccessToken() != null)    {
                 JWT jwt = new JWT(APIFactory.getInstance(context).getAccessToken());
                 if(jwt != null && jwt.isExpired(APIFactory.getInstance(context).getAccessTokenRefresh()))    {
-                    if(APIFactory.getInstance(context).getToken(false))  {
-                        return true;
-                    }
-                    else    {
+                    try {
+                        if(APIFactory.getInstance(context).getToken(false))  {
+                            return true;
+                        }
+                        else    {
+                            return false;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                         return false;
                     }
                 }
@@ -375,6 +382,8 @@ public class APIFactory {
                         setAccessToken(authObj.getString("access_token"));
                         return true;
                     }
+                }else{
+                    return  false;
                 }
             }
             catch(JSONException je) {
@@ -1771,6 +1780,7 @@ public class APIFactory {
             if (mixMultiAddrObj != null)    {
                 parseMixXPUB(mixMultiAddrObj);
                 parseMixUnspentOutputs(mixMultiAddrObj.toString());
+                AndroidWhirlpoolWalletService.getInstance().setWhirlpoolWalletResponse(mixMultiAddrObj);
             }
 
             //
@@ -1819,12 +1829,6 @@ public class APIFactory {
                     BlockedUTXO.getInstance().removePostMix(_s);
                     debug("APIFactory", "blocked removed:" + _s);
                 }
-            }
-
-            // refresh Whirlpool utxos
-            WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance(context).getWhirlpoolWalletOrNull();
-            if (whirlpoolWallet != null) {
-                whirlpoolWallet.getUtxoSupplier().expire();
             }
         }
         catch (Exception e) {
@@ -2752,5 +2756,4 @@ public class APIFactory {
         }
 
     }
-
 }

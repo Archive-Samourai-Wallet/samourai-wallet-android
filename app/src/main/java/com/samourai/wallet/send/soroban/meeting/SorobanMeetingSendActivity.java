@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.button.MaterialButton;
 import com.samourai.soroban.client.meeting.SorobanMeetingService;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
@@ -21,7 +22,6 @@ import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
-import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
@@ -29,7 +29,6 @@ import com.squareup.picasso.Picasso;
 
 import org.apache.commons.lang3.StringUtils;
 
-import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -49,7 +48,7 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
     private TextView paynymDisplayName, textViewConnecting;
     private ImageView paynymAvatar;
     private View paynymSelect;
-    private Button sendButton;
+    private MaterialButton sendButton;
     private ProgressBar progressBar;
     private Disposable sorobanDisposable;
 
@@ -87,31 +86,7 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
         paynymSelect.setOnClickListener(v -> selectPCode());
         sendButton.setOnClickListener(v -> send());
         parsePayloadIntent();
-
-        TorManager.INSTANCE.getTorStateLiveData().observe(SorobanMeetingSendActivity.this, torState -> {
-            if(torState == TorManager.TorState.WAITING){
-                textViewConnecting.setText("Waiting for tor...");
-            }
-            if (torState == TorManager.TorState.ON) {
-                 startListen();
-            }
-        });
-
-        if (TorManager.INSTANCE.getTorState() == TorManager.TorState.OFF) {
-            String message = "Tor connection is required for online cahoots ? do you want to continue ?";
-            new AlertDialog.Builder(this)
-                    .setTitle("Confirm")
-                    .setMessage(message)
-                    .setCancelable(true)
-                    .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
-                        progressBar.setVisibility(View.VISIBLE);
-                        PrefsUtil.getInstance(getApplicationContext()).setValue(PrefsUtil.OFFLINE, false);
-                        TorServiceController.startTor();
-                    }).setNegativeButton(R.string.no, (dialog, whichButton) -> {
-                finish();
-
-            }).show();
-        }
+        startListen();
     }
 
     // TODO remove on next whirlpool-client upgrade
