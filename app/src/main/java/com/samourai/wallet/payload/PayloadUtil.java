@@ -78,8 +78,7 @@ public class PayloadUtil	{
     private final static String strMultiAddrFilename = "samourai.multi";
     private final static String strPayNymFilename = "samourai.paynyms";
     private final static String strMultiAddrMixFilename = "samourai.multi.mix";
-    private final static String strOptionalBackupDir = "/samourai";
-    private final static String strOptionalFilename = "samourai.txt";
+    private final static String strOptionalFilename = "samourai.support.txt";
     private final static String paynymResponseFile = "paynym.res";
 
     private static Context context = null;
@@ -99,23 +98,13 @@ public class PayloadUtil	{
         return instance;
     }
 
-    public File getBackupFile()  {
-        String directory = Environment.DIRECTORY_DOCUMENTS;
-        File dir = null;
-        if(context.getPackageName().contains("staging"))    {
-            dir = Environment.getExternalStoragePublicDirectory(directory + strOptionalBackupDir + "/staging");
-        }
-        else    {
-            dir = Environment.getExternalStoragePublicDirectory(directory + strOptionalBackupDir);
-        }
-        File file = new File(dir, strOptionalFilename);
-
-        return file;
+    public File getSupportBackupFile()  {
+        File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
+        return new File(dir, strOptionalFilename);
     }
     public File getPaynymResponseFile(){
         File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
-        File file = new File(dir, paynymResponseFile);
-        return file;
+        return new File(dir, paynymResponseFile);
     }
 
     public JSONObject putPayload(String data, boolean external)    {
@@ -1012,37 +1001,29 @@ public class PayloadUtil	{
     }
 
     private synchronized void serialize(String data) throws IOException    {
-
-        String directory = Environment.DIRECTORY_DOCUMENTS;
-        File dir = null;
-        if(context.getPackageName().contains("staging"))    {
-            dir = Environment.getExternalStoragePublicDirectory(directory + strOptionalBackupDir + "/staging");
-        }
-        else    {
-            dir = Environment.getExternalStoragePublicDirectory(directory + strOptionalBackupDir);
-        }
-        if(!dir.exists())   {
-            dir.mkdirs();
-            dir.setWritable(true, true);
-            dir.setReadable(true, true);
-        }
-        File newfile = new File(dir, strOptionalFilename);
-        newfile.setWritable(true, true);
-        newfile.setReadable(true, true);
-
         JSONObject jsonObj = putPayload(data, false);
         if(jsonObj != null)    {
-            Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newfile), "UTF-8"));
+            try {
+                ExternalBackupManager.write(jsonObj.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(jsonObj != null)    {
+            Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getSupportBackupFile()), "UTF-8"));
             try {
                 out.write(jsonObj.toString());
-            } finally {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }finally {
                 out.close();
             }
         }
 
     }
 
-    public String getDecryptedBackupPayload(String data, CharSequenceX password)  {
+    public String getDecryptedBackupPayload(String data, CharSequenceX password) throws Exception {
 
         String encrypted = null;
         int version = 1;
@@ -1072,11 +1053,11 @@ public class PayloadUtil	{
             }
         }
         catch (Exception e) {
-            Toast.makeText(context, R.string.decryption_error, Toast.LENGTH_SHORT).show();
+           throw new Exception("Unable to decrypt");
         }
         finally {
             if (decrypted == null || decrypted.length() < 1) {
-                Toast.makeText(context, R.string.decryption_error, Toast.LENGTH_SHORT).show();
+                throw new Exception("Unable to decrypt");
 //                AppUtil.getInstance(context).restartApp();
             }
         }
