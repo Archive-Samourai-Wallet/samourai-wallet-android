@@ -283,6 +283,7 @@
     <string name="please_wait_ricochet">Processing Ricochet queue, please wait.</string>
 
     <string name="change_is_dust">The change from this transaction is a dust amount. Try again and either modify the spend amount or spend the entire balance.</string>
+    <string name="insufficient_amount_for_fee">insufficient balance for selected fee. Try again and either modify the spend amount or spend the entire balance.</string>
 
     <string name="tor_routing_on">Samourai is routing via Tor.</string>
     <string name="tor_routing_off">Samourai is not routing via Tor. Tap to activate.</string>
@@ -852,5 +853,7 @@
     <string name="choose">Choose</string>
     <string name="permission_dialog_scoped">Your wallet needs access to file storage so it can automatically save an encrypted backup of your wallet to your device. Please choose a directory.</string>
     <string name="permission_alert_dialog_title_external_scoped">Choose backup directory</string>
+    <string name="please_try_again_in">Please try again in </string>
+    <string name="seconds">seconds</string>
 
 </resources>
