@@ -218,7 +218,7 @@
     <string name="max_available">Max. available:</string>
 
     <string name="select_account">Selecione quantia</string>
-    <string name="received_bitcoin">Bitcoin Recebidon</string>
+    <string name="received_bitcoin">Bitcoin Recebido</string>
     <string name="received">Recebido</string>
     <string name="sent">Transação enviada</string>
     <string name="total">Total</string>
@@ -776,7 +776,7 @@
     <string name="mixing"><em>%1$s</em> : %2$s</string>
 
     <string name="doxxic_change_warning">Doxxic Change</string>
-    <string name="block_tx0_change">O change output deste tx0 será marcado. Bloquea-lo para tornar impossível gastar? Se feito isso, a quantia não vai se refletir no balanço total mas vai ser visível dentro da carteira consultando a lista de não-gastos.</string>
+    <string name="block_tx0_change">O change output deste tx0 será marcado. Bloqueá-lo para tornar impossível gastar? Se feito isso, a quantia não vai se refletir no balanço total mas vai ser visível dentro da carteira consultando a lista de não-gastos.</string>
     <string name="total_pre_mix_balance">Balanço total Pre-mix</string>
     <string name="total_post_mix_balance">Balanço total Post-mix</string>
     <string name="post_mix_transactions">Transações Post-mix</string>
