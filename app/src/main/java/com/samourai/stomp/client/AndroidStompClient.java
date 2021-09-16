@@ -2,7 +2,7 @@ package com.samourai.stomp.client;
 
 import com.google.gson.Gson;
 import com.samourai.wallet.tor.TorManager;
-import com.samourai.whirlpool.client.utils.MessageErrorListener;
+import com.samourai.wallet.util.MessageErrorListener;
 import com.samourai.whirlpool.protocol.WhirlpoolProtocol;
 
 import org.slf4j.Logger;

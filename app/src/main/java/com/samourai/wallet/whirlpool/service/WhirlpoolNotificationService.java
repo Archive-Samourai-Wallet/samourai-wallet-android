@@ -188,8 +188,8 @@ public class WhirlpoolNotificationService extends Service {
                     .concat(String.valueOf(mixingState.getNbQueued())).concat(" QUEUED"));
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
             for (WhirlpoolUtxo whirlpoolUtxo : mixingState.getUtxosMixing()) {
-                if (whirlpoolUtxo.getUtxoState().getMessage() != null && whirlpoolUtxo.getPoolId() != null)
-                    inboxStyle.addLine(whirlpoolUtxo.getPoolId().concat(" : ").concat(whirlpoolUtxo.getUtxoState().getMessage()));
+                if (whirlpoolUtxo.getUtxoState().getMessage() != null && whirlpoolUtxo.getUtxoState().getPoolId() != null)
+                    inboxStyle.addLine(whirlpoolUtxo.getUtxoState().getPoolId().concat(" : ").concat(whirlpoolUtxo.getUtxoState().getMessage()));
             }
             builder.setStyle(inboxStyle);
         } else {

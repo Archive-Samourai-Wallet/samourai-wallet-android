@@ -4,10 +4,8 @@ import android.content.Context;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
-import com.samourai.wallet.hd.HD_Wallet;
-import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.BIP84Util;
-import com.samourai.wallet.segwit.BIP84Wallet;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendFactory;
@@ -16,7 +14,6 @@ import com.samourai.wallet.util.AddressFactory;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.NetworkParameters;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +23,7 @@ public class AndroidCahootsWallet extends CahootsWallet {
     private AddressFactory addressFactory;
 
     public AndroidCahootsWallet(Context ctx) {
-        super(computeBip84Wallet(ctx), SamouraiWallet.getInstance().getCurrentNetworkParams());
+        super(BIP84Util.getInstance(ctx).getWallet(), SamouraiWallet.getInstance().getCurrentNetworkParams());
         this.apiFactory = APIFactory.getInstance(ctx);
         this.addressFactory = AddressFactory.getInstance(ctx);
     }
@@ -39,7 +36,7 @@ public class AndroidCahootsWallet extends CahootsWallet {
 
     @Override
     public int fetchPostChangeIndex() {
-        return addressFactory.getHighestPostChangeIdx();
+        return addressFactory.getIndex(WALLET_INDEX.POSTMIX_CHANGE, false);
     }
 
     @Override
@@ -64,17 +61,5 @@ public class AndroidCahootsWallet extends CahootsWallet {
             }
         }
         return utxos;
-    }
-
-    private static BIP84Wallet computeBip84Wallet(Context ctx) {
-        try {
-            HD_Wallet bip84w = BIP84Util.getInstance(ctx).getWallet();
-            NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
-            BIP84Wallet bip84Wallet = new BIP84Wallet(bip84w, params);
-            return bip84Wallet;
-        } catch(Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 }

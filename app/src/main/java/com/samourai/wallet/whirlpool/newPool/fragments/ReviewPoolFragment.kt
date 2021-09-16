@@ -4,22 +4,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.transition.AutoTransition
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.samourai.wallet.R
 import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.api.backend.beans.UnspentOutput.Xpub
-import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.whirlpool.WhirlpoolTx0
-import com.samourai.wallet.widgets.EntropyBar
 import com.samourai.whirlpool.client.tx0.Tx0Preview
-import com.samourai.whirlpool.client.tx0.UnspentOutputWithKey
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
+import com.samourai.whirlpool.client.wallet.WhirlpoolUtils
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import com.samourai.whirlpool.client.whirlpool.beans.Pool
@@ -80,27 +75,13 @@ class ReviewPoolFragment : Fragment() {
         showLoadingProgress(true)
         onLoading.invoke(true, null)
         val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
-        val spendFroms: MutableCollection<UnspentOutputWithKey> = ArrayList()
-        for (outPoint in tx0.outpoints) {
-            val unspentOutput = UnspentOutput()
-            unspentOutput.addr = outPoint.address
-            unspentOutput.script = Hex.toHexString(outPoint.scriptBytes)
-            unspentOutput.confirmations = outPoint.confirmations
-            unspentOutput.tx_hash = outPoint.txHash.toString()
-            unspentOutput.tx_output_n = outPoint.txOutputN
-            unspentOutput.value = outPoint.value.value
-            unspentOutput.xpub = Xpub()
-            unspentOutput.xpub.path = "M/0/0"
-            val eckey = SendFactory.getPrivKey(outPoint.address, account)
-            val spendFrom = UnspentOutputWithKey(unspentOutput, eckey.privKeyBytes)
-            spendFroms.add(spendFrom)
-        }
+        val spendFroms: MutableCollection<UnspentOutput> = WhirlpoolUtils.getInstance().toUnspentOutputs(tx0.outpoints)
         coroutineContext.launch(Dispatchers.IO) {
-            val tx0Config = whirlpoolWallet.tx0Config
+            val tx0Config = whirlpoolWallet.getTx0Config(tx0FeeTarget, mixFeeTarget)
             tx0Config.changeWallet = WhirlpoolAccount.DEPOSIT
             try {
-                val poolSelected: Pool = whirlpoolWallet.poolSupplier.findPoolById(pool?.poolId)
-                val tx0Preview = whirlpoolWallet.tx0Preview(poolSelected, spendFroms, tx0Config, tx0FeeTarget, mixFeeTarget)
+                val tx0Previews = whirlpoolWallet.tx0Previews(tx0Config, spendFroms)
+                val tx0Preview = tx0Previews.getTx0Preview(pool?.poolId)
                 withContext(Dispatchers.Main) {
                     showLoadingProgress(false)
                     setFees(tx0Preview);

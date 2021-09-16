@@ -4,16 +4,6 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
-
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
@@ -26,11 +16,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.R;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
-import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.PreSelectUtil;
@@ -47,13 +39,12 @@ import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService;
 import com.samourai.wallet.widgets.ViewPager;
 import com.samourai.whirlpool.client.tx0.Tx0;
 import com.samourai.whirlpool.client.tx0.Tx0Config;
-import com.samourai.whirlpool.client.tx0.UnspentOutputWithKey;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
+import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.TransactionOutput;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -61,12 +52,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import java8.util.Optional;
 import kotlin.Unit;
 
 import static android.graphics.Typeface.BOLD;
@@ -305,23 +301,8 @@ public class NewPoolActivity extends AppCompatActivity {
             if (whirlpoolWallet == null) {
                 return true;
             }
-            Collection<UnspentOutputWithKey> spendFroms = new ArrayList<UnspentOutputWithKey>();
+            Collection<UnspentOutput> spendFroms = WhirlpoolUtils.getInstance().toUnspentOutputsCoins(coins);
 
-            for (UTXOCoin coin : coins) {
-                UnspentOutput unspentOutput = new UnspentOutput();
-                unspentOutput.addr = coin.address;
-                unspentOutput.script = Hex.toHexString(coin.getOutPoint().getScriptBytes());
-                unspentOutput.confirmations = coin.getOutPoint().getConfirmations();
-                unspentOutput.tx_hash = coin.getOutPoint().getTxHash().toString();
-                unspentOutput.tx_output_n = coin.getOutPoint().getTxOutputN();
-                unspentOutput.value = coin.amount;
-                unspentOutput.xpub = new UnspentOutput.Xpub();
-                unspentOutput.xpub.path = "M/0/0";
-
-                ECKey eckey = SendFactory.getPrivKey(coin.address, account);
-                UnspentOutputWithKey spendFrom = new UnspentOutputWithKey(unspentOutput, eckey.getPrivKeyBytes());
-                spendFroms.add(spendFrom);
-            }
             if (selectedPoolPriority == PoolCyclePriority.HIGH) {
                 tx0FeeTarget = Tx0FeeTarget.BLOCKS_2;
 
@@ -331,8 +312,8 @@ public class NewPoolActivity extends AppCompatActivity {
             } else if (selectedPoolPriority == PoolCyclePriority.LOW) {
                 tx0FeeTarget = Tx0FeeTarget.BLOCKS_24;
             }
-
-            Tx0Config tx0Config = whirlpoolWallet.getTx0Config();
+            Tx0FeeTarget mixFeeTarget = tx0FeeTarget;
+            Tx0Config tx0Config = whirlpoolWallet.getTx0Config(tx0FeeTarget, mixFeeTarget);
             if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
                 tx0Config.setChangeWallet(WhirlpoolAccount.POSTMIX);
             } else {
@@ -340,9 +321,8 @@ public class NewPoolActivity extends AppCompatActivity {
             }
             try {
                 com.samourai.whirlpool.client.whirlpool.beans.Pool pool = whirlpoolWallet.getPoolSupplier().findPoolById(selectedPoolViewModel.getPoolId());
-//                Tx0FeeTarget mixFeeTarget = Tx0FeeTarget.BLOCKS_12;
-                Tx0FeeTarget mixFeeTarget = tx0FeeTarget;
-                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, pool, tx0Config, tx0FeeTarget, mixFeeTarget);
+
+                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, tx0Config, pool);
                 final String txHash = tx0.getTx().getHashAsString();
                 // tx0 success
                 if (tx0.getChangeOutputs() != null && !tx0.getChangeOutputs().isEmpty()) {

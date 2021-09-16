@@ -103,7 +103,7 @@ public class CycleDetail extends AppCompatActivity {
         try {
             for (WhirlpoolUtxo utxo : whirlpoolWallet.getUtxoSupplier().findUtxos(WhirlpoolAccount.PREMIX)) {
                 if (utxo.getUtxo().toString().equals(hash)) {
-                    getSupportActionBar().setTitle(utxo.getPoolId());
+                    getSupportActionBar().setTitle(utxo.getUtxoState().getPoolId());
                     whirlpoolUtxo = utxo;
                     makeTxNetworkRequest();
                     transactionId.setText(utxo.getUtxo().tx_hash);
@@ -158,7 +158,7 @@ public class CycleDetail extends AppCompatActivity {
             if (whirlpoolUtxoState.getMixProgress() != null) {
                 MixStep step = whirlpoolUtxoState.getMixProgress().getMixStep();
 
-                cycleProgress.setProgress(whirlpoolUtxoState.getMixProgress().getProgressPercent());
+                cycleProgress.setProgress(step.getProgressPercent());
 
                 if (step == MixStep.CONFIRMED_INPUT || whirlpoolUtxoState.getStatus() == WhirlpoolUtxoStatus.MIX_QUEUE) {
                     enableBlockChainConfirm(true);

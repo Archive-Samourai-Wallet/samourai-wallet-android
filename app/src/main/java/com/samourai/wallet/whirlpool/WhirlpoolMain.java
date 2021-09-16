@@ -364,11 +364,7 @@ public class WhirlpoolMain extends AppCompatActivity {
             if (whirlpoolWallet == null) {
                 return;
             }
-            try {
-                whirlpoolWallet.getUtxoSupplier().expire();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            whirlpoolWallet.refreshUtxos();
             new Handler().postDelayed(() -> {
                 Intent intent = new Intent(this, JobRefreshService.class);
                 intent.putExtra("notifTx", false);
