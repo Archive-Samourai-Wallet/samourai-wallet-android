@@ -62,6 +62,7 @@ import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.send.SweepUtil;
+import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.FormatsUtil;
@@ -203,7 +204,7 @@ public class OpenDimeActivity extends SamouraiActivity {
             public void onClick(View v) {
 
                 if(strAddress != null)    {
-                    String blockExplorer = "https://m.oxt.me/address/";
+                    String blockExplorer = TorManager.INSTANCE.isRequired() ? "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/address/" : "https://m.oxt.me/address/";
                     if (SamouraiWallet.getInstance().isTestNet()) {
                         blockExplorer = "https://blockstream.info/testnet/address/";
                     }

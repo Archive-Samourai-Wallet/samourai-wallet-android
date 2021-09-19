@@ -1384,7 +1384,7 @@ public class BalanceActivity extends SamouraiActivity {
 
         if (strHash != null) {
 
-            String blockExplorer = "https://m.oxt.me/transaction/";
+            String blockExplorer = TorManager.INSTANCE.isRequired() ? "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/address/" : "https://m.oxt.me/address/";
             if (SamouraiWallet.getInstance().isTestNet()) {
                 blockExplorer = "https://blockstream.info/testnet/";
             }
