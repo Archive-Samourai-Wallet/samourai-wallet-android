@@ -64,6 +64,7 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.send.SweepUtil;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.BlockExplorerUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.MessageSignUtil;
@@ -204,10 +205,7 @@ public class OpenDimeActivity extends SamouraiActivity {
             public void onClick(View v) {
 
                 if(strAddress != null)    {
-                    String blockExplorer = TorManager.INSTANCE.isRequired() ? "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/address/" : "https://m.oxt.me/address/";
-                    if (SamouraiWallet.getInstance().isTestNet()) {
-                        blockExplorer = "https://blockstream.info/testnet/address/";
-                    }
+                    String blockExplorer = BlockExplorerUtil.getInstance().getUri(false);
 
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + strAddress));
                     startActivity(browserIntent);

@@ -40,6 +40,7 @@ import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.util.BlockExplorerUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
@@ -634,10 +635,8 @@ public class UTXODetailsActivity extends SamouraiActivity {
     }
 
     private void viewInExplorer() {
-        String blockExplorer = TorManager.INSTANCE.isRequired() ? "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/transaction/" : "https://m.oxt.me/transaction/";
-        if (SamouraiWallet.getInstance().isTestNet()) {
-            blockExplorer = "https://blockstream.info/testnet/";
-        }
+        String blockExplorer = BlockExplorerUtil.getInstance().getUri(true);
+
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + hash));
         startActivity(browserIntent);
     }

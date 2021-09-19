@@ -34,6 +34,7 @@ import com.samourai.wallet.send.boost.CPFPTask
 import com.samourai.wallet.send.boost.RBFTask
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.tor.TorManager.isRequired
+import com.samourai.wallet.util.BlockExplorerUtil
 import com.samourai.wallet.util.DateUtil
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.widgets.CircleImageView
@@ -351,18 +352,9 @@ class TxDetailsActivity : SamouraiActivity() {
      * Opens external BlockExplorer
      */
     private fun doExplorerView() {
-        var blockExplorer = ""
+        var blockExplorer = BlockExplorerUtil.getInstance().getUri(true)
 
-        if(TorManager.isRequired()) {
-            blockExplorer = "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/transaction/"
-        }
-        else {
-            blockExplorer = "https://m.oxt.me/transaction/"
-        }
 
-        if (SamouraiWallet.getInstance().isTestNet) {
-            blockExplorer = "https://blockstream.info/testnet/"
-        }
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + tx!!.hash))
         startActivity(browserIntent)
     }

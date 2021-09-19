@@ -86,6 +86,7 @@ import com.samourai.wallet.settings.SettingsActivity;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.tx.TxDetailsActivity;
 import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.BlockExplorerUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
@@ -1384,10 +1385,8 @@ public class BalanceActivity extends SamouraiActivity {
 
         if (strHash != null) {
 
-            String blockExplorer = TorManager.INSTANCE.isRequired() ? "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/address/" : "https://m.oxt.me/address/";
-            if (SamouraiWallet.getInstance().isTestNet()) {
-                blockExplorer = "https://blockstream.info/testnet/";
-            }
+            String blockExplorer = BlockExplorerUtil.getInstance().getUri(true);
+
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + strHash));
             startActivity(browserIntent);
         }
