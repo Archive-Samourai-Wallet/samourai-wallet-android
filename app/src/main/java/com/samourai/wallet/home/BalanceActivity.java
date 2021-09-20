@@ -46,7 +46,7 @@ import androidx.transition.TransitionManager;
 import com.dm.zbar.android.scanner.ZBarConstants;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.progressindicator.ProgressIndicator;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.R;
 import com.samourai.wallet.ReceiveActivity;
@@ -94,7 +94,7 @@ import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.PrivKeyReader;
 import com.samourai.wallet.util.TimeOutUtil;
 import com.samourai.wallet.utxos.UTXOSActivity;
-import com.samourai.wallet.whirlpool.WhirlpoolMain;
+import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService;
 import com.samourai.wallet.widgets.ItemDividerDecorator;
@@ -135,7 +135,7 @@ public class BalanceActivity extends SamouraiActivity {
 
     private List<Tx> txs = null;
     private RecyclerView TxRecyclerView;
-    private ProgressIndicator progressBar;
+    private LinearProgressIndicator progressBar;
     private BalanceViewModel balanceViewModel;
 
     private RicochetQueueTask ricochetQueueTask = null;
@@ -324,7 +324,7 @@ public class BalanceActivity extends SamouraiActivity {
 
         setSupportActionBar(toolbar);
         TxRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        Drawable drawable = this.getResources().getDrawable(R.drawable.divider);
+        Drawable drawable = ContextCompat.getDrawable(this,R.drawable.divider_grey);
         TxRecyclerView.addItemDecoration(new ItemDividerDecorator(drawable));
         menuFab = findViewById(R.id.fab_menu);
         txs = new ArrayList<>();
@@ -336,7 +336,7 @@ public class BalanceActivity extends SamouraiActivity {
         boolean is_sat_prefs = PrefsUtil.getInstance(BalanceActivity.this).getValue(PrefsUtil.IS_SAT, false);
 
         findViewById(R.id.whirlpool_fab).setOnClickListener(view -> {
-            Intent intent = new Intent(BalanceActivity.this, WhirlpoolMain.class);
+            Intent intent = new Intent(BalanceActivity.this, WhirlpoolHome.class);
             startActivity(intent);
             menuFab.toggle(true);
         });
@@ -361,7 +361,7 @@ public class BalanceActivity extends SamouraiActivity {
             try    {
                 setBalance(payload.getLong("prev_balance"), is_sat_prefs);
             }
-            catch(Exception e)    {
+            catch(Exception e)    { 
                 setBalance(0L, is_sat_prefs);
             }
         }
@@ -516,8 +516,7 @@ public class BalanceActivity extends SamouraiActivity {
 
     private void initViewModel() {
         TxAdapter adapter = new TxAdapter(getApplicationContext(), new ArrayList<>(), account);
-        adapter.setHasStableIds(true);
-        adapter.setClickListener((position, tx) -> txDetails(tx));
+         adapter.setClickListener((position, tx) -> txDetails(tx));
 
         TxRecyclerView.setAdapter(adapter);
 
