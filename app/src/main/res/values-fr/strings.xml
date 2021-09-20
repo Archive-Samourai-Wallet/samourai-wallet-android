@@ -986,6 +986,10 @@
 
 <string name="api_key_blank_error">Champ requis !</string>
 
+<string name="please_try_again_in">Veuillez réessayer dans</string>
+<string name="seconds">secondes</string>
+
+<string name="insufficient_amount_for_fee">Solde insuffisant pour couvrir les frais sélectionnés. Veuillez réessayer et changer le montant de la dépense ou utiliser la totalité du solde.</string>
 
 
 </resources>
