@@ -171,7 +171,7 @@ class MixListFragment : Fragment() {
             if (wallet != null) {
                 binding.mixSwipeContainer.isRefreshing = true;
                 viewModel.viewModelScope.launch(Dispatchers.IO) {
-                    wallet.refreshUtxos(true)
+                    wallet.refreshUtxos()
                     withContext(Dispatchers.Main) {
                         binding.mixSwipeContainer.isRefreshing = false;
                     }

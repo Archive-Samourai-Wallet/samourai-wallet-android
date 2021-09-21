@@ -36,7 +36,7 @@ public class AndroidCahootsWallet extends CahootsWallet {
 
     @Override
     public int fetchPostChangeIndex() {
-        return addressFactory.getIndex(WALLET_INDEX.POSTMIX_CHANGE, false);
+        return addressFactory.getHighestPostChangeIdx();
     }
 
     @Override

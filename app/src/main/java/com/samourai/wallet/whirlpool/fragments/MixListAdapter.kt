@@ -34,7 +34,7 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
                 viewBinding.mixProgressMessage.visibility = View.VISIBLE
                 viewBinding.mixProgressMessage.text = utxoState.mixProgress.mixStep.message
                 progressbar.visibility = View.VISIBLE
-                progressbar.progress = utxoState.mixProgress.progressPercent
+                progressbar.progress = utxoState.mixProgress.mixStep.progressPercent
             } else {
                 progressbar.visibility = View.GONE
                 viewBinding.mixProgressMessage.visibility = View.GONE

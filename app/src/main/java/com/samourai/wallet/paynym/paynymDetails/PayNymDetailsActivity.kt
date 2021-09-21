@@ -436,7 +436,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         scope.launch(Dispatchers.IO) {
             val torManager = TorManager
             val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.WebUtil.getInstance(applicationContext), torManager)
-            val xManagerClient = XManagerClient(SamouraiWallet.getInstance().isTestNet, torManager.isConnected(), httpClient)
+            val xManagerClient = XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet, torManager.isConnected())
             val address = xManagerClient.getAddressOrDefault(XManagerService.BIP47)
             SendNotifTxFactory.getInstance().setAddress(address)
             //

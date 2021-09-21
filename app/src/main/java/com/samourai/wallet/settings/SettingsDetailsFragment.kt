@@ -23,10 +23,12 @@ import androidx.transition.Transition
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.*
 import com.samourai.wallet.access.AccessFactory
+import com.samourai.wallet.api.backend.MinerFeeTarget
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
+import com.samourai.wallet.hd.Chain
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.payload.ExternalBackupManager
@@ -40,6 +42,7 @@ import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
+import com.samourai.whirlpool.client.utils.ClientUtils
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
@@ -736,7 +739,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         val builder = StringBuilder()
         val utxo = whirlpoolUtxo.utxo
         builder.append("[").append(utxo.tx_hash).append(":").append(utxo.tx_output_n).append("] ").append(utxo.value.toString() + "sats").append(", ").append(utxo.confirmations).append("confs")
-        builder.append(", ").append(if (whirlpoolUtxo.poolId != null) whirlpoolUtxo.poolId else "no pool")
+        builder.append(", ").append(if (whirlpoolUtxo.utxoState.poolId != null) whirlpoolUtxo.utxoState.poolId else "no pool")
         builder.append(", ").append(whirlpoolUtxo.mixsDone.toString()).append(" mixed")
         builder.append(", ").append(whirlpoolUtxo.account).append(", ").append(whirlpoolUtxo.utxo.path)
         builder.append(", ").append(whirlpoolUtxo.utxoState)
@@ -754,6 +757,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         } else {
             val SEPARATOR = "---------------------------\n"
             val mixingState = whirlpoolWallet.mixingState
+            val walletSupplier = whirlpoolWallet.walletSupplier
             builder.append("""
     WHIRLPOOL IS ${if (mixingState.isStarted) "RUNNING" else "STOPPED"}
     
@@ -776,35 +780,66 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
     """.trimIndent())
                 }
             }
+            builder.append("Total = "+ ClientUtils.satToBtc(whirlpoolWallet.utxoSupplier.balanceTotal)+"btc");
+            builder.append("Updated = "+whirlpoolWallet.utxoSupplier.lastUpdate);
 
             // wallet state
-            builder.append("WALLET STATE\n");
-            builder.append(whirlpoolWallet.walletSupplier.walletStateSupplier.value.toString()+"\n")
+            builder.append("# WALLETS\n");
+            for (account in WhirlpoolAccount.values()) {
+                for (addressType in account.getAddressTypes()) {
+                    builder.append("- WALLET[$account][$addressType]:\n");
+                    val wallet = walletSupplier.getWallet(account, addressType);
+                    builder.append("pub = "+wallet.pub+"\n");
 
-            // premix
-            builder.append("\n")
-            val premixs = whirlpoolWallet.utxoSupplier.findUtxos(WhirlpoolAccount.PREMIX)
-            builder.append("""${premixs.size} PREMIXS
-""")
-            builder.append(SEPARATOR)
-            for (whirlpoolUtxo in premixs) {
-                builder.append("* ").append("""
-    ${utxoToString(whirlpoolUtxo)}
-    
-    """.trimIndent())
+                    for (chain in Chain.values()) {
+                        var indexHandler =
+                            whirlpoolWallet.walletStateSupplier.getIndexHandlerWallet(
+                                account,
+                                addressType,
+                                chain
+                            );
+                        var index = indexHandler.get();
+                        builder.append(""+chain+"_INDEX = "+index+"\n");
+                    }
+
+                    val utxos = whirlpoolWallet.utxoSupplier.findUtxos(addressType, account)
+                    builder.append(""+utxos.size+" utxos\n");
+                    builder.append(SEPARATOR)
+                }
             }
 
-            // postmix
-            builder.append("\n")
-            val postmixs = whirlpoolWallet.utxoSupplier.findUtxos(WhirlpoolAccount.POSTMIX)
-            builder.append("""${postmixs.size} POSTMIXS
-""")
-            builder.append(SEPARATOR)
-            for (whirlpoolUtxo in postmixs) {
-                builder.append("* ").append("""
+            // chain
+            builder.append("# LATEST BLOCK\n");
+            val latestBlock = whirlpoolWallet.chainSupplier.latestBlock;
+            builder.append("height="+latestBlock.height+"\n");
+            builder.append("hash="+latestBlock.hash+"\n");
+            builder.append("time="+latestBlock.time+"\n");
+
+            // chain
+            builder.append("# MINER FEE\n");
+            val minerFeeSupplier = whirlpoolWallet.minerFeeSupplier;
+            for (minerFeeTarget in MinerFeeTarget.values()) {
+                val value = minerFeeSupplier.getFee(minerFeeTarget);
+                builder.append("FEE[$minerFeeTarget]=$value\n");
+            }
+
+            // utxos
+            builder.append("# UTXOS\n");
+            for (account in WhirlpoolAccount.values()) {
+                for (addressType in account.getAddressTypes()) {
+                    val utxos = whirlpoolWallet.utxoSupplier.findUtxos(addressType, account)
+                    builder.append("- UTXOS[$account][$addressType] (" + utxos.size + "):\n");
+
+                    for (whirlpoolUtxo in utxos) {
+                        builder.append("* ").append(
+                            """
     ${utxoToString(whirlpoolUtxo)}
     
-    """.trimIndent())
+    """.trimIndent()
+                        )
+                    }
+                    builder.append(SEPARATOR)
+                }
             }
         }
         MaterialAlertDialogBuilder(requireContext())

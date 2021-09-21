@@ -30,6 +30,7 @@ public class UTXOFactory {
     private static HashMap<String, UTXO> postMix_toxic = null;
     private static HashMap<String, UTXO> preMix = null;
     private static HashMap<String, UTXO> badBank = null;
+    private static long lastUpdate = 0;
 
     private UTXOFactory() {
         ;
@@ -166,6 +167,7 @@ public class UTXOFactory {
                 p2pkh_clean.put(script, utxo);
             }
         }
+        onChange();
     }
 
     public void addP2SH_P2WPKH(String hash, int id, String script, UTXO utxo) {
@@ -176,6 +178,7 @@ public class UTXOFactory {
                 p2sh_p2wpkh_clean.put(script, utxo);
             }
         }
+        onChange();
     }
 
     public void addP2WPKH(String hash, int id, String script, UTXO utxo) {
@@ -186,6 +189,7 @@ public class UTXOFactory {
                 p2wpkh_clean.put(script, utxo);
             }
         }
+        onChange();
     }
 
     public void addPostMix(String hash, int id, String script, UTXO utxo) {
@@ -196,14 +200,17 @@ public class UTXOFactory {
                 postMix_clean.put(script, utxo);
             }
         }
+        onChange();
     }
 
     public void addPreMix(String hash, int id, String script, UTXO utxo) {
         preMix.put(script, utxo);
+        onChange();
     }
 
     public void addBadBank(String hash, int id, String script, UTXO utxo) {
         badBank.put(script, utxo);
+        onChange();
     }
 
     public long getTotalP2PKHClean() {
@@ -552,4 +559,11 @@ public class UTXOFactory {
 
     }
 
+    private void onChange() {
+        lastUpdate = System.currentTimeMillis();
+    }
+
+    public long getLastUpdate() {
+        return lastUpdate;
+    }
 }

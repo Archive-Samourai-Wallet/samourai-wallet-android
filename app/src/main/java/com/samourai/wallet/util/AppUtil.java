@@ -94,15 +94,10 @@ public class AppUtil {
 
         try  {
             HD_Wallet bip84w = BIP84Util.getInstance(context).getWallet();
-            String strIdentifier84 = WhirlpoolUtils.getInstance().computeWalletIdentifier(bip84w);
-            File whirlpoolUtxos = WhirlpoolUtils.getInstance().computeUtxosFile(strIdentifier84, context);
-            whirlpoolUtxos.delete();
-            File whirlpoolIndexes = WhirlpoolUtils.getInstance().computeIndexFile(strIdentifier84, context);
-            whirlpoolIndexes.delete();
+            WhirlpoolUtils.getInstance().wipe(bip84w, context);
         }
         catch(Exception e) {
             e.printStackTrace();
-            ;
         }
 /*
         try {

@@ -21,18 +21,20 @@ public class AndroidWalletStateIndexHandler extends AbstractIndexHandler {
 
   @Override
   public int get() {
-    int idx = addressFactory.getAddress(walletIndex, false).getLeft();
+    // TODO zl !!! int idx = addressFactory.getAddress(walletIndex).getLeft();
+    int idx = 0;
     return idx;
   }
 
   @Override
   public synchronized int getAndIncrement() {
-    int idx = addressFactory.getAddress(walletIndex, true).getLeft();
+    // TODO zl !!! int idx = addressFactory.getAddressAndIncrement(walletIndex).getLeft();
+    int idx = 0;
     return idx;
   }
 
   @Override
   public synchronized void set(int value) {
-    addressFactory.setIndex(walletIndex, value);
+    // TODO zl !!! addressFactory.restoreIndex(walletIndex, value);
   }
 }

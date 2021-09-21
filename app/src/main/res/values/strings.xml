@@ -888,5 +888,6 @@
     <string name="pool">Pool</string>
     <string name="mix_message">Mix Message</string>
     <string name="mix_error">Mix Error</string>
+    <string name="mix_utxos">Mix UTXOs</string>
 
 </resources>

@@ -755,7 +755,7 @@ public class SendActivity extends SamouraiActivity {
     private Completable setUpRicochetFees() {
         TorManager torManager = TorManager.INSTANCE;
         IHttpClient httpClient = new AndroidHttpClient(WebUtil.getInstance(getApplicationContext()), torManager);
-        XManagerClient xManagerClient = new XManagerClient(SamouraiWallet.getInstance().isTestNet(), torManager.isConnected(), httpClient);
+        XManagerClient xManagerClient = new XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet(), torManager.isConnected());
         if (PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_RICOCHET, false)) {
             Completable completable = Completable.fromCallable(() -> {
                 String feeAddress = xManagerClient.getAddressOrDefault(XManagerService.RICOCHET);

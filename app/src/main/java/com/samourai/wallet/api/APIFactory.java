@@ -114,6 +114,7 @@ public class APIFactory {
     public BehaviorSubject<Long> walletBalanceObserver = BehaviorSubject.create();
     private static long latest_block_height = -1L;
     private static String latest_block_hash = null;
+    private static long latest_block_time = -1L;
 
     private int last44ReceiveIdx = 0;
     private int last44ChangeIdx = 0;
@@ -650,6 +651,9 @@ public class APIFactory {
                     if(blockObj.has("hash"))  {
                         latest_block_hash = blockObj.getString("hash");
                     }
+                    if(blockObj.has("time"))  {
+                        latest_block_time = blockObj.getLong("time");
+                    }
                 }
             }
 
@@ -1038,6 +1042,14 @@ public class APIFactory {
         return latest_block_height;
     }
 
+    public String getLatestBlockHash() {
+        return latest_block_hash;
+    }
+
+    public long getLatestBlockTime() {
+        return latest_block_time;
+    }
+
     public JSONObject getNotifTx(String hash, String addr) {
 
         String _url =  WebUtil.getAPIUrl(context);
@@ -1383,8 +1395,7 @@ public class APIFactory {
                         }
 
                         // Construct the output
-                        MyTransactionOutPoint outPoint = new MyTransactionOutPoint(SamouraiWallet.getInstance().getCurrentNetworkParams(), txHash, txOutputN, value, scriptBytes, address);
-                        outPoint.setConfirmations(confirmations);
+                        MyTransactionOutPoint outPoint = new MyTransactionOutPoint(SamouraiWallet.getInstance().getCurrentNetworkParams(), txHash, txOutputN, value, scriptBytes, address, confirmations);
 
                         if(utxos.containsKey(script))    {
                             utxos.get(script).getOutpoints().add(outPoint);
@@ -1780,7 +1791,6 @@ public class APIFactory {
             if (mixMultiAddrObj != null)    {
                 parseMixXPUB(mixMultiAddrObj);
                 parseMixUnspentOutputs(mixMultiAddrObj.toString());
-                AndroidWhirlpoolWalletService.getInstance().setWhirlpoolWalletResponse(mixMultiAddrObj);
             }
 
             //
@@ -2269,8 +2279,7 @@ public class APIFactory {
                         }
 
                         // Construct the output
-                        MyTransactionOutPoint outPoint = new MyTransactionOutPoint(SamouraiWallet.getInstance().getCurrentNetworkParams(), txHash, txOutputN, value, scriptBytes, address);
-                        outPoint.setConfirmations(confirmations);
+                        MyTransactionOutPoint outPoint = new MyTransactionOutPoint(SamouraiWallet.getInstance().getCurrentNetworkParams(), txHash, txOutputN, value, scriptBytes, address, confirmations);
                         if(utxo == null)    {
                             utxo = new UTXO();
                         }
@@ -2614,8 +2623,7 @@ public class APIFactory {
                         }
 
                         // Construct the output
-                        MyTransactionOutPoint outPoint = new MyTransactionOutPoint(SamouraiWallet.getInstance().getCurrentNetworkParams(), txHash, txOutputN, value, scriptBytes, address);
-                        outPoint.setConfirmations(confirmations);
+                        MyTransactionOutPoint outPoint = new MyTransactionOutPoint(SamouraiWallet.getInstance().getCurrentNetworkParams(), txHash, txOutputN, value, scriptBytes, address, confirmations);
 
                         if(account_type == XPUB_POSTMIX)    {
                             if(utxosPostMix.containsKey(script))    {

@@ -42,9 +42,7 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
         }
         if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
             val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get()
-            val whirlpoolUtxo = wallet.utxoSupplier.utxos.find {
-                it.utxo.tx_hash == hash && it.utxo.tx_output_n == outputN
-            }
+            val whirlpoolUtxo = wallet.utxoSupplier.findUtxo(hash, outputN)
             if (whirlpoolUtxo == null) {
                 this.dismiss()
                 return
@@ -68,7 +66,7 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
 
     private fun setMixState(whirlpoolUtxo: WhirlpoolUtxo) {
         binding.mixAmount.text = FormatsUtil.formatBTC(whirlpoolUtxo.utxo.value)
-        binding.mixPool.text = whirlpoolUtxo.poolId
+        binding.mixPool.text = whirlpoolUtxo.utxoState.poolId
         binding.mixTxConfirmation.text = "${whirlpoolUtxo.utxo.confirmations}"
         binding.mixesDone.text = "${whirlpoolUtxo.mixsDone}"
 
@@ -86,7 +84,7 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
                 }else{
                     binding.mixProgressBar.setIndicatorColor(ContextCompat.getColor(requireContext(), R.color.green_ui_2))
                     binding.mixProgressContainer.visibility = View.VISIBLE
-                    binding.mixProgressBar.setProgressCompat(mixProgress.progressPercent, true)
+                    binding.mixProgressBar.setProgressCompat(mixProgress.mixStep.progressPercent, true)
                 }
             }else{
                 binding.mixProgressContainer.visibility = View.GONE
