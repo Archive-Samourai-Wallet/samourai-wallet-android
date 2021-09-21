@@ -887,6 +887,8 @@
     <string name="mixes_completed">Mixes completed</string>
     <string name="pool">Pool</string>
     <string name="mix_message">Mix Message</string>
+    <string name="toxic_change">Toxic change</string>
     <string name="mix_error">Mix Error</string>
+    <string name="mix_utxos">Mix UTXOs</string>
 
 </resources>
