@@ -60,7 +60,9 @@ import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.psbt.PSBTUtil;
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
+import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
 import com.samourai.wallet.ricochet.RicochetActivity;
@@ -95,6 +97,7 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
@@ -1194,13 +1197,18 @@ public class SendActivity extends SamouraiActivity {
 
         address = strDestinationBTCAddress == null ? toAddressEditText.getText().toString().trim() : strDestinationBTCAddress;
 
-        if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+        boolean useLikeType = PrefsUtil.getInstance(SendActivity.this).getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true);
+        if (DojoUtil.getInstance(SendActivity.this).getDojoParams() != null && !DojoUtil.getInstance(SendActivity.this).isLikeType()) {
+            useLikeType = false;
+        }
+
+        if (!useLikeType) {
             changeType = 84;
-        } else if (PrefsUtil.getInstance(SendActivity.this).getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true) == false) {
-            changeType = 84;
-        } else if (FormatsUtil.getInstance().isValidBech32(address) || Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
+        }
+        else if (FormatsUtil.getInstance().isValidBech32(address) || Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
             changeType = FormatsUtil.getInstance().isValidBech32(address) ? 84 : 49;
-        } else {
+        }
+        else {
             changeType = 44;
         }
 
@@ -1209,11 +1217,14 @@ public class SendActivity extends SamouraiActivity {
 
         if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
             change_index = idxBIP84PostMixInternal;
-        } else if (changeType == 84) {
+        }
+        else if (changeType == 84) {
             change_index = idxBIP84Internal;
-        } else if (changeType == 49) {
+        }
+        else if (changeType == 49) {
             change_index = idxBIP49Internal;
-        } else {
+        }
+        else {
             change_index = idxBIP44Internal;
         }
 
@@ -1855,16 +1866,32 @@ public class SendActivity extends SamouraiActivity {
             if (_change > 0L) {
                 if (SPEND_TYPE == SPEND_SIMPLE) {
                     if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, AddressFactory.getInstance(SendActivity.this).getHighestPostChangeIdx()).getBech32AsString();
+                        if(changeType == 44) {
+                            HD_Address hd_addr = BIP84Util.getInstance(SendActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(change_index);
+                            String change_address = hd_addr.getAddressString();
+                            receivers.put(change_address, BigInteger.valueOf(_change));
+                        }
+                        else if(changeType == 49) {
+                            HD_Address hd_addr = BIP84Util.getInstance(SendActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(change_index);
+                            SegwitAddress segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                            String change_address = segwitAddress.getAddressAsString();
+                            receivers.put(change_address, BigInteger.valueOf(_change));
+                        }
+                        else {
+                            String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, change_index).getBech32AsString();
+                            receivers.put(change_address, BigInteger.valueOf(_change));
+                        }
+                    }
+                    else if (changeType == 84) {
+                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, change_index).getBech32AsString();
                         receivers.put(change_address, BigInteger.valueOf(_change));
-                    } else if (changeType == 84) {
-                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getBech32AsString();
+                    }
+                    else if (changeType == 49) {
+                        String change_address = BIP49Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, change_index).getAddressAsString();
                         receivers.put(change_address, BigInteger.valueOf(_change));
-                    } else if (changeType == 49) {
-                        String change_address = BIP49Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getAddressAsString();
-                        receivers.put(change_address, BigInteger.valueOf(_change));
-                    } else {
-                        String change_address = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddressAt(HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddrIdx()).getAddressString();
+                    }
+                    else {
+                        String change_address = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddressAt(change_index).getAddressString();
                         receivers.put(change_address, BigInteger.valueOf(_change));
                     }
 
@@ -2035,13 +2062,16 @@ public class SendActivity extends SamouraiActivity {
                     if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
                         String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, AddressFactory.getInstance(SendActivity.this).getHighestPostChangeIdx()).getBech32AsString();
                         _receivers.put(change_address, BigInteger.valueOf(_change));
-                    } else if (changeType == 84) {
+                    }
+                    else if (changeType == 84) {
                         String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getBech32AsString();
                         _receivers.put(change_address, BigInteger.valueOf(_change));
-                    } else if (changeType == 49) {
+                    }
+                    else if (changeType == 49) {
                         String change_address = BIP49Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getAddressAsString();
                         _receivers.put(change_address, BigInteger.valueOf(_change));
-                    } else {
+                    }
+                    else {
                         String change_address = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddressAt(HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddrIdx()).getAddressString();
                         _receivers.put(change_address, BigInteger.valueOf(_change));
                     }
@@ -2449,7 +2479,7 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void doSupport() {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://support.samourai.io/section/8-sending-bitcoin"));
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/wallet/usage#send-1"));
         startActivity(intent);
     }
 
