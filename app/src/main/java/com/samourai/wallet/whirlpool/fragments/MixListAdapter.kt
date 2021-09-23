@@ -39,7 +39,7 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
                 progressbar.visibility = View.GONE
                 viewBinding.mixProgressMessage.visibility = View.GONE
             }
-            viewBinding.mixStatus.text = "${utxo.mixsDone} mixes complete"
+            viewBinding.mixStatus.text =  "${utxo.mixsDone} ${viewBinding.root.context.getString(R.string.mixes_complete)}"
 
             when (utxoState.status) {
                 WhirlpoolUtxoStatus.READY -> {
