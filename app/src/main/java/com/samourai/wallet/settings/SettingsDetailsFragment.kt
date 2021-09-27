@@ -766,11 +766,14 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             builder.append("""${mixingState.nbQueued} QUEUED (${mixingState.nbQueuedMustMix}+${mixingState.nbQueuedLiquidity})
 """)
 
+            builder.append("Total = "+ ClientUtils.satToBtc(whirlpoolWallet.utxoSupplier.balanceTotal)+"btc\n");
+            builder.append("Updated = "+whirlpoolWallet.utxoSupplier.lastUpdate+"\n");
+
             // mixing threads
             builder.append("\n")
+            builder.append(SEPARATOR)
             builder.append("""${mixingState.nbMixing} MIXING (${mixingState.nbMixingMustMix}+${mixingState.nbMixingLiquidity})
 """)
-            builder.append(SEPARATOR)
             for (whirlpoolUtxo in mixingState.utxosMixing) {
                 val mixProgress = whirlpoolUtxo.utxoState.mixProgress
                 if (mixProgress != null) {
@@ -780,10 +783,9 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
     """.trimIndent())
                 }
             }
-            builder.append("Total = "+ ClientUtils.satToBtc(whirlpoolWallet.utxoSupplier.balanceTotal)+"btc");
-            builder.append("Updated = "+whirlpoolWallet.utxoSupplier.lastUpdate);
 
             // wallet state
+            builder.append(SEPARATOR)
             builder.append("# WALLETS\n");
             for (account in WhirlpoolAccount.values()) {
                 for (addressType in account.getAddressTypes()) {
@@ -804,11 +806,12 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
                     val utxos = whirlpoolWallet.utxoSupplier.findUtxos(addressType, account)
                     builder.append(""+utxos.size+" utxos\n");
-                    builder.append(SEPARATOR)
+                    builder.append("\n")
                 }
             }
 
             // chain
+            builder.append(SEPARATOR)
             builder.append("# LATEST BLOCK\n");
             val latestBlock = whirlpoolWallet.chainSupplier.latestBlock;
             builder.append("height="+latestBlock.height+"\n");
@@ -816,6 +819,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             builder.append("time="+latestBlock.time+"\n");
 
             // chain
+            builder.append(SEPARATOR)
             builder.append("# MINER FEE\n");
             val minerFeeSupplier = whirlpoolWallet.minerFeeSupplier;
             for (minerFeeTarget in MinerFeeTarget.values()) {
@@ -824,6 +828,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             }
 
             // utxos
+            builder.append(SEPARATOR)
             builder.append("# UTXOS\n");
             for (account in WhirlpoolAccount.values()) {
                 for (addressType in account.getAddressTypes()) {
@@ -838,7 +843,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
     """.trimIndent()
                         )
                     }
-                    builder.append(SEPARATOR)
+                    builder.append("\n")
                 }
             }
         }

@@ -71,7 +71,7 @@ public class AndroidWebSocketsConnectionProvider extends AbstractConnectionProvi
 
             @Override
             public void onWebsocketHandshakeReceivedAsClient(WebSocket conn, ClientHandshake request, @NonNull ServerHandshake response) throws InvalidDataException {
-                Log.d(TAG, "onWebsocketHandshakeReceivedAsClient with response: " + response.getHttpStatus() + " " + response.getHttpStatusMessage());
+                Log.v(TAG, "onWebsocketHandshakeReceivedAsClient with response: " + response.getHttpStatus() + " " + response.getHttpStatusMessage());
                 mServerHandshakeHeaders = new TreeMap<>();
                 Iterator<String> keys = response.iterateHttpFields();
                 while (keys.hasNext()) {
@@ -82,7 +82,7 @@ public class AndroidWebSocketsConnectionProvider extends AbstractConnectionProvi
 
             @Override
             public void onOpen(@NonNull ServerHandshake handshakeData) {
-                Log.d(TAG, "onOpen with handshakeData: " + handshakeData.getHttpStatus() + " " + handshakeData.getHttpStatusMessage());
+                Log.v(TAG, "onOpen with handshakeData: " + handshakeData.getHttpStatus() + " " + handshakeData.getHttpStatusMessage());
                 LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.Type.OPENED);
                 openEvent.setHandshakeResponseHeaders(mServerHandshakeHeaders);
                 emitLifecycleEvent(openEvent);
@@ -90,17 +90,17 @@ public class AndroidWebSocketsConnectionProvider extends AbstractConnectionProvi
 
             @Override
             public void onMessage(String message) {
-                Log.d(TAG, "onMessage: " + message);
+                Log.v(TAG, "onMessage: " + message);
                 emitMessage(message);
             }
 
             @Override
             public void onClose(int code, String reason, boolean remote) {
-                Log.d(TAG, "onClose: code=" + code + " reason=" + reason + " remote=" + remote);
+                Log.v(TAG, "onClose: code=" + code + " reason=" + reason + " remote=" + remote);
                 haveConnection = false;
                 emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.Type.CLOSED));
 
-                Log.d(TAG, "Disconnect after close.");
+                Log.v(TAG, "Disconnect after close.");
                 disconnect();
             }
 
