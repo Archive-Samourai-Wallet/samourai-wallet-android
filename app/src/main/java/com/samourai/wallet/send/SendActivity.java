@@ -1968,6 +1968,9 @@ public class SendActivity extends SamouraiActivity {
 
                                     JSONObject nLockTimeObj = new JSONObject();
                                     nLockTimeObj.put("script", nLockTimeScript);
+                                    if(APIFactory.getInstance(getApplicationContext()).APITokenRequired()){
+                                        nLockTimeObj.put("at", APIFactory.getInstance(getApplicationContext()).getAccessToken());
+                                    }
 
 //                                        Log.d("SendActivity", "Ricochet nLockTime:" + nLockTimeObj.toString());
 

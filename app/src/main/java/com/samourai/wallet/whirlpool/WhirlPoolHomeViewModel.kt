@@ -80,10 +80,6 @@ class WhirlPoolHomeViewModel : ViewModel() {
                     delay(1800)
                     loadUtxos()
                     loadBalances()
-                    Log.i(
-                        "TAGMIX",
-                        "CHNAGE START"
-                    )
                 }
         }
     }
@@ -144,11 +140,6 @@ class WhirlPoolHomeViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.Main) {
             whirlpoolLoading.postValue(loading)
         }
-    }
-
-
-    fun showOnBoarding(): Boolean {
-       return  whirlpoolOnboarded.value!!
     }
 
 

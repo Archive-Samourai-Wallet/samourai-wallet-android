@@ -207,7 +207,6 @@ class MixListFragment : Fragment() {
 
     companion object {
         private const val MIX_TYPE = "MIX_TYPE"
-        private const val TAG = "MixListFragment"
 
         @JvmStatic
         fun newInstance(param1: MixListType) =

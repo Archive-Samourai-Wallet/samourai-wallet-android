@@ -2324,8 +2324,15 @@ public class APIFactory {
                 info("APIFactory", "XPUB:" + args.toString());
                 args.append("&at=");
                 args.append(getAccessToken());
-                if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
-                    args.append("&importPostmixLikeTypeChange=1");
+                if(DojoUtil.getInstance(context).getDojoParams() == null)    {
+                    if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
+                        args.append("&importPostmixLikeTypeChange=1");
+                    }
+                }
+                else    {
+                    if(DojoUtil.getInstance(context).isLikeType() && PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
+                        args.append("&importPostmixLikeTypeChange=1");
+                    }
                 }
                 response = WebUtil.getInstance(context).postURL(_url + "wallet?", args.toString());
                 info("APIFactory", "XPUB response:" + response);
@@ -2335,8 +2342,15 @@ public class APIFactory {
                 args.put("active", StringUtils.join(xpubs, "|"));
                 info("APIFactory", "XPUB:" + args.toString());
                 args.put("at", getAccessToken());
-                if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
-                    args.put("importPostmixLikeTypeChange", "1");
+                if(DojoUtil.getInstance(context).getDojoParams() == null)    {
+                    if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
+                        args.put("importPostmixLikeTypeChange", "1");
+                    }
+                }
+                else    {
+                    if(DojoUtil.getInstance(context).isLikeType() && PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
+                        args.put("importPostmixLikeTypeChange", "1");
+                    }
                 }
                 response = WebUtil.getInstance(context).tor_postURL(_url + "wallet", args);
                 info("APIFactory", "XPUB response:" + response);
@@ -2543,7 +2557,16 @@ public class APIFactory {
             if(isWellFormedMultiAddr(jsonObject))    {
                 try {
                     PayloadUtil.getInstance(context).serializeMultiAddrMix(jsonObject);
-                    PrefsUtil.getInstance(context).setValue(PrefsUtil.XPUBPOSTXREG, true);
+                    if(DojoUtil.getInstance(context).getDojoParams() == null)    {
+                        if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
+                            PrefsUtil.getInstance(context).setValue(PrefsUtil.XPUBPOSTXREG, true);
+                        }
+                    }
+                    else    {
+                        if(DojoUtil.getInstance(context).isLikeType() && PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTXREG, false) == false)    {
+                            PrefsUtil.getInstance(context).setValue(PrefsUtil.XPUBPOSTXREG, true);
+                        }
+                    }
                 }
                 catch(Exception e) {
                     ;
