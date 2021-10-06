@@ -478,7 +478,9 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         showText.setTextIsSelectable(true)
         showText.setPadding(40, 10, 40, 10)
         showText.textSize = 18.0f
-        activity?.getWindow()?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        if(!BuildConfig.FLAVOR.contains("staging")){
+            activity?.getWindow()?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        }
         MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.app_name)
                 .setView(showText)
