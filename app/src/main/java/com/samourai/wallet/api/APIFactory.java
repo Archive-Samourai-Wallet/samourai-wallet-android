@@ -21,6 +21,7 @@ import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
@@ -116,18 +117,6 @@ public class APIFactory {
     private static String latest_block_hash = null;
     private static long latest_block_time = -1L;
 
-    private int last44ReceiveIdx = 0;
-    private int last44ChangeIdx = 0;
-    private int last49ReceiveIdx = 0;
-    private int last49ChangeIdx = 0;
-    private int last84ReceiveIdx = 0;
-    private int last84ChangeIdx = 0;
-    private int lastPreMixReceiveIdx = 0;
-    private int lastPreMixChangeIdx = 0;
-    private int lastPostMixReceiveIdx = 0;
-    private int lastPostMixChangeIdx = 0;
-    private int lastBadBankReceiveIdx = 0;
-    private int lastBadBankChangeIdx = 0;
     private int lastRicochetReceiveIdx = 0;
 
     private static int XPUB_PREMIX = 1;
@@ -559,74 +548,6 @@ public class APIFactory {
         return jsonObject;
     }
 
-    private void setMainWalletIndexes()   {
-
-        if(last84ReceiveIdx > AddressFactory.getInstance(context).getHighestBIP84ReceiveIdx())   {
-            AddressFactory.getInstance().setHighestBIP84ReceiveIdx(last84ReceiveIdx);
-            BIP84Util.getInstance(context).getWallet().getAccount(0).getChain(0).setAddrIdx(last84ReceiveIdx);
-        }
-
-        if(last84ChangeIdx > AddressFactory.getInstance(context).getHighestBIP84ChangeIdx())   {
-            AddressFactory.getInstance().setHighestBIP84ChangeIdx(last84ChangeIdx);
-            BIP84Util.getInstance(context).getWallet().getAccount(0).getChain(1).setAddrIdx(last84ChangeIdx);
-        }
-
-        if(last49ReceiveIdx > AddressFactory.getInstance(context).getHighestBIP49ReceiveIdx())   {
-            AddressFactory.getInstance().setHighestBIP49ReceiveIdx(last49ReceiveIdx);
-            BIP49Util.getInstance(context).getWallet().getAccount(0).getChain(0).setAddrIdx(last49ReceiveIdx);
-        }
-
-        if(last49ChangeIdx > AddressFactory.getInstance(context).getHighestBIP49ChangeIdx())   {
-            AddressFactory.getInstance().setHighestBIP49ChangeIdx(last49ChangeIdx);
-            BIP49Util.getInstance(context).getWallet().getAccount(0).getChain(1).setAddrIdx(last49ChangeIdx);
-        }
-
-        if(last44ReceiveIdx > AddressFactory.getInstance(context).getHighestTxReceiveIdx(0))   {
-            AddressFactory.getInstance().setHighestTxReceiveIdx(0, last44ReceiveIdx);
-            HD_WalletFactory.getInstance(context).get().getAccount(0).getChain(0).setAddrIdx(last44ReceiveIdx);
-        }
-
-        if(last44ChangeIdx > AddressFactory.getInstance(context).getHighestTxChangeIdx(0))   {
-            AddressFactory.getInstance().setHighestTxChangeIdx(0, last44ChangeIdx);
-            HD_WalletFactory.getInstance(context).get().getAccount(0).getChain(1).setAddrIdx(last44ChangeIdx);
-        }
-
-    }
-
-    private void setPreMixWalletIndexes()   {
-        if(lastPreMixReceiveIdx > AddressFactory.getInstance(context).getHighestPreReceiveIdx())   {
-            AddressFactory.getInstance().setHighestPreReceiveIdx(lastPreMixReceiveIdx);
-            BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).getChain(0).setAddrIdx(lastPreMixReceiveIdx);
-        }
-        if(lastPreMixChangeIdx > AddressFactory.getInstance(context).getHighestPreChangeIdx())   {
-            AddressFactory.getInstance().setHighestPreChangeIdx(lastPreMixChangeIdx);
-            BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).getChain(1).setAddrIdx(lastPreMixChangeIdx);
-        }
-    }
-
-    private void setPostMixWalletIndexes()   {
-        if(lastPostMixReceiveIdx > AddressFactory.getInstance(context).getHighestPostReceiveIdx())   {
-            AddressFactory.getInstance().setHighestPostReceiveIdx(lastPostMixReceiveIdx);
-            BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(0).setAddrIdx(lastPostMixReceiveIdx);
-        }
-        if(lastPostMixChangeIdx > AddressFactory.getInstance(context).getHighestPostChangeIdx())   {
-            AddressFactory.getInstance().setHighestPostChangeIdx(lastPostMixChangeIdx);
-            BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(1).setAddrIdx(lastPostMixChangeIdx);
-        }
-    }
-
-    private void setBadBankWalletIndexes()   {
-        if(lastBadBankReceiveIdx > AddressFactory.getInstance(context).getHighestBadBankReceiveIdx())   {
-            AddressFactory.getInstance().setHighestBadBankReceiveIdx(lastBadBankReceiveIdx);
-            BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).getChain(0).setAddrIdx(lastBadBankReceiveIdx);
-        }
-        if(lastBadBankChangeIdx > AddressFactory.getInstance(context).getHighestBadBankChangeIdx())   {
-            AddressFactory.getInstance().setHighestBadBankChangeIdx(lastBadBankChangeIdx);
-            BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).getChain(1).setAddrIdx(lastBadBankChangeIdx);
-        }
-    }
-
-
     private synchronized boolean parseXPUB(JSONObject jsonObject) throws JSONException  {
 
         if(jsonObject != null)  {
@@ -667,29 +588,30 @@ public class APIFactory {
                         if(FormatsUtil.getInstance().isValidXpub((String)addrObj.get("address")))    {
                             xpub_amounts.put((String)addrObj.get("address"), addrObj.getLong("final_balance"));
 
+                            WALLET_INDEX walletIndexReceive = null;
+                            WALLET_INDEX walletIndexChange = null;
                             if(addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccount(0).xpubstr()) ||
                                     addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccount(0).zpubstr()))    {
-                                AddressFactory.getInstance().setHighestBIP84ReceiveIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                AddressFactory.getInstance().setHighestBIP84ChangeIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccount(0).getChain(0).setAddrIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccount(0).getChain(1).setAddrIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
+                                walletIndexReceive = WALLET_INDEX.BIP84_RECEIVE;
+                                walletIndexChange = WALLET_INDEX.BIP84_CHANGE;
                             }
                             else if(addrObj.getString("address").equals(BIP49Util.getInstance(context).getWallet().getAccount(0).xpubstr()) ||
                                     addrObj.getString("address").equals(BIP49Util.getInstance(context).getWallet().getAccount(0).ypubstr()))    {
-                                AddressFactory.getInstance().setHighestBIP49ReceiveIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                AddressFactory.getInstance().setHighestBIP49ChangeIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
-                                BIP49Util.getInstance(context).getWallet().getAccount(0).getChain(0).setAddrIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                BIP49Util.getInstance(context).getWallet().getAccount(0).getChain(1).setAddrIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
+                                walletIndexReceive = WALLET_INDEX.BIP49_RECEIVE;
+                                walletIndexChange = WALLET_INDEX.BIP49_CHANGE;
                             }
                             else if(AddressFactory.getInstance().xpub2account().get((String) addrObj.get("address")) != null)    {
-                                AddressFactory.getInstance().setHighestTxReceiveIdx(AddressFactory.getInstance().xpub2account().get((String) addrObj.get("address")), addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                AddressFactory.getInstance().setHighestTxChangeIdx(AddressFactory.getInstance().xpub2account().get((String)addrObj.get("address")), addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
-
-                                HD_WalletFactory.getInstance(context).get().getAccount(0).getChain(0).setAddrIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                HD_WalletFactory.getInstance(context).get().getAccount(0).getChain(1).setAddrIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
+                                walletIndexReceive = WALLET_INDEX.BIP44_RECEIVE;
+                                walletIndexChange = WALLET_INDEX.BIP44_CHANGE;
                             }
                             else    {
                                 ;
+                            }
+                            if (walletIndexReceive != null) {
+                                AddressFactory.getInstance().setHighestIdx(walletIndexReceive, addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
+                            }
+                            if (walletIndexChange != null) {
+                                AddressFactory.getInstance().setHighestIdx(walletIndexChange, addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
                             }
                         }
                         else    {
@@ -740,9 +662,6 @@ public class APIFactory {
                         }
                     }
                 }
-            }
-            else    {
-                setMainWalletIndexes();
             }
 
             if(jsonObject.has("txs"))  {
@@ -873,9 +792,6 @@ public class APIFactory {
 
             return true;
 
-        }
-        else    {
-            setMainWalletIndexes();
         }
 
         return false;
@@ -1659,18 +1575,6 @@ public class APIFactory {
 
     private synchronized void initWalletAmounts() {
 
-        last44ReceiveIdx = AddressFactory.getInstance(context).getHighestTxReceiveIdx(0);
-        last44ChangeIdx =  AddressFactory.getInstance(context).getHighestTxChangeIdx(0);
-        last49ReceiveIdx =  AddressFactory.getInstance(context).getHighestBIP49ReceiveIdx();
-        last49ChangeIdx =  AddressFactory.getInstance(context).getHighestBIP49ChangeIdx();
-        last84ReceiveIdx =  AddressFactory.getInstance(context).getHighestBIP84ReceiveIdx();
-        last84ChangeIdx =  AddressFactory.getInstance(context).getHighestBIP84ChangeIdx();
-        lastPreMixReceiveIdx =  AddressFactory.getInstance(context).getHighestPreReceiveIdx();
-        lastPreMixChangeIdx =  AddressFactory.getInstance(context).getHighestPreChangeIdx();
-        lastPostMixReceiveIdx =  AddressFactory.getInstance(context).getHighestPostReceiveIdx();
-        lastPostMixChangeIdx =  AddressFactory.getInstance(context).getHighestPostChangeIdx();
-        lastBadBankReceiveIdx =  AddressFactory.getInstance(context).getHighestBadBankReceiveIdx();
-        lastBadBankChangeIdx =  AddressFactory.getInstance(context).getHighestBadBankChangeIdx();
         lastRicochetReceiveIdx =  RicochetMeta.getInstance(context).getIndex();
 
         APIFactory.getInstance(context).reset();
@@ -1844,10 +1748,6 @@ public class APIFactory {
         catch (Exception e) {
             e.printStackTrace();
 
-            setMainWalletIndexes();
-            setPreMixWalletIndexes();
-            setPostMixWalletIndexes();
-            setBadBankWalletIndexes();
             RicochetMeta.getInstance(context).setIndex(lastRicochetReceiveIdx);
         }
         walletInit = true;
@@ -2398,47 +2298,44 @@ public class APIFactory {
                     addrObj = (JSONObject)addressesArray.get(i);
                     if(addrObj != null && addrObj.has("final_balance") && addrObj.has("address"))  {
                         if(FormatsUtil.getInstance().isValidXpub((String)addrObj.get("address")))    {
+                            WALLET_INDEX walletIndexReceive = null;
+                            WALLET_INDEX walletIndexChange = null;
                             if(addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).xpubstr()) ||
                                     addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).zpubstr()))    {
 
                                 xpub_postmix_balance = addrObj.getLong("final_balance");
 
-                                AddressFactory.getInstance().setHighestPostReceiveIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                AddressFactory.getInstance().setHighestPostChangeIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(0).setAddrIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(1).setAddrIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
+                                walletIndexReceive=WALLET_INDEX.POSTMIX_RECEIVE;
+                                walletIndexChange=WALLET_INDEX.POSTMIX_CHANGE;
                             }
                             else if(addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr()) ||
                                     addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).zpubstr()))    {
 
                                 xpub_premix_balance = addrObj.getLong("final_balance");
 
-                                AddressFactory.getInstance().setHighestPreReceiveIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                AddressFactory.getInstance().setHighestPreChangeIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).getChain(0).setAddrIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).getChain(1).setAddrIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
+                                walletIndexReceive=WALLET_INDEX.PREMIX_RECEIVE;
+                                walletIndexChange=WALLET_INDEX.PREMIX_CHANGE;
                             }
                             else if(addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).xpubstr()) ||
                                     addrObj.getString("address").equals(BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).zpubstr()))    {
 
                                 xpub_badbank_balance = addrObj.getLong("final_balance");
 
-                                AddressFactory.getInstance().setHighestBadBankReceiveIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                AddressFactory.getInstance().setHighestBadBankChangeIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).getChain(0).setAddrIdx(addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
-                                BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).getChain(1).setAddrIdx(addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
+                                walletIndexReceive=WALLET_INDEX.BADBANK_RECEIVE;
+                                walletIndexChange=WALLET_INDEX.BADBANK_CHANGE;
                             }
                             else    {
                                 ;
                             }
+                            if (walletIndexReceive != null) {
+                                AddressFactory.getInstance().setHighestIdx(walletIndexReceive, addrObj.has("account_index") ? addrObj.getInt("account_index") : 0);
+                            }
+                            if (walletIndexChange != null) {
+                                AddressFactory.getInstance().setHighestIdx(walletIndexChange, addrObj.has("change_index") ? addrObj.getInt("change_index") : 0);
+                            }
                         }
                     }
                 }
-            }
-            else    {
-                setPreMixWalletIndexes();
-                setPostMixWalletIndexes();
-                setBadBankWalletIndexes();
             }
 
             if(jsonObject.has("txs"))  {
@@ -2575,11 +2472,6 @@ public class APIFactory {
 
             return true;
 
-        }
-        else    {
-            setPreMixWalletIndexes();
-            setPostMixWalletIndexes();
-            setBadBankWalletIndexes();
         }
 
         return false;

@@ -1,14 +1,7 @@
 package com.samourai.wallet.hd;
 
 import android.content.Context;
-//import android.util.Log;
-
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.HDKeyDerivation;
-import org.bitcoinj.crypto.MnemonicCode;
-import org.bitcoinj.crypto.MnemonicException;
+import android.util.Log;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Util;
@@ -20,11 +13,13 @@ import com.samourai.wallet.util.FormatsUtil;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.crypto.MnemonicCode;
+import org.bitcoinj.crypto.MnemonicException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +28,7 @@ import java.util.List;
 //import org.apache.commons.lang.ArrayUtils;
 
 public class HD_WalletFactory	{
+    private static final String TAG = HD_WalletFactory.class.getSimpleName();
 
     public static final String BIP39_ENGLISH_SHA256 = "ad90bf3beb7b0eb7e5acd74727dc0da96e0a280a258354e7293fb7e211ac03db";
 
@@ -83,11 +79,7 @@ public class HD_WalletFactory	{
             hdw = new HD_Wallet(44, mc, params, seed, passphrase, nbAccounts);
         }
 
-        BIP47Util.getInstance(context).reset();
-        BIP49Util.getInstance(context).reset();
-        BIP84Util.getInstance(context).reset();
-        wallets.clear();
-        wallets.add(hdw);
+        set(hdw);
 
         return hdw;
     }
@@ -123,11 +115,7 @@ public class HD_WalletFactory	{
             }
         }
 
-        BIP47Util.getInstance(context).reset();
-        BIP49Util.getInstance(context).reset();
-        BIP84Util.getInstance(context).reset();
-        wallets.clear();
-        wallets.add(hdw);
+        set(hdw);
 
         return hdw;
     }
@@ -193,11 +181,14 @@ public class HD_WalletFactory	{
     }
 
     public void set(HD_Wallet wallet)	{
-
+        Log.d(TAG, "set wallet");
         if(wallet != null)	{
             wallets.clear();
             wallets.add(wallet);
         }
+        BIP47Util.getInstance(context).reset();
+        BIP49Util.getInstance(context).reset();
+        BIP84Util.getInstance(context).reset();
 
     }
 

@@ -34,6 +34,7 @@ import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
@@ -402,21 +403,13 @@ public class TxAnimUIActivity extends AppCompatActivity {
     private void handleResult(boolean isOK, RBFSpend rbf, String strTxHash, String hexTx, Transaction _tx) {
 
         try {
+            WALLET_INDEX changeIndex = WALLET_INDEX.findChangeIndex(SendParams.getInstance().getAccount(), SendParams.getInstance().getChangeType());
             if (isOK) {
                 Toast.makeText(TxAnimUIActivity.this, R.string.tx_sent, Toast.LENGTH_SHORT).show();
 
                 if (SendParams.getInstance().getChangeAmount() > 0L && SendParams.getInstance().getSpendType() == SendActivity.SPEND_SIMPLE) {
-
-                    if (SendParams.getInstance().getAccount() != 0) {
-                        BIP84Util.getInstance(TxAnimUIActivity.this).getWallet().getAccountAt(SendParams.getInstance().getAccount()).getChange().incAddrIdx();
-                        AddressFactory.getInstance(TxAnimUIActivity.this).setHighestPostChangeIdx(SendParams.getInstance().getChangeIdx() + 1);
-                    } else if (SendParams.getInstance().getChangeType() == 84) {
-                        BIP84Util.getInstance(TxAnimUIActivity.this).getWallet().getAccount(0).getChange().incAddrIdx();
-                    } else if (SendParams.getInstance().getChangeType() == 49) {
-                        BIP49Util.getInstance(TxAnimUIActivity.this).getWallet().getAccount(0).getChange().incAddrIdx();
-                    } else {
-                        HD_WalletFactory.getInstance(TxAnimUIActivity.this).get().getAccount(0).getChange().incAddrIdx();
-                    }
+                    // increment change index
+                    AddressFactory.getInstance().increment(changeIndex);
                 }
 
                 if (PrefsUtil.getInstance(TxAnimUIActivity.this).getValue(PrefsUtil.RBF_OPT_IN, false) == true) {
@@ -516,16 +509,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(TxAnimUIActivity.this, R.string.tx_failed, Toast.LENGTH_SHORT).show();
                 // reset change index upon tx fail
-                if (SendParams.getInstance().getAccount() != 0) {
-                    BIP84Util.getInstance(TxAnimUIActivity.this).getWallet().getAccountAt(SendParams.getInstance().getAccount()).getChange().setAddrIdx(SendParams.getInstance().getChangeIdx());
-                    AddressFactory.getInstance(TxAnimUIActivity.this).setHighestPostChangeIdx(SendParams.getInstance().getChangeIdx());
-                } else if (SendParams.getInstance().getChangeType() == 84) {
-                    BIP84Util.getInstance(TxAnimUIActivity.this).getWallet().getAccount(0).getChange().setAddrIdx(SendParams.getInstance().getChangeIdx());
-                } else if (SendParams.getInstance().getChangeType() == 49) {
-                    BIP49Util.getInstance(TxAnimUIActivity.this).getWallet().getAccount(0).getChange().setAddrIdx(SendParams.getInstance().getChangeIdx());
-                } else {
-                    HD_WalletFactory.getInstance(TxAnimUIActivity.this).get().getAccount(0).getChange().setAddrIdx(SendParams.getInstance().getChangeIdx());
-                }
+                AddressFactory.getInstance().setWalletIdx(changeIndex,SendParams.getInstance().getChangeIdx(),true);
             }
         } catch (DecoderException de) {
             Toast.makeText(TxAnimUIActivity.this, "pushTx:" + de.getMessage(), Toast.LENGTH_SHORT).show();

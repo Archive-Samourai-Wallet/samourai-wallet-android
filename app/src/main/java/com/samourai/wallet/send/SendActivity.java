@@ -62,6 +62,7 @@ import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
@@ -2062,22 +2063,9 @@ public class SendActivity extends SamouraiActivity {
             // add change
             if (_change > 0L) {
                 if (SPEND_TYPE == SPEND_SIMPLE) {
-                    if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, AddressFactory.getInstance(SendActivity.this).getHighestPostChangeIdx()).getBech32AsString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
-                    else if (changeType == 84) {
-                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getBech32AsString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
-                    else if (changeType == 49) {
-                        String change_address = BIP49Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getAddressAsString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
-                    else {
-                        String change_address = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddressAt(HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddrIdx()).getAddressString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
+                    WALLET_INDEX walletIndex = WALLET_INDEX.findChangeIndex(account, changeType);
+                    String change_address = AddressFactory.getInstance().getAddress(walletIndex).getRight();
+                    _receivers.put(change_address, BigInteger.valueOf(_change));
                 }
             }
             final Transaction tx = SendFactory.getInstance(getApplication()).makeTransaction(account,
@@ -2526,19 +2514,19 @@ public class SendActivity extends SamouraiActivity {
 
     private void saveChangeIndexes() {
 
-        idxBIP84PostMixInternal = AddressFactory.getInstance(SendActivity.this).getHighestPostChangeIdx();
-        idxBIP84Internal = BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx();
-        idxBIP49Internal = BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx();
-        idxBIP44Internal = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddrIdx();
+        idxBIP84PostMixInternal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.POSTMIX_CHANGE);
+        idxBIP84Internal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.BIP84_CHANGE);
+        idxBIP49Internal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.BIP49_CHANGE);
+        idxBIP44Internal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.BIP44_CHANGE);
 
     }
 
     private void restoreChangeIndexes() {
 
-        AddressFactory.getInstance(SendActivity.this).setHighestPostChangeIdx(idxBIP84PostMixInternal);
-        BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().setAddrIdx(idxBIP84Internal);
-        BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().setAddrIdx(idxBIP49Internal);
-        HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().setAddrIdx(idxBIP44Internal);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.POSTMIX_CHANGE, idxBIP84PostMixInternal, true);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.BIP84_CHANGE, idxBIP84Internal, true);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.BIP49_CHANGE, idxBIP49Internal, true);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.BIP44_CHANGE, idxBIP44Internal, true);
 
     }
 

@@ -12,8 +12,10 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.bip69.BIP69OutputComparator;
+import com.samourai.wallet.hd.AddressType;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
@@ -701,50 +703,29 @@ public class SendFactory	{
         }
 
         if(account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix())    {
-
-            int idx = AddressFactory.getInstance(context).getHighestPostChangeIdx();
-
+            // POSTMIX
+            AddressType forcedAddressType = AddressType.SEGWIT_NATIVE;
             if((type == 44 || type == 49) && useLikeType)    {
-
-                debug("SendFactory", "change index:" + idx);
-
                 if(type == 49)    {
-                    HD_Address hd_addr = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(idx);
-                    SegwitAddress segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                    String change_address = segwitAddress.getAddressAsString();
-                    AddressFactory.getInstance(context).setHighestPostChangeIdx(idx + 1);
-                    return change_address;
+                    forcedAddressType = AddressType.SEGWIT_COMPAT;
                 }
-                else    {
-                    HD_Address hd_addr = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(idx);
-                    String change_address = hd_addr.getAddressString();
-                    AddressFactory.getInstance(context).setHighestPostChangeIdx(idx + 1);
-                    return change_address;
+                else {
+                    forcedAddressType = AddressType.LEGACY;
                 }
-
             }
-            else    {
-                String change_address = BIP84Util.getInstance(context).getAddressAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, idx).getBech32AsString();
-                AddressFactory.getInstance(context).setHighestPostChangeIdx(idx + 1);
-                return change_address;
-            }
-        }
-        else if(type == 84)    {
-            String change_address = BIP84Util.getInstance(context).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(context).getWallet().getAccount(account).getChange().getAddrIdx()).getBech32AsString();
-            BIP84Util.getInstance(context).getWallet().getAccount(account).getChange().incAddrIdx();
-            return change_address;
-        }
-        else if(type == 49)    {
-            String change_address = BIP49Util.getInstance(context).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP49Util.getInstance(context).getWallet().getAccount(0).getChange().getAddrIdx()).getAddressAsString();
-            BIP49Util.getInstance(context).getWallet().getAccount(0).getChange().incAddrIdx();
-            return change_address;
-        }
-        else    {
-            String change_address = HD_WalletFactory.getInstance(context).get().getAccount(0).getChange().getAddressAt(HD_WalletFactory.getInstance(context).get().getAccount(0).getChange().getAddrIdx()).getAddressString();
-            HD_WalletFactory.getInstance(context).get().getAccount(0).getChange().incAddrIdx();
-            return change_address;
+            // get & increment
+            Pair<Integer, String> postmixChange = AddressFactory.getInstance(context).getAddressAndIncrement(WALLET_INDEX.POSTMIX_CHANGE, forcedAddressType);
+            debug("SendFactory", "change index:" + postmixChange.getLeft());
+            return postmixChange.getRight();
         }
 
+        // DEPOSIT
+        WALLET_INDEX walletIndex = WALLET_INDEX.findChangeIndex(0, type);
+
+        // get & increment
+        Pair<Integer, String> change = AddressFactory.getInstance(context).getAddressAndIncrement(walletIndex);
+        debug("SendFactory", "change index:" + change.getLeft());
+        return change.getRight();
     }
 
     public static ECKey getPrivKey(String address, int account)    {

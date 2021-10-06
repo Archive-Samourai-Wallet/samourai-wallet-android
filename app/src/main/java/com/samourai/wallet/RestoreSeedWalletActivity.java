@@ -412,8 +412,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                 Looper.prepare();
                 try {
                     JSONObject json = new JSONObject(decrypted);
-                    HD_Wallet hdw = PayloadUtil.getInstance(RestoreSeedWalletActivity.this).restoreWalletfromJSON(json,skipDojo);
-                    HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).set(hdw);
+                    PayloadUtil.getInstance(RestoreSeedWalletActivity.this).restoreWalletfromJSON(json,skipDojo);
                     String guid = AccessFactory.getInstance(RestoreSeedWalletActivity.this).createGUID();
                     String hash = AccessFactory.getInstance(RestoreSeedWalletActivity.this).getHash(guid, new CharSequenceX(AccessFactory.getInstance(RestoreSeedWalletActivity.this).getPIN()), AESUtil.DefaultPBKDF2Iterations);
                     PrefsUtil.getInstance(RestoreSeedWalletActivity.this).setValue(PrefsUtil.ACCESS_HASH, hash);

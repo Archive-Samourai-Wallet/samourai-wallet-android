@@ -63,36 +63,8 @@ public class JobRefreshService extends JobIntentService {
         APIFactory.getInstance(this.getApplicationContext()).stayingAlive();
         APIFactory.getInstance(this.getApplicationContext()).initWallet();
 
-        try {
-            int acc = 0;
-
-            if (AddressFactory.getInstance().getHighestTxReceiveIdx(acc) > HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getReceive().getAddrIdx()) {
-                HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getReceive().setAddrIdx(AddressFactory.getInstance().getHighestTxReceiveIdx(acc));
-            }
-            if (AddressFactory.getInstance().getHighestTxChangeIdx(acc) > HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getChange().getAddrIdx()) {
-                HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getChange().setAddrIdx(AddressFactory.getInstance().getHighestTxChangeIdx(acc));
-            }
-
-            if (AddressFactory.getInstance().getHighestBIP49ReceiveIdx() > BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().getAddrIdx()) {
-                BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().setAddrIdx(AddressFactory.getInstance().getHighestBIP49ReceiveIdx());
-            }
-            if (AddressFactory.getInstance().getHighestBIP49ChangeIdx() > BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().getAddrIdx()) {
-                BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().setAddrIdx(AddressFactory.getInstance().getHighestBIP49ChangeIdx());
-            }
-
-            if (AddressFactory.getInstance().getHighestBIP84ReceiveIdx() > BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().getAddrIdx()) {
-                BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().setAddrIdx(AddressFactory.getInstance().getHighestBIP84ReceiveIdx());
-            }
-            if (AddressFactory.getInstance().getHighestBIP84ChangeIdx() > BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().getAddrIdx()) {
-                BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().setAddrIdx(AddressFactory.getInstance().getHighestBIP84ChangeIdx());
-            }
-
-        } catch (NullPointerException ioe) {
-            ioe.printStackTrace();
-        } finally {
-            Intent _intent = new Intent("com.samourai.wallet.BalanceFragment.DISPLAY");
-            LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(_intent);
-        }
+        Intent _intentDisplay = new Intent("com.samourai.wallet.BalanceFragment.DISPLAY");
+        LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(_intentDisplay);
 
         PrefsUtil.getInstance(this.getApplicationContext()).setValue(PrefsUtil.FIRST_RUN, false);
 

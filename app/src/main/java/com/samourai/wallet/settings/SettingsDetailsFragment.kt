@@ -30,6 +30,7 @@ import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.hd.Chain
 import com.samourai.wallet.hd.HD_WalletFactory
+import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.payload.ExternalBackupManager
 import com.samourai.wallet.payload.PayloadUtil
@@ -47,8 +48,6 @@ import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import io.matthewnelson.topl_service.TorServiceController
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 import org.apache.commons.io.FileUtils
 import org.bitcoinj.core.Transaction
@@ -56,7 +55,7 @@ import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.bouncycastle.util.encoders.Hex
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.*
+import java.io.IOException
 import java.util.concurrent.CancellationException
 
 
@@ -671,58 +670,23 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
     private fun doIndexes() {
         val builder = StringBuilder()
-        var idxBIP84External = 0
-        var idxBIP84Internal = 0
-        var idxBIP49External = 0
-        var idxBIP49Internal = 0
-        var idxBIP44External = 0
-        var idxBIP44Internal = 0
-        var idxPremixExternal = 0
-        //        int idxPremixInternal = 0;
-        var idxPostmixExternal = 0
-        var idxPostmixInternal = 0
-        idxBIP84External = BIP84Util.getInstance(requireContext()).wallet.getAccount(0).receive.addrIdx
-        idxBIP84Internal = BIP84Util.getInstance(requireContext()).wallet.getAccount(0).change.addrIdx
-        idxBIP49External = BIP49Util.getInstance(requireContext()).wallet.getAccount(0).receive.addrIdx
-        idxBIP49Internal = BIP49Util.getInstance(requireContext()).wallet.getAccount(0).change.addrIdx
-        //        idxPremixExternal = BIP49Util.getInstance(SettingsActivity2.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SettingsActivity2.this).getWhirlpoolPremixAccount()).getReceive().getAddrIdx();
-//        idxPremixInternal = BIP49Util.getInstance(SettingsActivity2.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SettingsActivity2.this).getWhirlpoolPremixAccount()).getChange().getAddrIdx();
-        idxPremixExternal = AddressFactory.getInstance(requireContext()).highestPreReceiveIdx
-        //        idxPremixInternal = AddressFactory.getInstance(SettingsActivity2.this).getHighestPreChangeIdx();
-//        idxPostmixExternal = BIP49Util.getInstance(SettingsActivity2.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SettingsActivity2.this).getWhirlpoolPostmix()).getReceive().getAddrIdx();
-//        idxPostmixInternal = BIP49Util.getInstance(SettingsActivity2.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SettingsActivity2.this).getWhirlpoolPostmix()).getChange().getAddrIdx();
-        idxPostmixExternal = AddressFactory.getInstance(requireContext()).highestPostReceiveIdx
-        idxPostmixInternal = AddressFactory.getInstance(requireContext()).highestPostChangeIdx
-        try {
-            idxBIP44External = HD_WalletFactory.getInstance(requireContext()).get().getAccount(0).receive.addrIdx
-            idxBIP44Internal = HD_WalletFactory.getInstance(requireContext()).get().getAccount(0).change.addrIdx
-        } catch (ioe: IOException) {
-            ioe.printStackTrace()
-            Toast.makeText(requireContext(), "HD wallet error", Toast.LENGTH_SHORT).show()
-        } catch (mle: MnemonicLengthException) {
-            mle.printStackTrace()
-            Toast.makeText(requireContext(), "HD wallet error", Toast.LENGTH_SHORT).show()
+        builder.append("highestIdx ; walletIdx ; hdIdx => index\n");
+
+        for (walletIndex in WALLET_INDEX.values()) {
+            var debugIndex = AddressFactory.getInstance(requireContext()).debugIndex(walletIndex);
+            builder.append("$walletIndex: $debugIndex\n")
         }
-        builder.append("44 receive: $idxBIP44External\n")
-        builder.append("44 change: $idxBIP44Internal\n")
-        builder.append("49 receive: $idxBIP49External\n")
-        builder.append("49 change: $idxBIP49Internal\n")
-        builder.append("84 receive :$idxBIP84External\n")
-        builder.append("84 change :$idxBIP84Internal\n")
         builder.append("""
     Ricochet :${RicochetMeta.getInstance(requireContext()).index}
     
     """.trimIndent())
-        builder.append("Premix receive :$idxPremixExternal\n")
-        //        builder.append("Premix change :" + idxPremixInternal + "\n");
-        builder.append("Postmix receive :$idxPostmixExternal\n")
-        builder.append("Postmix change :$idxPostmixInternal\n")
+
         MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.app_name)
-                .setMessage(builder.toString())
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { dialog, whichButton -> dialog.dismiss() }
-                .show()
+            .setTitle(R.string.app_name)
+            .setMessage(builder.toString())
+            .setCancelable(false)
+            .setPositiveButton(R.string.ok) { dialog, whichButton -> dialog.dismiss() }
+            .show()
     }
 
     private fun doAddressCalc() {
