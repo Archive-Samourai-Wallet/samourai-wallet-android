@@ -52,7 +52,7 @@ public class HD_WalletFactory	{
         return instance;
     }
 
-    public HD_Wallet newWallet(int nbWords, String passphrase, int nbAccounts) throws IOException, MnemonicException.MnemonicLengthException   {
+    public HD_Wallet newWallet(int nbWords, String passphrase) throws IOException, MnemonicException.MnemonicLengthException   {
 
         HD_Wallet hdw = null;
 
@@ -76,7 +76,7 @@ public class HD_WalletFactory	{
 
         MnemonicCode mc = computeMnemonicCode();
         if (mc != null) {
-            hdw = new HD_Wallet(44, mc, params, seed, passphrase, nbAccounts);
+            hdw = new HD_Wallet(44, mc, params, seed, passphrase);
         }
 
         set(hdw);
@@ -84,7 +84,7 @@ public class HD_WalletFactory	{
         return hdw;
     }
 
-    public HD_Wallet restoreWallet(String data, String passphrase, int nbAccounts) throws AddressFormatException, IOException, DecoderException, MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException  {
+    public HD_Wallet restoreWallet(String data, String passphrase) throws AddressFormatException, IOException, DecoderException, MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException  {
 
         HD_Wallet hdw = null;
 
@@ -105,13 +105,13 @@ public class HD_WalletFactory	{
             }
             else if(data.matches(FormatsUtil.HEX) && data.length() % 4 == 0) {
                 seed = Hex.decodeHex(data.toCharArray());
-                hdw = new HD_Wallet(44, mc, params, seed, passphrase, nbAccounts);
+                hdw = new HD_Wallet(44, mc, params, seed, passphrase);
             }
             else {
                 data = data.toLowerCase().replaceAll("[^a-z]+", " ");             // only use for BIP39 English
                 words = Arrays.asList(data.trim().split("\\s+"));
                 seed = mc.toEntropy(words);
-                hdw = new HD_Wallet(44, mc, params, seed, passphrase, nbAccounts);
+                hdw = new HD_Wallet(44, mc, params, seed, passphrase);
             }
         }
 
@@ -140,7 +140,7 @@ public class HD_WalletFactory	{
         if (mc != null) {
             String seed = HD_WalletFactory.getInstance(context).get().getSeedHex();
             String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
-            hdw47 = new BIP47Wallet(47, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase, 1);
+            hdw47 = new BIP47Wallet(47, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase);
         }
 
         return hdw47;
@@ -157,7 +157,7 @@ public class HD_WalletFactory	{
         if (mc != null) {
             String seed = HD_WalletFactory.getInstance(context).get().getSeedHex();
             String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
-            hdw49 = new HD_Wallet(49, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase, 1);
+            hdw49 = new HD_Wallet(49, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase);
         }
 
         return hdw49;
@@ -174,7 +174,7 @@ public class HD_WalletFactory	{
         if (mc != null) {
             String seed = HD_WalletFactory.getInstance(context).get().getSeedHex();
             String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
-            hdw84 = new HD_Wallet(84, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase, 1);
+            hdw84 = new HD_Wallet(84, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase);
         }
 
         return hdw84;

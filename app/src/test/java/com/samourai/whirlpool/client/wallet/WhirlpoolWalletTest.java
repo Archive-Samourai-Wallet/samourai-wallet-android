@@ -124,7 +124,7 @@ public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
         Collection<UnspentOutput> spendFroms = new LinkedList<>();
         SimpleUtxoKeyProvider utxoKeyProvider = new SimpleUtxoKeyProvider();
 
-        ECKey ecKey = bip84w.getAccountAt(0).getChain(0).getAddressAt(61).getECKey();
+        ECKey ecKey = bip84w.getAccount(0).getChain(0).getAddressAt(61).getECKey();
         UnspentOutput unspentOutput = newUnspentOutput(
                 "cc588cdcb368f894a41c372d1f905770b61ecb3fb8e5e01a97e7cedbf5e324ae", 1, 500000000);
         unspentOutput.addr = new SegwitAddress(ecKey, networkParameters).getBech32AsString();

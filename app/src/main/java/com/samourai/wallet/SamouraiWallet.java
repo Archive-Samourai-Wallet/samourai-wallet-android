@@ -20,8 +20,6 @@ public class SamouraiWallet extends SamouraiWalletConst {
     public final static int MIXING_ACCOUNT = 1;
 //    public final static int PUBLIC_ACCOUNT = 2;
 
-    public final static int NB_ACCOUNTS = 1;
-
     public static final BigInteger bFee = BigInteger.valueOf(Coin.parseCoin("0.00015").longValue());
 
     public static final BigInteger RBF_SEQUENCE_VAL_WITH_NLOCKTIME = BigInteger.valueOf(0xffffffffL - 1L);

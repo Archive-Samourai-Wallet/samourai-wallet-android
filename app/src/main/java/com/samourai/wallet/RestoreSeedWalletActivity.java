@@ -467,7 +467,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                 if (create) {
 
                     try {
-                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).newWallet(12, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).newWallet(12, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (MnemonicException.MnemonicLengthException mle) {
@@ -481,7 +481,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                 } else {
 
                     try {
-                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).restoreWallet(seed, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).restoreWallet(seed, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (DecoderException de) {

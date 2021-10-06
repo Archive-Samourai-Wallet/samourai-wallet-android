@@ -37,7 +37,7 @@ public class WhirlpoolUtils {
     }
 
     public String computeWalletIdentifier(HD_Wallet bip84w) {
-        return ClientUtils.sha256Hash(bip84w.getAccountAt(0).zpubstr());
+        return ClientUtils.sha256Hash(bip84w.getAccount(0).zpubstr());
     }
 
     public File computeIndexFile(String walletIdentifier, Context ctx) throws NotifiableException {

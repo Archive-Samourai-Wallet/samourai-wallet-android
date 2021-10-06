@@ -227,9 +227,7 @@ public class PayloadUtil	{
             }
 
             JSONArray accts = new JSONArray();
-            for(HD_Account acct : HD_WalletFactory.getInstance(context).get().getAccounts()) {
-                accts.put(acct.toJSON(44));
-            }
+            accts.put(HD_WalletFactory.getInstance(context).get().getAccount(0).toJSON(44));
             wallet.put("accounts", accts);
 
             //
@@ -261,15 +259,15 @@ public class PayloadUtil	{
             // export Whirlpool accounts for debug payload
             //
             JSONArray whirlpool_account = new JSONArray();
-            JSONObject preObj = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).toJSON(84);
+            JSONObject preObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).toJSON(84);
             preObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.PREMIX_RECEIVE));
             preObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.PREMIX_CHANGE));
             whirlpool_account.put(preObj);
-            JSONObject postObj = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).toJSON(84);
+            JSONObject postObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).toJSON(84);
             postObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.POSTMIX_RECEIVE));
             postObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.POSTMIX_CHANGE));
             whirlpool_account.put(postObj);
-            JSONObject badbankObj = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).toJSON(84);
+            JSONObject badbankObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).toJSON(84);
             badbankObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.BADBANK_RECEIVE));
             badbankObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.BADBANK_CHANGE));
             whirlpool_account.put(badbankObj);
@@ -409,7 +407,7 @@ public class PayloadUtil	{
         byte[] seed = org.apache.commons.codec.binary.Hex.decodeHex(((String) jsonobj.get("seed")).toCharArray());
         String strPassphrase = jsonobj.getString("passphrase");
         MnemonicCode mc = computeMnemonicCode(ctx);
-        return new HD_Wallet(purpose, mc, params, seed, strPassphrase, SamouraiWallet.NB_ACCOUNTS);
+        return new HD_Wallet(purpose, mc, params, seed, strPassphrase);
     }
 
     /***

@@ -200,7 +200,7 @@ public class PSBTUtil {
                 debug("PSBTUtil", "path:" + path);
                 // BIP84Util returns pubkey only, use bip84Wallet to get privkey
                 HD_Wallet bip84Wallet = BIP84Util.getInstance(context).getWallet();
-                HD_Address addr = bip84Wallet.getAccountAt(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
+                HD_Address addr = bip84Wallet.getAccount(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
                 address = new SegwitAddress(addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                 debug("PSBTUtil", "address:" + address.getBech32AsString());
                 eckeyPriv = address.getECKey();

@@ -187,7 +187,7 @@ public class RicochetMeta {
         JSONObject jsonPayload = new JSONObject();
         try {
 
-            String zpub = BIP84Util.getInstance(context).getWallet().getAccountAt(RICOCHET_ACCOUNT).zpubstr();
+            String zpub = BIP84Util.getInstance(context).getWallet().getAccount(RICOCHET_ACCOUNT).zpubstr();
             jsonPayload.put("xpub", zpub);
 
             jsonPayload.put("index", index);
@@ -505,7 +505,7 @@ public class RicochetMeta {
 
     private String getDestinationAddress(int idx) {
 
-        HD_Address hd_addr = BIP84Util.getInstance(context).getWallet().getAccountAt(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(idx);
+        HD_Address hd_addr = BIP84Util.getInstance(context).getWallet().getAccount(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(idx);
         SegwitAddress segwitAddress = new SegwitAddress(hd_addr.getECKey().getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
         String address = segwitAddress.getBech32AsString();
 
@@ -617,7 +617,7 @@ public class RicochetMeta {
             output = new TransactionOutput(SamouraiWallet.getInstance().getCurrentNetworkParams(), null, Coin.valueOf(spendAmount), outputScript.getProgram());
         }
 
-        HD_Address address = BIP84Util.getInstance(context).getWallet().getAccountAt(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(prevIndex);
+        HD_Address address = BIP84Util.getInstance(context).getWallet().getAccount(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(prevIndex);
         ECKey ecKey = address.getECKey();
         SegwitAddress p2wpkh = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
         Script redeemScript = p2wpkh.segWitRedeemScript();

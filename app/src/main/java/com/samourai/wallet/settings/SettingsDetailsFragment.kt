@@ -490,7 +490,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         var xpub = ""
         if((purpose == 44 || purpose == 49) && account == WhirlpoolMeta.getInstance(context).whirlpoolPostmix) {
 
-            var vpub = BIP84Util.getInstance(requireContext()).wallet.getAccountAt(WhirlpoolMeta.getInstance(context).whirlpoolPostmix).zpubstr()
+            var vpub = BIP84Util.getInstance(requireContext()).wallet.getAccount(WhirlpoolMeta.getInstance(context).whirlpoolPostmix).zpubstr()
 
             if(purpose == 49) {
                 xpub = FormatsUtil.xlatXPUB(vpub, true);
@@ -503,7 +503,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         else {
             when (purpose) {
                 49 -> xpub = BIP49Util.getInstance(requireContext()).wallet.getAccount(account).ypubstr()
-                84 -> xpub = BIP84Util.getInstance(requireContext()).wallet.getAccountAt(account).zpubstr()
+                84 -> xpub = BIP84Util.getInstance(requireContext()).wallet.getAccount(account).zpubstr()
                 else -> try {
                     xpub = HD_WalletFactory.getInstance(requireContext()).get().getAccount(account).xpubstr()
                 } catch (ioe: IOException) {

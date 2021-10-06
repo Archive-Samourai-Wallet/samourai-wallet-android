@@ -118,7 +118,7 @@ public class AddressCalcActivity extends SamouraiActivity {
                     }
 
                     if(spType.getSelectedItemPosition() == 1)    {
-                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(0).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(0).getChain(chain).getAddressAt(index);
                         segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     }
                     else if(spType.getSelectedItemPosition() == 2)    {
@@ -126,33 +126,33 @@ public class AddressCalcActivity extends SamouraiActivity {
                         hd_addr = HD_WalletFactory.getInstance(AddressCalcActivity.this).get().getAccount(0).getChain(chain).getAddressAt(index);
                     }
                     else if(spType.getSelectedItemPosition() == 3)    {
-                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(RicochetMeta.getInstance(AddressCalcActivity.this).getRicochetAccount()).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(RicochetMeta.getInstance(AddressCalcActivity.this).getRicochetAccount()).getChain(chain).getAddressAt(index);
                         segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     }
                     else if(spType.getSelectedItemPosition() == 4)    {
-                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPremixAccount()).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPremixAccount()).getChain(chain).getAddressAt(index);
                         segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     }
                     else if(spType.getSelectedItemPosition() == 5)    {
-                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPostmix()).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPostmix()).getChain(chain).getAddressAt(index);
                         segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     }
                     else if(spType.getSelectedItemPosition() == 6)    {
                         segwitAddress = null;
                         chain = 1;
-                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPostmix()).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPostmix()).getChain(chain).getAddressAt(index);
                     }
                     else if(spType.getSelectedItemPosition() == 7)    {
                         chain = 1;
-                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPostmix()).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolPostmix()).getChain(chain).getAddressAt(index);
                         segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     }
                     else if(spType.getSelectedItemPosition() == 8)    {
-                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolBadBank()).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP84Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(AddressCalcActivity.this).getWhirlpoolBadBank()).getChain(chain).getAddressAt(index);
                         segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     }
                     else    {
-                        hd_addr = BIP49Util.getInstance(AddressCalcActivity.this).getWallet().getAccountAt(0).getChain(chain).getAddressAt(index);
+                        hd_addr = BIP49Util.getInstance(AddressCalcActivity.this).getWallet().getAccount(0).getChain(chain).getAddressAt(index);
                         segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     }
 
