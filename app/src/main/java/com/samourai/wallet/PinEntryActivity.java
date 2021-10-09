@@ -92,8 +92,9 @@ public class PinEntryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pinentry);
         this.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-        if (!BuildConfig.DEBUG)
+        if(!BuildConfig.FLAVOR.equals("staging")){
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
         userInput = new StringBuilder();
         pinEntryView = findViewById(R.id.pinentry_view);
         walletStatusTextView = findViewById(R.id.pin_entry_wallet_status);
