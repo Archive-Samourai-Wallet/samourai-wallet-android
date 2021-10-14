@@ -27,7 +27,7 @@ public class Bech32Util {
     }
 
     public boolean isBech32Script(String script) {
-        return isP2WPKHScript(script) || isP2WSHScript(script);
+        return isP2WPKHScript(script) || isP2WSHScript(script) || isP2TRScript(script);
     }
 
     public boolean isP2WPKHScript(String script) {
@@ -38,17 +38,13 @@ public class Bech32Util {
         return script.startsWith("0020") && script.length() == (32 * 2 + 2 * 2);
     }
 
+    public boolean isP2TRScript(String script) {
+        return script.startsWith("5120") && script.length() == (32 * 2 + 2 * 2);
+    }
+
     public String getAddressFromScript(String script) throws Exception    {
-
-        String hrp = null;
-        if(SamouraiWallet.getInstance().getCurrentNetworkParams() instanceof TestNet3Params)    {
-            hrp = "tb";
-        }
-        else    {
-            hrp = "bc";
-        }
-
-        return Bech32Segwit.encode(hrp, (byte)0x00, Hex.decode(script.substring(4).getBytes()));
+        Script _script = new Script(Hex.decode(script));
+        return getAddressFromScript(_script);
     }
 
     public String getAddressFromScript(Script script) throws Exception    {
@@ -65,7 +61,12 @@ public class Bech32Util {
         byte[] scriptBytes = new byte[buf.length - 2];
         System.arraycopy(buf, 2, scriptBytes, 0, scriptBytes.length);
 
-        return Bech32Segwit.encode(hrp, (byte)0x00, scriptBytes);
+        byte ver = (byte)0x00;
+        if(buf[0] == (byte)0x51)    {
+            ver = 0x01;
+        }
+
+        return Bech32Segwit.encode(hrp, ver, scriptBytes);
     }
 
     public TransactionOutput getTransactionOutput(String address, long value) throws Exception    {
