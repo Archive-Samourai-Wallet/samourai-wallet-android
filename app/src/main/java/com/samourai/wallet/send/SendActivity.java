@@ -1567,7 +1567,7 @@ public class SendActivity extends SamouraiActivity {
             for (TransactionOutput output : pair.getRight()) {
                 try {
                     Script script = new Script(output.getScriptBytes());
-                    if (Bech32Util.getInstance().isP2WPKHScript(Hex.toHexString(output.getScriptBytes()))) {
+                    if (Bech32Util.getInstance().isP2WPKHScript(Hex.toHexString(output.getScriptBytes())) || Bech32Util.getInstance().isP2TRScript(Hex.toHexString(output.getScriptBytes()))) {
                         receivers.put(Bech32Util.getInstance().getAddressFromScript(script), BigInteger.valueOf(output.getValue().longValue()));
                     } else {
                         receivers.put(script.getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString(), BigInteger.valueOf(output.getValue().longValue()));
