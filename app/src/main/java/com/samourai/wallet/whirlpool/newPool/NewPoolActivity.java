@@ -349,7 +349,7 @@ public class NewPoolActivity extends AppCompatActivity {
                 final String txHash = tx0.getTx().getHashAsString();
                 // tx0 success
                 if (tx0.getChangeOutputs() != null && !tx0.getChangeOutputs().isEmpty()) {
-                    TransactionOutput changeOutput = tx0.getChangeOutputs().get(0);
+                    TransactionOutput changeOutput = tx0.getChangeOutputs().iterator().next();
                     LogUtil.info("NewPoolActivity", "change:" + changeOutput.toString());
                     LogUtil.info("NewPoolActivity", "change index:" + changeOutput.getIndex());
                     UTXOUtil.getInstance().add(txHash + "-" + changeOutput.getIndex(), "\u2623 tx0 change\u2623");
