@@ -91,7 +91,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
             val preMix =
                 wallet.whirlpoolWallet.get().utxoSupplier.getBalance(WhirlpoolAccount.PREMIX)
             val balance =
-                wallet.whirlpoolWallet.get().utxoSupplier.balanceTotal
+                (preMix  + wallet.whirlpoolWallet.get().utxoSupplier.getBalance(WhirlpoolAccount.POSTMIX))
             try {
                 //Filter non-mixable utxo's from postmix account
                 val remixBalance = postMix
