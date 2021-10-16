@@ -222,8 +222,16 @@ public class SendFactory	{
             amount = amount.add(mapEntry.getValue());
         }
 
-        List<TransactionOutput> outputs = new ArrayList<TransactionOutput>();
         Transaction tx = new Transaction(SamouraiWallet.getInstance().getCurrentNetworkParams());
+        tx.setVersion(2);
+        if(PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false) == true)    {
+            long blockHeight = APIFactory.getInstance(context).getLatestBlockHeight();
+            if(blockHeight > 0L)    {
+                tx.setLockTime(blockHeight);
+            }
+        }
+
+        List<TransactionOutput> outputs = new ArrayList<TransactionOutput>();
 
         for(Iterator<Map.Entry<String, BigInteger>> iterator = receivers.entrySet().iterator(); iterator.hasNext();) {
             Map.Entry<String, BigInteger> mapEntry = iterator.next();
