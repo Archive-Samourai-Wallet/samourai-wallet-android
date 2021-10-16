@@ -7,9 +7,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
-import com.samourai.wallet.R
+import com.google.android.material.snackbar.Snackbar
 import com.samourai.wallet.api.backend.beans.UnspentOutput
-import com.samourai.wallet.api.backend.beans.UnspentOutput.Xpub
+import com.samourai.wallet.databinding.FragmentWhirlpoolReviewBinding
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.whirlpool.WhirlpoolTx0
 import com.samourai.whirlpool.client.tx0.Tx0Preview
@@ -18,15 +18,13 @@ import com.samourai.whirlpool.client.wallet.WhirlpoolUtils
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import com.samourai.whirlpool.client.whirlpool.beans.Pool
-import kotlinx.android.synthetic.main.fragment_whirlpool_review.*
 import kotlinx.coroutines.*
-import org.bouncycastle.util.encoders.Hex
-import java.util.*
 
 class ReviewPoolFragment : Fragment() {
 
 
     private val coroutineContext = CoroutineScope(Dispatchers.IO)
+    private lateinit var binding: FragmentWhirlpoolReviewBinding
 
     private val account = 0
     private var tx0: WhirlpoolTx0? = null;
@@ -37,45 +35,60 @@ class ReviewPoolFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        entropyBar?.setMaxBars(4)
-        entropyBar?.setRange(4)
+        binding.entropyBar.setMaxBars(4)
+        binding.entropyBar.setRange(4)
+        binding.previewRetryButton.setOnClickListener {
+            makeTxoPreview()
+        }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_whirlpool_review, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentWhirlpoolReviewBinding.inflate(inflater, container, false);
+        return binding.root
     }
 
     fun showProgress(show: Boolean) {
-        progressBar!!.visibility = if (show) View.VISIBLE else View.GONE
+        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     fun setLoadingListener(listener: (Boolean, Exception?) -> Unit) {
         this.onLoading = listener
     }
 
-    fun setTx0(tx0: WhirlpoolTx0, tx0FeeTarget: Tx0FeeTarget?, mixFeeTarget: Tx0FeeTarget?, pool: Pool?) {
+    fun setTx0(
+        tx0: WhirlpoolTx0,
+        tx0FeeTarget: Tx0FeeTarget?,
+        mixFeeTarget: Tx0FeeTarget?,
+        pool: Pool?
+    ) {
         this.pool = pool
-        this.tx0 = tx0;
+        this.tx0 = tx0
         this.tx0FeeTarget = tx0FeeTarget
         this.mixFeeTarget = mixFeeTarget
-        makeTxoPreview(tx0)
-        minerFees.text = ""
-        feePerUtxo.text = ""
-        poolFees.text = ""
-        uncycledAmount.text = ""
-        amountToCycle.text = ""
-        poolTotalFees.text = ""
-        totalPoolAmount.text = ""
-        poolAmount.text = getBTCDisplayAmount(tx0.pool)
-        totalUtxoCreated.text = "${tx0.premixRequested}";
+        makeTxoPreview()
+        binding.minerFees.text = ""
+        binding.feePerUtxo.text = ""
+        binding.poolFees.text = ""
+        binding.uncycledAmount.text = ""
+        binding.amountToCycle.text = ""
+        binding.poolTotalFees.text = ""
+        binding.totalPoolAmount.text = ""
+        binding.poolAmount.text = getBTCDisplayAmount(tx0.pool)
+        binding.totalUtxoCreated.text = "${tx0.premixRequested}";
     }
 
-    private fun makeTxoPreview(tx0: WhirlpoolTx0) {
+    private fun makeTxoPreview() {
+        if (tx0 == null) {
+            return;
+        }
         showLoadingProgress(true)
         onLoading.invoke(true, null)
         val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
-        val spendFroms: MutableCollection<UnspentOutput> = WhirlpoolUtils.getInstance().toUnspentOutputs(tx0.outpoints)
+        val spendFroms: MutableCollection<UnspentOutput> =
+            WhirlpoolUtils.getInstance().toUnspentOutputs(this.tx0!!.outpoints)
         coroutineContext.launch(Dispatchers.IO) {
             val tx0Config = whirlpoolWallet.getTx0Config(tx0FeeTarget, mixFeeTarget)
             tx0Config.changeWallet = WhirlpoolAccount.DEPOSIT
@@ -90,8 +103,10 @@ class ReviewPoolFragment : Fragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    onLoading.invoke(false, e);
+                    Snackbar.make(binding.root, "Error ${e.message}", Snackbar.LENGTH_LONG).show()
+                    onLoading.invoke(false, e)
                     showLoadingProgress(false)
+                    binding.previewRetryButton.visibility = View.VISIBLE
                 }
             }
         }
@@ -99,32 +114,34 @@ class ReviewPoolFragment : Fragment() {
 
     private fun showLoadingProgress(loading: Boolean) {
         if (loading) {
-            loadingFeeDetails.show()
+            binding.previewRetryButton.visibility = View.GONE
+            binding.loadingFeeDetails.show()
         } else {
-            loadingFeeDetails.hide()
+            binding.loadingFeeDetails.hide()
         }
     }
 
     private fun setFees(tx0Preview: Tx0Preview?) {
         tx0Preview?.let {
-            TransitionManager.beginDelayedTransition(reviewLayout, Fade())
+            TransitionManager.beginDelayedTransition(binding.root, Fade())
             val embeddedFees = tx0Preview.premixValue.minus(tx0!!.pool);
-            val embeddedTotalFees =  (embeddedFees * it.nbPremix)
-            minerFees.text = getBTCDisplayAmount(it.tx0MinerFee);
-            val totalFees =embeddedTotalFees + tx0Preview.feeValue + tx0Preview.tx0MinerFee;
-            poolTotalFees.text = getBTCDisplayAmount(totalFees);
-            poolFees.text = getBTCDisplayAmount(tx0Preview.feeValue)
+            val embeddedTotalFees = (embeddedFees * it.nbPremix)
+            binding.minerFees.text = getBTCDisplayAmount(it.tx0MinerFee);
+            val totalFees = embeddedTotalFees + tx0Preview.feeValue + tx0Preview.tx0MinerFee;
+            binding.poolTotalFees.text = getBTCDisplayAmount(totalFees);
+            binding.poolFees.text = getBTCDisplayAmount(tx0Preview.feeValue)
             if (it.feeDiscountPercent != 0) {
                 val scodeMessage = "SCODE Applied, ${it.feeDiscountPercent}% Discount"
-                discountText.text = scodeMessage
+                binding.discountText.text = scodeMessage
             }
             this.tx0?.let { tx0 ->
-                totalPoolAmount.text = "${getBTCDisplayAmount(tx0.amountSelected)}"
-                amountToCycle.text = getBTCDisplayAmount((tx0.amountSelected - totalFees ) - tx0Preview.changeValue )
+                binding.totalPoolAmount.text = "${getBTCDisplayAmount(tx0.amountSelected)}"
+                binding.amountToCycle.text =
+                    getBTCDisplayAmount((tx0.amountSelected - totalFees) - tx0Preview.changeValue)
             }
-            uncycledAmount?.text = getBTCDisplayAmount((tx0Preview.changeValue));
-            feePerUtxo.text = getBTCDisplayAmount(embeddedTotalFees);
-            totalUtxoCreated.text = "${it.nbPremix}";
+            binding.uncycledAmount.text = getBTCDisplayAmount((tx0Preview.changeValue));
+            binding.feePerUtxo.text = getBTCDisplayAmount(embeddedTotalFees);
+            binding.totalUtxoCreated.text = "${it.nbPremix}";
         }
     }
 
