@@ -363,21 +363,12 @@ public class NewPoolActivity extends AppCompatActivity {
                     }
                 }
 
-                NewPoolActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        Toast.makeText(NewPoolActivity.this, txHash, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                NewPoolActivity.this.runOnUiThread(() -> Toast.makeText(NewPoolActivity.this, txHash, Toast.LENGTH_SHORT).show());
                 LogUtil.info("NewPoolActivity", "result:" + txHash);
 
             } catch (Exception e) {
                 // tx0 failed
-                NewPoolActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        Toast.makeText(NewPoolActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-                LogUtil.info("NewPoolActivity", "result:" + e.getMessage());
+                throw  e;
             }
 
             return true;

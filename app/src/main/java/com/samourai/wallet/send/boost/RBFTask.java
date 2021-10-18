@@ -436,12 +436,10 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                                     boolean isOK = false;
                                     try {
 
-                                        isOK = PushTx.getInstance(activity).pushTx(hexTx);
-
-                                        if (isOK) {
-
-                                            handler.post(new Runnable() {
-                                                public void run() {
+                                        try {
+                                            isOK = PushTx.getInstance(activity).pushTx(hexTx);
+                                            if (isOK) {
+                                                handler.post(() -> {
                                                     Toast.makeText(activity, R.string.rbf_spent, Toast.LENGTH_SHORT).show();
 
                                                     RBFSpend _rbf = rbf;    // includes updated 'keyBag'
@@ -453,24 +451,17 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                                                     Intent _intent = new Intent(activity, MainActivity2.class);
                                                     _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                                                     activity.startActivity(_intent);
-                                                }
-                                            });
-
-                                        } else {
-
-                                            handler.post(new Runnable() {
-                                                public void run() {
-                                                    Toast.makeText(activity, R.string.tx_failed, Toast.LENGTH_SHORT).show();
-                                                }
-                                            });
-
-                                        }
-                                    } catch (final DecoderException de) {
-                                        handler.post(new Runnable() {
-                                            public void run() {
-                                                Toast.makeText(activity, "pushTx:" + de.getMessage(), Toast.LENGTH_SHORT).show();
+                                                });
+                                            } else {
+                                                handler.post(() -> Toast.makeText(activity, R.string.tx_failed, Toast.LENGTH_SHORT).show());
                                             }
-                                        });
+                                        } catch (Exception e) {
+                                            handler.post(() -> Toast.makeText(activity, R.string.tx_failed, Toast.LENGTH_SHORT).show());
+                                        }
+
+
+                                    } catch (final Exception de) {
+                                        handler.post(() -> Toast.makeText(activity, "pushTx:" + de.getMessage(), Toast.LENGTH_SHORT).show());
                                     } finally {
                                         ;
                                     }
@@ -478,13 +469,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                                 }
 
                             }
-                        }).setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-
-                                dialog.dismiss();
-
-                            }
-                        });
+                        }).setNegativeButton(R.string.cancel, (dialog, whichButton) -> dialog.dismiss());
                 if (!activity.isFinishing()) {
                     dlg.show();
                 }
