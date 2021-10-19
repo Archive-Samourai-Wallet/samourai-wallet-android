@@ -9,6 +9,7 @@ import android.content.UriPermission
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
@@ -53,10 +54,10 @@ object ExternalBackupManager {
 
         fun ask() {
             if (requireScoped()) {
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                }
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                    .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 activity.startActivityForResult(intent, STORAGE_REQ_CODE)
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -260,19 +261,18 @@ object ExternalBackupManager {
         data: Intent?,
         application: Application
     ) {
-        //Remove previously granted permissions
-        this.appContext.contentResolver.persistedUriPermissions.forEach {
-            this.appContext.revokeUriPermission(it.uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            this.appContext.revokeUriPermission(it.uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        }
         val directoryUri = data?.data ?: return
         if (requestCode == STORAGE_REQ_CODE && resultCode == RESULT_OK) {
-            this.appContext.contentResolver.takePersistableUriPermission(
-                directoryUri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            this.attach(application)
-            permissionState.postValue(true)
+            try {
+                this.appContext.contentResolver.takePersistableUriPermission(
+                    directoryUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                this.attach(application)
+                permissionState.postValue(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
