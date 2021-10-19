@@ -240,7 +240,7 @@ object ExternalBackupManager {
                 return false
             }
             if (backUpDocumentFile!!.canRead()) {
-                return backUpDocumentFile!!.exists()
+                return backUpDocumentFile!!.exists() && backUpDocumentFile!!.length() != 0L
             }
             return false
         } else {
