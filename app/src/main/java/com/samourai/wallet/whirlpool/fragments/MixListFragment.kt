@@ -76,6 +76,7 @@ class MixListFragment : Fragment() {
                             showListView()
                         }
                     }
+                    compositeDisposable.clear()
                     list.forEach {
                         it.utxoState.observable.subscribe {
                             refreshList()
@@ -90,8 +91,8 @@ class MixListFragment : Fragment() {
         })
 
         mixListAdapter.setOnClickListener {
-            val mxix = MixDetailsBottomSheet.newInstance(it.utxo.tx_hash, it.utxo.tx_output_n)
-            mxix.show(childFragmentManager, mxix.tag)
+            val mixDetailsBottomSheet = MixDetailsBottomSheet.newInstance(it.utxo.tx_hash, it.utxo.tx_output_n)
+            mixDetailsBottomSheet.show(childFragmentManager, mixDetailsBottomSheet.tag)
         }
 
     }
