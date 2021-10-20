@@ -76,19 +76,16 @@ class MixListFragment : Fragment() {
                             showListView()
                         }
                     }
+                    list.forEach {
+                        it.utxoState.observable.subscribe {
+                            refreshList()
+                        }.apply {
+                            compositeDisposable.add(this)
+                        }
+                    }
                     mixListAdapter.updateList(list)
                 })
-                viewModel.viewModelScope.launch(Dispatchers.Default) {
-                    while (viewModel.viewModelScope.isActive) {
-                        withContext(Dispatchers.Main) {
-                            val list =
-                                if (mixTypeArg == MixListType.REMIX.toString()) viewModel.remixLive.value else viewModel.mixingLive.value
-                            if (list != null)
-                                mixListAdapter.updateList(list)
-                        }
-                        delay(1000)
-                    }
-                }
+
             }
         })
 
@@ -99,6 +96,13 @@ class MixListFragment : Fragment() {
 
     }
 
+
+    private fun refreshList(){
+        val list =
+            if (mixTypeArg == MixListType.REMIX.toString()) viewModel.remixLive.value else viewModel.mixingLive.value
+        if (list != null)
+            mixListAdapter.updateList(list)
+    }
 
     private fun showListView() {
         startTransition()

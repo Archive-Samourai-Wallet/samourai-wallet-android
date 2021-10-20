@@ -184,6 +184,7 @@ class WhirlpoolHome : SamouraiActivity() {
         if (requestCode == NEWPOOL_REQ_CODE && resultCode == Activity.RESULT_OK) {
             if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
                 initPager()
+                checkOnboardStatus()
                 val intent = Intent(this, JobRefreshService::class.java)
                 intent.putExtra("notifTx", false)
                 intent.putExtra("dragged", true)

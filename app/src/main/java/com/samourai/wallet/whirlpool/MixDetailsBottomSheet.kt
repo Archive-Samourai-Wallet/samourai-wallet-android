@@ -1,6 +1,7 @@
 package com.samourai.wallet.whirlpool
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +12,7 @@ import com.samourai.wallet.databinding.FragmentMixDetailsDialogBinding
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import java.util.concurrent.TimeUnit
 
 
 class MixDetailsBottomSheet : BottomSheetDialogFragment() {
@@ -49,12 +47,9 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
             }
             setMixState(whirlpoolUtxo)
             whirlpoolUtxo.isAccountPremix
-            //Check utxo state every 1 sec
-            Observable
-                .interval(1, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
+            whirlpoolUtxo.utxoState.observable
                 .subscribe {
-                    setMixState(whirlpoolUtxo)
+                   setMixState(whirlpoolUtxo)
                 }.apply {
                     disposable.add(this)
                 }
@@ -71,25 +66,38 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
         binding.mixesDone.text = "${whirlpoolUtxo.mixsDone}"
 
         try {
-            if (whirlpoolUtxo.utxoState != null &&  whirlpoolUtxo.utxoState.mixProgress!=null) {
+            if (whirlpoolUtxo.utxoState != null && whirlpoolUtxo.utxoState.mixProgress != null) {
                 val mixProgress = whirlpoolUtxo.utxoState.mixProgress
                 binding.mixStepMessage.text = mixProgress.mixStep.message
                 binding.mixError.visibility = View.GONE
-                if( whirlpoolUtxo.utxoState.hasError()){
+                if (whirlpoolUtxo.utxoState.hasError()) {
                     binding.mixError.visibility = View.VISIBLE
-                    binding.mixError.text  = whirlpoolUtxo.utxoState.error
-                    binding.mixProgressBar.setIndicatorColor(ContextCompat.getColor(requireContext(), R.color.red))
+                    binding.mixError.text = whirlpoolUtxo.utxoState.error
+                    binding.mixProgressBar.setIndicatorColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.red
+                        )
+                    )
                     binding.mixProgressBar.setProgressCompat(20, true)
-                    binding.mixMessage.text  = whirlpoolUtxo.utxoState.message
-                }else{
-                    binding.mixProgressBar.setIndicatorColor(ContextCompat.getColor(requireContext(), R.color.green_ui_2))
+                    binding.mixMessage.text = whirlpoolUtxo.utxoState.message
+                } else {
+                    binding.mixProgressBar.setIndicatorColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.green_ui_2
+                        )
+                    )
                     binding.mixProgressContainer.visibility = View.VISIBLE
-                    binding.mixProgressBar.setProgressCompat(mixProgress.mixStep.progressPercent, true)
+                    binding.mixProgressBar.setProgressCompat(
+                        mixProgress.mixStep.progressPercent,
+                        true
+                    )
                 }
-            }else{
+            } else {
                 binding.mixProgressContainer.visibility = View.GONE
             }
-        } catch (ex:Exception) {
+        } catch (ex: Exception) {
 
         }
     }
