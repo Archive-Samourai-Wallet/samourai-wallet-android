@@ -391,6 +391,12 @@ public class UTXODetailsActivity extends SamouraiActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        setResult(RESULT_OK);
+        super.onBackPressed();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (item.getItemId() == R.id.utxo_details_add_to_whirlpool) {
