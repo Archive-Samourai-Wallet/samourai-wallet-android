@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.samourai.wallet.R
 import com.samourai.wallet.databinding.ItemMixUtxoBinding
 import com.samourai.wallet.util.FormatsUtil
-import com.samourai.whirlpool.client.wallet.beans.MixableStatus
+import com.samourai.wallet.util.LogUtil
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus
 import kotlinx.coroutines.*
@@ -39,7 +39,8 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
                 progressbar.visibility = View.GONE
                 viewBinding.mixProgressMessage.visibility = View.GONE
             }
-            viewBinding.mixStatus.text =  "${utxo.mixsDone} ${viewBinding.root.context.getString(R.string.mixes_complete)}"
+            viewBinding.mixStatus.text =
+                "${utxo.mixsDone} ${viewBinding.root.context.getString(R.string.mixes_complete)}"
 
             when (utxoState.status) {
                 WhirlpoolUtxoStatus.READY -> {
@@ -78,20 +79,18 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
     fun updateList(utxos: List<WhirlpoolUtxo>) {
         scope.launch {
             try {
-                val list = mutableListOf<WhirlpoolUtxo>()
-                list.addAll(utxos.filter {
-                    it.utxoState.mixProgress != null && it.utxoState.mixableStatus == MixableStatus.MIXABLE
-                })
-                list.addAll(utxos.filter {
-                    it.utxoState.mixProgress != null && it.utxoState.mixableStatus == MixableStatus.UNCONFIRMED
-                })
-                list.addAll(utxos.filter {
-                    it.utxoState.mixProgress == null
-                })
+                val sorted = utxos
+                    .sortedBy { it.utxoState.status != WhirlpoolUtxoStatus.READY }
+                    .sortedBy { it.utxoState.status != WhirlpoolUtxoStatus.MIX_QUEUE }
+                    .sortedBy { it.utxoState.status != WhirlpoolUtxoStatus.MIX_STARTED }
+                    .sortedBy { it.utxoState.status != WhirlpoolUtxoStatus.MIX_SUCCESS }
                 withContext(Dispatchers.Main) {
-                    mDiffer.submitList(list)
+                    mDiffer.submitList(
+                        sorted
+                    )
                 }
             } catch (e: Exception) {
+                LogUtil.error("updateList ", e)
             }
         }
     }
