@@ -2,10 +2,7 @@ package com.samourai.wallet.whirlpool
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.samourai.wallet.api.APIFactory
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus
@@ -122,13 +119,11 @@ class WhirlPoolHomeViewModel : ViewModel() {
                     val remixingUtxoState: List<WhirlpoolUtxo> = ArrayList(
                         whirlpoolWallet.utxoSupplier.findUtxos(WhirlpoolAccount.POSTMIX)
                     )
-                    val mixingUtxos = mutableListOf<WhirlpoolUtxo>()
 
                     val remixingUtxo = mutableListOf<WhirlpoolUtxo>()
                     remixingUtxo.addAll(remixingUtxoState.filter { it.utxoState.mixableStatus != MixableStatus.NO_POOL })
                     remixing.postValue(remixingUtxo)
                     mixing.postValue(utxoPremix)
-
                 }, {
 
                 })

@@ -3,6 +3,7 @@ package com.samourai.wallet.whirlpool.fragments
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +26,7 @@ import com.samourai.wallet.whirlpool.WhirlpoolHome
 import com.samourai.wallet.whirlpool.WhirlpoolHome.Companion.NEWPOOL_REQ_CODE
 import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
+import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.*
 import android.widget.FrameLayout.LayoutParams as LParams
@@ -65,8 +67,8 @@ class MixListFragment : Fragment() {
                     if (isRemixList) viewModel.remixLive else viewModel.mixingLive
 
                 mixList.observe(viewLifecycleOwner, { list ->
-                    val onBoardingActive  = viewModel.onboardStatus.value ?: showOnboard
-                    if(onBoardingActive){
+                    val onBoardingActive = viewModel.onboardStatus.value ?: showOnboard
+                    if (onBoardingActive) {
                         return@observe
                     }
                     if (list.isEmpty()) {
@@ -91,14 +93,28 @@ class MixListFragment : Fragment() {
         })
 
         mixListAdapter.setOnClickListener {
-            val mixDetailsBottomSheet = MixDetailsBottomSheet.newInstance(it.utxo.tx_hash, it.utxo.tx_output_n)
+            val mixDetailsBottomSheet =
+                MixDetailsBottomSheet.newInstance(it.utxo.tx_hash, it.utxo.tx_output_n)
             mixDetailsBottomSheet.show(childFragmentManager, mixDetailsBottomSheet.tag)
+        }
+        mixListAdapter.setOnMixingButtonClickListener {
+            if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
+                val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get();
+                if (it.utxoState != null && it.utxoState.status != null) {
+                    if (it.utxoState.status == WhirlpoolUtxoStatus.MIX_STARTED) {
+                        wallet.mixStop(it)
+                    }else{
+                        wallet.mix(it)
+                    }
+                }
+            }
+
         }
 
     }
 
 
-    private fun refreshList(){
+    private fun refreshList() {
         val list =
             if (mixTypeArg == MixListType.REMIX.toString()) viewModel.remixLive.value else viewModel.mixingLive.value
         if (list != null)

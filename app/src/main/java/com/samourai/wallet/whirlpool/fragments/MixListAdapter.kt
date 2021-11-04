@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import com.samourai.wallet.R
 import com.samourai.wallet.databinding.ItemMixUtxoBinding
 import com.samourai.wallet.util.FormatsUtil
@@ -19,6 +20,7 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
 
     private lateinit var itemMixUtxoBinding: ItemMixUtxoBinding
     var onClick: (utxo: WhirlpoolUtxo) -> Unit = {}
+    var onMixingButtonClickListener: (utxo: WhirlpoolUtxo) -> Unit = {}
     private val mDiffer = AsyncListDiffer(this, DIFF_CALLBACK)
     private val scope = CoroutineScope(Dispatchers.Default) + SupervisorJob()
 
@@ -41,31 +43,36 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
             }
             viewBinding.mixStatus.text =
                 "${utxo.mixsDone} ${viewBinding.root.context.getString(R.string.mixes_complete)}"
-
+            viewBinding.mixingButton.setIconTintResource(R.color.white)
             when (utxoState.status) {
                 WhirlpoolUtxoStatus.READY -> {
-
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_play_arrow_24)
                 }
                 WhirlpoolUtxoStatus.STOP -> {
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_play_arrow_24)
                 }
                 WhirlpoolUtxoStatus.TX0 -> {
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_timer_white_24dp)
                 }
+
                 WhirlpoolUtxoStatus.TX0_FAILED -> {
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_problem_24)
                 }
                 WhirlpoolUtxoStatus.TX0_SUCCESS -> {
-
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_timer_white_24dp)
                 }
                 WhirlpoolUtxoStatus.MIX_QUEUE -> {
-                    viewBinding.mixingStatusIcon.setImageResource(R.drawable.ic_timer_white_24dp)
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_play_arrow_24)
                 }
                 WhirlpoolUtxoStatus.MIX_STARTED -> {
-                    viewBinding.mixingStatusIcon.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_pause_24)
                 }
                 WhirlpoolUtxoStatus.MIX_SUCCESS -> {
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_check_white_82dp)
                     progressbar.setProgressCompat(100, true)
                 }
                 WhirlpoolUtxoStatus.MIX_FAILED -> {
-                    viewBinding.mixingStatusIcon.setImageResource(R.drawable.ic_baseline_problem_24)
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_problem_24)
                 }
                 else -> {
 
@@ -109,6 +116,10 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
                 whirlpoolUtxo.utxoState.toString()
         } catch (e: Exception) {
         }
+        holder.itemView.findViewById<MaterialButton>(R.id.mixingButton)
+            .setOnClickListener {
+                this.onMixingButtonClickListener.invoke(mDiffer.currentList[position])
+            }
         holder.itemView.setOnClickListener {
             this.onClick.invoke(mDiffer.currentList[position])
         }
@@ -122,6 +133,11 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
 
     fun setOnClickListener(handler: (utxo: WhirlpoolUtxo) -> Unit) {
         this.onClick = handler;
+    }
+
+    @JvmName("setOnMixingButtonClickListener1")
+    fun setOnMixingButtonClickListener(handler: (utxo: WhirlpoolUtxo) -> Unit) {
+        this.onMixingButtonClickListener = handler;
     }
 
     override fun getItemCount(): Int {
