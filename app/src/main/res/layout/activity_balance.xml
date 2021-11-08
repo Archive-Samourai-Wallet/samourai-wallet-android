@@ -46,7 +46,7 @@
             android:layout_height="wrap_content"
             app:trackCornerRadius="5dp"
             app:indicatorSize="2dp"
-            app:indicatorColor="?colorAccent"
+            app:indicatorColor="@color/white"
             app:trackColor="@android:color/transparent"
             android:indeterminate="true"
             android:visibility="visible" />

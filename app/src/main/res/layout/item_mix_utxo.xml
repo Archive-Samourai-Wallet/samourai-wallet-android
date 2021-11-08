@@ -107,15 +107,20 @@
         app:layout_constraintGuide_percent="0.86" />
 
 
-    <ImageView
-        android:id="@+id/mixingStatusIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/mixingButton"
+        android:layout_width="34dp"
+        app:icon="@drawable/ic_baseline_play_arrow_24"
+        android:layout_height="34dp"
+        app:iconTint="@null"
+        app:rippleColor="@color/white"
+        android:background="@color/transparent"
+        style="@style/Widget.MaterialComponents.Button.UnelevatedButton.Icon"
         app:layout_constraintBottom_toBottomOf="@+id/linearLayoutCompat"
         app:layout_constraintEnd_toStartOf="@+id/guideline35"
         app:layout_constraintStart_toStartOf="@+id/guideline36"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_baseline_play_arrow_24" />
+         />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline37"

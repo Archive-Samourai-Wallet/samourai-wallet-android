@@ -844,7 +844,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        this.loadUTXOs(true);
+        adapter.notifyDataSetChanged();
         super.onActivityResult(requestCode, resultCode, data);
     }
 
