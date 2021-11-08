@@ -69,11 +69,11 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
             log.debug("utxoSupplier.computeValue()");
         }
         List<UnspentOutput> utxos = new LinkedList();
-        utxos.addAll(toUnspentOutputs(utxoFactory.getAllP2PKH().values(), WhirlpoolAccount.DEPOSIT, AddressType.LEGACY));
-        utxos.addAll(toUnspentOutputs(utxoFactory.getAllP2SH_P2WPKH().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_COMPAT));
-        utxos.addAll(toUnspentOutputs(utxoFactory.getAllP2WPKH().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_NATIVE));
+        utxos.addAll(toUnspentOutputs(utxoFactory.getP2PKHClean().values(), WhirlpoolAccount.DEPOSIT, AddressType.LEGACY));
+        utxos.addAll(toUnspentOutputs(utxoFactory.getP2SH_P2WPKHClean().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_COMPAT));
+        utxos.addAll(toUnspentOutputs(utxoFactory.getP2WPKHClean().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_NATIVE));
         utxos.addAll(toUnspentOutputs(utxoFactory.getPreMix().values(), WhirlpoolAccount.PREMIX, AddressType.SEGWIT_NATIVE));
-        utxos.addAll(toUnspentOutputs(utxoFactory.getAllPostMix().values(), WhirlpoolAccount.POSTMIX, AddressType.SEGWIT_NATIVE));
+        utxos.addAll(toUnspentOutputs(utxoFactory.getPostMixClean().values(), WhirlpoolAccount.POSTMIX, AddressType.SEGWIT_NATIVE));
 
         UnspentOutput[] utxosArray = utxos.toArray(new UnspentOutput[]{});
         WalletResponse.Tx[] txs = new WalletResponse.Tx[]{}; // ignored
