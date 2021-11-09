@@ -24,6 +24,11 @@
         <item name="materialAlertDialogTheme">@style/Theme.Samourai.MaterialDialog.Rounded</item>
     </style>
 
+    <style name="Theme.Samourai.Material.TabTitle" parent="@android:style/TextAppearance.Widget.TabWidget">
+        <item name="textAllCaps">false</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
     <style name="Theme.Samourai.Whirlpool.Material" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="toolbarStyle">@style/Widget.Samourai.Whirlpool.Toolbar</item>
         <item name="colorAccent">@color/whirlpoolBlue</item>

@@ -106,6 +106,8 @@ class WhirlpoolHome : SamouraiActivity() {
     }
 
     private fun initPager() {
+        val mixingStr = resources.getString(R.string.mixing_title);
+        val remixingStr = resources.getString(R.string.remixing);
         val sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
         val viewPager: ViewPager = binding.viewPager
         viewPager.adapter = sectionsPagerAdapter
@@ -126,6 +128,21 @@ class WhirlpoolHome : SamouraiActivity() {
         whirlPoolHomeViewModel.mixingBalance.observe(this, {
             if (viewPager.currentItem == 1) {
                 binding.whirlpoolToolbar.title = FormatsUtil.formatBTC(it)
+            }
+        })
+        //Show mixing/remixing count in tabs title
+        whirlPoolHomeViewModel.mixingLive.observe(this,{
+            if(it.isNotEmpty()){
+                tabs.getTabAt(1)?.text = "$mixingStr (${it.size})"
+            }else{
+                tabs.getTabAt(1)?.text = mixingStr
+            }
+        })
+        whirlPoolHomeViewModel.remixLive.observe(this,{
+            if(it.isNotEmpty()){
+                tabs.getTabAt(2)?.text = "$remixingStr (${it.size})"
+            }else{
+                tabs.getTabAt(2)?.text = remixingStr
             }
         })
         try {
