@@ -123,7 +123,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
                     val remixingUtxo = mutableListOf<WhirlpoolUtxo>()
                     remixingUtxo.addAll(remixingUtxoState.filter { it.utxoState.mixableStatus != MixableStatus.NO_POOL })
                     remixing.postValue(remixingUtxo)
-                    mixing.postValue(utxoPremix)
+                    mixing.postValue(utxoPremix.filter { it.utxoState.mixableStatus != MixableStatus.NO_POOL })
                 }, {
 
                 })
