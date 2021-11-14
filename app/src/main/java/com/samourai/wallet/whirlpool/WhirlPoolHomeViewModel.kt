@@ -86,9 +86,16 @@ class WhirlPoolHomeViewModel : ViewModel() {
             val postMix =
                 wallet.whirlpoolWallet.get().utxoSupplier.findUtxos(WhirlpoolAccount.POSTMIX)
             val preMix =
-                wallet.whirlpoolWallet.get().utxoSupplier.getBalance(WhirlpoolAccount.PREMIX)
+                wallet.whirlpoolWallet.get().utxoSupplier.findUtxos(WhirlpoolAccount.PREMIX)
+
+            val premixBalance =  preMix
+                    .filter { it.utxoState.mixableStatus == MixableStatus.MIXABLE }
+                    .map { it.utxo.value }
+                    .takeIf { it.isNotEmpty() }
+                    ?.reduce { acc, l -> acc + l } ?: 0L
+
             val balance =
-                (preMix  + wallet.whirlpoolWallet.get().utxoSupplier.getBalance(WhirlpoolAccount.POSTMIX))
+                (premixBalance  + wallet.whirlpoolWallet.get().utxoSupplier.getBalance(WhirlpoolAccount.POSTMIX))
             try {
                 //Filter non-mixable utxo's from postmix account
                 val remixBalance = postMix
@@ -97,7 +104,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
                     .takeIf { it.isNotEmpty() }
                     ?.reduce { acc, l -> acc + l } ?: 0L
                 remixBalanceLive.postValue(remixBalance)
-                mixingBalanceLive.postValue(preMix)
+                mixingBalanceLive.postValue(premixBalance)
                 totalBalanceLive.postValue(balance)
             } catch (ex: Exception) {
             }
