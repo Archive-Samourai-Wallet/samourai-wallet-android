@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionManager
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 import com.google.android.material.transition.SlideDistanceProvider
 import com.samourai.wallet.R
@@ -26,6 +27,7 @@ import com.samourai.wallet.whirlpool.WhirlpoolHome
 import com.samourai.wallet.whirlpool.WhirlpoolHome.Companion.NEWPOOL_REQ_CODE
 import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
+import com.samourai.whirlpool.client.wallet.beans.MixableStatus
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.*
@@ -100,6 +102,13 @@ class MixListFragment : Fragment() {
         mixListAdapter.setOnMixingButtonClickListener {
             if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
                 val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get();
+                if(it.utxoState.mixableStatus == MixableStatus.UNCONFIRMED){
+                    Snackbar.make(binding.mixListContainer,R.string.unconfirmed,Snackbar.LENGTH_LONG).show()
+                    return@setOnMixingButtonClickListener
+                }
+                if(it.utxoState.mixableStatus == MixableStatus.NO_POOL){
+                    return@setOnMixingButtonClickListener
+                }
                 if (it.utxoState != null && it.utxoState.status != null) {
                     if (it.utxoState.status == WhirlpoolUtxoStatus.MIX_STARTED) {
                         wallet.mixStop(it)
