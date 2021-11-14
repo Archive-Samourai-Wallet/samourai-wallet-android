@@ -47,12 +47,7 @@ public class PoolsAdapter extends RecyclerView.Adapter<PoolsAdapter.ViewHolder> 
         holder.checkBox.setChecked(poolViewModel.isSelected());
         if (poolViewModel.isSelected()) {
             holder.feesGroup.setVisibility(View.VISIBLE);
-        }
-        if (!poolViewModel.isDisabled())
-            holder.itemView.setOnClickListener(view -> {
-                holder.feesGroup.setVisibility(holder.feesGroup.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-            });
-
+        }  
         if (!poolViewModel.isDisabled())
             holder.checkBox.setOnCheckedChangeListener((compoundButton, b) -> {
                 onItemsSelected.onItemsSelected(position);
