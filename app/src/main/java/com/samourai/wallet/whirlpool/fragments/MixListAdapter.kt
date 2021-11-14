@@ -11,6 +11,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.databinding.ItemMixUtxoBinding
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.LogUtil
+import com.samourai.whirlpool.client.wallet.beans.MixableStatus
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus
 import kotlinx.coroutines.*
@@ -38,12 +39,16 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
                 progressbar.visibility = View.VISIBLE
                 progressbar.progress = utxoState.mixProgress.mixStep.progressPercent
             } else {
+                viewBinding.mixingButton.setIconResource(R.drawable.ic_timer_white_24dp)
                 progressbar.visibility = View.GONE
                 viewBinding.mixProgressMessage.visibility = View.GONE
             }
-            viewBinding.mixStatus.text =
-                "${utxo.mixsDone} ${viewBinding.root.context.getString(R.string.mixes_complete)}"
+            viewBinding.mixStatus.text = "${utxo.mixsDone} ${viewBinding.root.context.getString(R.string.mixes_complete)}"
             viewBinding.mixingButton.setIconTintResource(R.color.white)
+            if(utxoState.mixableStatus == MixableStatus.UNCONFIRMED ){
+                viewBinding.mixingButton.setIconResource(R.drawable.ic_timer_white_24dp)
+                return
+            }
             when (utxoState.status) {
                 WhirlpoolUtxoStatus.READY -> {
                     viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_play_arrow_24)
@@ -68,14 +73,14 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
                     viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_pause_24)
                 }
                 WhirlpoolUtxoStatus.MIX_SUCCESS -> {
-                    viewBinding.mixingButton.setIconResource(R.drawable.ic_check_white_82dp)
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_check_white)
                     progressbar.setProgressCompat(100, true)
                 }
                 WhirlpoolUtxoStatus.MIX_FAILED -> {
                     viewBinding.mixingButton.setIconResource(R.drawable.ic_baseline_problem_24)
                 }
                 else -> {
-
+                    viewBinding.mixingButton.setIconResource(R.drawable.ic_timer_white_24dp)
                 }
             }
 
