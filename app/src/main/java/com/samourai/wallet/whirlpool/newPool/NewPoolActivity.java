@@ -30,6 +30,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
@@ -79,7 +80,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
 
-public class NewPoolActivity extends AppCompatActivity {
+public class NewPoolActivity extends SamouraiActivity {
 
     private static final String TAG = "NewPoolActivity";
 
@@ -263,8 +264,8 @@ public class NewPoolActivity extends AppCompatActivity {
         } catch (Exception ex) {
             Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
             ex.printStackTrace();
-            return;
         }
+
         if (tx0.getTx0() != null) {
             enableConfirmButton(true);
             selectPoolFragment.setTX0(selectedCoins);
