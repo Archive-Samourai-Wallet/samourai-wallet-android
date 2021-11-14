@@ -245,6 +245,7 @@ public class NewPoolActivity extends SamouraiActivity {
         selectedCoins = coins;
 
         if (coins.size() == 0) {
+            cycleTotalAmount.setText(FormatsUtil.formatBTC(0L));
             enableConfirmButton(false);
         } else {
             long mediumFee = FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue() / 1000L;
