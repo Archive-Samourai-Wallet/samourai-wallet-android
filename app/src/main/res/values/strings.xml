@@ -891,5 +891,7 @@
     <string name="mix_error">Mix Error</string>
     <string name="mix_utxos">Mix UTXOs</string>
     <string name="mixes_complete">mixes complete</string>
+    <string name="mixed">Mixed</string>
+    <string name="postmix_spend">Postmix spend</string>
 
 </resources>

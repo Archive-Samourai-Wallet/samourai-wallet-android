@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.samourai.wallet.R;
 import com.samourai.wallet.api.Tx;
 import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
@@ -132,7 +133,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 holder.tvAmount.setText("-".concat(is_sat_prefs ? FormatsUtil.formatSats(_amount) : FormatsUtil.formatBTC(_amount)));
                 if(account==WhirlpoolAccount.POSTMIX.getAccountIndex()){
                     holder.txSubText.setVisibility(View.VISIBLE);
-                    holder.txSubText.setText("Postmix spend");
+                    holder.txSubText.setText(R.string.postmix_spend);
                 }else{
                     holder.txSubText.setVisibility(View.GONE);
                 }
@@ -146,12 +147,17 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 }
                 holder.tvAmount.setText(amount);
                 holder.tvAmount.setTextColor(ContextCompat.getColor(mContext, R.color.green_ui_2));
-                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() && _amount!=0){
+                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() &&  BlockedUTXO.BLOCKED_UTXO_THRESHOLD < _amount){
                     holder.txSubText.setVisibility(View.VISIBLE);
-                    holder.txSubText.setText("Mixed");
+                    holder.txSubText.setText(R.string.mixed);
                     holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_whirlpool));
                 }else{
-                    holder.txSubText.setVisibility(View.GONE);
+                    if( BlockedUTXO.BLOCKED_UTXO_THRESHOLD >= _amount){
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.dust);
+                    }else{
+                        holder.txSubText.setVisibility(View.GONE);
+                    }
                 }
             }
 
