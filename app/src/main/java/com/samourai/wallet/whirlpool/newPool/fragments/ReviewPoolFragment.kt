@@ -124,8 +124,7 @@ class ReviewPoolFragment : Fragment() {
     private fun setFees(tx0Preview: Tx0Preview?) {
         tx0Preview?.let {
             TransitionManager.beginDelayedTransition(binding.root, Fade())
-            val embeddedFees = tx0Preview.premixValue.minus(tx0!!.pool);
-            val embeddedTotalFees = (embeddedFees * it.nbPremix)
+            val embeddedTotalFees = tx0Preview.mixMinerFee;
             binding.minerFees.text = getBTCDisplayAmount(it.tx0MinerFee);
             val totalFees = embeddedTotalFees + tx0Preview.feeValue + tx0Preview.tx0MinerFee;
             binding.poolTotalFees.text = getBTCDisplayAmount(totalFees);
