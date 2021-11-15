@@ -1,9 +1,13 @@
 package com.samourai.wallet.whirlpool
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.*
 import com.samourai.wallet.api.APIFactory
+import com.samourai.wallet.home.BalanceActivity
+import com.samourai.wallet.service.JobRefreshService
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
@@ -12,10 +16,7 @@ import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.*
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService.ConnectionStates as Connection
 
@@ -26,6 +27,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
 
 
     private val whirlpoolLoading = MutableLiveData(true)
+    private val refreshStatus = MutableLiveData(false)
     private val compositeDisposable = CompositeDisposable()
     private val wallet = AndroidWhirlpoolWalletService.getInstance();
 
@@ -42,6 +44,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
     val mixingBalance: LiveData<Long> get() = mixingBalanceLive
     val totalBalance: LiveData<Long> get() = totalBalanceLive
     val onboardStatus: LiveData<Boolean> get() = whirlpoolOnboarded
+    val listRefreshStatus: LiveData<Boolean> get() = refreshStatus
 
     init {
         val disposable = wallet.listenConnectionStatus()
@@ -157,5 +160,45 @@ class WhirlPoolHomeViewModel : ViewModel() {
     fun refresh() {
         loadUtxos()
         loadBalances()
+    }
+
+
+    val broadCastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+                if (BalanceActivity.DISPLAY_INTENT == intent.action) {
+                   setRefresh(false)
+                }
+            }
+        }
+    }
+
+
+
+    fun refreshList(context:Context) {
+        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull;
+        if (wallet != null) {
+            setRefresh(true)
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    withContext(Dispatchers.Main){
+                        val intent = Intent(context, JobRefreshService::class.java)
+                        intent.putExtra("notifTx", false)
+                        intent.putExtra("dragged", true)
+                        intent.putExtra("launch", false)
+                        JobRefreshService.enqueueWork(context, intent)
+                    }
+                    wallet.refreshUtxos()
+                    refresh()
+                }catch (e:Exception){
+                    throw  CancellationException()
+                }
+
+            }
+        }
+    }
+
+    fun setRefresh(b: Boolean) {
+        refreshStatus.postValue(b)
     }
 }

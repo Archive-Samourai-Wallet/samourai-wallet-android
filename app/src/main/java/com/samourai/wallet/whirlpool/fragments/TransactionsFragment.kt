@@ -64,7 +64,9 @@ class TransactionsFragment : Fragment() {
         viewModel.setAccount(WhirlpoolAccount.POSTMIX.accountIndex);
         val filter = IntentFilter(BalanceActivity.DISPLAY_INTENT)
         LocalBroadcastManager.getInstance(requireContext())
-            .registerReceiver(broadCastReceiver, filter)
+            .registerReceiver(whirlPoolHomeViewModel.broadCastReceiver, filter)
+        LocalBroadcastManager.getInstance(requireContext())
+                .registerReceiver(broadCastReceiver, filter)
         viewModel.loadOfflineData()
         whirlPoolHomeViewModel.onboardStatus.observe(viewLifecycleOwner, { showOnBoarding ->
             if (showOnBoarding) {
@@ -147,6 +149,7 @@ class TransactionsFragment : Fragment() {
                 })
         }
 
+
         swipeRefreshLayout = SwipeRefreshLayout(container.context)
             .apply {
                 layoutParams = FrameLayout.LayoutParams(
@@ -156,13 +159,13 @@ class TransactionsFragment : Fragment() {
                 whirlPoolHomeViewModel.refresh()
                 this.addView(recyclerView)
                 setOnRefreshListener {
-                    val intent = Intent(requireContext(), JobRefreshService::class.java)
-                    intent.putExtra("notifTx", false)
-                    intent.putExtra("dragged", true)
-                    intent.putExtra("launch", false)
-                    JobRefreshService.enqueueWork(requireContext(), intent)
+                    whirlPoolHomeViewModel.refreshList(requireContext())
                 }
             }
+
+        whirlPoolHomeViewModel.listRefreshStatus.observe(viewLifecycleOwner, {
+            swipeRefreshLayout?.isRefreshing = it
+        })
         containerLayout.addView(swipeRefreshLayout)
         return containerLayout
     }

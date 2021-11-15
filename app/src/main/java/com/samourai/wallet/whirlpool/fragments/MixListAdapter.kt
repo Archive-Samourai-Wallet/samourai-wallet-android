@@ -89,7 +89,7 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
 
 
     fun updateList(utxos: List<WhirlpoolUtxo>) {
-        scope.launch {
+        scope.launch (Dispatchers.Default){
             try {
                 val sorted = utxos
                     .sortedBy { it.utxoState.status != WhirlpoolUtxoStatus.READY }

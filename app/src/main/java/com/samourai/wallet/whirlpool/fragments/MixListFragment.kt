@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -69,11 +70,14 @@ class MixListFragment : Fragment() {
                     if (isRemixList) viewModel.remixLive else viewModel.mixingLive
 
                 mixList.observe(viewLifecycleOwner, { list ->
+                    if(viewModel.listRefreshStatus.value != false) {
+                        return@observe
+                    }
                     val onBoardingActive = viewModel.onboardStatus.value ?: showOnboard
                     if (onBoardingActive) {
                         return@observe
                     }
-                    if (list.isEmpty()) {
+                    if (list.isEmpty() && !binding.mixSwipeContainer.isRefreshing) {
                         showAddMoreCoinView(!isRemixList)
                     } else {
                         if (binding.mixListContainer.visibility != View.VISIBLE && !showOnboard) {
@@ -112,6 +116,7 @@ class MixListFragment : Fragment() {
                 if (it.utxoState != null && it.utxoState.status != null) {
                     if (it.utxoState.status == WhirlpoolUtxoStatus.MIX_STARTED) {
                         wallet.mixStop(it)
+                        wallet.mixQueue(it)
                     }else{
                         wallet.mix(it)
                     }
@@ -196,17 +201,11 @@ class MixListFragment : Fragment() {
     }
 
     private fun setUpList() {
+        viewModel.listRefreshStatus.observe(viewLifecycleOwner, {
+            binding.mixSwipeContainer.isRefreshing = it
+        })
         binding.mixSwipeContainer.setOnRefreshListener {
-            val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull;
-            if (wallet != null) {
-                binding.mixSwipeContainer.isRefreshing = true;
-                viewModel.viewModelScope.launch(Dispatchers.IO) {
-                    wallet.refreshUtxos()
-                    withContext(Dispatchers.Main) {
-                        binding.mixSwipeContainer.isRefreshing = false;
-                    }
-                }
-            }
+          viewModel.refreshList(requireContext())
         }
         val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.divider_grey)
         binding.mixListRecyclerView.apply {
