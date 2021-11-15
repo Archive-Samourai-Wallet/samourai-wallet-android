@@ -142,22 +142,22 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
 
                 holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.incoming_tx_green));
                 String amount = is_sat_prefs ? FormatsUtil.formatSats(_amount) : FormatsUtil.formatBTC(_amount);
-                if (this.account == WhirlpoolMeta.getInstance(mContext).getWhirlpoolPostmix() && _amount == 0) {
-                    amount = amount.concat(mContext.getString(R.string.remix_note_tag));
-                }
+
                 holder.tvAmount.setText(amount);
                 holder.tvAmount.setTextColor(ContextCompat.getColor(mContext, R.color.green_ui_2));
-                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() &&  _amount==0){
-                    holder.txSubText.setVisibility(View.VISIBLE);
-                    holder.txSubText.setText(R.string.mixed);
-                    holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_whirlpool));
-                }else{
-                    if( BlockedUTXO.BLOCKED_UTXO_THRESHOLD >= _amount){
+                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() ){
+                    if(_amount == 0){
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.remix_note_tag);
+                    }else if( BlockedUTXO.BLOCKED_UTXO_THRESHOLD >= _amount){
                         holder.txSubText.setVisibility(View.VISIBLE);
                         holder.txSubText.setText(R.string.dust);
                     }else{
-                        holder.txSubText.setVisibility(View.GONE);
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.mixed);
+                        holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_whirlpool));
                     }
+
                 }
             }
 
