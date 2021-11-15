@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 
 public class AndroidMinerFeeSupplier implements MinerFeeSupplier {
-    private Logger log = LoggerFactory.getLogger(AndroidMinerFeeSupplier.class.getSimpleName());
+    private Logger log = LoggerFactory.getLogger(AndroidMinerFeeSupplier.class);
     private FeeUtil feeUtil;
 
     public AndroidMinerFeeSupplier(FeeUtil feeUtil) {

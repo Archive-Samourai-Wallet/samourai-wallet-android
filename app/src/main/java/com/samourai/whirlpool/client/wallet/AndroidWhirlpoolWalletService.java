@@ -27,9 +27,11 @@ import com.samourai.whirlpool.client.exception.NotifiableException;
 import com.samourai.whirlpool.client.utils.ClientUtils;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolServer;
 import com.samourai.whirlpool.client.wallet.data.AndroidDataSourceFactory;
+import com.samourai.whirlpool.client.wallet.data.AndroidWalletStateSupplier;
 import com.samourai.whirlpool.client.wallet.data.dataPersister.DataPersisterFactory;
 import com.samourai.whirlpool.client.wallet.data.dataPersister.FileDataPersisterFactory;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceFactory;
+import com.samourai.whirlpool.client.wallet.data.walletState.WalletStateSupplier;
 import com.samourai.whirlpool.client.whirlpool.ServerApi;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -113,11 +115,10 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
 
     private DataSourceFactory computeDataSourceFactory(Context ctx) {
         PushTx pushTx = PushTx.getInstance(ctx);
-        AddressFactory addressFactory = AddressFactory.getInstance(ctx);
         FeeUtil feeUtil = FeeUtil.getInstance();
         APIFactory apiFactory = APIFactory.getInstance(ctx);
         UTXOFactory utxoFactory = UTXOFactory.getInstance(ctx);
-        return new AndroidDataSourceFactory(pushTx, addressFactory, feeUtil, apiFactory, utxoFactory);
+        return new AndroidDataSourceFactory(pushTx, feeUtil, apiFactory, utxoFactory);
     }
 
     private DataPersisterFactory computeDataPersisterFactory(Context ctx) {
@@ -130,6 +131,12 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
             @Override
             protected File computeFileUtxos(String walletIdentifier) throws NotifiableException {
                 return whirlpoolUtils.computeUtxosFile(walletIdentifier, ctx);
+            }
+
+            @Override
+            protected WalletStateSupplier computeWalletStateSupplier(WhirlpoolWallet whirlpoolWallet) {
+                AddressFactory addressFactory = AddressFactory.getInstance(ctx);
+                return new AndroidWalletStateSupplier(addressFactory);
             }
         };
     }

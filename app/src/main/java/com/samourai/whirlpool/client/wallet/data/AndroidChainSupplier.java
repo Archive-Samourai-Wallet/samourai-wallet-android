@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AndroidChainSupplier implements ChainSupplier {
-    private Logger log = LoggerFactory.getLogger(AndroidChainSupplier.class.getSimpleName());
+    private Logger log = LoggerFactory.getLogger(AndroidChainSupplier.class);
 
     private APIFactory apiFactory;
 

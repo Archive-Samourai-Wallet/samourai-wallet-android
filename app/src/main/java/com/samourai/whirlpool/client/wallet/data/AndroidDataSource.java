@@ -30,9 +30,9 @@ public class AndroidDataSource implements DataSource {
     private ExpirablePoolSupplier poolSupplier;
     private UtxoSupplier utxoSupplier;
 
-    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, DataPersister dataPersister, PushTx pushTx, AddressFactory addressFactory, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory) throws Exception {
+    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, DataPersister dataPersister, PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory) throws Exception {
         this.pushTx = pushTx;
-        WalletStateSupplier walletStateSupplier = new AndroidWalletStateSupplier(addressFactory);
+        WalletStateSupplier walletStateSupplier = dataPersister.getWalletStateSupplier();
         this.walletSupplier = new WalletSupplierImpl(bip44w, walletStateSupplier);
         this.minerFeeSupplier = new AndroidMinerFeeSupplier(feeUtil);
         this.chainSupplier = new AndroidChainSupplier(apiFactory);

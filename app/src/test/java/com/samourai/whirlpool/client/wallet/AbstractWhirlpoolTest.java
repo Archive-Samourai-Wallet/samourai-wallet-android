@@ -28,7 +28,7 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public abstract class AbstractWhirlpoolTest {
-    private Logger log = LoggerFactory.getLogger(AndroidStompClient.class.getSimpleName());
+    private Logger log = LoggerFactory.getLogger(AndroidStompClient.class);
 
     protected Context context = null; //new MockContext(); // TODO sdk>=29 required
     protected BIP47Util bip47Util = BIP47Util.getInstance(context);

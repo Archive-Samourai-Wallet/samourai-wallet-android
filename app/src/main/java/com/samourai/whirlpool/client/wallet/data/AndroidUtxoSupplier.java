@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class AndroidUtxoSupplier extends BasicUtxoSupplier {
-    private Logger log = LoggerFactory.getLogger(AndroidUtxoSupplier.class.getSimpleName());
+    private Logger log = LoggerFactory.getLogger(AndroidUtxoSupplier.class);
 
     private UTXOFactory utxoFactory;
     private long lastUpdate;
@@ -69,9 +69,9 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
             log.debug("utxoSupplier.computeValue()");
         }
         List<UnspentOutput> utxos = new LinkedList();
-        utxos.addAll(toUnspentOutputs(utxoFactory.getP2PKHClean().values(), WhirlpoolAccount.DEPOSIT, AddressType.LEGACY));
-        utxos.addAll(toUnspentOutputs(utxoFactory.getP2SH_P2WPKHClean().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_COMPAT));
-        utxos.addAll(toUnspentOutputs(utxoFactory.getP2WPKHClean().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_NATIVE));
+        utxos.addAll(toUnspentOutputs(utxoFactory.getP2PKH().values(), WhirlpoolAccount.DEPOSIT, AddressType.LEGACY));
+        utxos.addAll(toUnspentOutputs(utxoFactory.getP2SH_P2WPKH().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_COMPAT));
+        utxos.addAll(toUnspentOutputs(utxoFactory.getP2WPKH().values(), WhirlpoolAccount.DEPOSIT, AddressType.SEGWIT_NATIVE));
         utxos.addAll(toUnspentOutputs(utxoFactory.getPreMix().values(), WhirlpoolAccount.PREMIX, AddressType.SEGWIT_NATIVE));
         utxos.addAll(toUnspentOutputs(utxoFactory.getPostMixClean().values(), WhirlpoolAccount.POSTMIX, AddressType.SEGWIT_NATIVE));
 
@@ -92,6 +92,9 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
         for (UTXO utxo : utxos) {
             Collection<UnspentOutput> unspents = utxo.toUnspentOutputs(xpub);
             unspentOutputs.addAll(unspents);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("set utxos["+whirlpoolAccount+"]["+addressType+"] = "+utxos.size()+" UTXO = "+unspentOutputs.size()+" unspentOutputs");
         }
         return unspentOutputs;
     }

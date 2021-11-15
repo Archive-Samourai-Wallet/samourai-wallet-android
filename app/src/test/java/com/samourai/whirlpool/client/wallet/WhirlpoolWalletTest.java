@@ -8,7 +8,6 @@ import com.samourai.wallet.api.backend.BackendApi;
 import com.samourai.wallet.api.backend.BackendServer;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.hd.HD_Wallet;
-import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.send.provider.SimpleUtxoKeyProvider;
 import com.samourai.wallet.tor.TorManager;
@@ -16,13 +15,11 @@ import com.samourai.whirlpool.client.tx0.Tx0;
 import com.samourai.whirlpool.client.tx0.Tx0Config;
 import com.samourai.whirlpool.client.tx0.Tx0Preview;
 import com.samourai.whirlpool.client.tx0.Tx0Previews;
-import com.samourai.whirlpool.client.utils.ClientUtils;
+import com.samourai.whirlpool.client.utils.DebugUtils;
 import com.samourai.whirlpool.client.wallet.beans.MixingState;
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
-import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceFactory;
-import com.samourai.whirlpool.client.wallet.data.dataSource.SamouraiDataSourceFactory;
 import com.samourai.whirlpool.client.whirlpool.beans.Pool;
 
 import junit.framework.Assert;
@@ -41,7 +38,7 @@ import java.util.LinkedList;
 
 @Ignore
 public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
-    private Logger log = LoggerFactory.getLogger(WhirlpoolWalletTest.class.getSimpleName());
+    private Logger log = LoggerFactory.getLogger(WhirlpoolWalletTest.class);
     private WhirlpoolWallet whirlpoolWallet;
     private HD_Wallet bip84w;
     private WhirlpoolWalletConfig config;
@@ -101,12 +98,12 @@ public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
         // list premix utxos
         Collection<WhirlpoolUtxo> utxosPremix = whirlpoolWallet.getUtxoSupplier().findUtxos(WhirlpoolAccount.PREMIX);
         log.info(utxosPremix.size()+" PREMIX utxos:");
-        ClientUtils.logWhirlpoolUtxos(utxosPremix, 9999999);
+        log.info(DebugUtils.getDebugUtxos(utxosPremix, 9999999));
 
         // list postmix utxos
         Collection<WhirlpoolUtxo> utxosPostmix = whirlpoolWallet.getUtxoSupplier().findUtxos(WhirlpoolAccount.POSTMIX);
         log.info(utxosPostmix.size()+" POSTMIX utxos:");
-        ClientUtils.logWhirlpoolUtxos(utxosPostmix, 9999999);
+        log.info(DebugUtils.getDebugUtxos(utxosPostmix, 9999999));
 
         // keep running
         for(int i=0; i<50; i++) {

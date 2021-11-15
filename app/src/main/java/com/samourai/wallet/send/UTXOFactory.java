@@ -4,13 +4,13 @@ import android.content.Context;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -514,6 +514,7 @@ public class UTXOFactory {
         // assume starts with "M/1/"
         // any account change
         else {
+            LogUtil.debug("UTXOFactory", "Toxic utxo: path="+utxo.getPath()+", value="+utxo.getValue());
             return true;
         }
 
@@ -560,6 +561,7 @@ public class UTXOFactory {
     }
 
     private void onChange() {
+        // required for Whirlpool
         lastUpdate = System.currentTimeMillis();
     }
 

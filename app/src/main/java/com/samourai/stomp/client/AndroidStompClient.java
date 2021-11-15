@@ -26,7 +26,7 @@ import ua.naiksoftware.stomp.dto.StompHeader;
 import ua.naiksoftware.stomp.dto.StompMessage;
 
 public class AndroidStompClient implements IStompClient {
-    private Logger log = LoggerFactory.getLogger(AndroidStompClient.class.getSimpleName());
+    private Logger log = LoggerFactory.getLogger(AndroidStompClient.class);
     private Gson gson;
     private TorManager torManager;
     private StompClient stompClient;
