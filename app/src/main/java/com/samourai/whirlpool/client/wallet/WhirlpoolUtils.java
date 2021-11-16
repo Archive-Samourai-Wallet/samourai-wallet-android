@@ -5,6 +5,7 @@ import android.content.Context;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.segwit.BIP84Util;
+import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
@@ -111,7 +112,9 @@ public class WhirlpoolUtils {
                 // tag only premix & postmix utxos
                 if (WhirlpoolAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || WhirlpoolAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
                     // show whirlpool tag
-                    tags.add(whirlpoolUtxo.getMixsDone() + " MIXED");
+                    if(whirlpoolUtxo.getUtxo().value > BlockedUTXO.BLOCKED_UTXO_THRESHOLD){
+                        tags.add(whirlpoolUtxo.getMixsDone() + " MIXED");
+                    }
 
                     // show reason when not mixable
                     MixableStatus mixableStatus = whirlpoolUtxo.getUtxoState().getMixableStatus();
