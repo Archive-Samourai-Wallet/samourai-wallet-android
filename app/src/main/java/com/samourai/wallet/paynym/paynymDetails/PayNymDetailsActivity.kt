@@ -1,6 +1,7 @@
 package com.samourai.wallet.paynym.paynymDetails
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -237,6 +238,15 @@ class PayNymDetailsActivity : SamouraiActivity() {
     }
 
     private fun followPaynym() {
+        val bip47 = BIP47Util.getInstance(this);
+        if(bip47.paymentCode.toString() == pcode || bip47.featurePaymentCode.toString() == pcode){
+            MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.app_name)
+                    .setMessage(getString(R.string.you_cannot_follow_your_own_paynym))
+                    .setPositiveButton(R.string.ok) { dialogInterface, _ -> dialogInterface.dismiss() }
+                    .show()
+            return
+        }
         if (BIP47Meta.getInstance().isFollowing(pcode)) {
                 doNotifTx()
         } else {
