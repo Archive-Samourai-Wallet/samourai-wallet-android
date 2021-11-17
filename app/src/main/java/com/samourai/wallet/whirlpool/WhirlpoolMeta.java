@@ -43,7 +43,7 @@ public class WhirlpoolMeta {
         return WhirlpoolAccount.BADBANK.getAccountIndex();
     }
 
-    public long getMinimumPoolDenomination() {
+    public static long getMinimumPoolDenomination() {
         return 100000L;
     }
 
