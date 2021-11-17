@@ -868,10 +868,10 @@
     <string name="transactions">Transactions</string>
     <string name="remixing">Remixing</string>
     <string name="whirlpool_completely_breaks_the">Whirlpool completely breaks the past links of your bitcoin from their future activity to help protect your privacy when using Bitcoin.</string>
-    <string name="whirlpool_is_entirely">\"Whirlpool is entirely non custodial. This means you keep full control of your bitcoin private keys at all steps of the process</string>
+    <string name="whirlpool_is_entirely">Whirlpool is entirely non custodial. This means you keep full control of your bitcoin private keys at all steps of the process</string>
     <string name="coins_that_are_currently">Coins that are currently waiting to complete their first Whirlpool mix will be listed and managed here.</string>
-    <string name="your_coins_will_be_split">Your coins will be split into identical size amounts automatically. Each of these identical amount coins will be mixed individually.\nYour wallet can only mix while it is online and unlocked.</string>
-    <string name="coins_that_have_been_mixed">Coins that have been mixed at least one time will automatically be queued and randomly selected. for free remixing.</string>
+    <string name="your_coins_will_be_split">Your coins will be split into identical size amounts automatically. Each of these identical amount coins will be mixed individually.\n\nYour wallet can only mix while it is online and unlocked.</string>
+    <string name="coins_that_have_been_mixed">Coins that have been mixed at least one time will automatically be queued and randomly selected for free remixing.</string>
     <string name="whirlpool_offers_absolutely">Whirlpool offers absolutely free remixing for previously mixed coins. These transactions are without any miner fee or coordinator fees.\n\nRemixing increases your privacy gains and increases the privacy of the entire mixing pool.</string>
     <string name="your_mixed_coins_have_been">Your mixed coins have been automatically queued for remixing.\n\nAdd some more unmixed coins to Whirlpool at any time.</string>
     <string name="once_you_spend_a_mixed">Once you spend a mixed coin it is no longer eligible for free Remixing.\n\nAdd some more unmixed coins to Whirlpool at any time.</string>
