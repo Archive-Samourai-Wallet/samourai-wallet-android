@@ -1,37 +1,24 @@
 package com.samourai.wallet.whirlpool.newPool.fragments
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
-import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel.setPoolPriority
-import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel.getTx0PoolPriority
-import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel.setPool
-import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel.getPool
 import androidx.recyclerview.widget.RecyclerView
 import com.samourai.wallet.whirlpool.adapters.PoolsAdapter
 import com.samourai.wallet.whirlpool.models.PoolViewModel
 import com.google.android.material.button.MaterialButton
-import android.widget.TextView
 import com.samourai.wallet.whirlpool.models.PoolCyclePriority
-import com.samourai.wallet.whirlpool.newPool.fragments.SelectPoolFragment.OnPoolSelectionComplete
 import io.reactivex.disposables.CompositeDisposable
 import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel
 import com.samourai.wallet.utxos.models.UTXOCoin
 import android.os.Bundle
+import android.util.Log
 import com.samourai.wallet.R
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DefaultItemAnimator
-import com.samourai.wallet.whirlpool.newPool.fragments.SelectPoolFragment.SeparatorDecoration
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.samourai.wallet.whirlpool.adapters.PoolsAdapter.OnItemsSelected
-import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
-import com.samourai.whirlpool.client.wallet.WhirlpoolWallet
-import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
-import io.reactivex.android.schedulers.AndroidSchedulers
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
@@ -40,112 +27,85 @@ import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import android.util.TypedValue
 import android.view.View
 import androidx.fragment.app.Fragment
-import com.samourai.whirlpool.client.whirlpool.beans.Pool
-import io.reactivex.Single
+import androidx.fragment.app.activityViewModels
+import com.google.android.material.snackbar.Snackbar
+import com.samourai.wallet.api.backend.MinerFeeTarget
+import com.samourai.wallet.databinding.FragmentChoosePoolsBinding
+import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import java.util.ArrayList
 
 class SelectPoolFragment : Fragment() {
-    private var recyclerView: RecyclerView? = null
-    private var poolsAdapter: PoolsAdapter? = null
-    private val poolViewModels = ArrayList<PoolViewModel>()
-    private var feeNormalBtn: MaterialButton? = null
-    private var feeLowBtn: MaterialButton? = null
-    private var feeHighBtn: MaterialButton? = null
-    private var poolFee: TextView? = null
+    private lateinit var poolsAdapter: PoolsAdapter
+    private var poolViewModels = ArrayList<PoolViewModel>()
     private var poolCyclePriority = PoolCyclePriority.NORMAL
     private var onPoolSelectionComplete: OnPoolSelectionComplete? = null
-    private var fees = ArrayList<Long>()
     private val compositeDisposable = CompositeDisposable()
-    private var newPoolViewModel: NewPoolViewModel? = null
+    private val newPoolViewModel: NewPoolViewModel by activityViewModels()
     private var tx0Amount = 0L
+    private lateinit var binding: FragmentChoosePoolsBinding
     private var coins: List<UTXOCoin> = ArrayList()
-    fun setOnPoolSelectionComplete(onPoolSelectionComplete: OnPoolSelectionComplete?) {
-        this.onPoolSelectionComplete = onPoolSelectionComplete
-    }
+    private val fees :ArrayList<Long> = arrayListOf()
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        feeNormalBtn = view.findViewById(R.id.pool_fee_normal_btn)
-        feeHighBtn = view.findViewById(R.id.pool_fee_high_btn)
-        feeLowBtn = view.findViewById(R.id.pool_fee_low_btn)
-        newPoolViewModel = ViewModelProvider(requireActivity()).get(NewPoolViewModel::class.java)
-        recyclerView = view.findViewById(R.id.pool_recycler_view)
-        recyclerView.setItemAnimator(DefaultItemAnimator())
-        recyclerView.addItemDecoration(SeparatorDecoration(requireContext(), ContextCompat.getColor(requireContext(), R.color.item_separator_grey), 1))
-        recyclerView.setLayoutManager(LinearLayoutManager(context))
-        poolsAdapter = PoolsAdapter(context, poolViewModels)
-        recyclerView.setAdapter(poolsAdapter)
-        poolFee = view.findViewById(R.id.pool_fee_txt)
-        feeLowBtn.setOnClickListener(View.OnClickListener { view1: View? -> newPoolViewModel!!.setPoolPriority(PoolCyclePriority.LOW) })
-        feeNormalBtn.setOnClickListener(View.OnClickListener { view1: View? -> newPoolViewModel!!.setPoolPriority(PoolCyclePriority.NORMAL) })
-        feeHighBtn.setOnClickListener(View.OnClickListener { view1: View? -> newPoolViewModel!!.setPoolPriority(PoolCyclePriority.HIGH) })
-        newPoolViewModel!!.getTx0PoolPriority.observe(this.viewLifecycleOwner, { poolCyclePriority: PoolCyclePriority -> setPoolCyclePriority(poolCyclePriority) })
-        if (fees.size >= 2) poolFee.setText(fees[1].toString() + " " + getString(R.string.sat_b))
-        poolsAdapter!!.setOnItemsSelectListener { position: Int ->
-            for (i in poolViewModels.indices) {
-                if (i == position) {
-                    val selected = !poolViewModels[position].isSelected
-                    poolViewModels[i].isSelected = selected
-                    if (selected) {
-                        newPoolViewModel!!.setPool(poolViewModels[i])
-                    } else {
-                        if (onPoolSelectionComplete != null) newPoolViewModel!!.setPool(null)
-                    }
-                } else {
-                    poolViewModels[i].isSelected = false
-                }
-            }
-            poolsAdapter!!.update(poolViewModels)
-        }
-    }
 
-    fun setFees(fees: ArrayList<Long>) {
-        this.fees = fees
-    }
-
-    private fun loadPools() {
-        poolViewModels.clear()
-        tx0Amount = NewPoolActivity.getCycleTotalAmount(coins)
-        val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
-                ?: return
-        if (poolsAdapter == null) {
-            poolsAdapter = PoolsAdapter(context, poolViewModels)
+        binding.poolRecyclerView.itemAnimator = DefaultItemAnimator()
+        binding.poolRecyclerView.addItemDecoration(SeparatorDecoration(requireContext(), ContextCompat.getColor(requireContext(), R.color.item_separator_grey), 1f))
+        binding.poolRecyclerView.layoutManager = LinearLayoutManager(context)
+        poolsAdapter = PoolsAdapter(requireContext(), poolViewModels)
+        binding.poolRecyclerView.adapter = poolsAdapter
+        binding.poolRecyclerView.itemAnimator = null
+        binding.feeLowBtn.setOnClickListener {
+            newPoolViewModel.setPoolPriority(PoolCyclePriority.LOW)
+            newPoolViewModel.loadPools()
         }
-        val disposable = Single.fromCallable { whirlpoolWallet.poolSupplier.pools }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ whirlpoolPools: Collection<Pool> ->
-                    for (whirlpoolPool in whirlpoolPools) {
-                        val poolViewModel = PoolViewModel(whirlpoolPool)
-                        var fee = fees[1]
-                        if (newPoolViewModel!!.getTx0PoolPriority.value != null) {
-                            when (newPoolViewModel!!.getTx0PoolPriority.value) {
-                                PoolCyclePriority.HIGH -> fee = fees[2]
-                                PoolCyclePriority.NORMAL -> fee = fees[1]
-                                PoolCyclePriority.LOW -> {
-                                    fee = fees[0]
-                                }
-                            }
-                        }
-                        if (newPoolViewModel!!.getPool.value != null) {
-                            poolViewModel.isSelected = newPoolViewModel!!.getPool.value!!.poolId == poolViewModel.poolId
-                        }
-                        poolViewModel.setMinerFee(fee, coins)
-                        poolViewModels.add(poolViewModel)
-                        if (poolViewModel.denomination + poolViewModel.feeValue + poolViewModel.minerFee > tx0Amount) {
-                            poolViewModel.isDisabled = true
-                        } else {
-                            poolViewModel.isDisabled = false
-                        }
-                    }
-                    poolsAdapter!!.notifyDataSetChanged()
-                }) { obj: Throwable -> obj.printStackTrace() }
-        compositeDisposable.add(disposable)
+        binding.feeNormalBtn.setOnClickListener {
+            newPoolViewModel.setPoolPriority(PoolCyclePriority.NORMAL)
+            newPoolViewModel.loadPools()
+        }
+        binding.feeHighBtn.setOnClickListener {
+            newPoolViewModel.setPoolPriority(PoolCyclePriority.HIGH)
+            newPoolViewModel.loadPools()
+        }
+        newPoolViewModel.getTx0PoolPriority.observe(this.viewLifecycleOwner, { poolCyclePriority: PoolCyclePriority -> setPoolCyclePriority(poolCyclePriority) })
+        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
+        if (wallet != null) {
+            fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_24).toLong())
+            fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_6).toLong())
+            fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_2).toLong())
+        }
+
+        if (fees.size >= 2) {
+            binding.poolFee.text = fees[1].toString() + " " + getString(R.string.sat_b)
+        }
+
+        newPoolViewModel.getPools.observe(this.viewLifecycleOwner, {
+            binding.fetchPoolRetryButton.visibility = View.GONE;
+            poolsAdapter.update(it)
+        });
+
+        newPoolViewModel.getLoadingPools.observe(this.viewLifecycleOwner, {
+            binding.poolLoadingProgress.visibility = if (it) View.VISIBLE else View.GONE
+        })
+
+        newPoolViewModel.getPoolLoadError.observe(this.viewLifecycleOwner, {
+          if(it?.message != null){
+              binding.fetchPoolRetryButton.visibility = View.VISIBLE;
+          }
+        })
+        poolsAdapter.setOnItemsSelectListener { position: Int ->
+            newPoolViewModel.setSelectedPool(position)
+        }
+        binding.fetchPoolRetryButton.setOnClickListener {
+            newPoolViewModel.loadPools()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_choose_pools, container, false)
+                              savedInstanceState: Bundle?): View {
+        binding = FragmentChoosePoolsBinding.inflate(inflater, container, false);
+        return binding.root
     }
 
     override fun onDestroy() {
@@ -155,33 +115,31 @@ class SelectPoolFragment : Fragment() {
 
     private fun setPoolCyclePriority(poolCyclePriority: PoolCyclePriority) {
         this.poolCyclePriority = poolCyclePriority
+
         when (poolCyclePriority) {
             PoolCyclePriority.LOW -> {
-                setButtonColor(feeNormalBtn, R.color.window)
-                setButtonColor(feeHighBtn, R.color.window)
-                setButtonColor(feeLowBtn, R.color.blue_ui_2)
-                if (fees.size >= 1) poolFee!!.text = fees[0].toString() + " " + getString(R.string.sat_b)
-                if (fees.size >= 1) loadPools()
+                setButtonColor(binding.feeNormalBtn, R.color.window)
+                setButtonColor(binding.feeHighBtn, R.color.window)
+                setButtonColor(binding.feeLowBtn, R.color.blue_ui_2)
+                if (fees.size >= 1) binding.poolFee.text = fees[0].toString() + " " + getString(R.string.sat_b)
             }
             PoolCyclePriority.NORMAL -> {
-                setButtonColor(feeLowBtn, R.color.window)
-                setButtonColor(feeHighBtn, R.color.window)
-                setButtonColor(feeNormalBtn, R.color.blue_ui_2)
-                if (fees.size >= 2) poolFee!!.text = fees[1].toString() + " " + getString(R.string.sat_b)
-                if (fees.size >= 2) loadPools()
+                setButtonColor(binding.feeLowBtn, R.color.window)
+                setButtonColor(binding.feeHighBtn, R.color.window)
+                setButtonColor(binding.feeNormalBtn, R.color.blue_ui_2)
+                if (fees.size >= 2) binding.poolFee.text = fees[1].toString() + " " + getString(R.string.sat_b)
             }
             PoolCyclePriority.HIGH -> {
-                setButtonColor(feeLowBtn, R.color.window)
-                setButtonColor(feeNormalBtn, R.color.window)
-                setButtonColor(feeHighBtn, R.color.blue_ui_2)
-                if (fees.size >= 2) poolFee!!.text = fees[2].toString() + " " + getString(R.string.sat_b)
-                if (fees.size >= 2) loadPools()
+                setButtonColor(binding.feeLowBtn, R.color.window)
+                setButtonColor(binding.feeNormalBtn, R.color.window)
+                setButtonColor(binding.feeHighBtn, R.color.blue_ui_2)
+                if (fees.size >= 2) binding.poolFee.text = fees[2].toString() + " " + getString(R.string.sat_b)
             }
         }
     }
 
     fun setButtonColor(button: MaterialButton?, color: Int) {
-        button!!.backgroundTintList = ContextCompat.getColorStateList(context!!, color)
+        button!!.backgroundTintList = ContextCompat.getColorStateList(requireContext(), color)
     }
 
     override fun onDetach() {
@@ -191,7 +149,6 @@ class SelectPoolFragment : Fragment() {
 
     fun setTX0(coins: List<UTXOCoin>) {
         this.coins = coins
-        loadPools()
     }
 
     interface OnPoolSelectionComplete {
@@ -200,8 +157,8 @@ class SelectPoolFragment : Fragment() {
 
     // RV decorator that sets custom divider for the list
     private inner class SeparatorDecoration internal constructor(context: Context, @ColorInt color: Int,
-                                                                 @FloatRange(from = 0, fromInclusive = false) heightDp: Float) : ItemDecoration() {
-        private val mPaint: Paint
+                                                                 @FloatRange(from = 0.0, fromInclusive = false) heightDp: Float) : ItemDecoration() {
+        private val mPaint: Paint = Paint()
         override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
             val params = view.layoutParams as RecyclerView.LayoutParams
             val position = params.viewAdapterPosition
@@ -231,7 +188,6 @@ class SelectPoolFragment : Fragment() {
         }
 
         init {
-            mPaint = Paint()
             mPaint.color = color
             val thickness = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                     heightDp, context.resources.displayMetrics)

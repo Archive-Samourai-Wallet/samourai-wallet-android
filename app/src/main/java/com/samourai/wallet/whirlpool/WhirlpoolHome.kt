@@ -224,7 +224,7 @@ class WhirlpoolHome : SamouraiActivity() {
                 )
                 val mediumFee = FeeUtil.getInstance().normalFee.defaultPerKB.toLong() / 1000L
                 val tx0 = WhirlpoolTx0(
-                    WhirlpoolMeta.getInstance(this@WhirlpoolHome).minimumPoolDenomination,
+                    WhirlpoolMeta.getMinimumPoolDenomination(),
                     mediumFee,
                     1,
                     coins
