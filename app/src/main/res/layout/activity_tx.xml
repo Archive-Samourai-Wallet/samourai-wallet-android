@@ -145,6 +145,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:textColor="@color/white"
+                    android:alpha="0.5"
                     android:text="Date" />
 
                 <TextView
@@ -180,7 +182,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="@string/status" />
+                    android:alpha="0.5"
+                    android:text="@string/status"
+                    android:textColor="@color/white" />
 
                 <TextView
                     android:id="@+id/tx_status"
@@ -214,6 +218,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:textColor="@color/white"
+                    android:alpha="0.5"
                     android:text="@string/miner_fee_rate" />
 
                 <TextView
@@ -246,6 +252,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:textColor="@color/white"
+                    android:alpha="0.5"
                     android:text="Miner fee paid" />
 
                 <TextView
@@ -277,6 +285,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:textColor="@color/white"
+                    android:alpha="0.5"
                     android:text="@string/transaction_id" />
 
             </LinearLayout>
@@ -297,7 +307,7 @@
                     android:background="?attr/selectableItemBackground"
                     android:fontFamily="@font/roboto_mono"
                     android:gravity="start"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     tools:text="919cf999c5bd6c80e2e3fb81b9009ac779d749ff71b5b7fd279482f8cb82e125" />
 
             </LinearLayout>

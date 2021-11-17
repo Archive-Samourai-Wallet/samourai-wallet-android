@@ -38,7 +38,8 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:maxLines="4"
-                android:padding="16dp"
+                android:padding="18dp"
+                android:fontFamily="@font/roboto_mono"
                 android:textAlignment="center" />
         </FrameLayout>
 
@@ -70,14 +71,16 @@
                     android:paddingBottom="4dp"
                     android:text="@string/amount"
                     android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    android:alpha="0.5"
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/utxo_details_amount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/roboto_mono"
                     tools:text="2.030 BTC" />
 
             </LinearLayout>
@@ -103,14 +106,16 @@
                     android:paddingBottom="4dp"
                     android:text="@string/address"
                     android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    android:alpha="0.5"
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/utxo_details_address"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/roboto_mono"
                     android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     tools:text="address" />
 
             </LinearLayout>
@@ -137,14 +142,15 @@
                     android:paddingBottom="4dp"
                     android:text="@string/status"
                     android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    android:alpha="0.5"
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/utxo_details_spendable_status"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                    android:textSize="12sp" />
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
@@ -197,6 +203,8 @@
                     android:text="Notes"
                     android:textColor="@color/white"
                     android:textColorLink="@color/white"
+                    android:alpha="0.5"
+                    android:textSize="12sp"
                     app:layout_constraintBottom_toBottomOf="@+id/add_note_button"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"

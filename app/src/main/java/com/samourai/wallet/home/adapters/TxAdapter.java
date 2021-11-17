@@ -177,7 +177,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
             Date date = new Date(tx.getTS());
             if (tx.getTS() == -1L) {
                 holder.tvSection.setText(holder.itemView.getContext().getString(R.string.pending));
-                holder.tvSection.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.warning_yellow));
+                holder.tvSection.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
             } else {
                 holder.tvSection.setTextColor(ContextCompat.getColor(holder.tvSection.getContext(), R.color.text_primary));
                 if (DateUtils.isToday(tx.getTS())) {

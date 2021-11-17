@@ -46,9 +46,10 @@
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:background="@color/grey_accent" />
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:alpha="0.1"
+            android:background="@color/white" />
 
 
         <androidx.core.widget.NestedScrollView
@@ -131,7 +132,8 @@
                     android:layout_height="1dp"
                     android:layout_margin="12dp"
                     android:layout_marginTop="1dp"
-                    android:background="@color/text_ui2_grey" />
+                    android:alpha="0.1"
+                    android:background="@color/white" />
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -164,7 +166,8 @@
                     android:layout_height="1dp"
                     android:layout_margin="12dp"
                     android:layout_marginTop="1dp"
-                    android:background="@color/text_ui2_grey" />
+                    android:alpha="0.1"
+                    android:background="@color/white" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -197,7 +200,8 @@
                     android:layout_height="1dp"
                     android:layout_margin="12dp"
                     android:layout_marginTop="1dp"
-                    android:background="@color/text_ui2_grey" />
+                    android:alpha="0.1"
+                    android:background="@color/white" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -231,7 +235,8 @@
                     android:layout_height="1dp"
                     android:layout_margin="12dp"
                     android:layout_marginTop="1dp"
-                    android:background="@color/text_ui2_grey" />
+                    android:alpha="0.1"
+                    android:background="@color/white" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -265,7 +270,8 @@
                     android:layout_height="1dp"
                     android:layout_margin="12dp"
                     android:layout_marginTop="1dp"
-                    android:background="@color/text_ui2_grey" />
+                    android:alpha="0.1"
+                    android:background="@color/white" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
