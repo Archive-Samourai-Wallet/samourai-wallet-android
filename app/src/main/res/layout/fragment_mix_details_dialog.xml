@@ -32,7 +32,8 @@
                 android:layout_weight="1"
                 android:gravity="center_vertical"
                 android:text="@string/mix_details"
-                android:textColor="@color/white"
+                android:textColor="@color/accent"
+                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
@@ -40,17 +41,6 @@
 
 
         </LinearLayout>
-
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="12dp"
-            android:alpha="0.1"
-            android:background="@color/white" />
-
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
@@ -122,6 +112,7 @@
                         android:background="?attr/selectableItemBackground"
                         android:gravity="end"
                         android:textColor="@color/text_secondary"
+                        android:fontFamily="@font/roboto_mono"
                         tools:text="1234" />
 
 
