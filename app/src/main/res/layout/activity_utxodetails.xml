@@ -86,7 +86,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:alpha="0.2"
+                android:alpha="0.1"
                 android:background="@color/white"
                 android:padding="12dp" />
 
@@ -119,16 +119,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:alpha="0.2"
-                android:background="@color/white"
-                android:padding="12dp" />
-
-
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:alpha="0.2"
+                android:alpha="0.1"
                 android:background="@color/white"
                 android:padding="12dp" />
 
@@ -161,7 +152,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:alpha="0.2"
+                android:alpha="0.1"
                 android:background="@color/white"
                 android:padding="12dp" />
 
@@ -190,7 +181,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:alpha="0.2"
+                android:alpha="0.1"
                 android:background="@color/white"
                 android:padding="12dp" />
             <androidx.constraintlayout.widget.ConstraintLayout
