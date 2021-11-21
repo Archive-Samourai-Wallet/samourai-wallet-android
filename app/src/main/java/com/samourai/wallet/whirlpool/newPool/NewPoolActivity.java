@@ -215,6 +215,7 @@ public class NewPoolActivity extends SamouraiActivity {
                 try {
                     onUTXOSelected(coinList);
                     newPoolViewPager.setCurrentItem(1);
+                    newPoolViewModel.loadPools();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
