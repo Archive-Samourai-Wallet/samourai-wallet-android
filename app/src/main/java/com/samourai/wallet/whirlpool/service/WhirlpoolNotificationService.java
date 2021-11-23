@@ -129,7 +129,7 @@ public class WhirlpoolNotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent.getAction() !=null){
+        if(intent != null && intent.getAction() !=null){
             if (Objects.requireNonNull(intent.getAction()).equals(WhirlpoolNotificationService.ACTION_START)) {
                 Disposable startDisposable = AndroidWhirlpoolWalletService.getInstance()
                         .startService(getApplicationContext())
