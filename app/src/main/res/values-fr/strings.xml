@@ -792,6 +792,8 @@
         <item>Ricochet Segwit</item>
         <item>Whirlpool Segwit pré-mix</item>
         <item>Whirlpool Segwit post-mix</item>
+        <item>Adresse du rendu monnaie Whirlpool Segwit post-mix BIP44</item>
+        <item>Adresse du rendu monnaie Whirlpool Segwit post-mix BIP49</item>
         <item>Whirlpool Segwit bad bank</item>
     </string-array>
     
@@ -990,6 +992,13 @@
 <string name="seconds">secondes</string>
 
 <string name="insufficient_amount_for_fee">Solde insuffisant pour couvrir les frais sélectionnés. Veuillez réessayer et changer le montant de la dépense ou utiliser la totalité du solde.</string>
+
+
+<string name="options_xpub44_postmix">Afficher Whirlpool post-mix XPUB rendu monnaie</string>
+<string name="options_xpub44_postmix2">Afficher clé publique étendue pour compte rendu monnaie Whirlpool BIP44 post-mix.</string>
+<string name="options_xpub49_postmix">Afficher Whirlpool post-mix YPUB rendu monnaie</string>
+<string name="options_xpub49_postmix2">Afficher clé publique étendue pour compte Segwit BIP49 (P2SH-wrapped) compte rendu monnaie Whirlpool post-mix.</string>
+
 
 
 </resources>
