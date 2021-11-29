@@ -10,6 +10,7 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -215,7 +216,6 @@ public class NewPoolActivity extends SamouraiActivity {
                 try {
                     onUTXOSelected(coinList);
                     newPoolViewPager.setCurrentItem(1);
-                    newPoolViewModel.loadPools();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -240,6 +240,8 @@ public class NewPoolActivity extends SamouraiActivity {
         }
 
         newPoolViewModel.setUtxos(selectedCoins);
+        newPoolViewModel.setPoolPriority(PoolCyclePriority.NORMAL);
+        newPoolViewModel.loadPools();
     }
 
     private void calculateTx0(long denomination, long fee) {
