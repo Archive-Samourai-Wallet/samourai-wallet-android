@@ -42,6 +42,7 @@ class NewPoolViewModel : ViewModel() {
     }
 
     fun setUtxos(utxos: List<UTXOCoin>) {
+        this.utxos.value = utxos
         this.utxos.postValue(utxos)
     }
 
