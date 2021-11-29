@@ -87,6 +87,7 @@ class SelectPoolFragment : Fragment() {
 
         newPoolViewModel.getLoadingPools.observe(this.viewLifecycleOwner, {
             binding.poolLoadingProgress.visibility = if (it) View.VISIBLE else View.GONE
+            binding.poolRecyclerView.visibility = if (it) View.GONE else View.VISIBLE
         })
 
         newPoolViewModel.getPoolLoadError.observe(this.viewLifecycleOwner, {
