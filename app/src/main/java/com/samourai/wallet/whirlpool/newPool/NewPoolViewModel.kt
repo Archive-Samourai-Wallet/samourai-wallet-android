@@ -1,5 +1,6 @@
 package com.samourai.wallet.whirlpool.newPool
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -38,6 +39,7 @@ class NewPoolViewModel : ViewModel() {
 
 
     fun setPoolPriority(poolCyclePriority: PoolCyclePriority) {
+        this.tx0PoolPriority.value = poolCyclePriority
         this.tx0PoolPriority.postValue(poolCyclePriority)
     }
 
