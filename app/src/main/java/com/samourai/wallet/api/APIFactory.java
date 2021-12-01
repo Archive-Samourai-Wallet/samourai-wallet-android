@@ -2098,6 +2098,21 @@ public class APIFactory {
         Collections.sort(ret, new TxMostRecentDateComparator());
         return ret;
     }
+    public synchronized List<Tx> getAllPremixTx()  {
+
+        List<Tx> ret = new ArrayList<Tx>();
+        for(String key : premix_txs.keySet())  {
+            List<Tx> txs = premix_txs.get(key);
+            if(txs!=null){
+                for(Tx tx : txs)   {
+                    ret.add(tx);
+                }
+            }
+        }
+
+        Collections.sort(ret, new TxMostRecentDateComparator());
+        return ret;
+    }
 
     public synchronized UTXO getUnspentOutputsForSweep(String address) {
 
@@ -2340,6 +2355,7 @@ public class APIFactory {
 
             if(jsonObject.has("txs"))  {
                 postmix_txs.clear();
+                premix_txs.clear();
                 JSONArray txArray = (JSONArray)jsonObject.get("txs");
                 JSONObject txObj = null;
                 for(int i = 0; i < txArray.length(); i++)  {
@@ -2446,6 +2462,21 @@ public class APIFactory {
 
                         }
 
+                        if(hasPreMix ||  addr.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr()) ||
+                                addr.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).zpubstr())  ) {
+                            if (!premix_txs.containsKey(addr)) {
+                                premix_txs.put(addr, new ArrayList<Tx>());
+                            }
+                            if (FormatsUtil.getInstance().isValidXpub(addr)) {
+                                premix_txs.get(addr).add(tx);
+                            } else {
+                                if(!xpub_txs.containsKey(AddressFactory.getInstance().account2xpub().get(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount())))    {
+                                    xpub_txs.put(AddressFactory.getInstance().account2xpub().get(AddressFactory.getInstance().account2xpub().get(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount())), new ArrayList<Tx>());
+                                }
+                                xpub_txs.get(AddressFactory.getInstance().account2xpub().get(AddressFactory.getInstance().account2xpub().get(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()))).add(tx);
+                            }
+
+                        }
                     }
                 }
 
