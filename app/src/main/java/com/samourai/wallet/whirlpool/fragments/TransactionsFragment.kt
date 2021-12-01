@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,14 +22,13 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.samourai.wallet.R
 import com.samourai.wallet.api.APIFactory
+import com.samourai.wallet.api.Tx
 import com.samourai.wallet.databinding.WhirlpoolIntroViewBinding
 import com.samourai.wallet.home.BalanceActivity
-import com.samourai.wallet.home.BalanceViewModel
-import com.samourai.wallet.home.adapters.TxAdapter
-import com.samourai.wallet.service.JobRefreshService
 import com.samourai.wallet.tx.TxDetailsActivity
 import com.samourai.wallet.whirlpool.WhirlPoolHomeViewModel
 import com.samourai.wallet.whirlpool.WhirlpoolHome.Companion.NEWPOOL_REQ_CODE
+import com.samourai.wallet.whirlpool.adapters.MixTxAdapter
 import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import kotlinx.coroutines.Dispatchers
@@ -37,9 +37,8 @@ import kotlinx.coroutines.withContext
 
 class TransactionsFragment : Fragment() {
 
-    private val viewModel: BalanceViewModel by viewModels()
     private val whirlPoolHomeViewModel: WhirlPoolHomeViewModel by activityViewModels()
-    lateinit var adapter: TxAdapter
+    lateinit var adapter: MixTxAdapter
     lateinit var recyclerView: RecyclerView
     lateinit var containerLayout: FrameLayout
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
@@ -61,32 +60,43 @@ class TransactionsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.setAccount(WhirlpoolAccount.POSTMIX.accountIndex);
+
         val filter = IntentFilter(BalanceActivity.DISPLAY_INTENT)
         LocalBroadcastManager.getInstance(requireContext())
             .registerReceiver(whirlPoolHomeViewModel.broadCastReceiver, filter)
         LocalBroadcastManager.getInstance(requireContext())
                 .registerReceiver(broadCastReceiver, filter)
-        viewModel.loadOfflineData()
+        whirlPoolHomeViewModel.loadOfflineTxData(requireContext())
         whirlPoolHomeViewModel.onboardStatus.observe(viewLifecycleOwner, { showOnBoarding ->
             if (showOnBoarding) {
                 showIntroView()
             } else {
-                adapter = TxAdapter(
+                adapter = MixTxAdapter(
                     view.context,
-                    listOf(
-                    ),
-                    WhirlpoolAccount.POSTMIX.accountIndex
                 )
-                adapter.setClickListener { _, tx ->
+                adapter.setClickListener {  tx ->
                     val txIntent = Intent(requireContext(), TxDetailsActivity::class.java)
                     txIntent.putExtra("TX", tx.toJSON().toString())
                     txIntent.putExtra("_account", WhirlpoolAccount.POSTMIX.accountIndex)
                     startActivity(txIntent)
                 }
                 recyclerView.adapter = adapter
-                viewModel.txs.observe(viewLifecycleOwner, {
-                    adapter.setTxes(it)
+                whirlPoolHomeViewModel.mixTransactionsList.observe(viewLifecycleOwner, { mix ->
+                    val postMix = mutableListOf<Tx>()
+                    val preMix = mutableListOf<Tx>()
+                    if(mix.containsKey(WhirlpoolAccount.POSTMIX)){
+                        postMix.clear()
+                        mix[WhirlpoolAccount.POSTMIX]?.let {
+                            postMix.addAll(it)
+                        }
+                    }
+                    if(mix.containsKey(WhirlpoolAccount.PREMIX)){
+                        preMix.clear()
+                        mix[WhirlpoolAccount.PREMIX]?.let {
+                            preMix.addAll(it)
+                        }
+                    }
+                    adapter.setTx(postMix,preMix)
                 })
             }
         })
@@ -109,12 +119,16 @@ class TransactionsFragment : Fragment() {
     }
 
     private fun loadFromRepo() {
-        viewModel.viewModelScope.launch {
+        whirlPoolHomeViewModel.viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val postMixList = APIFactory.getInstance(requireContext()).allPostMixTxs
+                val premixList = APIFactory.getInstance(requireContext()).allPremixTx
+                val list =  arrayListOf<Tx>()
+                list.addAll(postMixList)
+                list.addAll(premixList)
                 if (postMixList != null) {
                     withContext(Dispatchers.Main) {
-                        viewModel.setTx(postMixList)
+                        whirlPoolHomeViewModel.setTx(postMixList,premixList)
                     }
                 }
             }
@@ -148,8 +162,6 @@ class TransactionsFragment : Fragment() {
                     drawable?.let { this.setDrawable(it) }
                 })
         }
-
-
         swipeRefreshLayout = SwipeRefreshLayout(container.context)
             .apply {
                 layoutParams = FrameLayout.LayoutParams(
@@ -171,7 +183,6 @@ class TransactionsFragment : Fragment() {
     }
 
     companion object {
-
         @JvmStatic
         fun newInstance(): TransactionsFragment {
             return TransactionsFragment().apply {

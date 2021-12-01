@@ -894,5 +894,6 @@
     <string name="mixed">Mixed</string>
     <string name="postmix_spend">Postmix spend</string>
     <string name="you_cannot_follow_your_own_paynym">You cannot follow your own paynym</string>
+    <string name="transfer_to_whirlpool">Transfer to whirlpool</string>
 
 </resources>
