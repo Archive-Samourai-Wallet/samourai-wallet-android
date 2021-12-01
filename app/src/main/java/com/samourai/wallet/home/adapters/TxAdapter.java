@@ -272,7 +272,6 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
             ArrayList<Long> sectionDates = new ArrayList<>();
             List<Tx> sectioned = new ArrayList<>();
             // for pending state
-            WhirlpoolWallet wallet =   AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
             boolean contains_pending = false;
             boolean containsNonPendingTxForTodaySection = false;
             for (int i = 0; i < txes.size(); i++) {
@@ -282,13 +281,6 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 }
                 if(tx.getConfirmations() >= MAX_CONFIRM_COUNT && DateUtils.isToday(tx.getTS() * 1000)){
                     containsNonPendingTxForTodaySection = true;
-                }
-                if(wallet !=null ){
-                    for (WhirlpoolUtxo whirlpoolUtxo: wallet.getUtxoSupplier().findUtxos(WhirlpoolAccount.POSTMIX)) {
-                        if(whirlpoolUtxo.getUtxo().tx_hash.equals(tx.getHash())){
-
-                        }
-                    }
                 }
             }
             for (Tx tx : txes) {
