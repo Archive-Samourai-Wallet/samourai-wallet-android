@@ -1,13 +1,22 @@
 package com.samourai.wallet.whirlpool
 
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.util.Pair
 import androidx.lifecycle.*
 import com.samourai.wallet.api.APIFactory
+import com.samourai.wallet.api.APIFactory.TxMostRecentDateComparator
+import com.samourai.wallet.api.Tx
 import com.samourai.wallet.home.BalanceActivity
+import com.samourai.wallet.home.BalanceViewModel
+import com.samourai.wallet.payload.PayloadUtil
+import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.PrefsUtil
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
@@ -15,8 +24,12 @@ import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.IOException
 import java.util.*
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService.ConnectionStates as Connection
 
@@ -32,6 +45,9 @@ class WhirlPoolHomeViewModel : ViewModel() {
     private val wallet = AndroidWhirlpoolWalletService.getInstance();
 
     private val mixing = MutableLiveData(listOf<WhirlpoolUtxo>())
+    private val mixTransactions = MutableLiveData<Map<WhirlpoolAccount,List<Tx>>>(
+              mapOf()
+    )
     private val remixing = MutableLiveData(listOf<WhirlpoolUtxo>())
     private val remixBalanceLive = MutableLiveData(0L)
     private val mixingBalanceLive = MutableLiveData(0L)
@@ -42,6 +58,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
     val remixLive: LiveData<List<WhirlpoolUtxo>> get() = remixing
     val remixBalance: LiveData<Long> get() = remixBalanceLive
     val mixingBalance: LiveData<Long> get() = mixingBalanceLive
+    val mixTransactionsList: LiveData<Map<WhirlpoolAccount,List<Tx>>> get() = mixTransactions
     val totalBalance: LiveData<Long> get() = totalBalanceLive
     val onboardStatus: LiveData<Boolean> get() = whirlpoolOnboarded
     val listRefreshStatus: LiveData<Boolean> get() = refreshStatus
@@ -200,5 +217,38 @@ class WhirlPoolHomeViewModel : ViewModel() {
 
     fun setRefresh(b: Boolean) {
         refreshStatus.postValue(b)
+    }
+
+    fun loadOfflineTxData(context: Context) {
+        try {
+            val response = PayloadUtil.getInstance(context).deserializeMultiAddrMix()
+            val apiFactory = APIFactory.getInstance(context)
+            if (response != null) {
+                val parser = apiFactory.parseMixXPUBObservable(JSONObject(response.toString()))
+                val disposable = parser
+                    .subscribeOn(Schedulers.computation())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({ pairValues: Pair<List<Tx>, Long> ->
+                        setTx(apiFactory.allPostMixTxs,apiFactory.allPremixTx)
+                    }) { error: Throwable ->
+                         LogUtil.error("WhirlPoolViewModel",error)
+                    }
+                compositeDisposable.add(disposable)
+            }
+        } catch (e: IOException) {
+            LogUtil.error("WhirlPoolViewModel",e)
+        } catch (e: JSONException) {
+            LogUtil.error("WhirlPoolViewModel",e)
+        }
+    }
+
+
+
+
+    fun setTx(postMixList: List<Tx>, premixList: List<Tx>) {
+        mixTransactions.postValue(mapOf(
+            WhirlpoolAccount.POSTMIX to postMixList,
+            WhirlpoolAccount.PREMIX to premixList
+        ))
     }
 }
