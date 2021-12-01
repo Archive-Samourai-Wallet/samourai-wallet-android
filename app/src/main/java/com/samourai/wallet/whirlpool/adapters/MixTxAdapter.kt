@@ -28,6 +28,7 @@ import io.reactivex.schedulers.Schedulers
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.abs
 
 class MixTxAdapter(private val mContext: Context) :
     RecyclerView.Adapter<MixTxAdapter.TxViewHolder>() {
@@ -65,13 +66,13 @@ class MixTxAdapter(private val mContext: Context) :
     }
 
     override fun onBindViewHolder(holder: TxViewHolder, position: Int) {
-        val is_sat_prefs = PrefsUtil.getInstance(mContext).getValue(PrefsUtil.IS_SAT, false)
+        val isSatPrefs = PrefsUtil.getInstance(mContext).getValue(PrefsUtil.IS_SAT, false)
         val tx = mDiffer.currentList[position]
         val isPremix =   this.preMixTxs.contains(tx)
         if (tx!!.section == null) {
             var _amount = 0L
             _amount = if (tx.amount < 0.0) {
-                Math.abs(tx.amount.toLong())
+                abs(tx.amount.toLong())
             } else {
                 tx.amount.toLong()
             }
@@ -98,8 +99,8 @@ class MixTxAdapter(private val mContext: Context) :
                         R.drawable.out_going_tx_whtie_arrow
                     )
                 )
-                holder.tvAmount!!.setTextColor(ContextCompat.getColor(mContext, R.color.white))
-                holder.tvAmount!!.text = "-" + if (is_sat_prefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
+                holder.tvAmount?.setTextColor(ContextCompat.getColor(mContext, R.color.white))
+                holder.tvAmount?.text = "-" + if (isSatPrefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
                         _amount
                     )
                     holder.txSubText!!.visibility = View.VISIBLE
@@ -107,7 +108,7 @@ class MixTxAdapter(private val mContext: Context) :
 
             } else {
                 TransitionManager.beginDelayedTransition(
-                    holder.tvAmount!!.rootView as ViewGroup,
+                    holder.tvAmount?.rootView as ViewGroup,
                     ChangeBounds()
                 )
                 holder.tvDirection!!.setImageDrawable(
@@ -117,22 +118,22 @@ class MixTxAdapter(private val mContext: Context) :
                     )
                 )
                 val amount =
-                    if (is_sat_prefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
+                    if (isSatPrefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
                         _amount
                     )
-                holder.tvAmount!!.text = amount
-                holder.tvAmount!!.setTextColor(ContextCompat.getColor(mContext, R.color.green_ui_2))
+                holder.tvAmount?.text = amount
+                holder.tvAmount?.setTextColor(ContextCompat.getColor(mContext, R.color.green_ui_2))
                     if (_amount == 0L) {
-                        holder.txSubText!!.visibility = View.VISIBLE
-                        holder.txSubText!!.setText(R.string.remix_note_tag)
+                        holder.txSubText?.visibility = View.VISIBLE
+                        holder.txSubText?.setText(R.string.remix_note_tag)
                     } else if (BlockedUTXO.BLOCKED_UTXO_THRESHOLD >= _amount) {
-                        holder.txSubText!!.visibility = View.VISIBLE
-                        holder.txSubText!!.setText(R.string.dust)
+                        holder.txSubText?.visibility = View.VISIBLE
+                        holder.txSubText?.setText(R.string.dust)
                     } else {
                         if(!isPremix) {
-                            holder.txSubText!!.visibility = View.VISIBLE
-                            holder.txSubText!!.setText(R.string.mixed)
-                            holder.tvDirection!!.setImageDrawable(
+                            holder.txSubText?.visibility = View.VISIBLE
+                            holder.txSubText?.setText(R.string.mixed)
+                            holder.tvDirection?.setImageDrawable(
                                 ContextCompat.getDrawable(
                                     mContext,
                                     R.drawable.ic_whirlpool
