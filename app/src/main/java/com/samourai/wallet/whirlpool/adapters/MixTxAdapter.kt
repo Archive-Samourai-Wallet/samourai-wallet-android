@@ -4,7 +4,6 @@ import android.content.Context
 import android.text.format.DateUtils
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -91,20 +90,21 @@ class MixTxAdapter(private val mContext: Context) :
                     tx
                 )
             }
-
             if (tx.amount < 0.0) {
-                holder.tvDirection!!.setImageDrawable(
+                holder.tvDirection?.setImageDrawable(
                     ContextCompat.getDrawable(
                         mContext,
                         R.drawable.out_going_tx_whtie_arrow
                     )
                 )
                 holder.tvAmount?.setTextColor(ContextCompat.getColor(mContext, R.color.white))
-                holder.tvAmount?.text = "-" + if (isSatPrefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
-                        _amount
-                    )
-                    holder.txSubText!!.visibility = View.VISIBLE
-                    holder.txSubText!!.setText(R.string.postmix_spend)
+                val amountStr = "-${if (isSatPrefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
+                    _amount
+                )}"
+                holder.tvAmount?.text = amountStr
+
+                    holder.txSubText?.visibility = View.VISIBLE
+                    holder.txSubText?.setText(R.string.postmix_spend)
 
             } else {
                 TransitionManager.beginDelayedTransition(
