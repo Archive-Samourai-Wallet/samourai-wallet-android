@@ -93,7 +93,11 @@ class TransactionsFragment : Fragment() {
                     if(mix.containsKey(WhirlpoolAccount.PREMIX)){
                         preMix.clear()
                         mix[WhirlpoolAccount.PREMIX]?.let {
-                            preMix.addAll(it)
+                            // Filter duplicates
+                            val filteredPremix=  it.filter { tx->
+                                postMix.find { tx2-> tx2.hash==tx.hash } ==null
+                            }
+                            preMix.addAll(filteredPremix)
                         }
                     }
                     adapter.setTx(postMix,preMix)
@@ -125,10 +129,14 @@ class TransactionsFragment : Fragment() {
                 val premixList = APIFactory.getInstance(requireContext()).allPremixTx
                 val list =  arrayListOf<Tx>()
                 list.addAll(postMixList)
+                // Filter duplicates
+                val filteredPremix  = premixList.filter { tx->
+                    postMixList.find { it.hash==tx.hash } ==null
+                }
                 list.addAll(premixList)
                 if (postMixList != null) {
                     withContext(Dispatchers.Main) {
-                        whirlPoolHomeViewModel.setTx(postMixList,premixList)
+                        whirlPoolHomeViewModel.setTx(postMixList,filteredPremix)
                     }
                 }
             }
