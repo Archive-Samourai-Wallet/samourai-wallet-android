@@ -278,13 +278,6 @@ class WhirlpoolHome : SamouraiActivity() {
                 WhirlpoolMeta.getInstance(this@WhirlpoolHome).whirlpoolPostmix
             )
             startActivity(intent)
-        } else if (id == R.id.action_menu_view_post_mix) {
-            val intent = Intent(this@WhirlpoolHome, BalanceActivity::class.java)
-            intent.putExtra(
-                "_account",
-                WhirlpoolMeta.getInstance(this@WhirlpoolHome).whirlpoolPostmix
-            )
-            startActivity(intent)
         } else if (id == R.id.action_scode) {
             doSCODE()
         } else if (id == R.id.action_scan_qr) {
