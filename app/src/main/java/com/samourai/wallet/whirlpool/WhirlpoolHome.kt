@@ -195,19 +195,19 @@ class WhirlpoolHome : SamouraiActivity() {
         var balance = 0L;
         when (position) {
             0 -> {
-                binding.whirlpoolAmountCaption.text = "Total Balance"
+                binding.whirlpoolAmountCaption.text = getString(R.string.total_balance)
                 whirlPoolHomeViewModel.totalBalance.value?.let {
                     balance = it
                 }
             }
             1 -> {
-                binding.whirlpoolAmountCaption.text = "Total in Progress Balance "
+                binding.whirlpoolAmountCaption.text = getString(R.string.total_in_progress_balance)
                 whirlPoolHomeViewModel.mixingBalance.value?.let {
                     balance = it
                 }
             }
             2 -> {
-                binding.whirlpoolAmountCaption.text = "Total Remixable Balance "
+                binding.whirlpoolAmountCaption.text = getString(R.string.total_remixable_balance)
                 whirlPoolHomeViewModel.remixBalance.value?.let {
                     balance = it
                 }
@@ -259,7 +259,7 @@ class WhirlpoolHome : SamouraiActivity() {
                     Toast.makeText(this, ex.message, Toast.LENGTH_LONG).show()
                     ex.printStackTrace()
                     val builder = MaterialAlertDialogBuilder(this)
-                    builder.setMessage("Tx0 is not possible with selected utxo.")
+                    builder.setMessage(getString(R.string.tx0_is_not_possible_with))
                         .setCancelable(true)
                     builder.setPositiveButton(R.string.ok) { dialogInterface, i -> dialogInterface.dismiss() }
                     builder.create().show()
@@ -267,7 +267,7 @@ class WhirlpoolHome : SamouraiActivity() {
                 }
                 if (tx0.tx0 == null) {
                     val builder = MaterialAlertDialogBuilder(this)
-                    builder.setMessage("Tx0 is not possible with selected utxo.")
+                    builder.setMessage(getString(R.string.tx0_is_not_possible_with))
                         .setCancelable(true)
                     builder.setPositiveButton(R.string.ok) { dialogInterface, i -> dialogInterface.dismiss() }
                     builder.create().show()

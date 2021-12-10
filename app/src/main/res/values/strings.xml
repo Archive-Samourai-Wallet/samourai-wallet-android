@@ -895,5 +895,9 @@
     <string name="postmix_spend">Postmix spend</string>
     <string name="you_cannot_follow_your_own_paynym">You cannot follow your own paynym</string>
     <string name="transfer_to_whirlpool">Transfer to whirlpool</string>
+    <string name="total_balance">Total Balance</string>
+    <string name="total_in_progress_balance">Total in Progress Balance</string>
+    <string name="total_remixable_balance">Total Remixable Balance </string>
+    <string name="tx0_is_not_possible_with">Tx0 is not possible with selected utxo.</string>
 
 </resources>
