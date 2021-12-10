@@ -53,9 +53,11 @@ class WhirlPoolHomeViewModel : ViewModel() {
     private val mixingBalanceLive = MutableLiveData(0L)
     private val totalBalanceLive = MutableLiveData(0L)
     private val whirlpoolOnboarded = MutableLiveData(false)
+    private val displaySats = MutableLiveData(false)
 
     val mixingLive: LiveData<List<WhirlpoolUtxo>> get() = mixing
     val remixLive: LiveData<List<WhirlpoolUtxo>> get() = remixing
+    val displaySatsLive: LiveData<Boolean> get() = displaySats
     val remixBalance: LiveData<Long> get() = remixBalanceLive
     val mixingBalance: LiveData<Long> get() = mixingBalanceLive
     val mixTransactionsList: LiveData<Map<WhirlpoolAccount,List<Tx>>> get() = mixTransactions
@@ -89,7 +91,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
                 }
             }, {
             })
-        compositeDisposable.add(disposable)
+         compositeDisposable.add(disposable)
 
 
          viewModelScope.launch(Dispatchers.Default){
@@ -250,5 +252,13 @@ class WhirlPoolHomeViewModel : ViewModel() {
             WhirlpoolAccount.POSTMIX to postMixList,
             WhirlpoolAccount.PREMIX to premixList
         ))
+    }
+
+    fun toggleSats(boolean: Boolean?=null) {
+        if(boolean!=null){
+            this.displaySats.value = boolean
+        }else{
+            this.displaySats.value = !(this.displaySats.value ?: false)
+        }
     }
 }

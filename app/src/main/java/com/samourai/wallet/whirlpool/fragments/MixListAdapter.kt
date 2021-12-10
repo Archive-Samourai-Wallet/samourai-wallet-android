@@ -1,5 +1,6 @@
 package com.samourai.wallet.whirlpool.fragments
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,18 +22,19 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
 
     private lateinit var itemMixUtxoBinding: ItemMixUtxoBinding
     var onClick: (utxo: WhirlpoolUtxo) -> Unit = {}
+    private var displaySats = false
     var onMixingButtonClickListener: (utxo: WhirlpoolUtxo) -> Unit = {}
     private val mDiffer = AsyncListDiffer(this, DIFF_CALLBACK)
     private val scope = CoroutineScope(Dispatchers.Default) + SupervisorJob()
 
-    class ViewHolder(private val viewBinding: ItemMixUtxoBinding) :
+    inner class ViewHolder(private val viewBinding: ItemMixUtxoBinding) :
         RecyclerView.ViewHolder(viewBinding.root) {
         fun bind(utxo: WhirlpoolUtxo) {
             val utxoState = utxo.utxoState
             val output = utxo.utxo
 
             val progressbar = viewBinding.mixProgressBar
-            viewBinding.mixAmount.text = FormatsUtil.formatBTC(output.value)
+            viewBinding.mixAmount.text =  if(displaySats) FormatsUtil.formatSats(output.value) else  FormatsUtil.formatBTC(output.value)
             if (utxoState != null && utxoState.mixProgress != null) {
                 viewBinding.mixProgressMessage.visibility = View.VISIBLE
                 viewBinding.mixProgressMessage.text = utxoState.mixProgress.mixStep.message
@@ -88,6 +90,11 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
     }
 
 
+    @SuppressLint("NotifyDataSetChanged")
+    fun setDisplaySats(sat:Boolean){
+        displaySats = sat
+        this.notifyDataSetChanged()
+    }
     fun updateList(utxos: List<WhirlpoolUtxo>) {
         scope.launch (Dispatchers.Default){
             try {

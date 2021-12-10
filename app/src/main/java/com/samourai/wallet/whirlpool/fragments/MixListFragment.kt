@@ -98,6 +98,9 @@ class MixListFragment : Fragment() {
             }
         })
 
+        viewModel.displaySatsLive.observe(viewLifecycleOwner, {
+            mixListAdapter.setDisplaySats(it)
+        })
         mixListAdapter.setOnClickListener {
             val mixDetailsBottomSheet =
                 MixDetailsBottomSheet.newInstance(it.utxo.tx_hash, it.utxo.tx_output_n)

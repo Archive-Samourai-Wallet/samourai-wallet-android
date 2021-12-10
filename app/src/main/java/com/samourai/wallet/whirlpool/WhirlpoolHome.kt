@@ -10,6 +10,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager.widget.ViewPager
@@ -31,6 +32,7 @@ import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.JobRefreshService
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.utxos.PreSelectUtil
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.fragments.SectionsPagerAdapter
@@ -78,6 +80,8 @@ class WhirlpoolHome : SamouraiActivity() {
             val whirlpoolDialog = WhirlpoolDialog()
             whirlpoolDialog.show(supportFragmentManager, whirlpoolDialog.tag)
         }
+        val displaySats = PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.IS_SAT,false)
+        whirlPoolHomeViewModel.toggleSats(displaySats)
         binding.viewPager.addOnPageChangeListener(pageListener)
         val filterDisplay = IntentFilter(BalanceActivity.DISPLAY_INTENT)
         LocalBroadcastManager.getInstance(this@WhirlpoolHome)
@@ -94,9 +98,11 @@ class WhirlpoolHome : SamouraiActivity() {
                 var hasMixUtxos = false;
                 if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
                     hasMixUtxos =
-                        AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get().utxoSupplier.findUtxos(WhirlpoolAccount.PREMIX, WhirlpoolAccount.POSTMIX).isEmpty()
+                        AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get().utxoSupplier.findUtxos(
+                            WhirlpoolAccount.PREMIX,
+                            WhirlpoolAccount.POSTMIX
+                        ).isEmpty()
                 }
-                LogUtil.debug(TAG, "checkOnboardStatus:  ${postmix && premix && hasMixUtxos}")
                 withContext(Dispatchers.Main) {
                     if (whirlPoolHomeViewModel.onboardStatus.value != postmix && premix && hasMixUtxos) {
                         whirlPoolHomeViewModel.setOnBoardingStatus(postmix && premix && hasMixUtxos)
@@ -115,41 +121,52 @@ class WhirlpoolHome : SamouraiActivity() {
         tabs.setupWithViewPager(viewPager)
         whirlPoolHomeViewModel.remixBalance.observe(this, {
             if (viewPager.currentItem == 3) {
-                binding.whirlpoolToolbar.title = FormatsUtil.formatBTC(it)
+                setBalance(3)
             }
         })
 
         whirlPoolHomeViewModel.totalBalance.observe(this, {
             if (viewPager.currentItem == 0) {
-                binding.whirlpoolToolbar.title = FormatsUtil.formatBTC(it)
+                setBalance(0)
             }
         })
 
         whirlPoolHomeViewModel.mixingBalance.observe(this, {
             if (viewPager.currentItem == 1) {
-                binding.whirlpoolToolbar.title = FormatsUtil.formatBTC(it)
+                setBalance(1)
             }
         })
         //Show mixing/remixing count in tabs title
-        whirlPoolHomeViewModel.mixingLive.observe(this,{
-            if(it.isNotEmpty()){
+        whirlPoolHomeViewModel.mixingLive.observe(this, {
+            if (it.isNotEmpty()) {
                 tabs.getTabAt(1)?.text = "$mixingStr (${it.size})"
-            }else{
+            } else {
                 tabs.getTabAt(1)?.text = mixingStr
             }
         })
-        whirlPoolHomeViewModel.remixLive.observe(this,{
-            if(it.isNotEmpty()){
+        whirlPoolHomeViewModel.remixLive.observe(this, {
+            if (it.isNotEmpty()) {
                 tabs.getTabAt(2)?.text = "$remixingStr (${it.size})"
-            }else{
+            } else {
                 tabs.getTabAt(2)?.text = remixingStr
             }
         })
+        binding.toolbar.setOnClickListener {
+            whirlPoolHomeViewModel.toggleSats()
+            PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.IS_SAT,whirlPoolHomeViewModel.displaySatsLive.value ?:false)
+        }
+        binding.whirlpoolToolbar.setOnClickListener {
+            whirlPoolHomeViewModel.toggleSats()
+            PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.IS_SAT,whirlPoolHomeViewModel.displaySatsLive.value ?:false)
+        }
         try {
             validateIntentAndStartNewPool()
         } catch (ex: Exception) {
 
         }
+        whirlPoolHomeViewModel.displaySatsLive.observe(this, Observer {
+            setBalance(binding.viewPager.currentItem)
+        })
         checkOnboardStatus()
     }
 
@@ -168,32 +185,39 @@ class WhirlpoolHome : SamouraiActivity() {
         }
 
         override fun onPageSelected(position: Int) {
-            var balance = 0L;
-            when (position) {
-                0 -> {
-                    binding.whirlpoolAmountCaption.text = "Total Balance"
-                    whirlPoolHomeViewModel.totalBalance.value?.let {
-                        balance = it
-                    }
-                }
-                1 -> {
-                    binding.whirlpoolAmountCaption.text = "Total in Progress Balance "
-                    whirlPoolHomeViewModel.mixingBalance.value?.let {
-                        balance = it
-                    }
-                }
-                2 -> {
-                    binding.whirlpoolAmountCaption.text = "Total Remixable Balance "
-                    whirlPoolHomeViewModel.remixBalance.value?.let {
-                        balance = it
-                    }
-                }
-            }
-            binding.whirlpoolToolbar.title = FormatsUtil.formatBTC(balance)
-            binding.toolbar.title = FormatsUtil.formatBTC(balance)
+            setBalance(position)
         }
 
         override fun onPageScrollStateChanged(state: Int) {}
+    }
+
+    fun setBalance(position: Int) {
+        var balance = 0L;
+        when (position) {
+            0 -> {
+                binding.whirlpoolAmountCaption.text = "Total Balance"
+                whirlPoolHomeViewModel.totalBalance.value?.let {
+                    balance = it
+                }
+            }
+            1 -> {
+                binding.whirlpoolAmountCaption.text = "Total in Progress Balance "
+                whirlPoolHomeViewModel.mixingBalance.value?.let {
+                    balance = it
+                }
+            }
+            2 -> {
+                binding.whirlpoolAmountCaption.text = "Total Remixable Balance "
+                whirlPoolHomeViewModel.remixBalance.value?.let {
+                    balance = it
+                }
+            }
+        }
+        val showSats = whirlPoolHomeViewModel.displaySatsLive.value ?: false;
+        val balanceString =
+            if (showSats) FormatsUtil.formatSats(balance) else FormatsUtil.formatBTC(balance)
+        binding.whirlpoolToolbar.title = balanceString
+        binding.toolbar.title = balanceString
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -372,6 +396,6 @@ class WhirlpoolHome : SamouraiActivity() {
     companion object {
         const val NEWPOOL_REQ_CODE = 6102
         private const val TAG = "WhirlpoolHome"
-     }
+    }
 
 }

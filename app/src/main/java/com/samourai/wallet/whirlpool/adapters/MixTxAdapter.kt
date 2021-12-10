@@ -1,5 +1,6 @@
 package com.samourai.wallet.whirlpool.adapters
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateUtils
 import android.transition.ChangeBounds
@@ -35,6 +36,7 @@ class MixTxAdapter(private val mContext: Context) :
     private var postMixTxs: List<Tx> = listOf()
     private var preMixTxs: List<Tx> = listOf()
     private val VIEW_SECTION = 0
+    var displaySats= false
     private val disposables = CompositeDisposable()
     private var listener: ((tx:Tx)->Unit )? = null
     private val mDiffer = AsyncListDiffer(this, DIFF_CALLBACK)
@@ -65,7 +67,7 @@ class MixTxAdapter(private val mContext: Context) :
     }
 
     override fun onBindViewHolder(holder: TxViewHolder, position: Int) {
-        val isSatPrefs = PrefsUtil.getInstance(mContext).getValue(PrefsUtil.IS_SAT, false)
+
         val tx = mDiffer.currentList[position]
         val isPremix =   this.preMixTxs.contains(tx)
         if (tx!!.section == null) {
@@ -98,7 +100,7 @@ class MixTxAdapter(private val mContext: Context) :
                     )
                 )
                 holder.tvAmount?.setTextColor(ContextCompat.getColor(mContext, R.color.white))
-                val amountStr = "-${if (isSatPrefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
+                val amountStr = "-${if (displaySats) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
                     _amount
                 )}"
                 holder.tvAmount?.text = amountStr
@@ -118,7 +120,7 @@ class MixTxAdapter(private val mContext: Context) :
                     )
                 )
                 val amount =
-                    if (isSatPrefs) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
+                    if (displaySats) FormatsUtil.formatSats(_amount) else FormatsUtil.formatBTC(
                         _amount
                     )
                 holder.tvAmount?.text = amount
@@ -303,6 +305,14 @@ class MixTxAdapter(private val mContext: Context) :
             }
             sectioned.reverse()
             sectioned
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun displaySats(it: Boolean?) {
+        it?.let {
+            this.displaySats = it
+            this.notifyDataSetChanged()
         }
     }
 

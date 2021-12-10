@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -26,6 +27,7 @@ import com.samourai.wallet.api.Tx
 import com.samourai.wallet.databinding.WhirlpoolIntroViewBinding
 import com.samourai.wallet.home.BalanceActivity
 import com.samourai.wallet.tx.TxDetailsActivity
+import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.whirlpool.WhirlPoolHomeViewModel
 import com.samourai.wallet.whirlpool.WhirlpoolHome.Companion.NEWPOOL_REQ_CODE
 import com.samourai.wallet.whirlpool.adapters.MixTxAdapter
@@ -38,7 +40,7 @@ import kotlinx.coroutines.withContext
 class TransactionsFragment : Fragment() {
 
     private val whirlPoolHomeViewModel: WhirlPoolHomeViewModel by activityViewModels()
-    lateinit var adapter: MixTxAdapter
+    private var adapter: MixTxAdapter? = null;
     lateinit var recyclerView: RecyclerView
     lateinit var containerLayout: FrameLayout
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
@@ -74,7 +76,10 @@ class TransactionsFragment : Fragment() {
                 adapter = MixTxAdapter(
                     view.context,
                 )
-                adapter.setClickListener {  tx ->
+                val displaySats =
+                    PrefsUtil.getInstance(requireActivity()).getValue(PrefsUtil.IS_SAT, false)
+                adapter?.displaySats = displaySats
+                adapter?.setClickListener {  tx ->
                     val txIntent = Intent(requireContext(), TxDetailsActivity::class.java)
                     txIntent.putExtra("TX", tx.toJSON().toString())
                     txIntent.putExtra("_account", WhirlpoolAccount.POSTMIX.accountIndex)
@@ -100,7 +105,7 @@ class TransactionsFragment : Fragment() {
                             preMix.addAll(filteredPremix)
                         }
                     }
-                    adapter.setTx(postMix,preMix)
+                    adapter?.setTx(postMix,preMix)
                 })
             }
         })
@@ -185,6 +190,9 @@ class TransactionsFragment : Fragment() {
 
         whirlPoolHomeViewModel.listRefreshStatus.observe(viewLifecycleOwner, {
             swipeRefreshLayout?.isRefreshing = it
+        })
+        whirlPoolHomeViewModel.displaySatsLive.observe(viewLifecycleOwner, { satPref->
+            adapter?.displaySats(satPref)
         })
         containerLayout.addView(swipeRefreshLayout)
         return containerLayout

@@ -587,6 +587,16 @@ public class BalanceActivity extends SamouraiActivity {
 //        LocalBroadcastManager.getInstance(BalanceActivity.this).registerReceiver(receiver, filter);
 
         AppUtil.getInstance(BalanceActivity.this).checkTimeOut();
+
+
+        try {
+            boolean isSatPrefs =  PrefsUtil.getInstance(getApplicationContext()).getValue(PrefsUtil.IS_SAT,false);
+            if(isSatPrefs != balanceViewModel.getSatState().getValue()){
+                balanceViewModel.toggleSat();
+            }
+        } catch (Exception e) {
+            LogUtil.error(TAG,e);
+        }
 //
 //        Intent intent = new Intent("com.samourai.wallet.MainActivity2.RESTART_SERVICE");
 //        LocalBroadcastManager.getInstance(BalanceActivity.this).sendBroadcast(intent);
