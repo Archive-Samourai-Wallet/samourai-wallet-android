@@ -37,6 +37,7 @@ import com.google.zxing.client.android.Contents;
 import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.hd.HD_Address;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity;
 import com.samourai.wallet.util.AddressFactory;
@@ -97,6 +98,10 @@ public class ReceiveActivity extends SamouraiActivity {
     private int idx44 = 0;
     private int idx49 = 0;
     private int idx84 = 0;
+
+    private boolean inc44 = false;
+    private boolean inc49 = false;
+    private boolean inc84 = false;
 
     private boolean canRefresh44 = false;
     private boolean canRefresh49 = false;
@@ -177,48 +182,67 @@ public class ReceiveActivity extends SamouraiActivity {
             }
         });
 
-        Pair<Integer, SegwitAddress> pair84 = AddressFactory.getInstance(ReceiveActivity.this).getBIP84Receive();
-        addr84 = pair84.getRight().getBech32AsString();
+        Pair<Integer, String> pair84 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP84_RECEIVE);
+        addr84 = pair84.getRight();
         idx84 = pair84.getLeft();
-        Pair<Integer, SegwitAddress> pair49 = AddressFactory.getInstance(ReceiveActivity.this).getBIP49Receive();
-        addr49 = pair49.getRight().getAddressAsString();
+        Pair<Integer, String> pair49 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP49_RECEIVE);
+        addr49 = pair49.getRight();
         idx49 = pair49.getLeft();
-        Pair<Integer, HD_Address> pair44 = AddressFactory.getInstance(ReceiveActivity.this).getReceive();
-        addr44 = pair44.getRight().getAddressString();
+        Pair<Integer, String> pair44 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP44_RECEIVE);
+        addr44 = pair44.getRight();
         idx44 = pair44.getLeft();
+
+        if (!useSegwit) {
+            addressTypesSpinner.setSelection(2);
+        }
 
         if (useSegwit && isBIP84Selected()) {
             addr = addr84;
             idx = idx84;
-        } else if (useSegwit && !isBIP84Selected()) {
+            AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP84_RECEIVE);
+            inc84 = true;
+        }
+        else if (useSegwit && !isBIP84Selected()) {
             addr = addr49;
             idx = idx49;
-        } else {
+            AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP49_RECEIVE);
+            inc49 = true;
+        }
+        else {
             addr = addr44;
             idx = idx44;
+            AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP44_RECEIVE);
+            inc44 = true;
         }
         addressTypesSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
-                    case 0: {
-                        addr = addr84;
-                        idx = idx84;
-                        break;
-                    }
                     case 1: {
                         addr = addr49;
                         idx = idx49;
+                        if(!inc49)    {
+                            AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP49_RECEIVE);
+                            inc49 = true;
+                        }
                         break;
                     }
                     case 2: {
                         addr = addr44;
                         idx = idx44;
+                        if(!inc44)    {
+                            AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP44_RECEIVE);
+                            inc44 = true;
+                        }
                         break;
                     }
                     default: {
                         addr = addr84;
                         idx = idx84;
+                        if(!inc84)    {
+                            AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP84_RECEIVE);
+                            inc84 = true;
+                        }
                     }
                 }
                 displayQRCode();
@@ -229,10 +253,6 @@ public class ReceiveActivity extends SamouraiActivity {
                 ;
             }
         });
-
-        if (!useSegwit) {
-            addressTypesSpinner.setSelection(2);
-        }
 
         tvAddress.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -266,8 +286,9 @@ public class ReceiveActivity extends SamouraiActivity {
             @Override
             public void onSwipeLeft() {
                 if (useSegwit && isBIP84Selected() && canRefresh84) {
-                    Pair<Integer, SegwitAddress> pair84 = AddressFactory.getInstance(ReceiveActivity.this).getBIP84Receive();
-                    addr84 = pair84.getRight().getBech32AsString();
+                    AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP84_RECEIVE);
+                    Pair<Integer, String> pair84 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP84_RECEIVE);
+                    addr84 = pair84.getRight();
                     addr = addr84;
                     idx84 = pair84.getLeft();
                     idx = idx84;
@@ -276,8 +297,9 @@ public class ReceiveActivity extends SamouraiActivity {
                     displayQRCode();
                 }
                 else if (useSegwit && !isBIP84Selected() && canRefresh49) {
-                    Pair<Integer, SegwitAddress> pair49 = AddressFactory.getInstance(ReceiveActivity.this).getBIP49Receive();
-                    addr49 = pair49.getRight().getAddressAsString();
+                    AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP49_RECEIVE);
+                    Pair<Integer, String> pair49 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP49_RECEIVE);
+                    addr49 = pair49.getRight();
                     addr = addr49;
                     idx49 = pair49.getLeft();
                     idx = idx49;
@@ -286,8 +308,9 @@ public class ReceiveActivity extends SamouraiActivity {
                     displayQRCode();
                 }
                 else if (!useSegwit && canRefresh44) {
-                    Pair<Integer, HD_Address> pair44 = AddressFactory.getInstance(ReceiveActivity.this).getReceive();
-                    addr44 = pair44.getRight().getAddressString();
+                    AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP44_RECEIVE);
+                    Pair<Integer, String> pair44 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP44_RECEIVE);
+                    addr44 = pair44.getRight();
                     addr = addr44;
                     idx44 = pair44.getLeft();
                     idx = idx44;
@@ -576,8 +599,9 @@ public class ReceiveActivity extends SamouraiActivity {
             }
             case R.id.action_refresh: {
                 if (useSegwit && isBIP84Selected() && canRefresh84) {
-                    Pair<Integer, SegwitAddress> pair84 = AddressFactory.getInstance(ReceiveActivity.this).getBIP84Receive();
-                    addr84 = pair84.getRight().getBech32AsString();
+                    AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP84_RECEIVE);
+                    Pair<Integer, String> pair84 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP84_RECEIVE);
+                    addr84 = pair84.getRight();
                     addr = addr84;
                     idx84 = pair84.getLeft();
                     idx = idx84;
@@ -586,8 +610,9 @@ public class ReceiveActivity extends SamouraiActivity {
                     displayQRCode();
                 }
                 else if (useSegwit && !isBIP84Selected() && canRefresh49) {
-                    Pair<Integer, SegwitAddress> pair49 = AddressFactory.getInstance(ReceiveActivity.this).getBIP49Receive();
-                    addr49 = pair49.getRight().getAddressAsString();
+                    AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP49_RECEIVE);
+                    Pair<Integer, String> pair49 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP49_RECEIVE);
+                    addr49 = pair49.getRight();
                     addr = addr49;
                     idx49 = pair49.getLeft();
                     idx = idx49;
@@ -596,8 +621,9 @@ public class ReceiveActivity extends SamouraiActivity {
                     displayQRCode();
                 }
                 else if (!useSegwit && canRefresh44) {
-                    Pair<Integer, HD_Address> pair44 = AddressFactory.getInstance(ReceiveActivity.this).getReceive();
-                    addr44 = pair44.getRight().getAddressString();
+                    AddressFactory.getInstance(ReceiveActivity.this).increment(WALLET_INDEX.BIP44_RECEIVE);
+                    Pair<Integer, String> pair44 = AddressFactory.getInstance(ReceiveActivity.this).getAddress(WALLET_INDEX.BIP44_RECEIVE);
+                    addr44 = pair44.getRight();
                     addr = addr44;
                     idx44 = pair44.getLeft();
                     idx = idx44;
@@ -782,14 +808,14 @@ public class ReceiveActivity extends SamouraiActivity {
         String path = "m/";
 
         switch (sel) {
-            case 0:
-                path += "84'";
-                break;
             case 1:
                 path += "49'";
                 break;
-            default:
+            case 2:
                 path += "44'";
+                break;
+            default:
+                path += "84'";
         }
 
         path += "/0'/0'/0/";

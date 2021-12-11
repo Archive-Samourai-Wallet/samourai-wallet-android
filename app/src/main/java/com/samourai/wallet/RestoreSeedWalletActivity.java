@@ -412,8 +412,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                 Looper.prepare();
                 try {
                     JSONObject json = new JSONObject(decrypted);
-                    HD_Wallet hdw = PayloadUtil.getInstance(RestoreSeedWalletActivity.this).restoreWalletfromJSON(json,skipDojo);
-                    HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).set(hdw);
+                    PayloadUtil.getInstance(RestoreSeedWalletActivity.this).restoreWalletfromJSON(json,skipDojo);
                     String guid = AccessFactory.getInstance(RestoreSeedWalletActivity.this).createGUID();
                     String hash = AccessFactory.getInstance(RestoreSeedWalletActivity.this).getHash(guid, new CharSequenceX(AccessFactory.getInstance(RestoreSeedWalletActivity.this).getPIN()), AESUtil.DefaultPBKDF2Iterations);
                     PrefsUtil.getInstance(RestoreSeedWalletActivity.this).setValue(PrefsUtil.ACCESS_HASH, hash);
@@ -468,7 +467,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                 if (create) {
 
                     try {
-                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).newWallet(12, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).newWallet(12, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (MnemonicException.MnemonicLengthException mle) {
@@ -482,7 +481,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                 } else {
 
                     try {
-                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).restoreWallet(seed, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(RestoreSeedWalletActivity.this).restoreWallet(seed, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (DecoderException de) {

@@ -129,24 +129,30 @@ public class WhirlpoolNotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if(intent != null && intent.getAction() !=null){
+            if (Objects.requireNonNull(intent.getAction()).equals(WhirlpoolNotificationService.ACTION_START)) {
+                Disposable startDisposable = AndroidWhirlpoolWalletService.getInstance()
+                        .startService(getApplicationContext())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(this::listenService, er -> {
+                            // start failed
+                            Log.e(TAG, "onStartCommand: ".concat(er.getMessage()));
+                            Toast.makeText(getApplicationContext(), er.getMessage(), Toast.LENGTH_LONG).show();
+                            stopWhirlPoolService();
+                        });
+                compositeDisposable.add(startDisposable);
 
-        if (Objects.requireNonNull(intent.getAction()).equals(WhirlpoolNotificationService.ACTION_START)) {
-            Disposable startDisposable = AndroidWhirlpoolWalletService.getInstance()
-                    .startService(getApplicationContext())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(this::listenService, er -> {
-                        // start failed
-                        Log.e(TAG, "onStartCommand: ".concat(er.getMessage()));
-                        Toast.makeText(getApplicationContext(), er.getMessage(), Toast.LENGTH_LONG).show();
-                        stopWhirlPoolService();
-                    });
-            compositeDisposable.add(startDisposable);
+            } else if (Objects.requireNonNull(intent.getAction()).equals(WhirlpoolNotificationService.ACTION_STOP)) {
+                this.stopWhirlPoolService();
+            }
+        }else{
+            try {
+                stopSelf();
+            }catch (Exception ignored){
 
-        } else if (Objects.requireNonNull(intent.getAction()).equals(WhirlpoolNotificationService.ACTION_STOP)) {
-            this.stopWhirlPoolService();
+            }
         }
-
         return START_STICKY;
 
     }
@@ -188,8 +194,8 @@ public class WhirlpoolNotificationService extends Service {
                     .concat(String.valueOf(mixingState.getNbQueued())).concat(" QUEUED"));
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
             for (WhirlpoolUtxo whirlpoolUtxo : mixingState.getUtxosMixing()) {
-                if (whirlpoolUtxo.getUtxoState().getMessage() != null && whirlpoolUtxo.getPoolId() != null)
-                    inboxStyle.addLine(whirlpoolUtxo.getPoolId().concat(" : ").concat(whirlpoolUtxo.getUtxoState().getMessage()));
+                if (whirlpoolUtxo.getUtxoState().getMessage() != null && whirlpoolUtxo.getUtxoState().getPoolId() != null)
+                    inboxStyle.addLine(whirlpoolUtxo.getUtxoState().getPoolId().concat(" : ").concat(whirlpoolUtxo.getUtxoState().getMessage()));
             }
             builder.setStyle(inboxStyle);
         } else {

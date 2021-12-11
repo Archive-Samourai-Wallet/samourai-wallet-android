@@ -143,6 +143,31 @@ public class DojoUtil {
 
     }
 
+    public boolean isP2TR()  {
+
+        if(dojoParams == null || dojoVersion == null)      {
+            return  false;
+        }
+
+        // version 1.13.x
+        String[] s = dojoVersion.split(".");
+        try {
+            if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
+                return true;
+            }
+            else if(s.length >= 2 && Integer.parseInt(s[0]) == 1 && Integer.parseInt(s[1]) >= 13){
+                return true;
+            }
+            else    {
+                return false;
+            }
+        }
+        catch(NumberFormatException nfe)    {
+            return false;
+        }
+
+    }
+
     public String getVersion(String data)  {
 
         if(!isValidPairingPayload(data))    {

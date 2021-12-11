@@ -56,8 +56,12 @@ import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.utxos.models.UTXOCoinSegment;
 import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.wallet.whirlpool.fragments.WhirlPoolLoaderDialog;
 import com.samourai.wallet.widgets.ItemDividerDecorator;
+import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
+import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
+import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.crypto.MnemonicException;
@@ -690,44 +694,35 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 String id = getPreSelected();
                 if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
                     if (PreSelectUtil.getInstance().getPreSelected(id).size() != 1) {
-                        Snackbar.make(utxoList, R.string.only_a_single_change_utxo_may, Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(utxoList, R.string.only_a_single_utxo_may, Snackbar.LENGTH_LONG).show();
                         return false;
                     }
-                    boolean blockedExist = false, receiveExist = false;
+                    boolean blockedExist = false;
                     for (UTXOCoin coin : PreSelectUtil.getInstance().getPreSelected(id)) {
                         if (coin.doNotSpend) {
                             blockedExist = true;
+                            break;
                         }
-                        if (!coin.path.startsWith("M/1/")) {
-                            receiveExist = true;
-                        }
-                    }
-                    if (receiveExist) {
-                        Snackbar.make(utxoList, R.string.only_a_single_change_utxo_may, Snackbar.LENGTH_LONG).show();
-                        return false;
                     }
                     if (blockedExist) {
                         Snackbar.make(utxoList, R.string.selection_contains_blocked_utxo, Snackbar.LENGTH_LONG).show();
                         return false;
                     }
+                    WhirlpoolWallet wallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
+
+                    if (wallet == null || !wallet.isStarted()) {
+                        WhirlPoolLoaderDialog whirlPoolLoaderDialog = new WhirlPoolLoaderDialog();
+                        whirlPoolLoaderDialog.show(getSupportFragmentManager(), whirlPoolLoaderDialog.getTag());
+                        whirlPoolLoaderDialog.setOnInitComplete(() -> {
+                            sendToWhirlpool(wallet,id   );
+                        });
+                    }else{
+                        sendToWhirlpool(wallet, id);
+                    }
+
+                }else{
+                    sendToWhirlpool(null, id);
                 }
-
-                new MaterialAlertDialogBuilder(this)
-                        .setMessage("Send selected utxo's to whirlpool")
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.ok, (dialog, whichButton) -> {
-                            if (id != null) {
-                                Intent intent = new Intent(UTXOSActivity.this, WhirlpoolHome.class);
-                                intent.putExtra("preselected", id);
-                                intent.putExtra("_account", account);
-                                startActivity(intent);
-                            }
-                        })
-                        .setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
-
-                        })
-                        .show();
-
                 break;
             }
             case R.id.utxo_details_action_send: {
@@ -772,6 +767,35 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             }
         }
         return false;
+    }
+
+    private void sendToWhirlpool(WhirlpoolWallet wallet, String id) {
+        if(wallet!=null){
+            List<UTXOCoin> utxoCoins =  PreSelectUtil.getInstance().getPreSelected(id);
+            for (UTXOCoin coin: utxoCoins) {
+                WhirlpoolUtxo utxo = wallet.getUtxoSupplier().findUtxo(coin.hash,coin.idx);
+                try {
+                    wallet.mixStop(utxo);
+                }catch (Exception ex){
+                    //no-op
+                }
+            }
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setMessage("Send selected utxo's to whirlpool")
+                .setCancelable(false)
+                .setPositiveButton(R.string.ok, (dialog, whichButton) -> {
+                    if (id != null) {
+                        Intent intent = new Intent(UTXOSActivity.this, WhirlpoolHome.class);
+                        intent.putExtra("preselected", id);
+                        intent.putExtra("_account", account);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
+
+                })
+                .show();
     }
 
     @Override
@@ -844,7 +868,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        this.loadUTXOs(true);
+        adapter.notifyDataSetChanged();
         super.onActivityResult(requestCode, resultCode, data);
     }
 

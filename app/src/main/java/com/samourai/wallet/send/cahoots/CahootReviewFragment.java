@@ -84,24 +84,29 @@ public class CahootReviewFragment extends Fragment {
                     new Thread(() -> {
                         Looper.prepare();
 
-                        boolean success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize()));
-
-                        if (success) {
-                            getActivity().runOnUiThread(() -> {
-                                Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
-                            });
-                            // notify
-                            if (onBroadcast != null) {
-                                try {
-                                    onBroadcast.call();
-                                } catch (Exception e) {}
+                        boolean success = false;
+                        try {
+                            success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize()));
+                            if (success) {
+                                getActivity().runOnUiThread(() -> {
+                                    Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
+                                });
+                                // notify
+                                if (onBroadcast != null) {
+                                    try {
+                                        onBroadcast.call();
+                                    } catch (Exception e) {}
+                                }
+                            } else {
+                                Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
+                                getActivity().runOnUiThread(() -> {
+                                    cahootsProgressGroup.setVisibility(View.GONE);
+                                });
+                                sendBtn.setEnabled(true);
                             }
-                        } else {
-                            Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
-                            getActivity().runOnUiThread(() -> {
-                                cahootsProgressGroup.setVisibility(View.GONE);
-                            });
-                            sendBtn.setEnabled(true);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(this.getActivity(), "Error broadcasting tx ".concat(e.getMessage()), Toast.LENGTH_SHORT).show();
                         }
 
                         Looper.loop();

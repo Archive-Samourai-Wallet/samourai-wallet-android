@@ -8,6 +8,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.hd.HD_WalletFactory
+import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.bech32.Bech32Util
@@ -127,20 +128,22 @@ class CPFPTask(private val context: Context, private val hash: String) {
                     var selected = utxo.outpoints.size
                     val remainingFee = if (estimatedFee.toLong() > fee) estimatedFee.toLong() - fee else 0L
                     Log.d("CPFPTask", "remaining fee:$remainingFee")
-                    val receiveIdx = AddressFactory.getInstance(context).getHighestTxReceiveIdx(0)
-                    Log.d("CPFPTask", "receive index:$receiveIdx")
                     addr  = if (PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true)) {
                         utxo.outpoints[0].address
                     } else {
                         outputs.getJSONObject(0).getString("address")
                     }
-                    val ownReceiveAddr: String = if (FormatsUtil.getInstance().isValidBech32(addr)) {
-                        AddressFactory.getInstance(context).biP84Receive.right.bech32AsString
+
+                    val walletIndex: WALLET_INDEX;
+                    if (FormatsUtil.getInstance().isValidBech32(addr)) {
+                        walletIndex = WALLET_INDEX.BIP84_RECEIVE;
                     } else if (Address.fromBase58(SamouraiWallet.getInstance().currentNetworkParams, addr).isP2SHAddress) {
-                        AddressFactory.getInstance(context).biP49Receive.right.addressAsString
+                        walletIndex = WALLET_INDEX.BIP49_RECEIVE;
                     } else {
-                        AddressFactory.getInstance(context).receive.right.addressString
+                        walletIndex = WALLET_INDEX.BIP44_RECEIVE;
                     }
+                    val ownReceiveAddr = AddressFactory.getInstance(context).getAddressAndIncrement(walletIndex).right
+
                     Log.d("CPFPTask", "receive address:$ownReceiveAddr")
                     var totalAmount = utxo.value
                     Log.d("CPFPTask", "amount before fee:$totalAmount")

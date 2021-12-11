@@ -46,8 +46,8 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     @Override
-    protected String requestJsonGet(String url, Map<String, String> headers) throws Exception {
-        return webUtil.getURL(url, headers);
+    protected String requestJsonGet(String urlStr, Map<String, String> headers, boolean async) throws Exception {
+        return webUtil.getURL(urlStr, headers);
     }
 
     @Override

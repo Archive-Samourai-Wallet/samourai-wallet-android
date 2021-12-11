@@ -252,7 +252,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:textColor="#858586"
-        android:tooltipText="Per utxo embeded fees"
+        android:tooltipText="Per utxo embedded fees"
         app:layout_constraintBottom_toBottomOf="@+id/textView81"
         app:layout_constraintEnd_toEndOf="@+id/poolTotalFees"
         app:layout_constraintHorizontal_bias="1.0"
@@ -270,23 +270,6 @@
         android:textColor="#858586"
         app:layout_constraintStart_toStartOf="@+id/textView62"
         app:layout_constraintTop_toBottomOf="@+id/textView81" />
-
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/loadingFeeDetails"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:indeterminate="true"
-        app:indicatorSize="12dp"
-        android:indeterminateBehavior="cycle"
-        app:indicatorInset="10dp"
-        app:indicatorColor="?attr/colorAccent"
-        tools:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/textView66"
-        app:layout_constraintEnd_toStartOf="@+id/guideline13"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/textView64"
-        app:layout_constraintTop_toBottomOf="@+id/view8" />
 
     <TextView
         android:id="@+id/minerFees"

@@ -59,7 +59,7 @@
                 app:tabMode="fixed"
                 app:layout_scrollFlags="noScroll"
                 app:tabBackground="?colorAccent"
-                app:tabTextAppearance="@android:style/TextAppearance.Material.Widget.TabWidget" />
+                app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 

@@ -54,13 +54,11 @@ public class BIP84Util {
     }
 
     public SegwitAddress getAddressAt(int chain, int idx) {
-        HD_Address addr = getWallet().getAccount(0).getChain(chain).getAddressAt(idx);
-        SegwitAddress segwitAddress = new SegwitAddress(addr.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-        return segwitAddress;
+        return getAddressAt(0, chain, idx);
     }
 
     public SegwitAddress getAddressAt(int account, int chain, int idx) {
-        HD_Address addr = getWallet().getAccountAt(account).getChain(chain).getAddressAt(idx);
+        HD_Address addr = getWallet().getAccount(account).getChain(chain).getAddressAt(idx);
         SegwitAddress segwitAddress = new SegwitAddress(addr.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
         return segwitAddress;
     }

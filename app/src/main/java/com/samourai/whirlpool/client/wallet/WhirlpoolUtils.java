@@ -2,7 +2,11 @@ package com.samourai.whirlpool.client.wallet;
 
 import android.content.Context;
 
+import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.hd.HD_Wallet;
+import com.samourai.wallet.segwit.BIP84Util;
+import com.samourai.wallet.send.BlockedUTXO;
+import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.whirlpool.client.exception.NotifiableException;
@@ -12,10 +16,12 @@ import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus;
 
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,7 +38,7 @@ public class WhirlpoolUtils {
     }
 
     public String computeWalletIdentifier(HD_Wallet bip84w) {
-        return ClientUtils.sha256Hash(bip84w.getAccountAt(0).zpubstr());
+        return ClientUtils.sha256Hash(bip84w.getAccount(0).zpubstr());
     }
 
     public File computeIndexFile(String walletIdentifier, Context ctx) throws NotifiableException {
@@ -66,6 +72,27 @@ public class WhirlpoolUtils {
         return f;
     }
 
+    public void wipe(HD_Wallet bip84w, Context context) {
+        String strIdentifier84 = WhirlpoolUtils.getInstance().computeWalletIdentifier(bip84w);
+        try  {
+            File whirlpoolUtxos = WhirlpoolUtils.getInstance().computeUtxosFile(strIdentifier84, context);
+            if (whirlpoolUtxos.exists()) {
+                whirlpoolUtxos.delete();
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            File whirlpoolIndexes = WhirlpoolUtils.getInstance().computeIndexFile(strIdentifier84, context);
+            if (whirlpoolIndexes.exists()) {
+                whirlpoolIndexes.delete();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public Collection<String> getWhirlpoolTags(UTXOCoin item, Context ctx ) {
         List<String> tags = new LinkedList<>();
         WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
@@ -85,7 +112,9 @@ public class WhirlpoolUtils {
                 // tag only premix & postmix utxos
                 if (WhirlpoolAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || WhirlpoolAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
                     // show whirlpool tag
-                    tags.add(whirlpoolUtxo.getMixsDone() + " MIXED");
+                    if(whirlpoolUtxo.getUtxo().value > BlockedUTXO.BLOCKED_UTXO_THRESHOLD){
+                        tags.add(whirlpoolUtxo.getMixsDone() + " MIXED");
+                    }
 
                     // show reason when not mixable
                     MixableStatus mixableStatus = whirlpoolUtxo.getUtxoState().getMixableStatus();
@@ -128,4 +157,36 @@ public class WhirlpoolUtils {
         }
         return tags;
     }
+
+    public Collection<UnspentOutput> toUnspentOutputsCoins(Collection<UTXOCoin> coins) {
+        Collection<UnspentOutput> unspentOutputs = new ArrayList<>();
+        for (UTXOCoin coin : coins) {
+            UnspentOutput unspentOutput = toUnspentOutput(coin.getOutPoint());
+            unspentOutputs.add(unspentOutput);
+        }
+        return unspentOutputs;
+    }
+
+    public UnspentOutput toUnspentOutput(MyTransactionOutPoint outPoint) {
+        UnspentOutput unspentOutput = new UnspentOutput();
+        unspentOutput.addr = outPoint.getAddress();
+        unspentOutput.script = Hex.toHexString(outPoint.getScriptBytes());
+        unspentOutput.confirmations = outPoint.getConfirmations();
+        unspentOutput.tx_hash = outPoint.getTxHash().toString();
+        unspentOutput.tx_output_n = outPoint.getTxOutputN();
+        unspentOutput.value = outPoint.getValue().getValue();
+        unspentOutput.xpub = new UnspentOutput.Xpub();
+        unspentOutput.xpub.path = "M/0/0";
+        return unspentOutput;
+    }
+
+    public Collection<UnspentOutput> toUnspentOutputs(Collection<MyTransactionOutPoint> outPoints) {
+        Collection<UnspentOutput> unspentOutputs = new ArrayList<>();
+        for (MyTransactionOutPoint outPoint : outPoints) {
+            UnspentOutput unspentOutput = toUnspentOutput(outPoint);
+            unspentOutputs.add(unspentOutput);
+        }
+        return unspentOutputs;
+    }
+
 }

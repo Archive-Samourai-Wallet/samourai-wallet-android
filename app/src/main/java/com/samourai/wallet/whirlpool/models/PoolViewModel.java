@@ -5,6 +5,7 @@ import android.util.Log;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolTx0;
+import com.samourai.whirlpool.client.tx0.Tx0Preview;
 import com.samourai.whirlpool.client.whirlpool.beans.Pool;
 
 import java.util.List;
@@ -17,8 +18,11 @@ public class PoolViewModel extends com.samourai.whirlpool.client.whirlpool.beans
     private long totalMinerFee = 0L;
     private long totalEstimatedBytes = 0L;
     private WhirlpoolTx0 tx0;
+    private Pool pool;
+    private Tx0Preview tx0Preview = null;
 
     public PoolViewModel(Pool pool) {
+        this.pool = pool;
         this.setDenomination(pool.getDenomination());
         this.setFeeValue(pool.getFeeValue());
         this.setPoolId(pool.getPoolId());
@@ -44,6 +48,14 @@ public class PoolViewModel extends com.samourai.whirlpool.client.whirlpool.beans
         return isSelected;
     }
 
+    public void setTx0Preview(Tx0Preview tx0Preview) {
+        this.tx0Preview = tx0Preview;
+    }
+
+    public Tx0Preview getTx0Preview() {
+        return tx0Preview;
+    }
+
     public void setSelected(boolean selected) {
         isSelected = selected;
     }
@@ -58,6 +70,10 @@ public class PoolViewModel extends com.samourai.whirlpool.client.whirlpool.beans
 
     public long getTotalEstimatedBytes() {
         return totalEstimatedBytes;
+    }
+
+    public Pool getPool() {
+        return pool;
     }
 
     public Long getMinerFee() {

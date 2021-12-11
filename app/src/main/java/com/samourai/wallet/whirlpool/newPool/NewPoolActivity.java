@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
@@ -19,7 +18,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -30,21 +28,19 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
-import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
-import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.wallet.whirlpool.WhirlpoolTx0;
 import com.samourai.wallet.whirlpool.models.PoolCyclePriority;
-import com.samourai.wallet.whirlpool.models.PoolViewModel;
 import com.samourai.wallet.whirlpool.newPool.fragments.ChooseUTXOsFragment;
 import com.samourai.wallet.whirlpool.newPool.fragments.ReviewPoolFragment;
 import com.samourai.wallet.whirlpool.newPool.fragments.SelectPoolFragment;
@@ -52,20 +48,20 @@ import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService;
 import com.samourai.wallet.widgets.ViewPager;
 import com.samourai.whirlpool.client.tx0.Tx0;
 import com.samourai.whirlpool.client.tx0.Tx0Config;
-import com.samourai.whirlpool.client.tx0.UnspentOutputWithKey;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
+import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.TransactionOutput;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import androidx.lifecycle.ViewModelProvider;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -74,7 +70,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
 
-public class NewPoolActivity extends AppCompatActivity {
+public class NewPoolActivity extends SamouraiActivity {
 
     private static final String TAG = "NewPoolActivity";
 
@@ -91,19 +87,16 @@ public class NewPoolActivity extends AppCompatActivity {
     private int account = 0;
     private MaterialButton confirmButton;
     private CompositeDisposable disposables = new CompositeDisposable();
-
+    private  NewPoolViewModel newPoolViewModel;
     private List<UTXOCoin> selectedCoins = new ArrayList<>();
     private ArrayList<Long> fees = new ArrayList<Long>();
-    private PoolViewModel selectedPoolViewModel = null;
-    private PoolCyclePriority selectedPoolPriority = PoolCyclePriority.NORMAL;
-    private Tx0FeeTarget tx0FeeTarget = Tx0FeeTarget.BLOCKS_2;
     private LinearLayout tx0Progress;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_whirlpool_cycle);
         Toolbar toolbar = findViewById(R.id.toolbar_new_whirlpool);
+        newPoolViewModel = new ViewModelProvider(this).get(NewPoolViewModel.class);
 
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -112,11 +105,6 @@ public class NewPoolActivity extends AppCompatActivity {
 
         cycleTotalAmount = findViewById(R.id.cycle_total_amount);
         cycleTotalAmount.setText(FormatsUtil.formatBTC(0L));
-
-        fees.add(FeeUtil.getInstance().getLowFee().getDefaultPerKB().longValue() / 1000L);
-        fees.add(FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue() / 1000L);
-        fees.add(FeeUtil.getInstance().getHighFee().getDefaultPerKB().longValue() / 1000L);
-
 
         String preselectId = null;
         if (getIntent().getExtras() != null && getIntent().getExtras().containsKey("preselected")) {
@@ -129,7 +117,6 @@ public class NewPoolActivity extends AppCompatActivity {
         chooseUTXOsFragment = ChooseUTXOsFragment.newInstance(preselectId);
         selectPoolFragment = new SelectPoolFragment();
         reviewPoolFragment = new ReviewPoolFragment();
-        selectPoolFragment.setFees(this.fees);
         tx0Progress = findViewById(R.id.new_pool_tx0_progress);
 
         newPoolViewPager = findViewById(R.id.new_pool_viewpager);
@@ -149,13 +136,24 @@ public class NewPoolActivity extends AppCompatActivity {
         if (account != WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix())
             chooseUTXOsFragment.setOnUTXOSelectionListener(this::onUTXOSelected);
 
-        selectPoolFragment.setOnPoolSelectionComplete((poolViewModel, priority) -> {
-            selectedPoolViewModel = poolViewModel;
-            selectedPoolPriority = priority;
-            if (tx0 != null && poolViewModel != null) {
-                tx0.setPool(poolViewModel.getDenomination());
+        newPoolViewModel.getGetPoolLoadError().observe(this,exception -> {
+            if(exception!=null){
+                if(exception.getMessage()!=null){
+                    Snackbar.make(findViewById(R.id.new_pool_snackbar_layout),exception.getMessage(),Snackbar.LENGTH_LONG).show();
+                }
             }
-            enableConfirmButton(selectedPoolViewModel != null);
+        });
+        newPoolViewModel.getGetPool().observe(this,(pool) -> {
+            if (tx0 != null && pool != null) {
+                tx0.setPool(pool.getDenomination());
+            }
+            enableConfirmButton(pool != null);
+        });
+
+        newPoolViewModel.getGetPool().observe(this,poolViewModel -> {
+            if(poolViewModel != null && newPoolViewPager.getCurrentItem() == 1){
+                enableConfirmButton(true);
+            }
         });
 
         reviewPoolFragment.setLoadingListener((aBoolean, e) -> {
@@ -170,22 +168,14 @@ public class NewPoolActivity extends AppCompatActivity {
                 case 0: {
                     newPoolViewPager.setCurrentItem(1);
                     initUTXOReviewButton(selectedCoins);
-                    enableConfirmButton(selectedPoolViewModel != null);
+                    newPoolViewModel.loadPools();
+                    enableConfirmButton(newPoolViewModel.getGetPool().getValue() != null);
                     break;
                 }
                 case 1: {
-                    try {
-//                        tx0.make();
-                    } catch (Exception ex) {
-                        Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    calculateTx0(selectedPoolViewModel.getDenomination(), selectedPoolViewModel.getMinerFee());
                     newPoolViewPager.setCurrentItem(2);
                     confirmButton.setText(getString(R.string.begin_cycle));
                     confirmButton.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.green_ui_2));
-
-                    reviewPoolFragment.setTx0(tx0, tx0FeeTarget, tx0FeeTarget, selectedPoolViewModel);
                     break;
                 }
                 case 2: {
@@ -239,6 +229,7 @@ public class NewPoolActivity extends AppCompatActivity {
         selectedCoins = coins;
 
         if (coins.size() == 0) {
+            cycleTotalAmount.setText(FormatsUtil.formatBTC(0L));
             enableConfirmButton(false);
         } else {
             long mediumFee = FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue() / 1000L;
@@ -247,6 +238,10 @@ public class NewPoolActivity extends AppCompatActivity {
             // default set to lowest pool
             calculateTx0(WhirlpoolMeta.getInstance(NewPoolActivity.this).getMinimumPoolDenomination(), mediumFee);
         }
+
+        newPoolViewModel.setUtxos(selectedCoins);
+        newPoolViewModel.setPoolPriority(PoolCyclePriority.NORMAL);
+        newPoolViewModel.loadPools();
     }
 
     private void calculateTx0(long denomination, long fee) {
@@ -258,8 +253,8 @@ public class NewPoolActivity extends AppCompatActivity {
         } catch (Exception ex) {
             Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
             ex.printStackTrace();
-            return;
         }
+
         if (tx0.getTx0() != null) {
             enableConfirmButton(true);
             selectPoolFragment.setTX0(selectedCoins);
@@ -279,8 +274,7 @@ public class NewPoolActivity extends AppCompatActivity {
                 Disposable tx0Disposable = beginTx0(selectedCoins)
                         .delay(500, TimeUnit.MILLISECONDS)
                         .andThen(Completable.fromCallable(() -> {
-                            AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWallet().get().refreshUtxos(true);
-                            AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWallet().get().resync();
+                            AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWallet().get().refreshUtxos();
                             return  false;
                         }))
                         .delay(100,TimeUnit.MILLISECONDS)
@@ -320,48 +314,31 @@ public class NewPoolActivity extends AppCompatActivity {
             if (whirlpoolWallet == null) {
                 return true;
             }
-            Collection<UnspentOutputWithKey> spendFroms = new ArrayList<UnspentOutputWithKey>();
+            Collection<UnspentOutput> spendFroms = WhirlpoolUtils.getInstance().toUnspentOutputsCoins(coins);
 
-            for (UTXOCoin coin : coins) {
-                UnspentOutput unspentOutput = new UnspentOutput();
-                unspentOutput.addr = coin.address;
-                unspentOutput.script = Hex.toHexString(coin.getOutPoint().getScriptBytes());
-                unspentOutput.confirmations = coin.getOutPoint().getConfirmations();
-                unspentOutput.tx_hash = coin.getOutPoint().getTxHash().toString();
-                unspentOutput.tx_output_n = coin.getOutPoint().getTxOutputN();
-                unspentOutput.value = coin.amount;
-                unspentOutput.xpub = new UnspentOutput.Xpub();
-                unspentOutput.xpub.path = "M/0/0";
+            Tx0FeeTarget mixFeeTarget = Tx0FeeTarget.BLOCKS_2;
 
-                ECKey eckey = SendFactory.getPrivKey(coin.address, account);
-                UnspentOutputWithKey spendFrom = new UnspentOutputWithKey(unspentOutput, eckey.getPrivKeyBytes());
-                spendFroms.add(spendFrom);
+            if (newPoolViewModel.getGetTx0PoolPriority().getValue() == PoolCyclePriority.HIGH) {
+                mixFeeTarget = Tx0FeeTarget.BLOCKS_2;
+            } else if (newPoolViewModel.getGetTx0PoolPriority().getValue() == PoolCyclePriority.NORMAL) {
+                mixFeeTarget = Tx0FeeTarget.BLOCKS_6;
+            } else if (newPoolViewModel.getGetTx0PoolPriority().getValue() == PoolCyclePriority.LOW) {
+                mixFeeTarget = Tx0FeeTarget.BLOCKS_24;
             }
-            if (selectedPoolPriority == PoolCyclePriority.HIGH) {
-                tx0FeeTarget = Tx0FeeTarget.BLOCKS_2;
-
-            } else if (selectedPoolPriority == PoolCyclePriority.NORMAL) {
-                tx0FeeTarget = Tx0FeeTarget.BLOCKS_6;
-
-            } else if (selectedPoolPriority == PoolCyclePriority.LOW) {
-                tx0FeeTarget = Tx0FeeTarget.BLOCKS_24;
-            }
-
-            Tx0Config tx0Config = whirlpoolWallet.getTx0Config();
+            Tx0Config tx0Config = whirlpoolWallet.getTx0Config(mixFeeTarget, mixFeeTarget);
             if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
                 tx0Config.setChangeWallet(WhirlpoolAccount.POSTMIX);
             } else {
                 tx0Config.setChangeWallet(WhirlpoolAccount.DEPOSIT);
             }
             try {
-                com.samourai.whirlpool.client.whirlpool.beans.Pool pool = whirlpoolWallet.getPoolSupplier().findPoolById(selectedPoolViewModel.getPoolId());
-//                Tx0FeeTarget mixFeeTarget = Tx0FeeTarget.BLOCKS_12;
-                Tx0FeeTarget mixFeeTarget = tx0FeeTarget;
-                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, pool, tx0Config, tx0FeeTarget, mixFeeTarget);
+                com.samourai.whirlpool.client.whirlpool.beans.Pool pool = whirlpoolWallet.getPoolSupplier().findPoolById(newPoolViewModel.getGetPool().getValue().getPoolId());
+
+                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, tx0Config, pool);
                 final String txHash = tx0.getTx().getHashAsString();
                 // tx0 success
                 if (tx0.getChangeOutputs() != null && !tx0.getChangeOutputs().isEmpty()) {
-                    TransactionOutput changeOutput = tx0.getChangeOutputs().get(0);
+                    TransactionOutput changeOutput = tx0.getChangeOutputs().iterator().next();
                     LogUtil.info("NewPoolActivity", "change:" + changeOutput.toString());
                     LogUtil.info("NewPoolActivity", "change index:" + changeOutput.getIndex());
                     UTXOUtil.getInstance().add(txHash + "-" + changeOutput.getIndex(), "\u2623 tx0 change\u2623");
@@ -375,21 +352,12 @@ public class NewPoolActivity extends AppCompatActivity {
                     }
                 }
 
-                NewPoolActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        Toast.makeText(NewPoolActivity.this, txHash, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                NewPoolActivity.this.runOnUiThread(() -> Toast.makeText(NewPoolActivity.this, txHash, Toast.LENGTH_SHORT).show());
                 LogUtil.info("NewPoolActivity", "result:" + txHash);
 
             } catch (Exception e) {
                 // tx0 failed
-                NewPoolActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        Toast.makeText(NewPoolActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-                LogUtil.info("NewPoolActivity", "result:" + e.getMessage());
+                throw  e;
             }
 
             return true;
@@ -424,7 +392,7 @@ public class NewPoolActivity extends AppCompatActivity {
                     case 1: {
                         initUTXOReviewButton(selectedCoins);
                         enableStep2(true);
-                        enableConfirmButton(selectedPoolViewModel != null);
+                        enableConfirmButton(newPoolViewModel.getGetPool().getValue() != null);
                         break;
                     }
                     case 2: {

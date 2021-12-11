@@ -1,14 +1,7 @@
 package com.samourai.wallet.hd;
 
 import android.content.Context;
-//import android.util.Log;
-
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.HDKeyDerivation;
-import org.bitcoinj.crypto.MnemonicCode;
-import org.bitcoinj.crypto.MnemonicException;
+import android.util.Log;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Util;
@@ -20,11 +13,13 @@ import com.samourai.wallet.util.FormatsUtil;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.crypto.MnemonicCode;
+import org.bitcoinj.crypto.MnemonicException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +28,7 @@ import java.util.List;
 //import org.apache.commons.lang.ArrayUtils;
 
 public class HD_WalletFactory	{
+    private static final String TAG = HD_WalletFactory.class.getSimpleName();
 
     public static final String BIP39_ENGLISH_SHA256 = "ad90bf3beb7b0eb7e5acd74727dc0da96e0a280a258354e7293fb7e211ac03db";
 
@@ -56,7 +52,7 @@ public class HD_WalletFactory	{
         return instance;
     }
 
-    public HD_Wallet newWallet(int nbWords, String passphrase, int nbAccounts) throws IOException, MnemonicException.MnemonicLengthException   {
+    public HD_Wallet newWallet(int nbWords, String passphrase) throws IOException, MnemonicException.MnemonicLengthException   {
 
         HD_Wallet hdw = null;
 
@@ -80,19 +76,15 @@ public class HD_WalletFactory	{
 
         MnemonicCode mc = computeMnemonicCode();
         if (mc != null) {
-            hdw = new HD_Wallet(44, mc, params, seed, passphrase, nbAccounts);
+            hdw = new HD_Wallet(44, mc, params, seed, passphrase);
         }
 
-        BIP47Util.getInstance(context).reset();
-        BIP49Util.getInstance(context).reset();
-        BIP84Util.getInstance(context).reset();
-        wallets.clear();
-        wallets.add(hdw);
+        set(hdw);
 
         return hdw;
     }
 
-    public HD_Wallet restoreWallet(String data, String passphrase, int nbAccounts) throws AddressFormatException, IOException, DecoderException, MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException  {
+    public HD_Wallet restoreWallet(String data, String passphrase) throws AddressFormatException, IOException, DecoderException, MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException  {
 
         HD_Wallet hdw = null;
 
@@ -113,21 +105,17 @@ public class HD_WalletFactory	{
             }
             else if(data.matches(FormatsUtil.HEX) && data.length() % 4 == 0) {
                 seed = Hex.decodeHex(data.toCharArray());
-                hdw = new HD_Wallet(44, mc, params, seed, passphrase, nbAccounts);
+                hdw = new HD_Wallet(44, mc, params, seed, passphrase);
             }
             else {
                 data = data.toLowerCase().replaceAll("[^a-z]+", " ");             // only use for BIP39 English
                 words = Arrays.asList(data.trim().split("\\s+"));
                 seed = mc.toEntropy(words);
-                hdw = new HD_Wallet(44, mc, params, seed, passphrase, nbAccounts);
+                hdw = new HD_Wallet(44, mc, params, seed, passphrase);
             }
         }
 
-        BIP47Util.getInstance(context).reset();
-        BIP49Util.getInstance(context).reset();
-        BIP84Util.getInstance(context).reset();
-        wallets.clear();
-        wallets.add(hdw);
+        set(hdw);
 
         return hdw;
     }
@@ -152,7 +140,7 @@ public class HD_WalletFactory	{
         if (mc != null) {
             String seed = HD_WalletFactory.getInstance(context).get().getSeedHex();
             String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
-            hdw47 = new BIP47Wallet(47, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase, 1);
+            hdw47 = new BIP47Wallet(47, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase);
         }
 
         return hdw47;
@@ -169,7 +157,7 @@ public class HD_WalletFactory	{
         if (mc != null) {
             String seed = HD_WalletFactory.getInstance(context).get().getSeedHex();
             String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
-            hdw49 = new HD_Wallet(49, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase, 1);
+            hdw49 = new HD_Wallet(49, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase);
         }
 
         return hdw49;
@@ -186,18 +174,21 @@ public class HD_WalletFactory	{
         if (mc != null) {
             String seed = HD_WalletFactory.getInstance(context).get().getSeedHex();
             String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
-            hdw84 = new HD_Wallet(84, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase, 1);
+            hdw84 = new HD_Wallet(84, mc, SamouraiWallet.getInstance().getCurrentNetworkParams(), org.bouncycastle.util.encoders.Hex.decode(seed), passphrase);
         }
 
         return hdw84;
     }
 
     public void set(HD_Wallet wallet)	{
-
+        Log.d(TAG, "set wallet");
         if(wallet != null)	{
             wallets.clear();
             wallets.add(wallet);
         }
+        BIP47Util.getInstance(context).reset();
+        BIP49Util.getInstance(context).reset();
+        BIP84Util.getInstance(context).reset();
 
     }
 

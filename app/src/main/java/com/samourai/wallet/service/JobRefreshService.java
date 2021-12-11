@@ -63,36 +63,8 @@ public class JobRefreshService extends JobIntentService {
         APIFactory.getInstance(this.getApplicationContext()).stayingAlive();
         APIFactory.getInstance(this.getApplicationContext()).initWallet();
 
-        try {
-            int acc = 0;
-
-            if (AddressFactory.getInstance().getHighestTxReceiveIdx(acc) > HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getReceive().getAddrIdx()) {
-                HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getReceive().setAddrIdx(AddressFactory.getInstance().getHighestTxReceiveIdx(acc));
-            }
-            if (AddressFactory.getInstance().getHighestTxChangeIdx(acc) > HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getChange().getAddrIdx()) {
-                HD_WalletFactory.getInstance(this.getApplicationContext()).get().getAccount(acc).getChange().setAddrIdx(AddressFactory.getInstance().getHighestTxChangeIdx(acc));
-            }
-
-            if (AddressFactory.getInstance().getHighestBIP49ReceiveIdx() > BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().getAddrIdx()) {
-                BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().setAddrIdx(AddressFactory.getInstance().getHighestBIP49ReceiveIdx());
-            }
-            if (AddressFactory.getInstance().getHighestBIP49ChangeIdx() > BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().getAddrIdx()) {
-                BIP49Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().setAddrIdx(AddressFactory.getInstance().getHighestBIP49ChangeIdx());
-            }
-
-            if (AddressFactory.getInstance().getHighestBIP84ReceiveIdx() > BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().getAddrIdx()) {
-                BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getReceive().setAddrIdx(AddressFactory.getInstance().getHighestBIP84ReceiveIdx());
-            }
-            if (AddressFactory.getInstance().getHighestBIP84ChangeIdx() > BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().getAddrIdx()) {
-                BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(0).getChange().setAddrIdx(AddressFactory.getInstance().getHighestBIP84ChangeIdx());
-            }
-
-        } catch (NullPointerException ioe) {
-            ioe.printStackTrace();
-        } finally {
-            Intent _intent = new Intent("com.samourai.wallet.BalanceFragment.DISPLAY");
-            LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(_intent);
-        }
+        Intent _intentDisplay = new Intent("com.samourai.wallet.BalanceFragment.DISPLAY");
+        LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(_intentDisplay);
 
         PrefsUtil.getInstance(this.getApplicationContext()).setValue(PrefsUtil.FIRST_RUN, false);
 
@@ -171,22 +143,22 @@ public class JobRefreshService extends JobIntentService {
                 }
 
                 if (!PrefsUtil.getInstance(this.getApplicationContext()).getValue(PrefsUtil.XPUBPRELOCK, false)) {
-                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccountAt(WhirlpoolMeta.getInstance(this.getApplicationContext()).getWhirlpoolPremixAccount()).zpubstr();
+                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(WhirlpoolMeta.getInstance(this.getApplicationContext()).getWhirlpoolPremixAccount()).zpubstr();
                     APIFactory.getInstance(this.getApplicationContext()).lockXPUB(zpub, 84, PrefsUtil.XPUBPRELOCK);
                 }
 
                 if (!PrefsUtil.getInstance(this.getApplicationContext()).getValue(PrefsUtil.XPUBPOSTLOCK, false)) {
-                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccountAt(WhirlpoolMeta.getInstance(this.getApplicationContext()).getWhirlpoolPostmix()).zpubstr();
+                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(WhirlpoolMeta.getInstance(this.getApplicationContext()).getWhirlpoolPostmix()).zpubstr();
                     APIFactory.getInstance(this.getApplicationContext()).lockXPUB(zpub, 84, PrefsUtil.XPUBPOSTLOCK);
                 }
 
                 if (!PrefsUtil.getInstance(this.getApplicationContext()).getValue(PrefsUtil.XPUBBADBANKLOCK, false)) {
-                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccountAt(WhirlpoolMeta.getInstance(this.getApplicationContext()).getWhirlpoolBadBank()).zpubstr();
+                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(WhirlpoolMeta.getInstance(this.getApplicationContext()).getWhirlpoolBadBank()).zpubstr();
                     APIFactory.getInstance(this.getApplicationContext()).lockXPUB(zpub, 84, PrefsUtil.XPUBBADBANKLOCK);
                 }
 
                 if (!PrefsUtil.getInstance(this.getApplicationContext()).getValue(PrefsUtil.XPUBRICOCHETLOCK, false)) {
-                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccountAt(RicochetMeta.getInstance(JobRefreshService.this).getRicochetAccount()).zpubstr();
+                    String zpub = BIP84Util.getInstance(this.getApplicationContext()).getWallet().getAccount(RicochetMeta.getInstance(JobRefreshService.this).getRicochetAccount()).zpubstr();
                     APIFactory.getInstance(this.getApplicationContext()).lockXPUB(zpub, 84, PrefsUtil.XPUBRICOCHETLOCK);
                 }
             } catch (Exception e) {

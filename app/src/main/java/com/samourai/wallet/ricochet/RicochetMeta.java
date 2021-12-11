@@ -16,6 +16,7 @@ import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.crypto.DecryptionException;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
@@ -186,7 +187,7 @@ public class RicochetMeta {
         JSONObject jsonPayload = new JSONObject();
         try {
 
-            String zpub = BIP84Util.getInstance(context).getWallet().getAccountAt(RICOCHET_ACCOUNT).zpubstr();
+            String zpub = BIP84Util.getInstance(context).getWallet().getAccount(RICOCHET_ACCOUNT).zpubstr();
             jsonPayload.put("xpub", zpub);
 
             jsonPayload.put("index", index);
@@ -504,7 +505,7 @@ public class RicochetMeta {
 
     private String getDestinationAddress(int idx) {
 
-        HD_Address hd_addr = BIP84Util.getInstance(context).getWallet().getAccountAt(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(idx);
+        HD_Address hd_addr = BIP84Util.getInstance(context).getWallet().getAccount(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(idx);
         SegwitAddress segwitAddress = new SegwitAddress(hd_addr.getECKey().getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
         String address = segwitAddress.getBech32AsString();
 
@@ -575,14 +576,8 @@ public class RicochetMeta {
         HashMap<String, BigInteger> receivers = new HashMap<String, BigInteger>();
 
         if (changeAmount > 0L) {
-            String change_address = null;
-            if (account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()) {
-                int idx = AddressFactory.getInstance(context).getHighestPostChangeIdx();
-                change_address = BIP84Util.getInstance(context).getAddressAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, idx).getBech32AsString();
-                AddressFactory.getInstance(context).setHighestPostChangeIdx(idx + 1);
-            } else {
-                change_address = BIP84Util.getInstance(context).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(context).getWallet().getAccount(0).getChange().getAddrIdx()).getBech32AsString();
-            }
+            WALLET_INDEX walletIndex = (account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix() ? WALLET_INDEX.POSTMIX_CHANGE : WALLET_INDEX.BIP84_CHANGE);
+            String change_address = AddressFactory.getInstance(context).getAddressAndIncrement(walletIndex).getRight();
             receivers.put(change_address, BigInteger.valueOf(changeAmount));
         }
 
@@ -622,7 +617,7 @@ public class RicochetMeta {
             output = new TransactionOutput(SamouraiWallet.getInstance().getCurrentNetworkParams(), null, Coin.valueOf(spendAmount), outputScript.getProgram());
         }
 
-        HD_Address address = BIP84Util.getInstance(context).getWallet().getAccountAt(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(prevIndex);
+        HD_Address address = BIP84Util.getInstance(context).getWallet().getAccount(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(prevIndex);
         ECKey ecKey = address.getECKey();
         SegwitAddress p2wpkh = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
         Script redeemScript = p2wpkh.segWitRedeemScript();

@@ -92,8 +92,9 @@ public class PinEntryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pinentry);
         this.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-        if (!BuildConfig.DEBUG)
+        if(!BuildConfig.FLAVOR.equals("staging")){
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
         userInput = new StringBuilder();
         pinEntryView = findViewById(R.id.pinentry_view);
         walletStatusTextView = findViewById(R.id.pin_entry_wallet_status);
@@ -405,7 +406,7 @@ public class PinEntryActivity extends AppCompatActivity {
                 if (create) {
 
                     try {
-                        HD_WalletFactory.getInstance(PinEntryActivity.this).newWallet(12, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(PinEntryActivity.this).newWallet(12, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (MnemonicException.MnemonicLengthException mle) {
@@ -419,7 +420,7 @@ public class PinEntryActivity extends AppCompatActivity {
                 } else {
 
                     try {
-                        HD_WalletFactory.getInstance(PinEntryActivity.this).restoreWallet(seed, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(PinEntryActivity.this).restoreWallet(seed, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (DecoderException de) {
@@ -578,8 +579,7 @@ public class PinEntryActivity extends AppCompatActivity {
                                                     try {
 
                                                         JSONObject json = new JSONObject(_decrypted);
-                                                        HD_Wallet hdw = PayloadUtil.getInstance(PinEntryActivity.this).restoreWalletfromJSON(json, false);
-                                                        HD_WalletFactory.getInstance(PinEntryActivity.this).set(hdw);
+                                                        PayloadUtil.getInstance(PinEntryActivity.this).restoreWalletfromJSON(json, false);
                                                         String guid = AccessFactory.getInstance(PinEntryActivity.this).createGUID();
                                                         String hash = AccessFactory.getInstance(PinEntryActivity.this).getHash(guid, new CharSequenceX(AccessFactory.getInstance(PinEntryActivity.this).getPIN()), AESUtil.DefaultPBKDF2Iterations);
                                                         PrefsUtil.getInstance(PinEntryActivity.this).setValue(PrefsUtil.ACCESS_HASH, hash);

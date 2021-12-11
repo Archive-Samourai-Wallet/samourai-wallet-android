@@ -11,8 +11,8 @@ android {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 185
-        versionName "0.99.97"
+        versionCode 187
+        versionName "0.99.97a"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -63,16 +63,16 @@ android {
             applicationId 'com.samourai.wallet'
             minSdkVersion 21
             targetSdkVersion 30
-            versionCode 185
-            versionName "0.99.97"
+            versionCode 187
+            versionName "0.99.97a"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.97"
+            resValue "string", "version_name", "0.99.97a"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
             minSdkVersion 21
             targetSdkVersion 30
-            versionCode 185
+            versionCode 187
             versionName "0.99.98"
             resValue "string", "app_name", "Samourai Staging"
             resValue "string", "version_name", "0.99.98"
@@ -137,7 +137,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation ('io.samourai.code.whirlpool:whirlpool-client:0.23.29') {
+    implementation ('io.samourai.code.whirlpool:whirlpool-client:0.23.37') {
         exclude group:'org.hibernate', module:'hibernate-validator'
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
@@ -148,7 +148,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:0.0.17-fetchWallet') {
+    implementation ('io.samourai.code.wallet:extlibj:0.0.26') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'

@@ -24,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:paddingTop="12dp"
-                android:src="@drawable/ic_check_white_82dp"
+                android:src="@drawable/ic_check_white_24dp"
                 app:layout_constraintEnd_toStartOf="@+id/guideline39"
                 app:layout_constraintHorizontal_bias="0.496"
                 app:layout_constraintStart_toStartOf="@+id/guideline38"

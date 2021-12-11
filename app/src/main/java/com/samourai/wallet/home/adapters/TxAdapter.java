@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.samourai.wallet.R;
 import com.samourai.wallet.api.Tx;
 import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
@@ -132,7 +133,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 holder.tvAmount.setText("-".concat(is_sat_prefs ? FormatsUtil.formatSats(_amount) : FormatsUtil.formatBTC(_amount)));
                 if(account==WhirlpoolAccount.POSTMIX.getAccountIndex()){
                     holder.txSubText.setVisibility(View.VISIBLE);
-                    holder.txSubText.setText("Postmix spend");
+                    holder.txSubText.setText(R.string.postmix_spend);
                 }else{
                     holder.txSubText.setVisibility(View.GONE);
                 }
@@ -141,17 +142,22 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
 
                 holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.incoming_tx_green));
                 String amount = is_sat_prefs ? FormatsUtil.formatSats(_amount) : FormatsUtil.formatBTC(_amount);
-                if (this.account == WhirlpoolMeta.getInstance(mContext).getWhirlpoolPostmix() && _amount == 0) {
-                    amount = amount.concat(mContext.getString(R.string.remix_note_tag));
-                }
+
                 holder.tvAmount.setText(amount);
                 holder.tvAmount.setTextColor(ContextCompat.getColor(mContext, R.color.green_ui_2));
-                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() && _amount!=0){
-                    holder.txSubText.setVisibility(View.VISIBLE);
-                    holder.txSubText.setText("Mixed");
-                    holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_whirlpool));
-                }else{
-                    holder.txSubText.setVisibility(View.GONE);
+                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() ){
+                    if(_amount == 0){
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.remix_note_tag);
+                    }else if( BlockedUTXO.BLOCKED_UTXO_THRESHOLD >= _amount){
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.dust);
+                    }else{
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.mixed);
+                        holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_whirlpool));
+                    }
+
                 }
             }
 
@@ -171,7 +177,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
             Date date = new Date(tx.getTS());
             if (tx.getTS() == -1L) {
                 holder.tvSection.setText(holder.itemView.getContext().getString(R.string.pending));
-                holder.tvSection.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.warning_yellow));
+                holder.tvSection.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
             } else {
                 holder.tvSection.setTextColor(ContextCompat.getColor(holder.tvSection.getContext(), R.color.text_primary));
                 if (DateUtils.isToday(tx.getTS())) {
@@ -266,7 +272,6 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
             ArrayList<Long> sectionDates = new ArrayList<>();
             List<Tx> sectioned = new ArrayList<>();
             // for pending state
-            WhirlpoolWallet wallet =   AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
             boolean contains_pending = false;
             boolean containsNonPendingTxForTodaySection = false;
             for (int i = 0; i < txes.size(); i++) {
@@ -276,13 +281,6 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 }
                 if(tx.getConfirmations() >= MAX_CONFIRM_COUNT && DateUtils.isToday(tx.getTS() * 1000)){
                     containsNonPendingTxForTodaySection = true;
-                }
-                if(wallet !=null ){
-                    for (WhirlpoolUtxo whirlpoolUtxo: wallet.getUtxoSupplier().findUtxos(WhirlpoolAccount.POSTMIX)) {
-                        if(whirlpoolUtxo.getUtxo().tx_hash.equals(tx.getHash())){
-
-                        }
-                    }
                 }
             }
             for (Tx tx : txes) {

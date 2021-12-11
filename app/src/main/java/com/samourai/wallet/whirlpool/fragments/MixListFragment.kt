@@ -3,6 +3,7 @@ package com.samourai.wallet.whirlpool.fragments
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -10,10 +11,12 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionManager
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 import com.google.android.material.transition.SlideDistanceProvider
 import com.samourai.wallet.R
@@ -25,6 +28,8 @@ import com.samourai.wallet.whirlpool.WhirlpoolHome
 import com.samourai.wallet.whirlpool.WhirlpoolHome.Companion.NEWPOOL_REQ_CODE
 import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
+import com.samourai.whirlpool.client.wallet.beans.MixableStatus
+import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.*
 import android.widget.FrameLayout.LayoutParams as LParams
@@ -65,40 +70,73 @@ class MixListFragment : Fragment() {
                     if (isRemixList) viewModel.remixLive else viewModel.mixingLive
 
                 mixList.observe(viewLifecycleOwner, { list ->
-                    val onBoardingActive  = viewModel.onboardStatus.value ?: showOnboard
-                    if(onBoardingActive){
+                    if(viewModel.listRefreshStatus.value != false) {
                         return@observe
                     }
-                    if (list.isEmpty()) {
+                    val onBoardingActive = viewModel.onboardStatus.value ?: showOnboard
+                    if (onBoardingActive) {
+                        return@observe
+                    }
+                    if (list.isEmpty() && !binding.mixSwipeContainer.isRefreshing) {
                         showAddMoreCoinView(!isRemixList)
                     } else {
                         if (binding.mixListContainer.visibility != View.VISIBLE && !showOnboard) {
                             showListView()
                         }
                     }
+                    compositeDisposable.clear()
+                    list.forEach {
+                        it.utxoState.observable.subscribe {
+                            refreshList()
+                        }.apply {
+                            compositeDisposable.add(this)
+                        }
+                    }
                     mixListAdapter.updateList(list)
                 })
-                viewModel.viewModelScope.launch(Dispatchers.Default) {
-                    while (viewModel.viewModelScope.isActive) {
-                        withContext(Dispatchers.Main) {
-                            val list =
-                                if (mixTypeArg == MixListType.REMIX.toString()) viewModel.remixLive.value else viewModel.mixingLive.value
-                            if (list != null)
-                                mixListAdapter.updateList(list)
-                        }
-                        delay(1000)
-                    }
-                }
+
             }
         })
 
+        viewModel.displaySatsLive.observe(viewLifecycleOwner, {
+            mixListAdapter.setDisplaySats(it)
+        })
         mixListAdapter.setOnClickListener {
-            val mxix = MixDetailsBottomSheet.newInstance(it.utxo.tx_hash, it.utxo.tx_output_n)
-            mxix.show(childFragmentManager, mxix.tag)
+            val mixDetailsBottomSheet =
+                MixDetailsBottomSheet.newInstance(it.utxo.tx_hash, it.utxo.tx_output_n)
+            mixDetailsBottomSheet.show(childFragmentManager, mixDetailsBottomSheet.tag)
+        }
+        mixListAdapter.setOnMixingButtonClickListener {
+            if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
+                val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get();
+                if(it.utxoState.mixableStatus == MixableStatus.UNCONFIRMED){
+                    Snackbar.make(binding.mixListContainer,R.string.unconfirmed,Snackbar.LENGTH_LONG).show()
+                    return@setOnMixingButtonClickListener
+                }
+                if(it.utxoState.mixableStatus == MixableStatus.NO_POOL){
+                    return@setOnMixingButtonClickListener
+                }
+                if (it.utxoState != null && it.utxoState.status != null) {
+                    if (it.utxoState.status == WhirlpoolUtxoStatus.MIX_STARTED) {
+                        wallet.mixStop(it)
+                        wallet.mixQueue(it)
+                    }else{
+                        wallet.mix(it)
+                    }
+                }
+            }
+
         }
 
     }
 
+
+    private fun refreshList() {
+        val list =
+            if (mixTypeArg == MixListType.REMIX.toString()) viewModel.remixLive.value else viewModel.mixingLive.value
+        if (list != null)
+            mixListAdapter.updateList(list)
+    }
 
     private fun showListView() {
         startTransition()
@@ -166,17 +204,11 @@ class MixListFragment : Fragment() {
     }
 
     private fun setUpList() {
+        viewModel.listRefreshStatus.observe(viewLifecycleOwner, {
+            binding.mixSwipeContainer.isRefreshing = it
+        })
         binding.mixSwipeContainer.setOnRefreshListener {
-            val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull;
-            if (wallet != null) {
-                binding.mixSwipeContainer.isRefreshing = true;
-                viewModel.viewModelScope.launch(Dispatchers.IO) {
-                    wallet.refreshUtxos(true)
-                    withContext(Dispatchers.Main) {
-                        binding.mixSwipeContainer.isRefreshing = false;
-                    }
-                }
-            }
+          viewModel.refreshList(requireContext())
         }
         val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.divider_grey)
         binding.mixListRecyclerView.apply {
@@ -207,7 +239,6 @@ class MixListFragment : Fragment() {
 
     companion object {
         private const val MIX_TYPE = "MIX_TYPE"
-        private const val TAG = "MixListFragment"
 
         @JvmStatic
         fun newInstance(param1: MixListType) =

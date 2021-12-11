@@ -514,7 +514,7 @@
 
     <string name="insufficient_fee">Insufficient fee</string>
     <string name="action_utxo_amounts">View amounts by address type</string>
-    <string name="remix_note_tag">" (Remix)"</string>
+    <string name="remix_note_tag">"Remix"</string>
 
     <string name="total_p2pkh">Total legacy (p2pkh):</string>
     <string name="total_p2sh_p2wpkh">Total segwit (p2sh):</string>
@@ -585,7 +585,7 @@
     <string name="select_a_cycle_type">Select a cycle type</string>
     <string name="supercharge">SuperCharge</string>
     <string name="transaction_broadcast">Transaction Broadcast</string>
-    <string name="pending">pending</string>
+    <string name="pending">Pending</string>
     <string name="transaction_id">Transaction ID</string>
     <string name="completed">Completed</string>
     <string name="title_activity_received_tx">" "</string>
@@ -727,7 +727,7 @@
     <string name="change_from_postmix">Change from postmix spend</string>
     <string name="selection_contains_blocked_utxo">Your selection contains blocked utxos. please remove and try again.</string>
     <string name="only_single_utxo_may_selected">Only a single utxo may be selected for direct spend from post-mix.</string>
-    <string name="only_a_single_change_utxo_may">Only a single change utxo may be selected for direct Whirlpooling from post-mix.</string>
+    <string name="only_a_single_utxo_may">Only a single utxo may be selected for direct Whirlpooling from post-mix.</string>
     <string name="only_change_utxos_allowed">Only change utxo\'s allowed</string>
     <string name="utxo_is_marked_as_blocked">utxo is marked as blocked</string>
     <string-array name="address_types">
@@ -847,16 +847,16 @@
     <string name="restoring_a_wallet_no_problem_let_s_figure">Restoring a wallet? No problem, let\'s figure out what kind of restore to perform.</string>
     <string name="i_have_a_samourai_backup_file">I have a Samourai backup file</string>
     <string name="encrypted_backup_file_passphrase">Encrypted backup file + passphrase</string>
-    <string name="before_anything_else_lets_take_ncare_of">Before anything else, lets take\ncare of some network\nhousekeeping.</string>
+    <string name="before_anything_else_lets_take_ncare_of">Before anything else, let\'s take\ncare of some network\nhousekeeping.</string>
     <string name="dojo_status">Dojo status:</string>
     <string name="api_key">API Key</string>
     <string name="dojo_onion_address">Dojo onion address</string>
     <string name="would_you_like_to_enable_tor">Would you like to enable Tor?</string>
-    <string name="would_you_like_to_connect_to">Would you like to connect to your\nown dojo server?</string>
+    <string name="would_you_like_to_connect_to">Would you like to connect to your\nown Dojo server?</string>
     <string name="passphrase_is_required_for_samourai">Passphrase is required for samourai import</string>
     <string name="send_cahoots">Send Cahoots</string>
     <string name="dojo_config_detected">Dojo configuration detected</string>
-    <string name="dojo_config_override">Dojo configuration detected in backup file. do you want to override current configuration?\n\nNote: if you press yes restore process will skip dojo configuration\n</string>
+    <string name="dojo_config_override">Dojo configuration detected in backup file. Override current Dojo configuration in backup file?</string>
     <string name="api_key_blank_error">This field cannot be left blank!</string>
     <string name="choose">Choose</string>
     <string name="permission_dialog_scoped">Your wallet needs access to file storage so it can automatically save an encrypted backup of your wallet to your device. Please choose a directory.</string>
@@ -868,10 +868,10 @@
     <string name="transactions">Transactions</string>
     <string name="remixing">Remixing</string>
     <string name="whirlpool_completely_breaks_the">Whirlpool completely breaks the past links of your bitcoin from their future activity to help protect your privacy when using Bitcoin.</string>
-    <string name="whirlpool_is_entirely">\"Whirlpool is entirely non custodial. This means you keep full control of your bitcoin private keys at all steps of the process</string>
+    <string name="whirlpool_is_entirely">Whirlpool is entirely non custodial. This means you keep full control of your bitcoin private keys at all steps of the process</string>
     <string name="coins_that_are_currently">Coins that are currently waiting to complete their first Whirlpool mix will be listed and managed here.</string>
-    <string name="your_coins_will_be_split">Your coins will be split into identical size amounts automatically. Each of these identical amount coins will be mixed individually.\nYour wallet can only mix while it is online and unlocked.</string>
-    <string name="coins_that_have_been_mixed">Coins that have been mixed at least one time will automatically be queued and randomly selected. for free remixing.</string>
+    <string name="your_coins_will_be_split">Your coins will be split into identical size amounts automatically. Each of these identical amount coins will be mixed individually.\n\nYour wallet can only mix while it is online and unlocked.</string>
+    <string name="coins_that_have_been_mixed">Coins that have been mixed at least one time will automatically be queued and randomly selected for free remixing.</string>
     <string name="whirlpool_offers_absolutely">Whirlpool offers absolutely free remixing for previously mixed coins. These transactions are without any miner fee or coordinator fees.\n\nRemixing increases your privacy gains and increases the privacy of the entire mixing pool.</string>
     <string name="your_mixed_coins_have_been">Your mixed coins have been automatically queued for remixing.\n\nAdd some more unmixed coins to Whirlpool at any time.</string>
     <string name="once_you_spend_a_mixed">Once you spend a mixed coin it is no longer eligible for free Remixing.\n\nAdd some more unmixed coins to Whirlpool at any time.</string>
@@ -887,6 +887,17 @@
     <string name="mixes_completed">Mixes completed</string>
     <string name="pool">Pool</string>
     <string name="mix_message">Mix Message</string>
+    <string name="toxic_change">Toxic change</string>
     <string name="mix_error">Mix Error</string>
+    <string name="mix_utxos">Mix UTXOs</string>
+    <string name="mixes_complete">mixes complete</string>
+    <string name="mixed">Mixed</string>
+    <string name="postmix_spend">Postmix spend</string>
+    <string name="you_cannot_follow_your_own_paynym">You cannot follow your own paynym</string>
+    <string name="transfer_to_whirlpool">Transfer to whirlpool</string>
+    <string name="total_balance">Total Balance</string>
+    <string name="total_in_progress_balance">Total in Progress Balance</string>
+    <string name="total_remixable_balance">Total Remixable Balance </string>
+    <string name="tx0_is_not_possible_with">Tx0 is not possible with selected utxo.</string>
 
 </resources>

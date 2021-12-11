@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="0.000005"
+            tools:text="0.000005"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/guideline36"
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:layout_marginBottom="8dp"
-            android:text="0 mixes complete"
+            tools:text="0 mixes complete"
             android:textColor="@color/text_ui2_grey"
             android:textSize="11sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -72,7 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="0dp"
             android:layout_marginBottom="8dp"
-            android:text="Joined a mix, waiting for participants"
+            tools:text="Joined a mix, waiting for participants"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/guideline36"
@@ -107,15 +107,20 @@
         app:layout_constraintGuide_percent="0.86" />
 
 
-    <ImageView
-        android:id="@+id/mixingStatusIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/mixingButton"
+        android:layout_width="34dp"
+        app:icon="@drawable/ic_baseline_play_arrow_24"
+        android:layout_height="34dp"
+        app:iconTint="@null"
+        app:rippleColor="@color/white"
+        android:background="@color/transparent"
+        style="@style/Widget.MaterialComponents.Button.UnelevatedButton.Icon"
         app:layout_constraintBottom_toBottomOf="@+id/linearLayoutCompat"
         app:layout_constraintEnd_toStartOf="@+id/guideline35"
         app:layout_constraintStart_toStartOf="@+id/guideline36"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_baseline_play_arrow_24" />
+         />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline37"
