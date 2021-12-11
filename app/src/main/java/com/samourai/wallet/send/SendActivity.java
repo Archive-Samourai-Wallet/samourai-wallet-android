@@ -1,6 +1,7 @@
 package com.samourai.wallet.send;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -32,7 +33,9 @@ import android.widget.ViewSwitcher;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.dialog.MaterialDialogs;
 import com.google.android.material.slider.Slider;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Splitter;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
@@ -1159,6 +1162,8 @@ public class SendActivity extends SamouraiActivity {
 
     synchronized private boolean prepareSpend() {
 
+        try {
+
         if(SPEND_TYPE == SPEND_SIMPLE && stoneWallChecked){
             SPEND_TYPE = SPEND_BOLTZMANN;
         }
@@ -1317,7 +1322,6 @@ public class SendActivity extends SamouraiActivity {
             if (BIP47Meta.getInstance().getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM) {
                 samouraiFeeViaBIP47 = true;
             }
-
             ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this).script(amount, FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(), address, 4, strPCode, samouraiFeeViaBIP47, ricochetStaggeredDelivery.isChecked(), account);
             if (ricochetJsonObj != null) {
 
@@ -1782,6 +1786,18 @@ public class SendActivity extends SamouraiActivity {
             return true;
         }
         return false;
+        }catch (Exception exception){
+            if(exception.getMessage() !=null){
+              new   MaterialAlertDialogBuilder(this)
+                      .setMessage("Exception ".concat(exception.getMessage()))
+                      .setTitle("Error")
+                      .setPositiveButton(R.string.ok,(dialog, which) -> dialog.dismiss())
+                        .show();
+            }else{
+                Snackbar.make(amountViewSwitcher.getRootView(),"Error: unable to compose transaction", BaseTransientBottomBar.LENGTH_LONG).show();
+            }
+            return  false;
+        }
     }
 
     private String getParticipantLabel() {
