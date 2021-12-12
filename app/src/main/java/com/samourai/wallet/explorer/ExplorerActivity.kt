@@ -9,4 +9,8 @@ class ExplorerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_explorer)
     }
+
+    companion object{
+        const val TX_URI= "tx_uri";
+    }
 }

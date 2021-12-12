@@ -28,6 +28,7 @@ import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.Tx
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.boost.CPFPTask
@@ -352,11 +353,11 @@ class TxDetailsActivity : SamouraiActivity() {
      * Opens external BlockExplorer
      */
     private fun doExplorerView() {
-        var blockExplorer = BlockExplorerUtil.getInstance().getUri(true)
-
-
-        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + tx!!.hash))
-        startActivity(browserIntent)
+        tx?.let {
+            val browserIntent = Intent(this,  ExplorerActivity::class.java)
+            browserIntent.putExtra(ExplorerActivity.TX_URI,it.hash)
+            startActivity(browserIntent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
