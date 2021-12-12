@@ -74,8 +74,6 @@ public class PinEntryActivity extends AppCompatActivity {
     private String strConfirm = null;
     private String strSeed = null;
     private String strPassphrase = "";
-    private boolean isOpenDime = false;
-
 
     private String strUri = null;
 
@@ -167,9 +165,8 @@ public class PinEntryActivity extends AppCompatActivity {
             strSeed = extras.getString("seed");
             strPassphrase = extras.getString("passphrase");
             Toast.makeText(PinEntryActivity.this, R.string.pin_5_8_confirm, Toast.LENGTH_LONG).show();
-        } else if (extras != null && extras.containsKey("opendime") && extras.getBoolean("opendime")) {
-            isOpenDime = true;
-        } else {
+        }
+        else {
             if(isLocked()){
                 startCountDownTimer();
             }
@@ -340,17 +337,9 @@ public class PinEntryActivity extends AppCompatActivity {
 
                     AccessFactory.getInstance(PinEntryActivity.this).setIsLoggedIn(true);
                     TimeOutUtil.getInstance().updatePin();
-                    if (isOpenDime) {
-                        runOnUiThread(() -> {
-                            Intent intent = new Intent(PinEntryActivity.this, OpenDimeActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        });
 
-                    } else {
-                        AppUtil.getInstance(PinEntryActivity.this).restartApp(getIntent().getExtras());
-                        finish();
-                    }
+                    AppUtil.getInstance(PinEntryActivity.this).restartApp(getIntent().getExtras());
+                    finish();
 
                 } catch (MnemonicException.MnemonicLengthException mle) {
                     mle.printStackTrace();
