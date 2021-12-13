@@ -59,7 +59,7 @@
         <activity
             android:name=".explorer.ExplorerActivity"
             android:label=""
-            android:theme="@style/Theme.Samourai.Whirlpool.Material"
+            android:theme="@style/Theme.Samourai.Material"
             android:exported="false" />
         <activity
             android:name=".whirlpool.WhirlpoolHome"
