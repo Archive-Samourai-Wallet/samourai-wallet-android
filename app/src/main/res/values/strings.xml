@@ -899,5 +899,9 @@
     <string name="total_in_progress_balance">Total in Progress Balance</string>
     <string name="total_remixable_balance">Total Remixable Balance </string>
     <string name="tx0_is_not_possible_with">Tx0 is not possible with selected utxo.</string>
+    <string name="tor_status">Tor status</string>
+    <string name="open_in_browser">Open in browser</string>
+    <string name="copy_tx_id">Copy tx id</string>
+    <string name="copy_url">Copy url</string>
 
 </resources>
