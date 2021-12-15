@@ -29,7 +29,7 @@ public class BlockExplorerUtil {
 
         // blockstream.info
         if(SamouraiWallet.getInstance().isTestNet())    {
-            if(TorManager.INSTANCE.isRequired())    {
+            if(isTorRequired())    {
                 ret = strTestNetTorExplorer + (isTx ? "transaction/" : "address/");
             }
             else    {
@@ -38,15 +38,19 @@ public class BlockExplorerUtil {
         }
         // oxt.me
         else    {
-            if(TorManager.INSTANCE.isRequired())    {
+            if(isTorRequired())    {
                 ret = strMainNetTorExplorer + (isTx ? "transaction/" : "address/");
             }
             else    {
-                ret = strMainNetClearExplorer + (isTx ? "tx/" : "address/");
+                ret = strMainNetClearExplorer + (isTx ? "transaction/" : "address/");
             }
         }
 
         return ret;
+    }
+
+    boolean isTorRequired(){
+        return TorManager.INSTANCE.isRequired() || TorManager.INSTANCE.isConnected();
     }
 
 }
