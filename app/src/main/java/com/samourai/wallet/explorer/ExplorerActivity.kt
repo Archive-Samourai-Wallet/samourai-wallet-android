@@ -66,9 +66,7 @@ class ExplorerActivity : AppCompatActivity() {
         })
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
-            if (TorManager.isConnected() || TorManager.torState == TorManager.TorState.WAITING) {
-
-            } else {
+            if (!TorManager.isConnected()) {
                 MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.confirm)
                     .setMessage("Tor is not enabled, built in web browser supports tor proxy")
