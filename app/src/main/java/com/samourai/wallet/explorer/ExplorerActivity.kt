@@ -173,9 +173,13 @@ class ExplorerActivity : AppCompatActivity() {
                copyText(this.txId)
             }
             R.id.menu_web_tor -> {
-                val torEnabled = TorManager.torState == TorManager.TorState.ON
+                val torStatus = when( TorManager.torState ){
+                    TorManager.TorState.WAITING ->  "Waiting"
+                    TorManager.TorState.ON -> "Enabled"
+                    TorManager.TorState.OFF -> "Disabled"
+                }
                 MaterialAlertDialogBuilder(this)
-                    .setTitle("Tor status : ${if(torEnabled) " Enabled" else " Disabled"}")
+                    .setTitle("Tor status : $torStatus")
                     .setPositiveButton("Close") { dialog, _ ->
                         dialog.dismiss()
                     }.show()
