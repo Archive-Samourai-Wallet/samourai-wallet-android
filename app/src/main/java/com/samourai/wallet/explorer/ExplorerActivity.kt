@@ -132,6 +132,12 @@ class ExplorerActivity : AppCompatActivity() {
         }
 
 
+        webView.settings.javaScriptEnabled = true
+        webView.settings.allowContentAccess = true
+        webView.settings.domStorageEnabled = true
+        webView.settings.javaScriptCanOpenWindowsAutomatically = false
+        webView.settings.setGeolocationEnabled(false)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webView.settings.safeBrowsingEnabled  = true
         }
