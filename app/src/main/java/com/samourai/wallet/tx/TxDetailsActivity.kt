@@ -356,6 +356,7 @@ class TxDetailsActivity : SamouraiActivity() {
         tx?.let {
             val browserIntent = Intent(this,  ExplorerActivity::class.java)
             browserIntent.putExtra(ExplorerActivity.TX_URI,it.hash)
+            browserIntent.putExtra("_account",account)
             startActivity(browserIntent)
         }
     }
