@@ -181,6 +181,22 @@ class ExplorerActivity : AppCompatActivity() {
                         dialog.dismiss()
                     }.show()
             }
+            R.id.menu_web_explorer -> {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.open_in_browser)
+                    .setMessage("View link in external browser?")
+                    .setPositiveButton(R.string.yes) { dialog, _ ->
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(webView.url)))
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(R.string.no) { dialog, _ ->
+                        dialog.dismiss()
+                    }.show()
+            }
+            R.id.menu_web_clear_cache -> {
+                webView.clearCache(true)
+                Toast.makeText(webView.context,"Cache cleared",Toast.LENGTH_SHORT).show()
+            }
             R.id.menu_web_copy_url -> {
                 webView.url?.let { copyText(it) }
             }
