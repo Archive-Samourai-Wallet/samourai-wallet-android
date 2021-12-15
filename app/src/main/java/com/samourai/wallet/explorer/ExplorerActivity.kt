@@ -27,8 +27,7 @@ import com.samourai.wallet.util.LogUtil
 import kotlinx.android.synthetic.main.activity_explorer.*
 import kotlinx.coroutines.*
 import android.webkit.WebView
-
-
+import com.samourai.wallet.BuildConfig
 
 
 class ExplorerActivity : AppCompatActivity() {
@@ -137,7 +136,9 @@ class ExplorerActivity : AppCompatActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.javaScriptCanOpenWindowsAutomatically = false
         webView.settings.setGeolocationEnabled(false)
-
+        if (BuildConfig.DEBUG) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webView.settings.safeBrowsingEnabled  = true
         }
