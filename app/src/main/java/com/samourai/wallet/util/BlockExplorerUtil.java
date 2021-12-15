@@ -8,7 +8,7 @@ public class BlockExplorerUtil {
     private static String strMainNetClearExplorer = "https://m.oxt.me/";
     private static String strMainNetTorExplorer = "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/";
     private static String strTestNetClearExplorer = "https://blockstream.info/testnet/";
-    private static String strTestNetTorExplorer = "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/nojs/";
+    private static String strTestNetTorExplorer = "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/";
 
     private static BlockExplorerUtil instance = null;
 
@@ -30,7 +30,7 @@ public class BlockExplorerUtil {
         // blockstream.info
         if(SamouraiWallet.getInstance().isTestNet())    {
             if(isTorRequired())    {
-                ret = strTestNetTorExplorer + (isTx ? "transaction/" : "address/");
+                ret = strTestNetTorExplorer + (isTx ? "tx/" : "address/");
             }
             else    {
                 ret = strTestNetClearExplorer + (isTx ? "tx/" : "address/");
