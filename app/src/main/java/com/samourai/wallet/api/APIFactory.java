@@ -1379,9 +1379,11 @@ public class APIFactory {
             StringBuilder url = new StringBuilder(_url);
             url.append("tx/");
             url.append(hash);
-            url.append("?fees=true");
+            url.append("?fees=1");
             url.append("&at=");
             url.append(getAccessToken());
+
+            debug("APIFactory", "url:" + url.toString());
 
             String response = WebUtil.getInstance(context).getURL(url.toString());
             jsonObject = new JSONObject(response);
