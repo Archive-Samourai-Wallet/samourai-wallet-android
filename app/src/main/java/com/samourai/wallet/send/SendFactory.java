@@ -376,7 +376,6 @@ public class SendFactory	{
         }
 
         return transaction;
-
     }
 
     public Pair<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>> boltzmann(List<UTXO> utxos, List<UTXO> utxosBis, BigInteger spendAmount, String address, int account) {
@@ -749,13 +748,21 @@ public class SendFactory	{
                 String[] s = path.split("/");
                 if(FormatsUtil.getInstance().isValidBech32(address))    {
                     debug("SendFactory", "address type:" + "bip84");
-                    HD_Address addr = BIP84Util.getInstance(context).getWallet().getAccount(account).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
+                    HD_Address addr = null;
+                    addr = BIP84Util.getInstance(context).getWallet().getAccount(account).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
                     ecKey = addr.getECKey();
                 }
                 else if(Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress())    {
-                    debug("SendFactory", "address type:" + "p2sh");
-                    HD_Address addr = BIP84Util.getInstance(context).getWallet().getAccount(account).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
-                    ecKey = addr.getECKey();
+                    if(account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix())    {
+                        debug("SendFactory", "address type:" + "post-mix p2sh");
+                        HD_Address addr = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
+                        ecKey = addr.getECKey();
+                    }
+                    else    {
+                        debug("SendFactory", "address type:" + "bip49");
+                        HD_Address addr = BIP49Util.getInstance(context).getWallet().getAccount(0).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
+                        ecKey = addr.getECKey();
+                    }
                 }
                 else    {
                     if(account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix())    {
