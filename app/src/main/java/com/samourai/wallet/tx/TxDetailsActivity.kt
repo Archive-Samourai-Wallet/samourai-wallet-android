@@ -28,10 +28,14 @@ import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.Tx
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.boost.CPFPTask
 import com.samourai.wallet.send.boost.RBFTask
+import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.TorManager.isRequired
+import com.samourai.wallet.util.BlockExplorerUtil
 import com.samourai.wallet.util.DateUtil
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.widgets.CircleImageView
@@ -349,12 +353,12 @@ class TxDetailsActivity : SamouraiActivity() {
      * Opens external BlockExplorer
      */
     private fun doExplorerView() {
-        var blockExplorer = "https://m.oxt.me/transaction/"
-        if (SamouraiWallet.getInstance().isTestNet) {
-            blockExplorer = "https://blockstream.info/testnet/"
+        tx?.let {
+            val browserIntent = Intent(this,  ExplorerActivity::class.java)
+            browserIntent.putExtra(ExplorerActivity.TX_URI,it.hash)
+            browserIntent.putExtra("_account",account)
+            startActivity(browserIntent)
         }
-        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + tx!!.hash))
-        startActivity(browserIntent)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -1,16 +1,14 @@
 package com.samourai.wallet.util;
 
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.tor.TorManager;
 
 public class BlockExplorerUtil {
 
-    private static CharSequence[] blockExplorers = { "Smartbit", "Blockchain Reader (Yogh)", "BlockCypher", "OXT" };
-    private static CharSequence[] blockExplorerTxUrls = { "https://www.smartbit.com.au/tx/", "http://srv1.yogh.io/#tx:id:", "https://live.blockcypher.com/btc/tx/", "https://m.oxt.me/transaction/" };
-    private static CharSequence[] blockExplorerAddressUrls = { "https://www.smartbit.com.au/address/", "http://srv1.yogh.io/#addr:id:", "https://live.blockcypher.com/btc/address/", "https://live.blockcypher.com/btc/address/" };
-
-    private static CharSequence[] tBlockExplorers = { "Smartbit", "BlockCypher" };
-    private static CharSequence[] tBlockExplorerTxUrls = { "https://testnet.smartbit.com.au/tx/", "https://live.blockcypher.com/btc-testnet/tx/" };
-    private static CharSequence[] tBlockExplorerAddressUrls = { "https://testnet.smartbit.com.au/address/", "https://live.blockcypher.com/btc-testnet/address/" };
+    private static String strMainNetClearExplorer = "https://m.oxt.me/";
+    private static String strMainNetTorExplorer = "http://oxtmblv4v7q5rotqtbbmtbcc5aa5vehr72eiebyamclfo3rco5zm3did.onion/";
+    private static String strTestNetClearExplorer = "https://blockstream.info/testnet/";
+    private static String strTestNetTorExplorer = "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/";
 
     private static BlockExplorerUtil instance = null;
 
@@ -25,37 +23,34 @@ public class BlockExplorerUtil {
         return instance;
     }
 
-    public CharSequence[] getBlockExplorers() {
+    public String getUri(boolean isTx) {
 
+        String ret = null;
+
+        // blockstream.info
         if(SamouraiWallet.getInstance().isTestNet())    {
-            return tBlockExplorers;
+            if(isTorRequired())    {
+                ret = strTestNetTorExplorer + (isTx ? "tx/" : "address/");
+            }
+            else    {
+                ret = strTestNetClearExplorer + (isTx ? "tx/" : "address/");
+            }
         }
+        // oxt.me
         else    {
-            return blockExplorers;
+            if(isTorRequired())    {
+                ret = strMainNetTorExplorer + (isTx ? "transaction/" : "address/");
+            }
+            else    {
+                ret = strMainNetClearExplorer + (isTx ? "transaction/" : "address/");
+            }
         }
 
+        return ret;
     }
 
-    public CharSequence[] getBlockExplorerTxUrls() {
-
-        if(SamouraiWallet.getInstance().isTestNet())    {
-            return tBlockExplorerTxUrls;
-        }
-        else    {
-            return blockExplorerTxUrls;
-        }
-
-    }
-
-    public CharSequence[] getBlockExplorerAddressUrls() {
-
-        if(SamouraiWallet.getInstance().isTestNet())    {
-            return tBlockExplorerAddressUrls;
-        }
-        else    {
-            return blockExplorerAddressUrls;
-        }
-
+    boolean isTorRequired(){
+        return TorManager.INSTANCE.isRequired() || TorManager.INSTANCE.isConnected();
     }
 
 }

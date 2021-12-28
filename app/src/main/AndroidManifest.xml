@@ -40,12 +40,15 @@
         android:usesCleartextTraffic="true"
         tools:replace="android:allowBackup">
         <activity
+            android:name=".explorer.ExplorerActivity"
+            android:label=""
+            android:theme="@style/Theme.Samourai.Material"
+            android:exported="false" />
+        <activity
             android:name=".whirlpool.WhirlpoolHome"
             android:exported="false"
             android:label=""
-            android:theme="@style/Theme.Samourai.Whirlpool.Material">
-
-        </activity>
+            android:theme="@style/Theme.Samourai.Whirlpool.Material" />
         <activity
             android:name=".onboard.RestoreOptionActivity"
             android:theme="@style/Theme.Samourai.Material" />
@@ -97,6 +100,7 @@
             android:theme="@style/AppTheme.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
@@ -163,7 +167,6 @@
             android:name=".whirlpool.newPool.NewPoolActivity"
             android:label=""
             android:theme="@style/Theme.Samourai.Whirlpool.Material" />
-
         <activity
             android:name=".tx.TxDetailsActivity"
             android:label=" "
