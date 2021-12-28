@@ -14,10 +14,11 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
+        android:layout_marginStart="0dp"
         android:padding="18dp"
         android:text="Advanced"
-        android:textColor="@color/cyan_ui_2" />
+        android:textColor="@color/accent"
+        android:textStyle="bold" />
 
     <LinearLayout
         android:id="@+id/utxo_details_option_spend"

@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.AddressFactory;
@@ -149,13 +150,9 @@ public class SweepUtil  {
                                 progress.setMessage(context.getString(R.string.please_wait_sending));
                                 progress.show();
 
-                                String receive_address = null;
-                                if(PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_SEGWIT, true) == true)    {
-                                    receive_address = AddressFactory.getInstance(context).getBIP84Receive().getRight().getBech32AsString();
-                                }
-                                else    {
-                                    receive_address = AddressFactory.getInstance(context).getReceive().getRight().getAddressString();
-                                }
+                                WALLET_INDEX walletIndex = (PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_SEGWIT, true) == true ? WALLET_INDEX.BIP84_RECEIVE : WALLET_INDEX.BIP44_RECEIVE);
+                                String receive_address = AddressFactory.getInstance(context).getAddressAndIncrement(walletIndex).getRight();
+
                                 final HashMap<String, BigInteger> receivers = new HashMap<String, BigInteger>();
                                 receivers.put(receive_address, BigInteger.valueOf(amount));
                                 org.bitcoinj.core.Transaction tx = SendFactory.getInstance(context).makeTransaction(0, outpoints, receivers);

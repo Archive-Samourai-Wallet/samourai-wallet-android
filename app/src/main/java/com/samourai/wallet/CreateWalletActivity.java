@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Looper;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -47,7 +48,7 @@ import java.io.IOException;
 import static com.samourai.wallet.R.id.dots;
 
 
-public class CreateWalletActivity extends FragmentActivity implements
+public class CreateWalletActivity extends AppCompatActivity implements
         PinEntryFragment.onPinEntryListener,
         PassphraseEntryFragment.onPassPhraseListener {
     private ViewPager wallet_create_viewpager;
@@ -341,7 +342,7 @@ public class CreateWalletActivity extends FragmentActivity implements
                 if (create) {
 
                     try {
-                        HD_WalletFactory.getInstance(CreateWalletActivity.this).newWallet(12, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(CreateWalletActivity.this).newWallet(12, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (MnemonicException.MnemonicLengthException mle) {
@@ -355,7 +356,7 @@ public class CreateWalletActivity extends FragmentActivity implements
                 } else {
 
                     try {
-                        HD_WalletFactory.getInstance(CreateWalletActivity.this).restoreWallet(seed, passphrase, SamouraiWallet.NB_ACCOUNTS);
+                        HD_WalletFactory.getInstance(CreateWalletActivity.this).restoreWallet(seed, passphrase);
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (DecoderException de) {

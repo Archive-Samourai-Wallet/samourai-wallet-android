@@ -1,13 +1,13 @@
 package com.samourai.wallet.utxos;
 
-import android.app.AlertDialog;
+import static com.samourai.wallet.util.LogUtil.debug;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,6 +22,16 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.view.ActionMode;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.AsyncListDiffer;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -33,7 +43,6 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.crypto.DecryptionException;
 import com.samourai.wallet.payload.PayloadUtil;
-import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendActivity;
@@ -45,15 +54,18 @@ import com.samourai.wallet.util.LinearLayoutManagerWrapper;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.utxos.models.UTXOCoinSegment;
-import com.samourai.wallet.whirlpool.WhirlpoolMain;
+import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.wallet.whirlpool.fragments.WhirlPoolLoaderDialog;
 import com.samourai.wallet.widgets.ItemDividerDecorator;
+import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
+import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
+import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.crypto.MnemonicException;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -66,23 +78,12 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.view.ActionMode;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-
-import static com.samourai.wallet.util.LogUtil.debug;
 
 public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callback {
 
@@ -492,11 +493,11 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
                     boolean exist = false;
                     for (int i = 0; i < items.size(); i++) {
-                        if(items.get(i).hash.equals(displayData.hash) && items.get(i).idx == displayData.idx && items.get(i).path.equals(displayData.path)){
+                        if (items.get(i).hash.equals(displayData.hash) && items.get(i).idx == displayData.idx && items.get(i).path.equals(displayData.path)) {
                             exist = true;
                         }
                     }
-                    if(!exist){
+                    if (!exist) {
                         items.add(displayData);
                     }
 
@@ -693,44 +694,35 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 String id = getPreSelected();
                 if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
                     if (PreSelectUtil.getInstance().getPreSelected(id).size() != 1) {
-                        Snackbar.make(utxoList, R.string.only_a_single_change_utxo_may, Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(utxoList, R.string.only_a_single_utxo_may, Snackbar.LENGTH_LONG).show();
                         return false;
                     }
-                    boolean blockedExist = false, receiveExist = false;
+                    boolean blockedExist = false;
                     for (UTXOCoin coin : PreSelectUtil.getInstance().getPreSelected(id)) {
                         if (coin.doNotSpend) {
                             blockedExist = true;
+                            break;
                         }
-                        if (!coin.path.startsWith("M/1/")) {
-                            receiveExist = true;
-                        }
-                    }
-                    if (receiveExist) {
-                        Snackbar.make(utxoList, R.string.only_a_single_change_utxo_may, Snackbar.LENGTH_LONG).show();
-                        return false;
                     }
                     if (blockedExist) {
                         Snackbar.make(utxoList, R.string.selection_contains_blocked_utxo, Snackbar.LENGTH_LONG).show();
                         return false;
                     }
+                    WhirlpoolWallet wallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
+
+                    if (wallet == null || !wallet.isStarted()) {
+                        WhirlPoolLoaderDialog whirlPoolLoaderDialog = new WhirlPoolLoaderDialog();
+                        whirlPoolLoaderDialog.show(getSupportFragmentManager(), whirlPoolLoaderDialog.getTag());
+                        whirlPoolLoaderDialog.setOnInitComplete(() -> {
+                            sendToWhirlpool(wallet,id   );
+                        });
+                    }else{
+                        sendToWhirlpool(wallet, id);
+                    }
+
+                }else{
+                    sendToWhirlpool(null, id);
                 }
-
-                new MaterialAlertDialogBuilder(this)
-                        .setMessage("Send selected utxo's to whirlpool")
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.ok, (dialog, whichButton) -> {
-                            if (id != null) {
-                                Intent intent = new Intent(UTXOSActivity.this, WhirlpoolMain.class);
-                                intent.putExtra("preselected", id);
-                                intent.putExtra("_account", account);
-                                startActivity(intent);
-                            }
-                        })
-                        .setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
-
-                        })
-                        .show();
-
                 break;
             }
             case R.id.utxo_details_action_send: {
@@ -775,6 +767,35 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             }
         }
         return false;
+    }
+
+    private void sendToWhirlpool(WhirlpoolWallet wallet, String id) {
+        if(wallet!=null){
+            List<UTXOCoin> utxoCoins =  PreSelectUtil.getInstance().getPreSelected(id);
+            for (UTXOCoin coin: utxoCoins) {
+                WhirlpoolUtxo utxo = wallet.getUtxoSupplier().findUtxo(coin.hash,coin.idx);
+                try {
+                    wallet.mixStop(utxo);
+                }catch (Exception ex){
+                    //no-op
+                }
+            }
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setMessage("Send selected utxo's to whirlpool")
+                .setCancelable(false)
+                .setPositiveButton(R.string.ok, (dialog, whichButton) -> {
+                    if (id != null) {
+                        Intent intent = new Intent(UTXOSActivity.this, WhirlpoolHome.class);
+                        intent.putExtra("preselected", id);
+                        intent.putExtra("_account", account);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
+
+                })
+                .show();
     }
 
     @Override
@@ -847,7 +868,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        this.loadUTXOs(true);
+        adapter.notifyDataSetChanged();
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -855,7 +876,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
 
         int SECTION = 0, UTXO = 1;
-
+        AsyncListDiffer<UTXOCoin> mAsyncListDiffer = new AsyncListDiffer(this, DIFF_CALLBACK);
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -875,7 +896,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
         @Override
         public long getItemId(int position) {
-            return filteredUTXOs.get(position).id;
+            return mAsyncListDiffer.getCurrentList().get(position).id;
         }
 
         @Override
@@ -888,17 +909,17 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
         }
 
         public void updateList(List<UTXOCoin> newList) {
-            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new UTXODiffCallback(filteredUTXOs, newList));
+            mAsyncListDiffer.submitList(newList);
             filteredUTXOs = new ArrayList<>();
             filteredUTXOs.addAll(newList);
-            diffResult.dispatchUpdatesTo(this);
+            mAsyncListDiffer.submitList(filteredUTXOs);
         }
 
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
 
-            if (filteredUTXOs.get(position) instanceof UTXOCoinSegment) {
+            if (mAsyncListDiffer.getCurrentList().get(position) instanceof UTXOCoinSegment) {
                 UTXOCoinSegment utxoCoinSegment = (UTXOCoinSegment) filteredUTXOs.get(position);
                 holder.section.setText(utxoCoinSegment.isActive ? getString(R.string.active) : getString(R.string.do_not_spend));
                 if (!utxoCoinSegment.isActive) {
@@ -909,9 +930,9 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 }
                 return;
             }
-            UTXOCoin item = filteredUTXOs.get(position);
+            UTXOCoin item = mAsyncListDiffer.getCurrentList().get(position);
             holder.address.setText(item.address);
-            holder.amount.setText(df.format(((double) (filteredUTXOs.get(position).amount) / 1e8)).concat(" BTC"));
+            holder.amount.setText(df.format(((double) (mAsyncListDiffer.getCurrentList().get(position).amount) / 1e8)).concat(" BTC"));
             holder.rootViewGroup.setOnClickListener(view -> {
                 if (!multiSelect)
                     onItemClick(item, view);
@@ -989,7 +1010,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             if (item.isSelected) {
                 holder.rootViewGroup.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.select_overlay));
             } else {
-                holder.rootViewGroup.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.window));
+                holder.rootViewGroup.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.windowDark));
             }
 
             holder.checkBox.setOnClickListener((v) -> {
@@ -1004,7 +1025,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             TextView tx = new TextView(context);
             tx.setText(tag);
-            tx.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_accent));
+            tx.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.txt_grey));
             tx.setLayoutParams(lparams);
             tx.setBackgroundResource(R.drawable.tag_round_shape);
             tx.setPadding((int) (8 * scale + 0.5f), (int) (4 * scale + 0.5f), (int) (4 * scale + 0.5f), (int) (4 * scale + 0.5f));
@@ -1016,7 +1037,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
         @Override
         public int getItemCount() {
-            return filteredUTXOs.size();
+            return mAsyncListDiffer.getCurrentList().size();
         }
 
         private boolean isBIP47(String address) {
@@ -1066,43 +1087,23 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 rootViewGroup = (ViewGroup) itemView;
             }
         }
+
+
+
     }
 
-    public class UTXODiffCallback extends DiffUtil.Callback {
+    static final DiffUtil.ItemCallback<UTXOCoin> DIFF_CALLBACK
+            = new DiffUtil.ItemCallback<UTXOCoin>() {
 
-        List<UTXOCoin> oldList;
-        List<UTXOCoin> newList;
-
-        UTXODiffCallback(List<UTXOCoin> newPersons, List<UTXOCoin> oldPersons) {
-            this.newList = newPersons;
-            this.oldList = oldPersons;
+        @Override
+        public boolean areItemsTheSame(@NonNull UTXOCoin oldItem, @NonNull UTXOCoin newItem) {
+            return oldItem.id == newItem.id;
         }
 
         @Override
-        public int getOldListSize() {
-            return oldList.size();
+        public boolean areContentsTheSame(@NonNull UTXOCoin oldItem, @NonNull UTXOCoin newItem) {
+            return oldItem.equals(newItem);
         }
-
-        @Override
-        public int getNewListSize() {
-            return newList.size();
-        }
-
-        @Override
-        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            return oldList.get(oldItemPosition).id == newList.get(newItemPosition).id;
-        }
-
-        @Override
-        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            return oldList.get(oldItemPosition).equals(newList.get(newItemPosition));
-        }
-
-        @Nullable
-        @Override
-        public Object getChangePayload(int oldItemPosition, int newItemPosition) {
-            return super.getChangePayload(oldItemPosition, newItemPosition);
-        }
-    }
+    };
 
 }

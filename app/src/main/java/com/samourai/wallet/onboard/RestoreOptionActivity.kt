@@ -104,9 +104,7 @@ class RestoreOptionActivity : AppCompatActivity() {
             showLoading(true)
             scope.launch(Dispatchers.IO) {
                 val json = JSONObject(decrypted)
-                val hdw = PayloadUtil.getInstance(applicationContext)
-                    .restoreWalletfromJSON(json, skipDojo)
-                HD_WalletFactory.getInstance(applicationContext).set(hdw)
+                PayloadUtil.getInstance(applicationContext).restoreWalletfromJSON(json, skipDojo)
                 val guid = AccessFactory.getInstance(applicationContext).createGUID()
                 val hash = AccessFactory.getInstance(applicationContext).getHash(
                     guid,

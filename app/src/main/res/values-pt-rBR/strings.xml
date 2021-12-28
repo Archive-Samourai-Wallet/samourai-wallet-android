@@ -92,11 +92,11 @@
     <string name="options_strictoutputs">Modo estrito</string>
     <string name="options_strictoutputs2">Controle estrito de resultados de transações e reutilização de endereços.</string>
     <string name="options_segwit">Receber em endereços Segwit</string>
-    <string name="options_segwit_2">Gerar endereços SegWit para as transações de entrada.</string>
+    <string name="options_segwit_2">Gerar endereços SegWit para as transações para recebimento de transações.</string>
     <string name="options_broadcast_hex">Transmitir hex da transação</string>
     <string name="options_broadcast_hex2">Transmite transação assinada em formato hexadecimal.</string>
-    <string name="options_like_typed_change">Mudar recebimento para saídas de tipo igual</string>
-    <string name="options_like_typed_change2">Muda o recebimento para o mesmo tipo de endereço que o gasto de saída. DESLIGUE para receber apenas em endereços SegWit.</string>
+    <string name="options_like_typed_change">Receber troco em endereço do tipo igual do enviado.</string>
+    <string name="options_like_typed_change2">Recebe o troco em um endereço do mesmo tipo que o endereço enviado originalmente. Desligue para receber apenas em endereços SegWit.</string>
     <string name="options_haptic">Resposta táctil do PIN</string>
     <string name="options_haptic_2">Vibração a cada dígito na entrada do PIN.</string>
     <string name="options_prune">Reduzir backup</string>
@@ -218,7 +218,7 @@
     <string name="max_available">Max. available:</string>
 
     <string name="select_account">Selecione quantia</string>
-    <string name="received_bitcoin">Bitcoin Recebidon</string>
+    <string name="received_bitcoin">Bitcoin Recebido</string>
     <string name="received">Recebido</string>
     <string name="sent">Transação enviada</string>
     <string name="total">Total</string>
@@ -776,7 +776,7 @@
     <string name="mixing"><em>%1$s</em> : %2$s</string>
 
     <string name="doxxic_change_warning">Doxxic Change</string>
-    <string name="block_tx0_change">O change output deste tx0 será marcado. Bloquea-lo para tornar impossível gastar? Se feito isso, a quantia não vai se refletir no balanço total mas vai ser visível dentro da carteira consultando a lista de não-gastos.</string>
+    <string name="block_tx0_change">O change output deste tx0 será marcado. Bloqueá-lo para tornar impossível gastar? Se feito isso, a quantia não vai se refletir no balanço total mas vai ser visível dentro da carteira consultando a lista de não-gastos.</string>
     <string name="total_pre_mix_balance">Balanço total Pre-mix</string>
     <string name="total_post_mix_balance">Balanço total Post-mix</string>
     <string name="post_mix_transactions">Transações Post-mix</string>

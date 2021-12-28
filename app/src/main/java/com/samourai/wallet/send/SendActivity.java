@@ -33,7 +33,9 @@ import android.widget.ViewSwitcher;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.dialog.MaterialDialogs;
 import com.google.android.material.slider.Slider;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Splitter;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
@@ -62,6 +64,7 @@ import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
@@ -96,8 +99,6 @@ import com.samourai.xmanager.protocol.XManagerService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
@@ -129,8 +130,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
 
-import ch.boye.httpclientandroidlib.protocol.HttpProcessorBuilder;
-import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -755,7 +754,7 @@ public class SendActivity extends SamouraiActivity {
     private Completable setUpRicochetFees() {
         TorManager torManager = TorManager.INSTANCE;
         IHttpClient httpClient = new AndroidHttpClient(WebUtil.getInstance(getApplicationContext()), torManager);
-        XManagerClient xManagerClient = new XManagerClient(SamouraiWallet.getInstance().isTestNet(), torManager.isConnected(), httpClient);
+        XManagerClient xManagerClient = new XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet(), torManager.isConnected());
         if (PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_RICOCHET, false)) {
             Completable completable = Completable.fromCallable(() -> {
                 String feeAddress = xManagerClient.getAddressOrDefault(XManagerService.RICOCHET);
@@ -1163,6 +1162,8 @@ public class SendActivity extends SamouraiActivity {
 
     synchronized private boolean prepareSpend() {
 
+        try {
+
         if(SPEND_TYPE == SPEND_SIMPLE && stoneWallChecked){
             SPEND_TYPE = SPEND_BOLTZMANN;
         }
@@ -1259,9 +1260,9 @@ public class SendActivity extends SamouraiActivity {
             utxos = SpendUtil.getUTXOS(SendActivity.this, address, neededAmount, account);
         }
 
-        List<UTXO> utxosP2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllP2WPKH().values());
-        List<UTXO> utxosP2SH_P2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllP2SH_P2WPKH().values());
-        List<UTXO> utxosP2PKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllP2PKH().values());
+        List<UTXO> utxosP2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2WPKH().values());
+        List<UTXO> utxosP2SH_P2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2SH_P2WPKH().values());
+        List<UTXO> utxosP2PKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2PKH().values());
         if ((preselectedUTXOs == null || preselectedUTXOs.size() == 0) && account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
             utxos = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllPostMix().values());
             utxosP2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllPostMix().values());
@@ -1321,7 +1322,6 @@ public class SendActivity extends SamouraiActivity {
             if (BIP47Meta.getInstance().getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM) {
                 samouraiFeeViaBIP47 = true;
             }
-
             ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this).script(amount, FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(), address, 4, strPCode, samouraiFeeViaBIP47, ricochetStaggeredDelivery.isChecked(), account);
             if (ricochetJsonObj != null) {
 
@@ -1566,7 +1566,7 @@ public class SendActivity extends SamouraiActivity {
             for (TransactionOutput output : pair.getRight()) {
                 try {
                     Script script = new Script(output.getScriptBytes());
-                    if (Bech32Util.getInstance().isP2WPKHScript(Hex.toHexString(output.getScriptBytes()))) {
+                    if (Bech32Util.getInstance().isP2WPKHScript(Hex.toHexString(output.getScriptBytes())) || Bech32Util.getInstance().isP2TRScript(Hex.toHexString(output.getScriptBytes()))) {
                         receivers.put(Bech32Util.getInstance().getAddressFromScript(script), BigInteger.valueOf(output.getValue().longValue()));
                     } else {
                         receivers.put(script.getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString(), BigInteger.valueOf(output.getValue().longValue()));
@@ -1786,6 +1786,18 @@ public class SendActivity extends SamouraiActivity {
             return true;
         }
         return false;
+        }catch (Exception exception){
+            if(exception.getMessage() !=null){
+              new   MaterialAlertDialogBuilder(this)
+                      .setMessage("Exception ".concat(exception.getMessage()))
+                      .setTitle("Error")
+                      .setPositiveButton(R.string.ok,(dialog, which) -> dialog.dismiss())
+                        .show();
+            }else{
+                Snackbar.make(amountViewSwitcher.getRootView(),"Error: unable to compose transaction", BaseTransientBottomBar.LENGTH_LONG).show();
+            }
+            return  false;
+        }
     }
 
     private String getParticipantLabel() {
@@ -1867,12 +1879,12 @@ public class SendActivity extends SamouraiActivity {
                 if (SPEND_TYPE == SPEND_SIMPLE) {
                     if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
                         if(changeType == 44) {
-                            HD_Address hd_addr = BIP84Util.getInstance(SendActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(change_index);
+                            HD_Address hd_addr = BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(change_index);
                             String change_address = hd_addr.getAddressString();
                             receivers.put(change_address, BigInteger.valueOf(_change));
                         }
                         else if(changeType == 49) {
-                            HD_Address hd_addr = BIP84Util.getInstance(SendActivity.this).getWallet().getAccountAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(change_index);
+                            HD_Address hd_addr = BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(change_index);
                             SegwitAddress segwitAddress = new SegwitAddress(hd_addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                             String change_address = segwitAddress.getAddressAsString();
                             receivers.put(change_address, BigInteger.valueOf(_change));
@@ -1968,6 +1980,9 @@ public class SendActivity extends SamouraiActivity {
 
                                     JSONObject nLockTimeObj = new JSONObject();
                                     nLockTimeObj.put("script", nLockTimeScript);
+                                    if(APIFactory.getInstance(getApplicationContext()).APITokenRequired()){
+                                        nLockTimeObj.put("at", APIFactory.getInstance(getApplicationContext()).getAccessToken());
+                                    }
 
 //                                        Log.d("SendActivity", "Ricochet nLockTime:" + nLockTimeObj.toString());
 
@@ -2059,22 +2074,9 @@ public class SendActivity extends SamouraiActivity {
             // add change
             if (_change > 0L) {
                 if (SPEND_TYPE == SPEND_SIMPLE) {
-                    if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix(), AddressFactory.CHANGE_CHAIN, AddressFactory.getInstance(SendActivity.this).getHighestPostChangeIdx()).getBech32AsString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
-                    else if (changeType == 84) {
-                        String change_address = BIP84Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getBech32AsString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
-                    else if (changeType == 49) {
-                        String change_address = BIP49Util.getInstance(SendActivity.this).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx()).getAddressAsString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
-                    else {
-                        String change_address = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddressAt(HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddrIdx()).getAddressString();
-                        _receivers.put(change_address, BigInteger.valueOf(_change));
-                    }
+                    WALLET_INDEX walletIndex = WALLET_INDEX.findChangeIndex(account, changeType);
+                    String change_address = AddressFactory.getInstance().getAddress(walletIndex).getRight();
+                    _receivers.put(change_address, BigInteger.valueOf(_change));
                 }
             }
             final Transaction tx = SendFactory.getInstance(getApplication()).makeTransaction(account,
@@ -2523,19 +2525,19 @@ public class SendActivity extends SamouraiActivity {
 
     private void saveChangeIndexes() {
 
-        idxBIP84PostMixInternal = AddressFactory.getInstance(SendActivity.this).getHighestPostChangeIdx();
-        idxBIP84Internal = BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx();
-        idxBIP49Internal = BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().getAddrIdx();
-        idxBIP44Internal = HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().getAddrIdx();
+        idxBIP84PostMixInternal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.POSTMIX_CHANGE);
+        idxBIP84Internal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.BIP84_CHANGE);
+        idxBIP49Internal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.BIP49_CHANGE);
+        idxBIP44Internal = AddressFactory.getInstance(SendActivity.this).getIndex(WALLET_INDEX.BIP44_CHANGE);
 
     }
 
     private void restoreChangeIndexes() {
 
-        AddressFactory.getInstance(SendActivity.this).setHighestPostChangeIdx(idxBIP84PostMixInternal);
-        BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().setAddrIdx(idxBIP84Internal);
-        BIP49Util.getInstance(SendActivity.this).getWallet().getAccount(0).getChange().setAddrIdx(idxBIP49Internal);
-        HD_WalletFactory.getInstance(SendActivity.this).get().getAccount(0).getChange().setAddrIdx(idxBIP44Internal);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.POSTMIX_CHANGE, idxBIP84PostMixInternal, true);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.BIP84_CHANGE, idxBIP84Internal, true);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.BIP49_CHANGE, idxBIP49Internal, true);
+        AddressFactory.getInstance(SendActivity.this).setWalletIdx(WALLET_INDEX.BIP44_CHANGE, idxBIP44Internal, true);
 
     }
 

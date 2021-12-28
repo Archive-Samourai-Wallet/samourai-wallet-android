@@ -17,23 +17,6 @@
     <uses-permission
         android:name="android.permission.WAKE_LOCK"
         tools:node="replace" />
-    <!--
-    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    -->
-    <!--
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="false"
-        tools:node="replace" />
-    -->
-    <uses-feature
-        android:name="android.hardware.usb.host"
-        android:required="false"
-        tools:node="replace" />
     <uses-feature
         android:name="android.hardware.camera.autofocus"
         android:required="false"
@@ -57,9 +40,15 @@
         android:usesCleartextTraffic="true"
         tools:replace="android:allowBackup">
         <activity
+            android:name=".whirlpool.WhirlpoolHome"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/Theme.Samourai.Whirlpool.Material">
+
+        </activity>
+        <activity
             android:name=".onboard.RestoreOptionActivity"
-            android:theme="@style/Theme.Samourai.Material"
-            />
+            android:theme="@style/Theme.Samourai.Material" />
         <activity
             android:name=".onboard.SetUpWalletActivity"
             android:theme="@style/Theme.Samourai.Material" />
@@ -82,7 +71,7 @@
             android:name=".network.NetworkDashboard"
             android:label="@string/title_activity_network_dashboard"
             android:parentActivityName=".home.BalanceActivity"
-            android:theme="@style/SamouraiAppTheme" />
+            android:theme="@style/Theme.Samourai.Material" />
         <activity
             android:name=".utxos.UTXOSActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -108,7 +97,6 @@
             android:theme="@style/AppTheme.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
@@ -128,7 +116,7 @@
             android:name=".ReceiveActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/app_name"
-            android:theme="@style/SamouraiAppTheme"
+            android:theme="@style/Theme.Samourai.Material"
             android:windowSoftInputMode="stateVisible|adjustPan" />
         <activity
             android:name=".settings.SettingsActivity"
@@ -149,21 +137,6 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/app_name" />
         <activity
-            android:name=".OpenDimeActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Samourai.Material">
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
-                android:resource="@xml/device_filter" />
-        </activity>
-        <activity
             android:name=".PayNymCalcActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="PayNym Calculator" />
@@ -173,44 +146,11 @@
             android:label="Address Calculator"
             android:theme="@style/SamouraiAppTheme" />
         <activity
-            android:name="com.dm.zbar.android.scanner.ZBarScannerActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="landscape" />
-        <activity android:name=".CreateWalletActivity" android:theme="@style/Theme.Samourai.Material" />
-        <activity android:name=".RestoreSeedWalletActivity"   android:theme="@style/Theme.Samourai.Material" />
-        <!--
-                <receiver
-                    android:name=".receivers.BootIntentReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.BOOT_COMPLETED" />
-                        <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-
-                        <category android:name="android.intent.category.HOME" />
-                    </intent-filter>
-                </receiver>
-                <receiver
-                    android:name=".receivers.InterceptOutgoingReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                    <intent-filter android:priority="1001">
-                        <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
-
-                        <category android:name="android.intent.category.DEFAULT" />
-                    </intent-filter>
-                </receiver>
-                <receiver
-                    android:name=".receivers.SMSReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                    <intent-filter android:priority="999">
-                        <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-
-                        <category android:name="android.intent.category.DEFAULT" />
-                    </intent-filter>
-                </receiver>
-        -->
+            android:name=".CreateWalletActivity"
+            android:theme="@style/Theme.Samourai.Material" />
+        <activity
+            android:name=".RestoreSeedWalletActivity"
+            android:theme="@style/Theme.Samourai.Material" />
         <activity
             android:name=".TxAnimUIActivity"
             android:theme="@style/SamouraiAppTheme" />
@@ -220,25 +160,17 @@
             android:theme="@style/Theme.Samourai.Material"
             android:windowSoftInputMode="stateHidden" />
         <activity
-            android:name=".whirlpool.WhirlpoolMain"
-            android:label=""
-            android:theme="@style/Theme.Samourai.Whirlpool.Material" />
-        <activity
             android:name=".whirlpool.newPool.NewPoolActivity"
             android:label=""
             android:theme="@style/Theme.Samourai.Whirlpool.Material" />
-        <activity
-            android:name=".whirlpool.CycleDetail"
-            android:label=""
-            android:theme="@style/SamouraiAppWhirlpoolTheme" />
+
         <activity
             android:name=".tx.TxDetailsActivity"
             android:label=" "
-            android:theme="@style/Theme.Samourai.Material" />
-        <!--        <activity-->
-        <!--            android:name=".tx.TxPrivacyDetailsActivity"-->
-        <!--            android:label=""-->
-        <!--            android:theme="@style/SamouraiAppTheme" />-->
+            android:theme="@style/Theme.Samourai.Material" /> <!-- <activity -->
+        <!-- android:name=".tx.TxPrivacyDetailsActivity" -->
+        <!-- android:label="" -->
+        <!-- android:theme="@style/SamouraiAppTheme" /> -->
         <activity
             android:name=".send.cahoots.ManualCahootsActivity"
             android:label="Manual Cahoots"

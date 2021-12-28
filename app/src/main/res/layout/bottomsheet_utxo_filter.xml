@@ -26,7 +26,8 @@
             android:paddingEnd="18dp"
             android:paddingBottom="8dp"
             android:text="Filter"
-            android:textColor="@color/cyan_ui_2" />
+            android:textStyle="bold"
+            android:textColor="@color/accent" />
 
         <FrameLayout
             android:layout_width="match_parent"

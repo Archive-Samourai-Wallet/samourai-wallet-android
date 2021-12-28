@@ -10,7 +10,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,16 +19,14 @@ public class UTXOFactory {
 
     private static UTXOFactory instance = null;
 
-    private static HashMap<String, UTXO> p2pkh_clean = null;
-    private static HashMap<String, UTXO> p2sh_p2wpkh_clean = null;
-    private static HashMap<String, UTXO> p2wpkh_clean = null;
+    private static HashMap<String, UTXO> p2pkh = null;
+    private static HashMap<String, UTXO> p2sh_p2wpkh = null;
+    private static HashMap<String, UTXO> p2wpkh = null;
     private static HashMap<String, UTXO> postMix_clean = null;
-    private static HashMap<String, UTXO> p2pkh_toxic = null;
-    private static HashMap<String, UTXO> p2sh_p2wpkh_toxic = null;
-    private static HashMap<String, UTXO> p2wpkh_toxic = null;
     private static HashMap<String, UTXO> postMix_toxic = null;
     private static HashMap<String, UTXO> preMix = null;
     private static HashMap<String, UTXO> badBank = null;
+    private static long lastUpdate = 0;
 
     private UTXOFactory() {
         ;
@@ -40,13 +37,10 @@ public class UTXOFactory {
         if (instance == null) {
             instance = new UTXOFactory();
 
-            p2pkh_clean = new HashMap<String, UTXO>();
-            p2sh_p2wpkh_clean = new HashMap<String, UTXO>();
-            p2wpkh_clean = new HashMap<String, UTXO>();
+            p2pkh = new HashMap<String, UTXO>();
+            p2sh_p2wpkh = new HashMap<String, UTXO>();
+            p2wpkh = new HashMap<String, UTXO>();
             postMix_clean = new HashMap<String, UTXO>();
-            p2pkh_toxic = new HashMap<String, UTXO>();
-            p2sh_p2wpkh_toxic = new HashMap<String, UTXO>();
-            p2wpkh_toxic = new HashMap<String, UTXO>();
             postMix_toxic = new HashMap<String, UTXO>();
             preMix = new HashMap<String, UTXO>();
             badBank = new HashMap<String, UTXO>();
@@ -62,13 +56,10 @@ public class UTXOFactory {
         if (instance == null) {
             instance = new UTXOFactory();
 
-            p2pkh_clean = new HashMap<String, UTXO>();
-            p2sh_p2wpkh_clean = new HashMap<String, UTXO>();
-            p2wpkh_clean = new HashMap<String, UTXO>();
+            p2pkh = new HashMap<String, UTXO>();
+            p2sh_p2wpkh = new HashMap<String, UTXO>();
+            p2wpkh = new HashMap<String, UTXO>();
             postMix_clean = new HashMap<String, UTXO>();
-            p2pkh_toxic = new HashMap<String, UTXO>();
-            p2sh_p2wpkh_toxic = new HashMap<String, UTXO>();
-            p2wpkh_toxic = new HashMap<String, UTXO>();
             postMix_toxic = new HashMap<String, UTXO>();
             preMix = new HashMap<String, UTXO>();
             badBank = new HashMap<String, UTXO>();
@@ -78,44 +69,17 @@ public class UTXOFactory {
     }
 
     public void clear() {
-        p2pkh_clean.clear();
-        p2sh_p2wpkh_clean.clear();
-        p2wpkh_clean.clear();
+        p2pkh.clear();
+        p2sh_p2wpkh.clear();
+        p2wpkh.clear();
         postMix_clean.clear();
-        p2pkh_toxic.clear();
-        p2sh_p2wpkh_toxic.clear();
-        p2wpkh_toxic.clear();
         postMix_toxic.clear();
         preMix.clear();
         badBank.clear();
     }
 
-    public HashMap<String, UTXO> getP2PKHClean() {
-        return p2pkh_clean;
-    }
-
-    public HashMap<String, UTXO> getP2SH_P2WPKHClean() {
-        return p2sh_p2wpkh_clean;
-    }
-
-    public HashMap<String, UTXO> getP2WPKHClean() {
-        return p2wpkh_clean;
-    }
-
     public HashMap<String, UTXO> getPostMixClean() {
         return postMix_clean;
-    }
-
-    public HashMap<String, UTXO> getP2PKHToxic() {
-        return p2pkh_toxic;
-    }
-
-    public HashMap<String, UTXO> getP2SH_P2WPKHToxic() {
-        return p2sh_p2wpkh_toxic;
-    }
-
-    public HashMap<String, UTXO> getP2WPKHToxic() {
-        return p2wpkh_toxic;
     }
 
     public HashMap<String, UTXO> getPostMixToxic() {
@@ -130,25 +94,16 @@ public class UTXOFactory {
         return badBank;
     }
 
-    public HashMap<String, UTXO> getAllP2PKH() {
-        HashMap<String, UTXO> ret = new HashMap<String, UTXO>();
-        ret.putAll(p2pkh_clean);
-        ret.putAll(p2pkh_toxic);
-        return ret;
+    public HashMap<String, UTXO> getP2PKH() {
+        return p2pkh;
     }
 
-    public HashMap<String, UTXO> getAllP2SH_P2WPKH() {
-        HashMap<String, UTXO> ret = new HashMap<String, UTXO>();
-        ret.putAll(p2sh_p2wpkh_clean);
-        ret.putAll(p2sh_p2wpkh_toxic);
-        return ret;
+    public HashMap<String, UTXO> getP2SH_P2WPKH() {
+        return p2sh_p2wpkh;
     }
 
-    public HashMap<String, UTXO> getAllP2WPKH() {
-        HashMap<String, UTXO> ret = new HashMap<String, UTXO>();
-        ret.putAll(p2wpkh_clean);
-        ret.putAll(p2wpkh_toxic);
-        return ret;
+    public HashMap<String, UTXO> getP2WPKH() {
+        return p2wpkh;
     }
 
     public HashMap<String, UTXO> getAllPostMix() {
@@ -160,54 +115,48 @@ public class UTXOFactory {
 
     public void addP2PKH(String hash, int id, String script, UTXO utxo) {
         if (!BlockedUTXO.getInstance().contains(hash, id)) {
-            if (isToxic(utxo)) {
-                p2pkh_toxic.put(script, utxo);
-            } else {
-                p2pkh_clean.put(script, utxo);
-            }
+            p2pkh.put(script, utxo);
+            onChange();
         }
     }
 
     public void addP2SH_P2WPKH(String hash, int id, String script, UTXO utxo) {
         if (!BlockedUTXO.getInstance().contains(hash, id)) {
-            if (isToxic(utxo)) {
-                p2sh_p2wpkh_toxic.put(script, utxo);
-            } else {
-                p2sh_p2wpkh_clean.put(script, utxo);
-            }
+            p2sh_p2wpkh.put(script, utxo);
+            onChange();
         }
     }
 
     public void addP2WPKH(String hash, int id, String script, UTXO utxo) {
         if (!BlockedUTXO.getInstance().contains(hash, id)) {
-            if (isToxic(utxo)) {
-                p2wpkh_toxic.put(script, utxo);
-            } else {
-                p2wpkh_clean.put(script, utxo);
-            }
+            p2wpkh.put(script, utxo);
+            onChange();
         }
     }
 
     public void addPostMix(String hash, int id, String script, UTXO utxo) {
         if (!BlockedUTXO.getInstance().containsPostMix(hash, id)) {
-            if (isToxic(utxo)) {
+            if (isPostmixToxic(utxo)) {
                 postMix_toxic.put(script, utxo);
             } else {
                 postMix_clean.put(script, utxo);
             }
+            onChange();
         }
     }
 
     public void addPreMix(String hash, int id, String script, UTXO utxo) {
         preMix.put(script, utxo);
+        onChange();
     }
 
     public void addBadBank(String hash, int id, String script, UTXO utxo) {
         badBank.put(script, utxo);
+        onChange();
     }
 
-    public long getTotalP2PKHClean() {
-        HashMap<String, UTXO> utxos = getP2PKHClean();
+    public long getTotalP2PKH() {
+        HashMap<String, UTXO> utxos = getP2PKH();
         long ret = 0L;
 
         for (UTXO utxo : utxos.values()) {
@@ -217,8 +166,8 @@ public class UTXOFactory {
         return ret;
     }
 
-    public long getTotalP2SH_P2WPKHClean() {
-        HashMap<String, UTXO> utxos = getP2SH_P2WPKHClean();
+    public long getTotalP2SH_P2WPKH() {
+        HashMap<String, UTXO> utxos = getP2SH_P2WPKH();
         long ret = 0L;
 
         for (UTXO utxo : utxos.values()) {
@@ -228,8 +177,8 @@ public class UTXOFactory {
         return ret;
     }
 
-    public long getTotalP2WPKHClean() {
-        HashMap<String, UTXO> utxos = getP2WPKHClean();
+    public long getTotalP2WPKH() {
+        HashMap<String, UTXO> utxos = getP2WPKH();
         long ret = 0L;
 
         for (UTXO utxo : utxos.values()) {
@@ -250,8 +199,8 @@ public class UTXOFactory {
         return ret;
     }
 
-    public int getCountP2PKHClean() {
-        HashMap<String, UTXO> utxos = getP2PKHClean();
+    public int getCountP2PKH() {
+        HashMap<String, UTXO> utxos = getP2PKH();
         int ret = 0;
 
         for (UTXO utxo : utxos.values()) {
@@ -261,8 +210,8 @@ public class UTXOFactory {
         return ret;
     }
 
-    public int getCountP2SH_P2WPKHClean() {
-        HashMap<String, UTXO> utxos = getP2SH_P2WPKHClean();
+    public int getCountP2SH_P2WPKH() {
+        HashMap<String, UTXO> utxos = getP2SH_P2WPKH();
         int ret = 0;
 
         for (UTXO utxo : utxos.values()) {
@@ -272,8 +221,8 @@ public class UTXOFactory {
         return ret;
     }
 
-    public int getCountP2WPKHClean() {
-        HashMap<String, UTXO> utxos = getP2WPKHClean();
+    public int getCountP2WPKH() {
+        HashMap<String, UTXO> utxos = getP2WPKH();
         int ret = 0;
 
         for (UTXO utxo : utxos.values()) {
@@ -289,39 +238,6 @@ public class UTXOFactory {
 
         for (UTXO utxo : utxos.values()) {
             ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public long getTotalP2PKHToxic() {
-        HashMap<String, UTXO> utxos = getP2PKHToxic();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public long getTotalP2SH_P2WPKHToxic() {
-        HashMap<String, UTXO> utxos = getP2SH_P2WPKHToxic();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public long getTotalP2WPKHToxic() {
-        HashMap<String, UTXO> utxos = getP2WPKHToxic();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
         }
 
         return ret;
@@ -349,39 +265,6 @@ public class UTXOFactory {
         return ret;
     }
 
-    public int getCountP2PKHToxic() {
-        HashMap<String, UTXO> utxos = getP2PKHToxic();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2SH_P2WPKHToxic() {
-        HashMap<String, UTXO> utxos = getP2SH_P2WPKHToxic();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2WPKHToxic() {
-        HashMap<String, UTXO> utxos = getP2WPKHToxic();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
     public int getCountPostMixToxic() {
         HashMap<String, UTXO> utxos = getPostMixToxic();
         int ret = 0;
@@ -404,78 +287,12 @@ public class UTXOFactory {
         return ret;
     }
 
-    public long getTotalP2PKH() {
-        HashMap<String, UTXO> utxos = getAllP2PKH();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public long getTotalP2SH_P2WPKH() {
-        HashMap<String, UTXO> utxos = getAllP2SH_P2WPKH();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public long getTotalP2WPKH() {
-        HashMap<String, UTXO> utxos = getAllP2WPKH();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
     public long getTotalPostMix() {
         HashMap<String, UTXO> utxos = getAllPostMix();
         long ret = 0L;
 
         for (UTXO utxo : utxos.values()) {
             ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2PKH() {
-        HashMap<String, UTXO> utxos = getAllP2PKH();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2SH_P2WPKH() {
-        HashMap<String, UTXO> utxos = getAllP2SH_P2WPKH();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2WPKH() {
-        HashMap<String, UTXO> utxos = getAllP2WPKH();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
         }
 
         return ret;
@@ -492,7 +309,7 @@ public class UTXOFactory {
         return ret;
     }
 
-    private boolean isToxic(UTXO utxo) {
+    private boolean isPostmixToxic(UTXO utxo) {
 
         String path = utxo.getPath();
 
@@ -552,4 +369,12 @@ public class UTXOFactory {
 
     }
 
+    private void onChange() {
+        // required for Whirlpool
+        lastUpdate = System.currentTimeMillis();
+    }
+
+    public long getLastUpdate() {
+        return lastUpdate;
+    }
 }

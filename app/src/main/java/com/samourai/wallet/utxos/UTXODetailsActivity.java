@@ -1,6 +1,5 @@
 package com.samourai.wallet.utxos;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -45,7 +44,7 @@ import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.MessageSignUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
-import com.samourai.wallet.whirlpool.WhirlpoolMain;
+import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
@@ -68,7 +67,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityOptionsCompat;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -393,6 +391,12 @@ public class UTXODetailsActivity extends SamouraiActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        setResult(RESULT_OK);
+        super.onBackPressed();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (item.getItemId() == R.id.utxo_details_add_to_whirlpool) {
@@ -444,7 +448,7 @@ public class UTXODetailsActivity extends SamouraiActivity {
                         }
 
                         if (id != null) {
-                            Intent intent = new Intent(getApplicationContext(), WhirlpoolMain.class);
+                            Intent intent = new Intent(getApplicationContext(), WhirlpoolHome.class);
                             intent.putExtra("preselected", id);
                             intent.putExtra("_account", account);
                             startActivity(intent);

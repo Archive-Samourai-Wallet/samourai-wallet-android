@@ -149,11 +149,6 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
         }
     }
 
-    private long toFeePerB(BigInteger feePerKb) {
-        long feePerB = Math.round(feePerKb.doubleValue() / 1000.0);
-        return feePerB;
-    }
-
     public long getSuggestedFeeDefaultPerB() {
         return toFeePerB(getSuggestedFee().getDefaultPerKB());
     }

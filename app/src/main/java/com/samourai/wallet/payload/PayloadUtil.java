@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
@@ -19,6 +18,7 @@ import com.samourai.wallet.crypto.DecryptionException;
 import com.samourai.wallet.hd.HD_Account;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
 import com.samourai.wallet.segwit.BIP49Util;
@@ -167,10 +167,7 @@ public class PayloadUtil	{
 
     public synchronized void wipe() throws IOException	{
 
-        BIP47Util.getInstance(context).reset();
         BIP47Meta.getInstance().clear();
-        BIP49Util.getInstance(context).reset();
-        BIP84Util.getInstance(context).reset();
         DojoUtil.getInstance(context).clear();
         APIFactory.getInstance(context).reset();
 
@@ -179,29 +176,7 @@ public class PayloadUtil	{
 
         PrefsUtil.getInstance(context).clear();
 
-        int nbAccounts = HD_WalletFactory.getInstance(context).get().getAccounts().size();
-
-        for(int i = 0; i < nbAccounts; i++)	{
-            HD_WalletFactory.getInstance(context).get().getAccount(i).getReceive().setAddrIdx(0);
-            HD_WalletFactory.getInstance(context).get().getAccount(i).getChange().setAddrIdx(0);
-            AddressFactory.getInstance().setHighestTxReceiveIdx(i, 0);
-            AddressFactory.getInstance().setHighestTxChangeIdx(i, 0);
-        }
-
-        AddressFactory.getInstance().setHighestBIP49ReceiveIdx(0);
-        AddressFactory.getInstance().setHighestBIP49ChangeIdx(0);
-        AddressFactory.getInstance().setHighestBIP84ReceiveIdx(0);
-        AddressFactory.getInstance().setHighestBIP84ChangeIdx(0);
-        BIP49Util.getInstance(context).getWallet().getAccount(0).getReceive().setAddrIdx(0);
-        BIP49Util.getInstance(context).getWallet().getAccount(0).getChange().setAddrIdx(0);
-        BIP84Util.getInstance(context).getWallet().getAccount(0).getReceive().setAddrIdx(0);
-        BIP84Util.getInstance(context).getWallet().getAccount(0).getChange().setAddrIdx(0);
-        AddressFactory.getInstance().setHighestPreReceiveIdx(0);
-        AddressFactory.getInstance().setHighestPreChangeIdx(0);
-        AddressFactory.getInstance().setHighestPostReceiveIdx(0);
-        AddressFactory.getInstance().setHighestPostChangeIdx(0);
-        AddressFactory.getInstance().setHighestBadBankReceiveIdx(0);
-        AddressFactory.getInstance().setHighestBadBankChangeIdx(0);
+        AddressFactory.getInstance().wipe();
 
         RicochetMeta.getInstance(context).empty();
         RicochetMeta.getInstance(context).setIndex(0);
@@ -252,9 +227,7 @@ public class PayloadUtil	{
             }
 
             JSONArray accts = new JSONArray();
-            for(HD_Account acct : HD_WalletFactory.getInstance(context).get().getAccounts()) {
-                accts.put(acct.toJSON(44));
-            }
+            accts.put(HD_WalletFactory.getInstance(context).get().getAccount(0).toJSON(44));
             wallet.put("accounts", accts);
 
             //
@@ -286,17 +259,17 @@ public class PayloadUtil	{
             // export Whirlpool accounts for debug payload
             //
             JSONArray whirlpool_account = new JSONArray();
-            JSONObject preObj = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).toJSON(84);
-            preObj.put("receiveIdx", AddressFactory.getInstance(context).getHighestPreReceiveIdx());
-            preObj.put("changeIdx", AddressFactory.getInstance(context).getHighestPreChangeIdx());
+            JSONObject preObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).toJSON(84);
+            preObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.PREMIX_RECEIVE));
+            preObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.PREMIX_CHANGE));
             whirlpool_account.put(preObj);
-            JSONObject postObj = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).toJSON(84);
-            postObj.put("receiveIdx", AddressFactory.getInstance(context).getHighestPostReceiveIdx());
-            postObj.put("changeIdx", AddressFactory.getInstance(context).getHighestPostChangeIdx());
+            JSONObject postObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).toJSON(84);
+            postObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.POSTMIX_RECEIVE));
+            postObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.POSTMIX_CHANGE));
             whirlpool_account.put(postObj);
-            JSONObject badbankObj = BIP84Util.getInstance(context).getWallet().getAccountAt(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).toJSON(84);
-            badbankObj.put("receiveIdx", AddressFactory.getInstance(context).getHighestBadBankReceiveIdx());
-            badbankObj.put("changeIdx", AddressFactory.getInstance(context).getHighestBadBankChangeIdx());
+            JSONObject badbankObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).toJSON(84);
+            badbankObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.BADBANK_RECEIVE));
+            badbankObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.BADBANK_CHANGE));
             whirlpool_account.put(badbankObj);
             wallet.put("whirlpool_account", whirlpool_account);
 
@@ -434,7 +407,7 @@ public class PayloadUtil	{
         byte[] seed = org.apache.commons.codec.binary.Hex.decodeHex(((String) jsonobj.get("seed")).toCharArray());
         String strPassphrase = jsonobj.getString("passphrase");
         MnemonicCode mc = computeMnemonicCode(ctx);
-        return new HD_Wallet(purpose, mc, params, seed, strPassphrase, SamouraiWallet.NB_ACCOUNTS);
+        return new HD_Wallet(purpose, mc, params, seed, strPassphrase);
     }
 
     /***
@@ -489,16 +462,19 @@ public class PayloadUtil	{
                     PrefsUtil.getInstance(context).removeValue(PrefsUtil.TESTNET);
                 }
 
+                // set wallet
                 hdw = newHDWallet(context, 44, wallet, params);
-                hdw.getAccount(SamouraiWallet.SAMOURAI_ACCOUNT).getReceive().setAddrIdx(wallet.has("receiveIdx") ? wallet.getInt("receiveIdx") : 0);
-                hdw.getAccount(SamouraiWallet.SAMOURAI_ACCOUNT).getChange().setAddrIdx(wallet.has("changeIdx") ? wallet.getInt("changeIdx") : 0);
+                HD_WalletFactory.getInstance(context).set(hdw);
+
+                AddressFactory.getInstance().setWalletIdx(WALLET_INDEX.BIP44_RECEIVE, wallet.has("receiveIdx") ? wallet.getInt("receiveIdx") : 0, true);
+                AddressFactory.getInstance().setWalletIdx(WALLET_INDEX.BIP44_CHANGE, wallet.has("changeIdx") ? wallet.getInt("changeIdx") : 0, true);
 
                 if(wallet.has("accounts")) {
                     JSONArray accounts = wallet.getJSONArray("accounts");
 
                     JSONObject account = accounts.getJSONObject(0);
-                    hdw.getAccount(0).getReceive().setAddrIdx(account.has("receiveIdx") ? account.getInt("receiveIdx") : 0);
-                    hdw.getAccount(0).getChange().setAddrIdx(account.has("changeIdx") ? account.getInt("changeIdx") : 0);
+                    AddressFactory.getInstance().setWalletIdx(WALLET_INDEX.BIP44_RECEIVE, account.has("receiveIdx") ? account.getInt("receiveIdx") : 0, true);
+                    AddressFactory.getInstance().setWalletIdx(WALLET_INDEX.BIP44_CHANGE, account.has("changeIdx") ? account.getInt("changeIdx") : 0, true);
 
                     AddressFactory.getInstance().account2xpub().put(0, hdw.getAccount(0).xpubstr());
                     AddressFactory.getInstance().xpub2account().put(hdw.getAccount(0).xpubstr(), 0);
@@ -576,7 +552,7 @@ public class PayloadUtil	{
                     RBFUtil.getInstance().fromJSON((JSONArray) meta.get("rbfs"));
                 }
                 if(meta.has("tor")) {
-                     TorManager.INSTANCE.fromJSON((JSONObject) meta.get("tor"));
+                    TorManager.INSTANCE.fromJSON((JSONObject) meta.get("tor"));
                 }
                 if(meta.has("blocked_utxos")) {
                     BlockedUTXO.getInstance().fromJSON((JSONObject) meta.get("blocked_utxos"));
@@ -718,10 +694,6 @@ public class PayloadUtil	{
         catch(JSONException je) {
             je.printStackTrace();
         }
-
-        HD_WalletFactory.getInstance(context).getWallets().clear();
-        HD_WalletFactory.getInstance(context).getWallets().add(hdw);
-
         return hdw;
     }
 
@@ -831,8 +803,8 @@ public class PayloadUtil	{
         if(jsonObj != null && jsonObj.has("payload"))    {
             payload = jsonObj.getString("payload");
         }
-         if(jsonObj != null && jsonObj.has("version"))    {
-             version = jsonObj.getInt("version");
+        if(jsonObj != null && jsonObj.has("version"))    {
+            version = jsonObj.getInt("version");
         }
 
         // not a json stream, assume v0
@@ -1062,7 +1034,7 @@ public class PayloadUtil	{
             }
         }
         catch (Exception e) {
-           throw new Exception("Unable to decrypt");
+            throw new Exception("Unable to decrypt");
         }
         finally {
             if (decrypted == null || decrypted.length() < 1) {

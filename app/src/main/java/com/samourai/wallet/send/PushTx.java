@@ -8,6 +8,7 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.WebUtil;
 
@@ -80,12 +81,11 @@ public class PushTx {
 
     }
 
-    public boolean pushTx(String hexTx) {
+    public boolean pushTx(String hexTx) throws Exception {
 
         String response = null;
         boolean isOK = false;
 
-        try {
             if(DO_SPEND)    {
                 response = PushTx.getInstance(context).samourai(hexTx, null);
                 if(response != null)    {
@@ -97,27 +97,14 @@ public class PushTx {
                     }
                 }
                 else    {
-                    Toast.makeText(context, R.string.pushtx_returns_null, Toast.LENGTH_SHORT).show();
+                    throw new Exception(context.getString( R.string.pushtx_returns_null));
                 }
             }
             else    {
-                Log.d("PushTx", hexTx);
+                debug("PushTx", hexTx);
                 isOK = true;
             }
-
-            if(isOK)    {
-                Toast.makeText(context, R.string.tx_sent, Toast.LENGTH_SHORT).show();
-            }
-            else    {
-                Toast.makeText(context, R.string.tx_failed, Toast.LENGTH_SHORT).show();
-            }
-
-        }
-        catch(JSONException je) {
-            Toast.makeText(context, "pushTx:" + je.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-
-        return isOK;
+            return   isOK;
 
     }
 

@@ -1,6 +1,7 @@
 package com.samourai.wallet.paynym.paynymDetails
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -237,6 +238,15 @@ class PayNymDetailsActivity : SamouraiActivity() {
     }
 
     private fun followPaynym() {
+        val bip47 = BIP47Util.getInstance(this);
+        if(bip47.paymentCode.toString() == pcode || bip47.featurePaymentCode.toString() == pcode){
+            MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.app_name)
+                    .setMessage(getString(R.string.you_cannot_follow_your_own_paynym))
+                    .setPositiveButton(R.string.ok) { dialogInterface, _ -> dialogInterface.dismiss() }
+                    .show()
+            return
+        }
         if (BIP47Meta.getInstance().isFollowing(pcode)) {
                 doNotifTx()
         } else {
@@ -436,7 +446,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         scope.launch(Dispatchers.IO) {
             val torManager = TorManager
             val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.WebUtil.getInstance(applicationContext), torManager)
-            val xManagerClient = XManagerClient(SamouraiWallet.getInstance().isTestNet, torManager.isConnected(), httpClient)
+            val xManagerClient = XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet, torManager.isConnected())
             val address = xManagerClient.getAddressOrDefault(XManagerService.BIP47)
             SendNotifTxFactory.getInstance().setAddress(address)
             //
@@ -468,7 +478,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
             var utxos: MutableList<UTXO?>? = null
             if (UTXOFactory.getInstance().totalP2SH_P2WPKH > amount + FeeUtil.getInstance().estimatedFeeSegwit(0, 1, 0, 4).toLong()) {
                 utxos = ArrayList()
-                utxos.addAll(UTXOFactory.getInstance().allP2SH_P2WPKH.values)
+                utxos.addAll(UTXOFactory.getInstance().p2SH_P2WPKH.values)
             } else {
                 utxos = APIFactory.getInstance(this@PayNymDetailsActivity).getUtxos(true)
             }

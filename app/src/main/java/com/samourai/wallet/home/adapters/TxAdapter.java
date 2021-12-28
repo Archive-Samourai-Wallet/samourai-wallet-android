@@ -1,36 +1,38 @@
 package com.samourai.wallet.home.adapters;
 
 import android.content.Context;
-import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.text.format.DateUtils;
 import android.transition.ChangeBounds;
 import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.AsyncListDiffer;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.api.Tx;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.home.BalanceActivity;
+import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
+import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
+import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
+import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.BtcFormat;
 import org.json.JSONObject;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -50,13 +52,13 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
 
     private final int VIEW_ITEM = 1;
     private final int VIEW_SECTION = 0;
-    private static final String TAG = "TxAdapter";
-    private Context mContext;
-    private List<Tx> txes;
-    private int account = 0;
-    private CompositeDisposable disposables = new CompositeDisposable();
+    private final Context mContext;
+    private final int account;
+    private final CompositeDisposable disposables = new CompositeDisposable();
     private OnClickListener listener;
     private static final int MAX_CONFIRM_COUNT = 3;
+    private final AsyncListDiffer<Tx> mDiffer = new AsyncListDiffer<>(this, DIFF_CALLBACK);
+    private final SimpleDateFormat fmt = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
 
     public interface OnClickListener {
         void onClick(int position, Tx tx);
@@ -65,15 +67,8 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
     public TxAdapter(Context mContext, List<Tx> txes, int account) {
         this.mContext = mContext;
         this.account = account;
-        this.txes = new ArrayList<>();
-        Disposable disposable = makeSectionedDataSet(txes)
-                .subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe((List<Tx> list) -> {
-                    this.txes = list;
-                });
-        disposables.add(disposable);
-
+        fmt.setTimeZone(TimeZone.getDefault());
+        this.updateList(txes);
     }
 
     public void setClickListener(OnClickListener listener) {
@@ -81,18 +76,14 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
     }
 
     @Override
-    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
         disposables.dispose();
         super.onDetachedFromRecyclerView(recyclerView);
     }
 
+    @NonNull
     @Override
-    public long getItemId(int position) {
-        return txes.get(position).getTS();
-    }
-
-    @Override
-    public TxViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public TxViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = null;
         if (viewType == VIEW_ITEM) {
             view = LayoutInflater.from(parent.getContext())
@@ -107,10 +98,10 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(TxViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull TxViewHolder holder, int position) {
         boolean is_sat_prefs = PrefsUtil.getInstance(this.mContext).getValue(PrefsUtil.IS_SAT, false);
 
-        Tx tx = txes.get(position);
+        Tx tx = mDiffer.getCurrentList().get(position);
         if (tx.section == null) {
             long _amount = 0L;
             if (tx.getAmount() < 0.0) {
@@ -125,10 +116,10 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
 
             holder.tvDateView.setText(sdf.format(tx.getTS() * 1000L));
             if (tx.getPaymentCode() != null) {
-                holder.tvPaynymId.setVisibility(View.VISIBLE);
-                holder.tvPaynymId.setText(BIP47Meta.getInstance().getDisplayLabel(tx.getPaymentCode()));
+                holder.txSubText.setVisibility(View.VISIBLE);
+                holder.txSubText.setText(BIP47Meta.getInstance().getDisplayLabel(tx.getPaymentCode()));
             } else {
-                holder.tvPaynymId.setVisibility(View.INVISIBLE);
+                holder.txSubText.setVisibility(View.GONE);
             }
             if (this.listener != null)
                 holder.itemView.setOnClickListener(view -> {
@@ -136,42 +127,64 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 });
             if (tx.getAmount() < 0.0) {
 
-                holder.tvDirection.setImageDrawable(mContext.getDrawable(R.drawable.out_going_tx_whtie_arrow));
+                holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.out_going_tx_whtie_arrow));
 
                 holder.tvAmount.setTextColor(ContextCompat.getColor(mContext, R.color.white));
-                holder.tvAmount.setText("-".concat(is_sat_prefs ? FormatsUtil.formatSats(_amount) :FormatsUtil.formatBTC(_amount)));
-
+                holder.tvAmount.setText("-".concat(is_sat_prefs ? FormatsUtil.formatSats(_amount) : FormatsUtil.formatBTC(_amount)));
+                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex()){
+                    holder.txSubText.setVisibility(View.VISIBLE);
+                    holder.txSubText.setText(R.string.postmix_spend);
+                }else{
+                    holder.txSubText.setVisibility(View.GONE);
+                }
             } else {
                 TransitionManager.beginDelayedTransition((ViewGroup) holder.tvAmount.getRootView(), new ChangeBounds());
 
-                holder.tvDirection.setImageDrawable(mContext.getDrawable(R.drawable.incoming_tx_green));
-                String amount = is_sat_prefs ?  FormatsUtil.formatSats(_amount): FormatsUtil.formatBTC(_amount);
-                if (this.account == WhirlpoolMeta.getInstance(mContext).getWhirlpoolPostmix() && _amount == 0) {
-                    amount = amount.concat(" (Remix)");
-                }
+                holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.incoming_tx_green));
+                String amount = is_sat_prefs ? FormatsUtil.formatSats(_amount) : FormatsUtil.formatBTC(_amount);
+
                 holder.tvAmount.setText(amount);
                 holder.tvAmount.setTextColor(ContextCompat.getColor(mContext, R.color.green_ui_2));
+                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() ){
+                    if(_amount == 0){
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.remix_note_tag);
+                    }else if( BlockedUTXO.BLOCKED_UTXO_THRESHOLD >= _amount){
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.dust);
+                    }else{
+                        holder.txSubText.setVisibility(View.VISIBLE);
+                        holder.txSubText.setText(R.string.mixed);
+                        holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_whirlpool));
+                    }
+
+                }
             }
 
-            if (this.account == WhirlpoolMeta.getInstance(mContext).getWhirlpoolPostmix() && _amount == 0) {
-                holder.tvDirection.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_repeat_24dp));
+            if (this.account == WhirlpoolAccount.POSTMIX.getAccountIndex() && _amount == 0) {
+                holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_repeat_24dp));
             }
 
             if (UTXOUtil.getInstance().getNote(tx.getHash()) != null) {
                 holder.txNoteGroup.setVisibility(View.VISIBLE);
                 holder.tvNoteView.setText(UTXOUtil.getInstance().getNote(tx.getHash()));
             } else {
-                holder.txNoteGroup.setVisibility(View.INVISIBLE);
+                holder.txNoteGroup.setVisibility(View.GONE);
             }
 
         } else {
-            SimpleDateFormat fmt = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-            fmt.setTimeZone(TimeZone.getDefault());
+
             Date date = new Date(tx.getTS());
             if (tx.getTS() == -1L) {
-                holder.tvSection.setText("  ".concat(holder.itemView.getContext().getString(R.string.pending)));
+                holder.tvSection.setText(holder.itemView.getContext().getString(R.string.pending));
+                holder.tvSection.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.white));
             } else {
-                holder.tvSection.setText(fmt.format(date));
+                holder.tvSection.setTextColor(ContextCompat.getColor(holder.tvSection.getContext(), R.color.text_primary));
+                if (DateUtils.isToday(tx.getTS())) {
+                    holder.tvSection.setText(holder.itemView.getContext().getString(R.string.timeline_today));
+                } else {
+                    holder.tvSection.setText(fmt.format(date));
+                }
             }
 
         }
@@ -180,36 +193,59 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
 
     @Override
     public int getItemCount() {
-        return txes.size();
+        return mDiffer.getCurrentList().size();
     }
 
     @Override
     public int getItemViewType(int position) {
-        return txes.get(position).section != null ? VIEW_SECTION : VIEW_ITEM;
+        return mDiffer.getCurrentList().get(position).section != null ? VIEW_SECTION : VIEW_ITEM;
     }
 
     public void setTxes(List<Tx> txs) {
         if (txs == null) {
             return;
         }
-        Disposable disposable = makeSectionedDataSet(txs)
+        this.updateList(txs);
+    }
+
+    private void updateList(List<Tx> txes) {
+        Disposable disposable = makeSectionedDataSet(txes)
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe((List<Tx> list) -> {
-                    DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new TxDiffUtil(this.txes, list));
-                    this.txes = list;
-                    diffResult.dispatchUpdatesTo(this);
-                    this.notifyDataSetChanged();
-                });
+                .subscribe(this.mDiffer::submitList);
         disposables.add(disposable);
-
     }
+
+    public static final DiffUtil.ItemCallback<Tx> DIFF_CALLBACK
+            = new DiffUtil.ItemCallback<Tx>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Tx oldItem, @NonNull Tx newItem) {
+            return oldItem.getTS() == newItem.getTS();
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Tx oldItem, @NonNull Tx newItem) {
+            if (oldItem.section != null || newItem.section != null) {
+                return true;
+            }
+            boolean reRender = false;
+            if (oldItem.getConfirmations() != newItem.getConfirmations()) {
+                reRender = true;
+            }
+            if (!oldItem.getHash().equals(newItem.getHash())) {
+                reRender = true;
+            }
+            return reRender;
+        }
+
+    };
+
 
     class TxViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView tvSection, tvDateView, tvAmount, tvPaynymId, tvNoteView;
+        private TextView tvSection, tvDateView, tvAmount, txSubText, tvNoteView;
         private ImageView tvDirection;
-        private Group txNoteGroup;
+        private LinearLayout txNoteGroup;
 
 
         TxViewHolder(View itemView, int viewType) {
@@ -218,16 +254,13 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 tvSection = itemView.findViewById(R.id.section_title);
 
             } else {
-
                 tvDateView = itemView.findViewById(R.id.tx_time);
-
+                tvDirection = itemView.findViewById(R.id.TransactionDirection);
+                tvAmount = itemView.findViewById(R.id.tvAmount);
+                txSubText = itemView.findViewById(R.id.txSubText);
+                txNoteGroup = itemView.findViewById(R.id.tx_note_group);
+                tvNoteView = itemView.findViewById(R.id.tx_note_view);
             }
-
-            tvDirection = itemView.findViewById(R.id.TransactionDirection);
-            tvAmount = itemView.findViewById(R.id.tvAmount);
-            tvPaynymId = itemView.findViewById(R.id.paynymId);
-            txNoteGroup = itemView.findViewById(R.id.tx_note_group);
-            tvNoteView = itemView.findViewById(R.id.tx_note_view);
 
         }
     }
@@ -240,18 +273,16 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
             List<Tx> sectioned = new ArrayList<>();
             // for pending state
             boolean contains_pending = false;
-            //if there is only pending tx today we don't want to add today's section
-            boolean show_todays_tx = false;
+            boolean containsNonPendingTxForTodaySection = false;
             for (int i = 0; i < txes.size(); i++) {
                 Tx tx = txes.get(i);
                 if (tx.getConfirmations() < MAX_CONFIRM_COUNT) {
                     contains_pending = true;
                 }
-                if (tx.getConfirmations() >= MAX_CONFIRM_COUNT && DateUtils.isToday(tx.getTS() * 1000)) {
-                    show_todays_tx = true;
+                if(tx.getConfirmations() >= MAX_CONFIRM_COUNT && DateUtils.isToday(tx.getTS() * 1000)){
+                    containsNonPendingTxForTodaySection = true;
                 }
             }
-
             for (Tx tx : txes) {
                 Date date = new Date();
                 date.setTime(tx.getTS() * 1000);
@@ -264,10 +295,11 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 calendarDM.set(Calendar.MILLISECOND, 0);
 
                 if (!sectionDates.contains(calendarDM.getTime().getTime())) {
-                    if (DateUtils.isToday(calendarDM.getTime().getTime())) {
-                        if (show_todays_tx)
+                    if(DateUtils.isToday(calendarDM.getTime().getTime())){
+                        if(containsNonPendingTxForTodaySection){
                             sectionDates.add(calendarDM.getTime().getTime());
-                    } else {
+                        }
+                    }else{
                         sectionDates.add(calendarDM.getTime().getTime());
                     }
                 }
@@ -286,7 +318,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 if (key != -1) {
                     section.section = new Date(key).toString();
                 } else {
-                    section.section = "pending";
+                    section.section = mContext.getString(R.string.pending);
                 }
 
                 section.setTS(key);
@@ -316,7 +348,6 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
         });
 
     }
-
 
 
 }

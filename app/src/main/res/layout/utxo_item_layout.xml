@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@drawable/tx_ripples"
     android:clickable="true"
     android:focusable="true"
+    android:background="?selectableItemBackground"
     android:orientation="vertical">
 
     <TextView
@@ -17,10 +17,12 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
-        android:text="TextView"
+        tools:text="TextView"
         android:textColor="@color/white"
-        android:textSize="14sp"
+        android:textSize="16sp"
         android:textStyle="bold"
+        android:fontFamily="@font/roboto_mono"
+        android:alpha="0.8"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/multiselect_checkbox"
         app:layout_constraintTop_toTopOf="parent" />
@@ -32,6 +34,8 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="24dp"
         android:textSize="12sp"
+        android:textColor="@color/white"
+        android:alpha="0.5"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/utxo_item_amount"
         app:layout_constraintHorizontal_bias="0.0"
