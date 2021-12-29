@@ -176,14 +176,15 @@ public class PayloadUtil	{
 
         PrefsUtil.getInstance(context).clear();
 
-        AddressFactory.getInstance().wipe();
-
         RicochetMeta.getInstance(context).empty();
         RicochetMeta.getInstance(context).setIndex(0);
 
         HD_WalletFactory.getInstance(context).set(null);
 
         HD_WalletFactory.getInstance(context).clear();
+
+        AddressFactory.getInstance().reset();
+        AddressFactory.getInstance().wipe();
 
         File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
         File datfile = new File(dir, strFilename);

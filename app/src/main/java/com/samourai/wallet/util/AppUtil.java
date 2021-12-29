@@ -114,13 +114,6 @@ public class AppUtil {
         }
 */
 
-        try {
-            PayloadUtil.getInstance(context).wipe();
-        }
-        catch(IOException ioe) {
-            ioe.printStackTrace();
-        }
-
         BIP49Util.getInstance(context).reset();
         BIP84Util.getInstance(context).reset();
         BIP47Util.getInstance(context).reset();
@@ -155,6 +148,14 @@ public class AppUtil {
         catch(IOException ioe) {
             ioe.printStackTrace();
         }
+
+        try {
+            PayloadUtil.getInstance(context).wipe();
+        }
+        catch(IOException ioe) {
+            ioe.printStackTrace();
+        }
+
 	}
 
 	public void restartApp() {

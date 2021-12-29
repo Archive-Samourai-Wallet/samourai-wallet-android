@@ -41,7 +41,7 @@ public class AddressFactory extends AddressFactoryGeneric {
         account2xpub = new HashMap<Integer,String>();
     }
 
-    public void reset() {
+    public void init() {
         Log.d(TAG, "reset");
         HD_Wallet bip44w = HD_WalletFactory.getInstance(context).get();
         HD_Wallet bip49w = BIP49Util.getInstance(context).getWallet();
