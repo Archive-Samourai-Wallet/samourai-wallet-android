@@ -683,6 +683,10 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
     
     """.trimIndent())
 
+        // debug consistency
+        val debugConsistency = AddressFactory.getInstance(context).debugConsistency()
+        builder.append("\n-- AddressFactory consistency --\n"+debugConsistency)
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.app_name)
             .setMessage(builder.toString())
