@@ -15,7 +15,6 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.cahoots.CahootsFactory;
 import com.samourai.wallet.crypto.AESUtil;
 import com.samourai.wallet.crypto.DecryptionException;
-import com.samourai.wallet.hd.HD_Account;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.hd.WALLET_INDEX;
@@ -167,25 +166,6 @@ public class PayloadUtil	{
 
     public synchronized void wipe() throws IOException	{
 
-        BIP47Meta.getInstance().clear();
-        DojoUtil.getInstance(context).clear();
-        APIFactory.getInstance(context).reset();
-
-        PrefsUtil.getInstance(context).setValue(PrefsUtil.ENABLE_TOR, false);
-        PrefsUtil.getInstance(context).setValue(PrefsUtil.IS_RESTORE, false);
-
-        PrefsUtil.getInstance(context).clear();
-
-        RicochetMeta.getInstance(context).empty();
-        RicochetMeta.getInstance(context).setIndex(0);
-
-        HD_WalletFactory.getInstance(context).set(null);
-
-        HD_WalletFactory.getInstance(context).clear();
-
-        AddressFactory.getInstance().reset();
-        AddressFactory.getInstance().wipe();
-
         File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
         File datfile = new File(dir, strFilename);
         File tmpfile = new File(dir, strTmpFilename);
@@ -211,7 +191,6 @@ public class PayloadUtil	{
             }
 
         }
-
     }
 
     public JSONObject getPayload() {
