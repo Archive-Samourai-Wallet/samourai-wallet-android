@@ -461,8 +461,10 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="add_bip39_password">Add bip39 password</string>
-    <string name="close_bip39_password">Close bip39 password</string>
+    <string name="add_bip39_passphrase">Add bip39 passphrase</string>
+    <string name="close_bip39_passphrase">Close bip39 passphrase</string>
+    <string name="add_bip39_password">Add bip39 passphrase</string>
+    <string name="close_bip39_password">Close bip39 passphrase</string>
     <string name="enter_your_mnemonic_seed_to_import_a_wallet">Enter your mnemonic seed to import a wallet from another provider.</string>
     <string name="last_updated">Last updated</string>
     <string name="get_help">Get help</string>
