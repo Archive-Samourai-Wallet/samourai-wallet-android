@@ -8,6 +8,7 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.BIP47Wallet;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
+import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.FormatsUtil;
 
@@ -181,15 +182,24 @@ public class HD_WalletFactory	{
     }
 
     public void set(HD_Wallet wallet)	{
+        // reset HD_WalletFactory
         Log.d(TAG, "set wallet");
+        wallets.clear();
         if(wallet != null)	{
-            wallets.clear();
             wallets.add(wallet);
         }
+
+        // reset BIPUtils
         BIP47Util.getInstance(context).reset();
         BIP49Util.getInstance(context).reset();
         BIP84Util.getInstance(context).reset();
 
+        // reset AddressFactory from BIPUtils
+        AddressFactory.getInstance(context).reset();
+    }
+
+    public void clear() {
+        set(null);
     }
 
     public boolean holding()	{
@@ -198,12 +208,6 @@ public class HD_WalletFactory	{
 
     public List<HD_Wallet> getWallets()    {
         return wallets;
-    }
-
-    public void clear() {
-        wallets = null;
-        context = null;
-        instance = null;
     }
 
     private MnemonicCode computeMnemonicCode() throws IOException {

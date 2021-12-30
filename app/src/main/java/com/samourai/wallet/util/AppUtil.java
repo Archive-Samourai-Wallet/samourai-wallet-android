@@ -1,5 +1,5 @@
 package com.samourai.wallet.util;
- 
+
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,15 +10,16 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.samourai.wallet.MainActivity2;
+import com.samourai.wallet.R;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
-import com.samourai.wallet.bip47.BIP47Util;
+import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.hd.HD_Wallet;
+import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.prng.PRNGFixes;
-import com.samourai.wallet.R;
 import com.samourai.wallet.ricochet.RicochetMeta;
-import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.utxos.UTXOUtil;
@@ -93,6 +94,7 @@ public class AppUtil {
     public void wipeApp() {
 
         try  {
+            // wipe whirlpool files
             HD_Wallet bip84w = BIP84Util.getInstance(context).getWallet();
             WhirlpoolUtils.getInstance().wipe(bip84w, context);
         }
@@ -114,6 +116,9 @@ public class AppUtil {
         }
 */
 
+        BIP47Meta.getInstance().clear();
+        DojoUtil.getInstance(context).clear();
+
         try {
             PayloadUtil.getInstance(context).wipe();
         }
@@ -121,9 +126,8 @@ public class AppUtil {
             ioe.printStackTrace();
         }
 
-        BIP49Util.getInstance(context).reset();
-        BIP84Util.getInstance(context).reset();
-        BIP47Util.getInstance(context).reset();
+        // reset HD_WalletFactory + BIP47Util + BIP49Util + BIP84Util + AddressFactory
+        HD_WalletFactory.getInstance(context).clear();
 
         deleteBackup();
         deleteQR();
@@ -139,10 +143,13 @@ public class AppUtil {
 
         APIFactory.getInstance(context).setXpubBalance(0L);
         APIFactory.getInstance(context).reset();
-		PrefsUtil.getInstance(context).clear();
+        PrefsUtil.getInstance(context).setValue(PrefsUtil.ENABLE_TOR, false);
+        PrefsUtil.getInstance(context).setValue(PrefsUtil.IS_RESTORE, false);
+        PrefsUtil.getInstance(context).clear();
         BlockedUTXO.getInstance().clear();
         BlockedUTXO.getInstance().clearPostMix();
         RicochetMeta.getInstance(context).empty();
+        RicochetMeta.getInstance(context).setIndex(0);
         SendAddressUtil.getInstance().reset();
         SentToFromBIP47Util.getInstance().reset();
         BatchSendUtil.getInstance().clear();
@@ -155,7 +162,7 @@ public class AppUtil {
         catch(IOException ioe) {
             ioe.printStackTrace();
         }
-	}
+    }
 
 	public void restartApp() {
 		Intent intent = new Intent(context, MainActivity2.class);
