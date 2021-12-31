@@ -650,7 +650,7 @@
 
     <string name="you_received_s">You received</string>
     <string name="paynym_follow_message">This fee covers the cost of creating a one-time transaction to create a record on the blockchain.  This keeps PayNyms decentralized</string>
-    <string name="paynym_follow_fee_message">A one time connection fee of  will be charged to follow contact</string>
+    <string name="paynym_follow_fee_message">A one time connection fee of  will be charged to connect to this PayNym</string>
     <string name="initializing_tor">Initializing Tor…</string>
     <string name="cannot_pair_whirlpool_gui">Cannot prepare pair to Whirlpool GUI.</string>
     <string name="message_copied">message copied</string>
