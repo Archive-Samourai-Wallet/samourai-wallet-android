@@ -147,7 +147,7 @@
     <string name="bip39_unmatch">Passphrase does not match. Please try again.</string>
     <string name="bip39_invalid">Do not use any space characters in your passphrase. Please try again.</string>
     <string name="bip39_empty">You must define a passphrase.</string>
-    <string name="please_select">Please select...</string>
+    <string name="please_select">Please select…</string>
     <string name="create_wallet">Create wallet</string>
     <string name="restore_wallet">Restore wallet</string>
     <string name="wallet_passphrase">Enter your wallet passphrase</string>
@@ -158,7 +158,7 @@
     <string name="backup_read_error">Error reading backup file.</string>
     <string name="mnemonic_hex">Mnemonic or hex entropy</string>
     <string name="pin_enter">Enter PIN code</string>
-    <string name="please_wait">Please wait...</string>
+    <string name="please_wait">Please wait…</string>
     <string name="random_key_error">Random key error</string>
     <string name="login_error">Login failed</string>
     <string name="wallet_created_ok">Wallet created OK.</string>
@@ -207,7 +207,7 @@
     <string name="priority_fee">PRIORITY FEE</string>
     <string name="low_fee">LOW FEE</string>
     <string name="custom_fee">Custom</string>
-    <string name="sat_b">sat/b</string>
+    <string name="sat_b">sat/vB</string>
 
     <string name="account_Samourai">Wallet</string>
     <string name="account_shuffling">Shifted</string>
@@ -215,7 +215,7 @@
     <string name="max_available">Max. available:</string>
 
     <string name="select_account">Select account</string>
-    <string name="received_bitcoin">Received Bitcoin</string>
+    <string name="received_bitcoin">Received bitcoin</string>
     <string name="received">Received</string>
     <string name="sent">Transaction sent</string>
     <string name="total">Total</string>
@@ -312,7 +312,7 @@
     <string name="ricochet_broadcast">Your Ricochet has been broadcast.</string>
 
     <string name="bip47_cannot_identify_outpoint">Unable to mask outgoing payment code</string>
-    <string name="bip47_cannot_compose_notif_tx">Unable to compose notification tx</string>
+    <string name="bip47_cannot_compose_notif_tx">Unable to compose notification Tx</string>
 
     <string name="pushtx_returns_null">Spend failed. Server returned null value.</string>
 
@@ -332,7 +332,7 @@
 
     <string name="options_sign">Sign message</string>
     <string name="options_soroban_collab">Soroban receive/collaborate</string>
-    <string name="options_paste_cahoots">Paste cahoots payload</string>
+    <string name="options_paste_cahoots">Paste Cahoots payload</string>
 
 
     <string name="options_fees">Show current miners\' fees</string>
@@ -340,8 +340,8 @@
     <string name="current_hi_fee_value">Current high fee:</string>
     <string name="current_mid_fee_value">Current normal fee:</string>
     <string name="current_lo_fee_value">Current low fee:</string>
-    <string name="slash_sat">sat/b</string>
-    <string name="set_sat">Set your custom fee in sat/b.</string>
+    <string name="slash_sat">sat/vB</string>
+    <string name="set_sat">Set your custom fee in sat/vB.</string>
     <string name="custom_fee_too_low">Custom fee is set too low.</string>
     <string name="custom_fee_too_high">Custom fee is set too high.</string>
 
@@ -355,8 +355,8 @@
 
     <string name="utxo_sign">Sign message</string>
     <string name="utxo_sign_text1">Sign message using this private key?</string>
-    <string name="utxo_sign_text2">Signed using utxo.</string>
-    <string name="utxo_sign_text3">Signed using utxo.</string>
+    <string name="utxo_sign_text2">Signed using UTXO.</string>
+    <string name="utxo_sign_text3">Signed using UTXO.</string>
 
     <string name="recovery_checkup">Recovery Checkup</string>
     <string name="recovery_checkup_message">Your wallet recovery words and passphrase will be displayed. Do not allow anyone to view your screen. This will NOT be displayed again.</string>
@@ -364,25 +364,14 @@
     <string name="recovery_checkup_finish">I\'VE SECURED MY RECOVERY INFO</string>
     <string name="pin_reminder">As a reminder, your PIN code is:</string>
 
-    <string name="opendime_confirmed_balance">Confirmed Balance</string>
-    <string name="opendime_privkey">Private Key</string>
-    <string name="opendime_verified">VERIFIED</string>
-    <string name="opendime_valid_key">Valid private key on device</string>
-    <string name="opendime_not_verified">CANNOT VERIFY</string>
-    <string name="opendime_no_valid_key">Cannot validate private key on device</string>
-    <string name="opendime_view">VIEW</string>
-    <string name="opendime_sweep">SWEEP</string>
-    <string name="opendime_topup">TOP UP</string>
-
     <string name="select_app">Select application</string>
-    <string name="samourai_opendime">Samourai: OpenDime</string>
 
     <string name="show_qr">Show QR</string>
     <string name="share_qr">Share QR</string>
     <string name="send_tx">Send raw transaction</string>
     <string name="tx_too_large_qr">Raw transaction too large to display in QR code.</string>
 
-    <string name="select_network">Select network...</string>
+    <string name="select_network">Select network…</string>
     <string name="MainNet">MainNet</string>
     <string name="TestNet">TestNet</string>
 
@@ -427,12 +416,12 @@
 
     <string name="paynym">PayNym</string>
     <string name="paynyms">PayNyms</string>
-    <string name="claim_paynym">Claim your paynym</string>
+    <string name="claim_paynym">Claim your PayNym</string>
     <string name="claim_paynym_title1">Claim your free PayNymID</string>
     <string name="claim_paynym_text1">Allow your friends &amp; contacts to find and connect to your PayNym directly through compatible bitcoin wallets.</string>
     <string name="claim_paynym_title2">Benefits of a PayNymID</string>
-    <string name="claim_paynym_text2a">Unique name and image generated with a hash of your paynym code. No two will ever be the same!</string>
-    <string name="claim_paynym_text2b">No identity checks! Your name and image are based on your paynym code, not any national ID card.</string>
+    <string name="claim_paynym_text2a">Unique name and image generated with a hash of your PayNym code. No two will ever be the same!</string>
+    <string name="claim_paynym_text2b">No identity checks! Your name and image are based on your PayNym code, not any national ID card.</string>
     <string name="claim_paynym_text2c">Be found easily! Compatible wallets can search for new contacts and send private secure payments without leaving a trace.</string>
     <string name="claim_paynym_id">Claim my PayNymID</string>
     <string name="claim_paynym_id_refused">Not interested. Don\'t ask me again.</string>
@@ -452,9 +441,9 @@
     <string name="set_pin_code">Set Pin code</string>
     <string name="accept_disclaimer_error">You need to accept disclaimer</string>
     <string name="import_external_wallet">Import external wallet</string>
-    <string name="import_samourai_wallet">Import samourai backup</string>
+    <string name="import_samourai_wallet">Import Samourai backup</string>
     <string name="backup_file">Backup file</string>
-    <string name="import_an_encrypted_samourai_wallet">import an encrypted samourai backup to restore a wallet with all meta-data intact</string>
+    <string name="import_an_encrypted_samourai_wallet">import an encrypted Samourai backup to restore a wallet with all meta-data intact</string>
     <string name="back">BACK</string>
     <string name="finish">finish</string>
     <string name="choose_file">choose file</string>
@@ -512,7 +501,7 @@
     <string name="advanced">Advanced</string>
     <string name="broadcast_with_txtenna">Broadcast with TxTenna</string>
     <string name="show_qr_code">Show QR Code</string>
-    <string name="tx_connectivity_failure_msg">Cannot broadcast transaction without a data connection.How would you like to proceed</string>
+    <string name="tx_connectivity_failure_msg">Cannot broadcast transaction without a data connection. How would you like to proceed</string>
 
     <string name="insufficient_fee">Insufficient fee</string>
     <string name="action_utxo_amounts">View amounts by address type</string>
@@ -540,7 +529,7 @@
     <string name="broadcast_off">Your Samourai Wallet broadcasting is switched off.</string>
     <string name="tx_standby">Transaction in stand-by</string>
     <string name="show_hex">Display Hex Code</string>
-    <string name="tx_tenna_coming_soon">txTenna on Android coming soon</string>
+    <string name="tx_tenna_coming_soon">TxTenna on Android coming soon</string>
     <string name="enter_paynym">PayNym</string>
     <string name="enter_index">Index</string>
     <string name="receive_addresses">Receive addresses</string>
@@ -606,16 +595,16 @@
     <string name="total_available_amount">Total available amount</string>
     <string name="you_do_not_yet_have_any_paynym_contacts">You do not yet have any PayNym contacts</string>
     <string name="experimental">Experimental</string>
-    <string name="cahoots">#Cahoots</string>
+    <string name="cahoots">Cahoots</string>
 
     <string name="options_cahoots2">Make every spend a CoinJoin.</string>
     <string name="PSBT">PSBT</string>
     <string name="options_psbt2">Partially Signed Bitcoin Transaction.</string>
-    <string name="import_cahoots">Scan or paste a #Cahoots.</string>
+    <string name="import_cahoots">Scan or paste a Cahoots.</string>
     <string name="import_psbt">Scan or paste a PSBT.</string>
-    <string name="enter_cahoots">Enter #Cahoots text</string>
+    <string name="enter_cahoots">Enter Cahoots text</string>
     <string name="enter_psbt">Enter PSBT hex text</string>
-    <string name="create_cahoots">Create #Cahoots spend</string>
+    <string name="create_cahoots">Create Cahoots spend</string>
     <string name="stowaway">Stowaway</string>
     <string name="stonewall">Stonewall</string>
     <string name="urgent">Urgent</string>
@@ -627,24 +616,22 @@
     <string name="tag_utxo">Label UTXO</string>
     <string name="boost_transaction_fee">Boost transaction fee</string>
     <string name="refund">Refund</string>
-    <string name="not_cahoots">Invalid #Cahoots</string>
+    <string name="not_cahoots">Invalid Cahoots</string>
     <string name="not_valid_json">JSON parsing error</string>
 
-    <string name="unrecognized_cahoots">Unrecognized #Cahoots</string>
-    <string name="cannot_compose_cahoots">Cannot compose #Cahoots</string>
+    <string name="unrecognized_cahoots">Unrecognized Cahoots</string>
+    <string name="cannot_compose_cahoots">Cannot compose Cahoots</string>
     <string name="start_stowaway">Begin Stowaway as spender</string>
     <string name="start_stonewall">Begin STONEWALL as spender</string>
     <string name="amount_sats">Enter amount in sats</string>
     <string name="zero_bits">0 bits</string>
     <string name="not_available">N/A</string>
     <string name="show_tx">Display transaction</string>
-    <string name="unrecognized_step">Unrecognized #Cahoots step</string>
+    <string name="unrecognized_step">Unrecognized Cahoots step</string>
     <string name="cannot_process_stowaway">Cannot process Stowaway</string>
     <string name="cannot_process_stonewall">Cannot process STONEWALL</string>
-    <string name="cannot_process_cahoots">Cannot process #Cahoots</string>
-    <string name="title_activity_network_dashboard">
-        Networking
-    </string>
+    <string name="cannot_process_cahoots">Cannot process Cahoots</string>
+    <string name="title_activity_network_dashboard">Networking</string>
     <string name="powering_samourai_wallet_">Powering Samourai Wallet with your own personal node offers the best level of privacy and independence when interacting with the bitcoin network. Dojo makes running a full node easy and simple.</string>
     <string name="plug_and_play_full_bitcoin_node_automatically">- Plug and Play full bitcoin node\n\n -Automatically configured Tor hidden service\n\n -Independence from default Samourai servers</string>
     <string name="dojo_connect_instruction">If you already have a Dojo Full Node or are \nrunning the free and open source Dojo Software\non your own hardware, scan the pairing QR code\nlocated on the Dojo Maintenance control panel</string>
@@ -653,7 +640,7 @@
     <string name="create_to_existing_dojo">Create wallet and pair to Dojo</string>
     <string name="preorder">preorder</string>
     <string name="add_new">Add New</string>
-    <string name="paynym_follow_message_2">to follow instantly. Follow this PayNym to participate in Cahoots CoinJoin\ntransactions with them.</string>
+    <string name="paynym_follow_message_2">to participate in Cahoots CoinJoin transactions with them. No need to connect to use Cahoots!</string>
     <string name="paynym_connect_message">to generate unique private addresses for sending bitcoin\nto this contact</string>
     <string name="follow">Follow</string>
     <string name="wallet_locked">Wallet Locked</string>
@@ -664,13 +651,13 @@
     <string name="you_received_s">You received</string>
     <string name="paynym_follow_message">This fee covers the cost of creating a one-time transaction to create a record on the blockchain.  This keeps PayNyms decentralized</string>
     <string name="paynym_follow_fee_message">A one time connection fee of  will be charged to follow contact</string>
-    <string name="initializing_tor">initializing Tor...</string>
+    <string name="initializing_tor">Initializing Tor…</string>
     <string name="cannot_pair_whirlpool_gui">Cannot prepare pair to Whirlpool GUI.</string>
     <string name="message_copied">message copied</string>
 
     <string name="scan_code">Scan Code</string>
     <string name="follows_you">Follows you</string>
-    <string name="edit_paynym">Edit paynym</string>
+    <string name="edit_paynym">Edit PayNym</string>F
     <string name="sycing_pcodes">Syncing payment codes</string>
     <string name="sync_complete">Payment code sync complete</string>
     <string name="options_paynym_indexes">Show PayNym indexes</string>
@@ -700,7 +687,7 @@
     <string name="share_this_qr_code_with_your_participant">Share this QR code with your participant</string>
     <string name="review_tx_before_braodcast">Review the transaction before broadcasting</string>
     <string name="select_participant">Select participant</string>
-    <string name="select_cahoots_type">Select cahoots type</string>
+    <string name="select_cahoots_type">Select Cahoots type</string>
     <string name="cannot_disable_tor_dojo">Tor cannot be stopped since wallet is connected to a Samourai Dojo node.</string>
     <string name="temporary_dojo_disable">Uninstall Samourai Wallet to unpair from your Dojo node. \'DISABLE\' will be fully activated in a later update.</string>
 
@@ -711,14 +698,14 @@
     <string name="begin_stonewallx2">Begin STONEWALLx2</string>
     <string name="total_miner_fee">Total Miner Fee :</string>
     <string name="launch_qr_scanner">LAUNCH QR Scanner</string>
-    <string name="next_step">Next Step...</string>
+    <string name="next_step">Next Step…</string>
     <string name="scan_the_qr_code_that_your_collaborator_provides_you">Scan the QR CODE that your collaborator provides you.</string>
     <string name="you_will_contribute">You will contribute</string>
     <string name="create_an_on_demand_coinjoin_transaction_for_enhanced_privacy_and_surveillance_protection">Create an on demand CoinJoin transaction for enhanced privacy and surveillance protection</string>
     <string name="refresh">Refresh</string>
     <string name="unspent_outputs">Unspent Outputs</string>
     <string name="unspent_outputs_post_mix">Unspent Outputs - Post mix</string>
-    <string name="paste_cahoots_payload">Paste cahoots payload</string>
+    <string name="paste_cahoots_payload">Paste Cahoots payload</string>
     <string name="clipboard_empty">Clipboard empty</string>
     <string name="premix_balance">Premix balance</string>
     <string name="post_mix_balance">Post mix balance</string>
@@ -727,11 +714,11 @@
     <string name="coming_soon">Coming soon</string>
     <string name="active">Active</string>
     <string name="change_from_postmix">Change from postmix spend</string>
-    <string name="selection_contains_blocked_utxo">Your selection contains blocked utxos. please remove and try again.</string>
-    <string name="only_single_utxo_may_selected">Only a single utxo may be selected for direct spend from post-mix.</string>
-    <string name="only_a_single_utxo_may">Only a single utxo may be selected for direct Whirlpooling from post-mix.</string>
-    <string name="only_change_utxos_allowed">Only change utxo\'s allowed</string>
-    <string name="utxo_is_marked_as_blocked">utxo is marked as blocked</string>
+    <string name="selection_contains_blocked_utxo">Your selection contains blocked UTXOs. Please remove and try again.</string>
+    <string name="only_single_utxo_may_selected">Only a single UTXO may be selected for direct spend from post-mix.</string>
+    <string name="only_a_single_utxo_may">Only a single UTXO may be selected for direct Whirlpooling from post-mix.</string>
+    <string name="only_change_utxos_allowed">Only change UTXO\'s allowed</string>
+    <string name="utxo_is_marked_as_blocked">UTXO is marked as blocked</string>
     <string-array name="address_types">
         <item>Segwit native (bech32)</item>
         <item>Segwit compatibility (P2SH)</item>
@@ -754,7 +741,7 @@
     <string name="mixing_title">Mixing</string>
 
     <string name="doxxic_change_warning">Doxxic Change</string>
-    <string name="block_tx0_change">The change output from this tx0 will be tagged. Block it to make it unspendable? If so, the amount will not be reflected in the total balance but will be visible within the wallet by consulting the list of unspents.</string>
+    <string name="block_tx0_change">The change output from this Tx0 will be tagged. Block it to make it unspendable? If so, the amount will not be reflected in the total balance but will be visible within the wallet by consulting the list of unspents.</string>
     <string name="total_pre_mix_balance">Total Pre-mix Balance</string>
     <string name="total_post_mix_balance">Total Post-mix Balance</string>
     <string name="post_mix_transactions">Post-mix transactions</string>
@@ -773,7 +760,7 @@
     <string name="strict_mode_address">Strict mode has detected possible address reuse for this transaction. Reformulate the transaction or broadcast as-is?</string>
     <string name="strict_reformulate">Reformulate transaction</string>
 
-    <string name="sweep_no_amount">No utxos found for this private key.</string>
+    <string name="sweep_no_amount">No UTXOs found for this private key.</string>
     <string name="note_privacy_addons_are_not_available_for_selected_utxo_s">NOTE: Privacy addons are not available for selected utxo\'s</string>
     <string name="note_you_are_making_a_post_mix_spend_if_cahoots_nis_not_selected_samourai_will">NOTE: You are making a post-mix spend. If #Cahoots\nis not selected Samourai will attempt to make a STONEWALL spend.</string>
     <string name="off">Off</string>
@@ -792,11 +779,10 @@
     <!-- Sync Preferences -->
     <string name="sync_title">Sync email periodically</string>
     <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails
-    </string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails</string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="no_cahoots_detected">No cahoots detected. Refresh to search again</string>
-    <string name="waiting_for_cahoots_request">Waiting for Cahoots request...</string>
+    <string name="waiting_for_cahoots_request">Waiting for Cahoots request…</string>
     <string name="follow_paynym_fee_free">Fee : Free</string>
     <string name="connect_paynym_fee">Fee : 0.00015000 BTC</string>
     <string name="connect">Connect</string>
@@ -805,8 +791,7 @@
     <string name="based_on_cryptography_and">Based on cryptography and math, not your personal information</string>
     <string name="find_and_follow_your_friends">Find and follow your friends and contacts without harming your privacy</string>
     <string name="unlocks_advanced">Unlocks advanced privacy functionality in your wallet</string>
-    <string name="share_and_reuse">Share and reuse without revealing your other
-        transactions and balances</string>
+    <string name="share_and_reuse">Share and reuse without revealing your other transactions and balances</string>
     <string name="enter_backup_password">Enter backup password</string>
     <string name="restore_backup">Restore backup</string>
     <string name="whirlpool_pairing">Whirlpool Pairing</string>
@@ -835,12 +820,12 @@
     <string name="invalid_api_endpoint">Invalid API endpoint</string>
     <string name="invalid_api_key">Invalid Api key</string>
     <string name="do_you_want_to_unpair">Do you want to unpair dojo ?</string>
-    <string name="dojo_connection_error">Unable to connect dojo. Please check the api key or dojo status</string>
+    <string name="dojo_connection_error">Unable to connect Dojo. Please check the api key or Dojo status</string>
     <string name="invalid_dojo_payload">Invalid dojo payload</string>
     <string name="your_passphrase">Your passphrase</string>
     <string name="your_passphrase_will_not_be_shown_to_you_again">Your passphrase will not be shown to you again.</string>
     <string name="your_passphrase_is_a_required_part_of_your_noffline">Your passphrase is a required part of your\noffline paper backup. Without it you\ncannot restore your wallet</string>
-    <string name="write_down_words_down_and_keep_them">Write down words down and keep them\nsecret. Together with your passphrase\nthey allow access to your wallet</string>
+    <string name="write_down_words_down_and_keep_them">Write these words down and keep them\nsecret. Together with your passphrase\nthey allow access to your wallet</string>
     <string name="create_your_offline_paper_backup">Create your offline paper backup</string>
     <string name="without_a_backup_your_bitcoin">Without a backup your bitcoin wallet is at\nrisk of unrecoverable loss.\n\nDownload and print the PDF template to\nmake the backup as easy as possible.</string>
     <string name="download_pdf_template">Download PDF Template</string>
@@ -855,7 +840,7 @@
     <string name="dojo_onion_address">Dojo onion address</string>
     <string name="would_you_like_to_enable_tor">Would you like to enable Tor?</string>
     <string name="would_you_like_to_connect_to">Would you like to connect to your\nown Dojo server?</string>
-    <string name="passphrase_is_required_for_samourai">Passphrase is required for samourai import</string>
+    <string name="passphrase_is_required_for_samourai">Passphrase is required for Samourai import</string>
     <string name="send_cahoots">Send Cahoots</string>
     <string name="dojo_config_detected">Dojo configuration detected</string>
     <string name="dojo_config_override">Dojo configuration detected in backup file. Override current Dojo configuration in backup file?</string>
@@ -873,14 +858,14 @@
     <string name="whirlpool_is_entirely">Whirlpool is entirely non custodial. This means you keep full control of your bitcoin private keys at all steps of the process</string>
     <string name="coins_that_are_currently">Coins that are currently waiting to complete their first Whirlpool mix will be listed and managed here.</string>
     <string name="your_coins_will_be_split">Your coins will be split into identical size amounts automatically. Each of these identical amount coins will be mixed individually.\n\nYour wallet can only mix while it is online and unlocked.</string>
-    <string name="coins_that_have_been_mixed">Coins that have been mixed at least one time will automatically be queued and randomly selected for free remixing.</string>
+    <string name="coins_that_have_been_mixed">Coins that have been mixed at least once will automatically be queued and randomly selected for free remixing.</string>
     <string name="whirlpool_offers_absolutely">Whirlpool offers absolutely free remixing for previously mixed coins. These transactions are without any miner fee or coordinator fees.\n\nRemixing increases your privacy gains and increases the privacy of the entire mixing pool.</string>
     <string name="your_mixed_coins_have_been">Your mixed coins have been automatically queued for remixing.\n\nAdd some more unmixed coins to Whirlpool at any time.</string>
     <string name="once_you_spend_a_mixed">Once you spend a mixed coin it is no longer eligible for free Remixing.\n\nAdd some more unmixed coins to Whirlpool at any time.</string>
     <string name="your_coins_have_been_mixed">Your coins have been mixed!</string>
-    <string name="you_dont_have_any">You don\'t have any Remixable coins</string>
+    <string name="you_dont_have_any">You don\'t have any remixable coins</string>
     <string name="loading">Loading…</string>
-    <string name="start_new_tx0">Start new tx0</string>
+    <string name="start_new_tx0">Start new Tx0</string>
     <string name="disconnected">Disconnected</string>
     <string name="initializing_whirlpool">initializing whirlpool</string>
     <string name="connecting_to_service">Connecting to service</string>
@@ -892,18 +877,18 @@
     <string name="toxic_change">Toxic change</string>
     <string name="mix_error">Mix Error</string>
     <string name="mix_utxos">Mix UTXOs</string>
-    <string name="mixes_complete">mixes complete</string>
+    <string name="mixes_complete">Mixes complete</string>
     <string name="mixed">Mixed</string>
     <string name="postmix_spend">Postmix spend</string>
-    <string name="you_cannot_follow_your_own_paynym">You cannot follow your own paynym</string>
-    <string name="transfer_to_whirlpool">Transfer to whirlpool</string>
+    <string name="you_cannot_follow_your_own_paynym">You cannot follow your own PayNym</string>
+    <string name="transfer_to_whirlpool">Transfer to Whirlpool</string>
     <string name="total_balance">Total Balance</string>
     <string name="total_in_progress_balance">Total in Progress Balance</string>
     <string name="total_remixable_balance">Total Remixable Balance </string>
-    <string name="tx0_is_not_possible_with">Tx0 is not possible with selected utxo.</string>
+    <string name="tx0_is_not_possible_with">Tx0 is not possible with selected UTXO.</string>
     <string name="tor_status">Tor status</string>
     <string name="open_in_browser">Open in browser</string>
-    <string name="copy_tx_id">Copy tx id</string>
-    <string name="copy_url">Copy url</string>
+    <string name="copy_tx_id">Copy TxID</string>
+    <string name="copy_url">Copy URL</string>
 
 </resources>
