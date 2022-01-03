@@ -62,4 +62,18 @@ public class LogUtil {
         Log.d("LogUtil", "Debug logs enabled");
     }
 
+    /**
+     * Debug large strings to avoid log truncation.
+     * @param tag
+     * @param content
+     */
+    public static void debugLarge(String tag, String content) {
+        if (content.length() > 4000) {
+            Log.d(tag, content.substring(0, 4000));
+            debugLarge(tag, content.substring(4000));
+        } else {
+            Log.d(tag, content);
+        }
+    }
+
 }
