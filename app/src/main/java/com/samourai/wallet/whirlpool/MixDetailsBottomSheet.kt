@@ -66,22 +66,11 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
         binding.mixesDone.text = "${whirlpoolUtxo.mixsDone}"
 
         try {
-            if (whirlpoolUtxo.utxoState != null && whirlpoolUtxo.utxoState.mixProgress != null) {
-                val mixProgress = whirlpoolUtxo.utxoState.mixProgress
-                binding.mixStepMessage.text = mixProgress.mixStep.message
-                binding.mixError.visibility = View.GONE
-                if (whirlpoolUtxo.utxoState.hasError()) {
-                    binding.mixError.visibility = View.VISIBLE
-                    binding.mixError.text = whirlpoolUtxo.utxoState.error
-                    binding.mixProgressBar.setIndicatorColor(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.red
-                        )
-                    )
-                    binding.mixProgressBar.setProgressCompat(20, true)
-                    binding.mixMessage.text = whirlpoolUtxo.utxoState.message
-                } else {
+            if (whirlpoolUtxo.utxoState != null) {
+                if(whirlpoolUtxo.utxoState.mixProgress != null){
+                    val mixProgress = whirlpoolUtxo.utxoState.mixProgress
+                    binding.mixStepMessage.text = mixProgress.mixStep.message
+                    binding.mixError.visibility = View.GONE
                     binding.mixProgressBar.setIndicatorColor(
                         ContextCompat.getColor(
                             requireContext(),
@@ -94,11 +83,23 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
                         true
                     )
                 }
+                if (whirlpoolUtxo.utxoState.hasError()) {
+                    binding.mixError.visibility = View.VISIBLE
+                    binding.mixError.text = whirlpoolUtxo.utxoState.error
+                    binding.mixProgressBar.setIndicatorColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.red
+                        )
+                    )
+                    binding.mixProgressBar.setProgressCompat(20, true)
+                    binding.mixStepMessage.text = getString(R.string.mix_error)
+                }
             } else {
                 binding.mixProgressContainer.visibility = View.GONE
             }
         } catch (ex: Exception) {
-
+            binding.mixError.text = "${ex.message}"
         }
     }
 

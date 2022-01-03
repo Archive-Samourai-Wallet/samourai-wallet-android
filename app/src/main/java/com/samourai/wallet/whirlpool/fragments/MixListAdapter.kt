@@ -47,7 +47,9 @@ class MixListAdapter : RecyclerView.Adapter<MixListAdapter.ViewHolder>() {
             }
             viewBinding.mixStatus.text = "${utxo.mixsDone} ${viewBinding.root.context.getString(R.string.mixes_complete)}"
             viewBinding.mixingButton.setIconTintResource(R.color.white)
-            if(utxoState.mixableStatus == MixableStatus.UNCONFIRMED ){
+            if(utxoState.hasError()){
+                viewBinding.mixStatus.text = "${utxoState.error}";
+            }else  if(utxoState.mixableStatus == MixableStatus.UNCONFIRMED ){
                 viewBinding.mixingButton.setIconResource(R.drawable.ic_timer_white_24dp)
                 return
             }
