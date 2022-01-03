@@ -82,6 +82,8 @@ class MixDetailsBottomSheet : BottomSheetDialogFragment() {
                         mixProgress.mixStep.progressPercent,
                         true
                     )
+                }else{
+                    binding.mixProgressContainer.visibility = View.GONE
                 }
                 if (whirlpoolUtxo.utxoState.hasError()) {
                     binding.mixError.visibility = View.VISIBLE
