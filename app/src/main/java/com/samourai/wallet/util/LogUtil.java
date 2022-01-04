@@ -3,6 +3,7 @@ package com.samourai.wallet.util;
 import android.util.Log;
 
 import com.samourai.wallet.BuildConfig;
+import com.samourai.whirlpool.client.utils.ClientUtils;
 
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +59,10 @@ public class LogUtil {
 
         // skip noisy logs
         ((Logger) LoggerFactory.getLogger("com.samourai.wallet.staging")).setLevel(Level.DEBUG);
+
+        // set whirlpool log level
+        Level level = BuildConfig.DEBUG ? Level.DEBUG : Level.WARN;
+        ClientUtils.setLogLevel(level, level);
 
         Log.d("LogUtil", "Debug logs enabled");
     }

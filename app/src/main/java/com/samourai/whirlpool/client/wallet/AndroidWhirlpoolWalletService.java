@@ -10,9 +10,10 @@ import com.samourai.http.client.IHttpClientService;
 import com.samourai.stomp.client.AndroidStompClientService;
 import com.samourai.stomp.client.IStompClientService;
 import com.samourai.tor.client.TorClientService;
-import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.AndroidSecretPointFactory;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.network.dojo.DojoUtil;
@@ -24,7 +25,6 @@ import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.exception.NotifiableException;
-import com.samourai.whirlpool.client.utils.ClientUtils;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolServer;
 import com.samourai.whirlpool.client.wallet.data.AndroidDataSourceFactory;
 import com.samourai.whirlpool.client.wallet.data.AndroidWalletStateSupplier;
@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Map;
 
-import ch.qos.logback.classic.Level;
 import io.reactivex.Completable;
 import io.reactivex.subjects.BehaviorSubject;
 import java8.util.Optional;
@@ -75,10 +74,6 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         source.onNext(ConnectionStates.LOADING);
-
-        // set whirlpool log level
-        Level level = BuildConfig.DEBUG ? Level.DEBUG : Level.WARN;
-        ClientUtils.setLogLevel(level, level);
     }
 
     private WhirlpoolWallet getOrOpenWhirlpoolWallet(Context ctx) throws Exception {
@@ -118,7 +113,9 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         FeeUtil feeUtil = FeeUtil.getInstance();
         APIFactory apiFactory = APIFactory.getInstance(ctx);
         UTXOFactory utxoFactory = UTXOFactory.getInstance(ctx);
-        return new AndroidDataSourceFactory(pushTx, feeUtil, apiFactory, utxoFactory);
+        BIP47Util bip47Util = BIP47Util.getInstance(ctx);
+        BIP47Meta bip47Meta = BIP47Meta.getInstance();
+        return new AndroidDataSourceFactory(pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta);
     }
 
     private DataPersisterFactory computeDataPersisterFactory(Context ctx) {
@@ -179,7 +176,7 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
             source.onNext(ConnectionStates.STARTING);
         return Completable.fromCallable(() -> {
             try {
-                this.getOrOpenWhirlpoolWallet(ctx).start();
+                this.getOrOpenWhirlpoolWallet(ctx).startAsync().blockingAwait();
                 if (source.hasObservers()) {
                     source.onNext(ConnectionStates.CONNECTED);
                 }
