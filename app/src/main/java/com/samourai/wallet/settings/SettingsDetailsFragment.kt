@@ -451,7 +451,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
     private fun otherSettings() {
         val aboutPref = findPreference("about") as Preference?
-        aboutPref?.summary = "Samourai," + " " + resources.getString(R.string.version_name)
+        aboutPref?.summary = "Samourai," + " " + BuildConfig.VERSION_NAME
         aboutPref?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val intent = Intent(activity, AboutActivity::class.java)
             startActivity(intent)
