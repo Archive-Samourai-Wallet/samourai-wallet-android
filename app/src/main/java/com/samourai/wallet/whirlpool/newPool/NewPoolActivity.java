@@ -273,10 +273,7 @@ public class NewPoolActivity extends SamouraiActivity {
                 confirmButton.setEnabled(false);
                 Disposable tx0Disposable = beginTx0(selectedCoins)
                         .delay(500, TimeUnit.MILLISECONDS)
-                        .andThen(Completable.fromCallable(() -> {
-                            AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWallet().get().refreshUtxos();
-                            return  false;
-                        }))
+                        .andThen(AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWallet().get().refreshUtxosAsync())
                         .delay(100,TimeUnit.MILLISECONDS)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())

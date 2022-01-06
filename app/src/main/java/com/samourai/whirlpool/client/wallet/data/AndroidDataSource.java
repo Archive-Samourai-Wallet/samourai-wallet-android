@@ -1,11 +1,12 @@
 package com.samourai.whirlpool.client.wallet.data;
 
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.UTXOFactory;
-import com.samourai.wallet.util.AddressFactory;
 import com.samourai.whirlpool.client.tx0.Tx0ParamService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWalletConfig;
@@ -30,7 +31,7 @@ public class AndroidDataSource implements DataSource {
     private ExpirablePoolSupplier poolSupplier;
     private UtxoSupplier utxoSupplier;
 
-    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, DataPersister dataPersister, PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory) throws Exception {
+    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, DataPersister dataPersister, PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory, BIP47Util bip47Util, BIP47Meta bip47Meta) throws Exception {
         this.pushTx = pushTx;
         WalletStateSupplier walletStateSupplier = dataPersister.getWalletStateSupplier();
         this.walletSupplier = new WalletSupplierImpl(bip44w, walletStateSupplier);
@@ -39,7 +40,7 @@ public class AndroidDataSource implements DataSource {
         WhirlpoolWalletConfig config = whirlpoolWallet.getConfig();
         this.tx0ParamService = new Tx0ParamService(minerFeeSupplier, config);
         this.poolSupplier = new ExpirablePoolSupplier(config.getRefreshPoolsDelay(), config.getServerApi(), tx0ParamService);
-        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, dataPersister.getUtxoConfigSupplier(), chainSupplier, poolSupplier, tx0ParamService, config.getNetworkParameters(), utxoFactory);
+        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, dataPersister.getUtxoConfigSupplier(), chainSupplier, poolSupplier, tx0ParamService, config.getNetworkParameters(), utxoFactory, bip47Util, bip47Meta);
     }
 
     @Override

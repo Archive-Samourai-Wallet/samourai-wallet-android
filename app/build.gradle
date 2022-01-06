@@ -11,8 +11,8 @@ android {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 189
-        versionName "0.99.98a"
+        versionCode 190
+        versionName "0.99.98b"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -63,19 +63,19 @@ android {
             applicationId 'com.samourai.wallet'
             minSdkVersion 21
             targetSdkVersion 30
-            versionCode 189
-            versionName "0.99.98a"
+            versionCode 190
+            versionName "0.99.98b"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98a"
+            resValue "string", "version_name", "0.99.98b"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
             minSdkVersion 21
             targetSdkVersion 30
-            versionCode 189
-            versionName "0.99.98a"
+            versionCode 190
+            versionName "0.99.98b"
             resValue "string", "app_name", "Samourai Staging"
-            resValue "string", "version_name", "0.99.98a"
+            resValue "string", "version_name", "0.99.98b"
         }
     }
     testOptions {
@@ -134,7 +134,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation ('io.samourai.code.whirlpool:whirlpool-client:0.23.37') {
+    implementation ('io.samourai.code.whirlpool:whirlpool-client:0.23.37.2') {
         exclude group:'org.hibernate', module:'hibernate-validator'
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
@@ -145,7 +145,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:0.0.26-2') {
+    implementation ('io.samourai.code.wallet:extlibj:0.0.26-3') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'

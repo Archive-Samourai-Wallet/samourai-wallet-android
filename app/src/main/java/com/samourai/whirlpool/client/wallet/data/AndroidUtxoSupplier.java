@@ -2,12 +2,17 @@ package com.samourai.whirlpool.client.wallet.data;
 
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.api.backend.beans.WalletResponse;
+import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.bip47.BIP47Util;
+import com.samourai.wallet.bip47.rpc.PaymentAddress;
+import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.client.BipWallet;
 import com.samourai.wallet.hd.AddressType;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.whirlpool.client.tx0.Tx0ParamService;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
+import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 import com.samourai.whirlpool.client.wallet.data.chain.ChainSupplier;
 import com.samourai.whirlpool.client.wallet.data.pool.PoolSupplier;
 import com.samourai.whirlpool.client.wallet.data.utxo.BasicUtxoSupplier;
@@ -15,6 +20,7 @@ import com.samourai.whirlpool.client.wallet.data.utxo.UtxoData;
 import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
 import com.samourai.whirlpool.client.wallet.data.wallet.WalletSupplier;
 
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +33,8 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     private Logger log = LoggerFactory.getLogger(AndroidUtxoSupplier.class);
 
     private UTXOFactory utxoFactory;
+    private BIP47Util bip47Util;
+    private BIP47Meta bip47Meta;
     private long lastUpdate;
 
     public AndroidUtxoSupplier(WalletSupplier walletSupplier,
@@ -35,9 +43,13 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
                                PoolSupplier poolSupplier,
                                Tx0ParamService tx0ParamService,
                                NetworkParameters params,
-                               UTXOFactory utxoFactory) throws Exception {
+                               UTXOFactory utxoFactory,
+                               BIP47Util bip47Util,
+                               BIP47Meta bip47Meta) throws Exception {
         super(walletSupplier, utxoConfigSupplier, chainSupplier, poolSupplier, tx0ParamService, params);
         this.utxoFactory = utxoFactory;
+        this.bip47Util = bip47Util;
+        this.bip47Meta = bip47Meta;
         this.lastUpdate = -1;
     }
 
@@ -97,5 +109,17 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
             log.debug("set utxos["+whirlpoolAccount+"]["+addressType+"] = "+utxos.size()+" UTXO = "+unspentOutputs.size()+" unspentOutputs");
         }
         return unspentOutputs;
+    }
+
+    @Override
+    public ECKey _getPrivKeyBip47(WhirlpoolUtxo whirlpoolUtxo) throws Exception {
+        String address = whirlpoolUtxo.getUtxo().addr;
+        String pcode = bip47Meta.getPCode4Addr(address);
+        int idx = bip47Meta.getIdx4Addr(address);
+        if (log.isDebugEnabled()) {
+            log.debug("_getPrivKeyBip47: pcode="+pcode+", idx="+idx);
+        }
+        PaymentAddress addr = bip47Util.getReceiveAddress(new PaymentCode(pcode), idx);
+        return addr.getReceiveECKey();
     }
 }
