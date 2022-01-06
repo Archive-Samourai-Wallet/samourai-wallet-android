@@ -10,6 +10,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -450,7 +451,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
     private fun otherSettings() {
         val aboutPref = findPreference("about") as Preference?
-        aboutPref?.summary = "Samourai," + " " + resources.getString(R.string.version_name)
+        aboutPref?.summary = "Samourai," + " " + BuildConfig.VERSION_NAME
         aboutPref?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val intent = Intent(activity, AboutActivity::class.java)
             startActivity(intent)
@@ -693,6 +694,8 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             .setCancelable(false)
             .setPositiveButton(R.string.ok) { dialog, whichButton -> dialog.dismiss() }
             .show()
+
+        LogUtil.debugLarge("Settings", "# INDEXES DEBUG #\n"+builder.toString());
     }
 
     private fun doAddressCalc() {
@@ -823,6 +826,8 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok) { dialog, whichButton -> dialog.dismiss() }
                 .show()
+
+        LogUtil.debugLarge("Settings", "# WHIRLPOOL DEBUG #\n"+builder.toString());
     }
 
     private fun doBroadcastHex() {

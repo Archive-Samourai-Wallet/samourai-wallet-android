@@ -336,8 +336,8 @@ public class WebUtil {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .proxy(TorManager.INSTANCE.getProxy())
-                .connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(90, TimeUnit.SECONDS);
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS);
 
         if(URL.contains("onion")){
             getHostNameVerifier(builder);
@@ -394,7 +394,9 @@ public class WebUtil {
         RequestBody body = RequestBody.create(JSON, jsonToString);
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .proxy(TorManager.INSTANCE.getProxy());
+                .proxy(TorManager.INSTANCE.getProxy())
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS);
 
         if(URL.contains("onion")){
             getHostNameVerifier(builder);

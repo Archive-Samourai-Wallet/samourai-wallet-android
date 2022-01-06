@@ -207,7 +207,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
                         intent.putExtra("launch", false)
                         JobRefreshService.enqueueWork(context, intent)
                     }
-                    wallet.refreshUtxos()
+                    wallet.refreshUtxosAsync().blockingAwait()
                     refresh()
                 }catch (e:Exception){
                     throw  CancellationException()

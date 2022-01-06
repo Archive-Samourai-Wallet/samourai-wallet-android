@@ -3,6 +3,7 @@ package com.samourai.wallet.util;
 import android.util.Log;
 
 import com.samourai.wallet.BuildConfig;
+import com.samourai.whirlpool.client.utils.ClientUtils;
 
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,25 @@ public class LogUtil {
         // skip noisy logs
         ((Logger) LoggerFactory.getLogger("com.samourai.wallet.staging")).setLevel(Level.DEBUG);
 
+        // set whirlpool log level
+        Level level = BuildConfig.DEBUG ? Level.DEBUG : Level.WARN;
+        ClientUtils.setLogLevel(level, level);
+
         Log.d("LogUtil", "Debug logs enabled");
+    }
+
+    /**
+     * Debug large strings to avoid log truncation.
+     * @param tag
+     * @param content
+     */
+    public static void debugLarge(String tag, String content) {
+        if (content.length() > 4000) {
+            Log.d(tag, content.substring(0, 4000));
+            debugLarge(tag, content.substring(4000));
+        } else {
+            Log.d(tag, content);
+        }
     }
 
 }
