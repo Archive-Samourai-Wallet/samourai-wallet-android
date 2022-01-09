@@ -501,7 +501,7 @@
     <string name="advanced">Advanced</string>
     <string name="broadcast_with_txtenna">Broadcast with TxTenna</string>
     <string name="show_qr_code">Show QR Code</string>
-    <string name="tx_connectivity_failure_msg">Cannot broadcast transaction without a data connection. How would you like to proceed</string>
+    <string name="tx_connectivity_failure_msg">Cannot broadcast transaction without a data connection. How would you like to proceed?</string>
 
     <string name="insufficient_fee">Insufficient fee</string>
     <string name="action_utxo_amounts">View amounts by address type</string>
