@@ -55,9 +55,11 @@ object ExternalBackupManager {
         fun ask() {
             if (requireScoped()) {
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                    .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                    .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    .addFlags(
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                    )
                 activity.startActivityForResult(intent, STORAGE_REQ_CODE)
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -228,7 +230,9 @@ object ExternalBackupManager {
             if (backupDirectoryUri == null) {
                 return false
             }
-            return backupDirectoryUri!!.isWritePermission || backupDirectoryUri!!.isReadPermission
+            val directory =
+                DocumentFile.fromTreeUri(appContext,backupDirectoryUri!!.uri) ?: return false;
+            return directory.canRead() && directory.canWrite();
         } else {
             return hasPermission()
         }
