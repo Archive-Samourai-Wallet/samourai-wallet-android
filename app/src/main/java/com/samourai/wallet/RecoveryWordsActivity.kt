@@ -152,7 +152,7 @@ class RecoveryWordsActivity : AppCompatActivity() {
                 bundle.getStringArrayList(WORD_LIST)
                         ?.let {
                             if (it.size == 12) {
-                                it.map { word -> "(${it.indexOf(word) + 1}) $word" }
+                                it.mapIndexed{ index,word -> "(${index+ 1}) $word" }
                                         .forEachIndexed { index, word ->
                                             run {
                                                 when (index) {
