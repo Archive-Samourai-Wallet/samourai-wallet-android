@@ -69,7 +69,7 @@ class SelectPoolFragment : Fragment() {
             newPoolViewModel.loadPools()
         }
         newPoolViewModel.getTx0PoolPriority.observe(this.viewLifecycleOwner, { poolCyclePriority: PoolCyclePriority -> setPoolCyclePriority(poolCyclePriority) })
-        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
+        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet()
         if (wallet != null) {
             fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_24).toLong())
             fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_6).toLong())

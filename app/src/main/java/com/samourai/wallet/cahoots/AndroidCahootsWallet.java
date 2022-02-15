@@ -11,7 +11,7 @@ import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.util.AddressFactory;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.bitcoinj.core.ECKey;
 
@@ -42,7 +42,7 @@ public class AndroidCahootsWallet extends CahootsWallet {
     @Override
     protected List<CahootsUtxo> fetchUtxos(int account) {
         List<UTXO> apiUtxos;
-        if(account == WhirlpoolAccount.POSTMIX.getAccountIndex())    {
+        if(account == SamouraiAccountIndex.POSTMIX)    {
             apiUtxos = apiFactory.getUtxosPostMix(true);
         }
         else    {

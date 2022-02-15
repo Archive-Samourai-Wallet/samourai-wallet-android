@@ -25,4 +25,9 @@ public class AndroidHttpClientService implements IHttpClientService {
     public AndroidHttpClient getHttpClient(HttpUsage httpUsage) {
         return AndroidHttpClient.getInstance(ctx);
     }
+
+    @Override
+    public void stop() {
+        // nothing to do
+    }
 }

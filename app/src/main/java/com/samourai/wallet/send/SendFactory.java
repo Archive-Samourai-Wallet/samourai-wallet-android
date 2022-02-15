@@ -12,9 +12,9 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.bip69.BIP69OutputComparator;
-import com.samourai.wallet.hd.AddressType;
+import com.samourai.wallet.bipFormat.BIP_FORMAT;
+import com.samourai.wallet.bipFormat.BipFormat;
 import com.samourai.wallet.hd.HD_Address;
-import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP49Util;
@@ -38,7 +38,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
-import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
@@ -46,7 +45,6 @@ import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.script.ScriptOpCodes;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -711,17 +709,17 @@ public class SendFactory	{
 
         if(account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix())    {
             // POSTMIX
-            AddressType forcedAddressType = AddressType.SEGWIT_NATIVE;
+            BipFormat forcedBipFormat = BIP_FORMAT.SEGWIT_NATIVE;
             if((type == 44 || type == 49) && useLikeType)    {
                 if(type == 49)    {
-                    forcedAddressType = AddressType.SEGWIT_COMPAT;
+                    forcedBipFormat = BIP_FORMAT.SEGWIT_COMPAT;
                 }
                 else {
-                    forcedAddressType = AddressType.LEGACY;
+                    forcedBipFormat = BIP_FORMAT.LEGACY;
                 }
             }
             // get & increment
-            Pair<Integer, String> postmixChange = AddressFactory.getInstance(context).getAddressAndIncrement(WALLET_INDEX.POSTMIX_CHANGE, forcedAddressType);
+            Pair<Integer, String> postmixChange = AddressFactory.getInstance(context).getAddressAndIncrement(WALLET_INDEX.POSTMIX_CHANGE, forcedBipFormat);
             debug("SendFactory", "change index:" + postmixChange.getLeft());
             return postmixChange.getRight();
         }

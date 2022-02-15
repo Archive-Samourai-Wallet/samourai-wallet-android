@@ -43,7 +43,6 @@ import java.util.Map;
 
 import io.reactivex.Completable;
 import io.reactivex.subjects.BehaviorSubject;
-import java8.util.Optional;
 
 public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
     private static final Logger LOG = LoggerFactory.getLogger(AndroidWhirlpoolWalletService.class);
@@ -77,18 +76,18 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
     }
 
     private WhirlpoolWallet getOrOpenWhirlpoolWallet(Context ctx) throws Exception {
-        Optional<WhirlpoolWallet> whirlpoolWalletOpt = getWhirlpoolWallet();
-        if (!whirlpoolWalletOpt.isPresent()) {
+        WhirlpoolWallet whirlpoolWallet = whirlpoolWallet();
+        if (whirlpoolWallet == null) {
             WhirlpoolWalletConfig config = computeWhirlpoolWalletConfig(ctx);
 
             // wallet closed => open WhirlpoolWallet
             HD_Wallet bip84w = BIP84Util.getInstance(ctx).getWallet();
             String walletIdentifier = whirlpoolUtils.computeWalletIdentifier(bip84w); // preserve android filenames
-            WhirlpoolWallet whirlpoolWallet = new WhirlpoolWallet(config, bip84w.getSeed(), bip84w.getPassphrase(), walletIdentifier);
+            whirlpoolWallet = new WhirlpoolWallet(config, bip84w.getSeed(), bip84w.getPassphrase(), walletIdentifier);
             return openWallet(whirlpoolWallet);
         }
         // wallet already opened
-        return whirlpoolWalletOpt.get();
+        return whirlpoolWallet;
     }
 
     protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(Context ctx) {
@@ -154,6 +153,7 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
                 new WhirlpoolWalletConfig(dataSourceFactory,
                         httpClientService, stompClientService, torClientService, serverApi, params, true);
         whirlpoolWalletConfig.setSecretPointFactory(AndroidSecretPointFactory.getInstance());
+        whirlpoolWalletConfig.setBip47Util(BIP47Util.getInstance(ctx));
         whirlpoolWalletConfig.setDataPersisterFactory(dataPersisterFactory);
 
         whirlpoolWalletConfig.setAutoTx0PoolId(null); // disable auto-tx0
@@ -193,16 +193,12 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         if (source.hasObservers()) {
             source.onNext(ConnectionStates.DISCONNECTED);
         }
-        if (getWhirlpoolWallet().isPresent()) {
+        if (whirlpoolWallet() != null) {
             closeWallet();
         }
     }
 
     public BehaviorSubject<ConnectionStates> listenConnectionStatus() {
         return source;
-    }
-
-    public WhirlpoolWallet getWhirlpoolWalletOrNull() {
-        return getWhirlpoolWallet().orElse(null);
     }
 }

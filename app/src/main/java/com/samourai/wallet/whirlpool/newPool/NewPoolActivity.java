@@ -307,7 +307,7 @@ public class NewPoolActivity extends SamouraiActivity {
 
     private Completable beginTx0(List<UTXOCoin> coins) {
         return Completable.fromCallable(() -> {
-            WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
+            WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet();
             if (whirlpoolWallet == null) {
                 return true;
             }

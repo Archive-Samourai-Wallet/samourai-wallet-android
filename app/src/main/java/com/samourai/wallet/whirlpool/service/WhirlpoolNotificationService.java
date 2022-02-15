@@ -29,7 +29,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import java8.util.Optional;
 
 import static androidx.core.app.NotificationCompat.GROUP_ALERT_SUMMARY;
 import static com.samourai.wallet.SamouraiApplication.WHIRLPOOL_CHANNEL;
@@ -67,7 +66,7 @@ public class WhirlpoolNotificationService extends Service {
 
     private void listenService() {
         try {
-            WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
+            WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet();
             if (whirlpoolWallet == null) {
                 // whirlpool wallet not opened yet
                 return;
@@ -186,7 +185,7 @@ public class WhirlpoolNotificationService extends Service {
     }
 
     private void setMixState(NotificationCompat.Builder builder) {
-        WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
+        WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet();
         if (whirlpoolWallet != null) {
             MixingState mixingState = whirlpoolWallet.getMixingState();
             builder.setContentTitle("Whirlpool online: ".concat(String.valueOf(mixingState.getNbMixing()))

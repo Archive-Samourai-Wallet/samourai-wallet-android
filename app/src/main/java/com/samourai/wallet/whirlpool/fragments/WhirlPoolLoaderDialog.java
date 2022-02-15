@@ -105,7 +105,7 @@ public class WhirlPoolLoaderDialog extends BottomSheetDialogFragment {
                                     .interval(600, TimeUnit.MILLISECONDS)
                                     .subscribeOn(Schedulers.io())
                                     .flatMap(aLong -> Observable.fromCallable(() -> {
-                                        WhirlpoolWallet wallet = androidWhirlpoolWalletService.getWhirlpoolWalletOrNull();
+                                        WhirlpoolWallet wallet = androidWhirlpoolWalletService.whirlpoolWallet();
                                         if (wallet != null) {
                                             return wallet.isStarted();
                                         }
@@ -113,7 +113,7 @@ public class WhirlPoolLoaderDialog extends BottomSheetDialogFragment {
                                     }))
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe(isInitialized -> {
-                                        WhirlpoolWallet wallet = androidWhirlpoolWalletService.getWhirlpoolWalletOrNull();
+                                        WhirlpoolWallet wallet = androidWhirlpoolWalletService.whirlpoolWallet();
                                         if (wallet != null) {
                                             if (wallet.isStarted()) {
                                                 onInitComplete.init();

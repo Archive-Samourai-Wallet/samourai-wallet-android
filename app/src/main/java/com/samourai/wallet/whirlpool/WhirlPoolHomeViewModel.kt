@@ -134,7 +134,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
     }
 
     private fun loadUtxos() {
-        val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
+        val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet()
         if (whirlpoolWallet != null) {
 
             val disposable = whirlpoolWallet.mixingState.observable
@@ -195,7 +195,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
 
 
     fun refreshList(context:Context) {
-        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull;
+        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet();
         if (wallet != null) {
             setRefresh(true)
             viewModelScope.launch(Dispatchers.IO) {

@@ -10,7 +10,6 @@ import android.os.Looper
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -24,12 +23,10 @@ import androidx.transition.Transition
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.*
 import com.samourai.wallet.access.AccessFactory
-import com.samourai.wallet.api.backend.MinerFeeTarget
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
-import com.samourai.wallet.hd.Chain
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.network.dojo.DojoUtil
@@ -44,9 +41,9 @@ import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
-import com.samourai.whirlpool.client.utils.ClientUtils
+import com.samourai.whirlpool.client.utils.DebugUtils
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import io.matthewnelson.topl_service.TorServiceController
 import kotlinx.coroutines.*
@@ -527,7 +524,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         }
 
         when (account) {
-            WhirlpoolAccount.POSTMIX.accountIndex -> {
+            SamouraiAccountIndex.POSTMIX -> {
                 if(purpose == 49){
                     dialogTitle = "Whirlpool Post-mix YPUB"
                 }
@@ -538,10 +535,10 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                     dialogTitle = "Whirlpool Post-mix ZPUB"
                 }
             }
-            WhirlpoolAccount.PREMIX.accountIndex -> {
+            SamouraiAccountIndex.PREMIX -> {
                 dialogTitle = "Whirlpool Pre-mix ZPUB"
             }
-            WhirlpoolAccount.BADBANK.accountIndex -> {
+            SamouraiAccountIndex.BADBANK -> {
                 dialogTitle = "Whirlpool Bad bank ZPUB"
             }
             else -> dialogTitle
@@ -721,113 +718,17 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
     private fun doWhirlpoolState() {
         val whirlpoolWalletService = AndroidWhirlpoolWalletService.getInstance()
-        val whirlpoolWallet = whirlpoolWalletService.whirlpoolWalletOrNull
-        val builder = StringBuilder()
+        val whirlpoolWallet = whirlpoolWalletService.whirlpoolWallet()
+        val debugInfo = DebugUtils.getDebug(whirlpoolWallet)
 
-        // whirlpool wallet status
-        if (whirlpoolWallet == null) {
-            builder.append("WHIRLPOOL IS CLOSED\n")
-        } else {
-            val SEPARATOR = "---------------------------\n"
-            val mixingState = whirlpoolWallet.mixingState
-            val walletSupplier = whirlpoolWallet.walletSupplier
-            builder.append("""
-    WHIRLPOOL IS ${if (mixingState.isStarted) "RUNNING" else "STOPPED"}
-    
-    
-    """.trimIndent())
-            builder.append("""${mixingState.nbQueued} QUEUED (${mixingState.nbQueuedMustMix}+${mixingState.nbQueuedLiquidity})
-""")
-
-            builder.append("Total = "+ ClientUtils.satToBtc(whirlpoolWallet.utxoSupplier.balanceTotal)+"btc\n");
-            builder.append("Updated = "+whirlpoolWallet.utxoSupplier.lastUpdate+"\n");
-
-            // mixing threads
-            builder.append("\n")
-            builder.append(SEPARATOR)
-            builder.append("""${mixingState.nbMixing} MIXING (${mixingState.nbMixingMustMix}+${mixingState.nbMixingLiquidity})
-""")
-            for (whirlpoolUtxo in mixingState.utxosMixing) {
-                val mixProgress = whirlpoolUtxo.utxoState.mixProgress
-                if (mixProgress != null) {
-                    builder.append("* ").append("""
-    ${utxoToString(whirlpoolUtxo)}
-    
-    """.trimIndent())
-                }
-            }
-
-            // wallet state
-            builder.append(SEPARATOR)
-            builder.append("# WALLETS\n");
-            for (account in WhirlpoolAccount.values()) {
-                for (addressType in account.getAddressTypes()) {
-                    builder.append("- WALLET[$account][$addressType]:\n");
-                    val wallet = walletSupplier.getWallet(account, addressType);
-                    builder.append("pub = "+wallet.pub+"\n");
-
-                    for (chain in Chain.values()) {
-                        var indexHandler =
-                            whirlpoolWallet.walletStateSupplier.getIndexHandlerWallet(
-                                account,
-                                addressType,
-                                chain
-                            );
-                        var index = indexHandler.get();
-                        builder.append(""+chain+"_INDEX = "+index+"\n");
-                    }
-
-                    val utxos = whirlpoolWallet.utxoSupplier.findUtxos(addressType, account)
-                    builder.append(""+utxos.size+" utxos\n");
-                    builder.append("\n")
-                }
-            }
-
-            // chain
-            builder.append(SEPARATOR)
-            builder.append("# LATEST BLOCK\n");
-            val latestBlock = whirlpoolWallet.chainSupplier.latestBlock;
-            builder.append("height="+latestBlock.height+"\n");
-            builder.append("hash="+latestBlock.hash+"\n");
-            builder.append("time="+latestBlock.time+"\n");
-
-            // chain
-            builder.append(SEPARATOR)
-            builder.append("# MINER FEE\n");
-            val minerFeeSupplier = whirlpoolWallet.minerFeeSupplier;
-            for (minerFeeTarget in MinerFeeTarget.values()) {
-                val value = minerFeeSupplier.getFee(minerFeeTarget);
-                builder.append("FEE[$minerFeeTarget]=$value\n");
-            }
-
-            // utxos
-            builder.append(SEPARATOR)
-            builder.append("# UTXOS\n");
-            for (account in WhirlpoolAccount.values()) {
-                for (addressType in account.getAddressTypes()) {
-                    val utxos = whirlpoolWallet.utxoSupplier.findUtxos(addressType, account)
-                    builder.append("- UTXOS[$account][$addressType] (" + utxos.size + "):\n");
-
-                    for (whirlpoolUtxo in utxos) {
-                        builder.append("* ").append(
-                            """
-    ${utxoToString(whirlpoolUtxo)}
-    
-    """.trimIndent()
-                        )
-                    }
-                    builder.append("\n")
-                }
-            }
-        }
         MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.app_name)
-                .setMessage(builder.toString())
+                .setMessage(debugInfo)
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok) { dialog, whichButton -> dialog.dismiss() }
                 .show()
 
-        LogUtil.debugLarge("Settings", "# WHIRLPOOL DEBUG #\n"+builder.toString());
+        LogUtil.debugLarge("Settings", "# WHIRLPOOL DEBUG #\n"+debugInfo);
     }
 
     private fun doBroadcastHex() {

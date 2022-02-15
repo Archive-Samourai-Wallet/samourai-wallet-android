@@ -95,7 +95,7 @@ public class WhirlpoolUtils {
 
     public Collection<String> getWhirlpoolTags(UTXOCoin item, Context ctx ) {
         List<String> tags = new LinkedList<>();
-        WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
+        WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet();
         if (whirlpoolWallet != null) {
             WhirlpoolUtxo whirlpoolUtxo = whirlpoolWallet.getUtxoSupplier().findUtxo(item.hash, item.idx);
 

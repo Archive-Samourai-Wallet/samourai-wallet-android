@@ -28,6 +28,7 @@ import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
@@ -131,7 +132,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
 
                 holder.tvAmount.setTextColor(ContextCompat.getColor(mContext, R.color.white));
                 holder.tvAmount.setText("-".concat(is_sat_prefs ? FormatsUtil.formatSats(_amount) : FormatsUtil.formatBTC(_amount)));
-                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex()){
+                if(account==SamouraiAccountIndex.POSTMIX){
                     holder.txSubText.setVisibility(View.VISIBLE);
                     holder.txSubText.setText(R.string.postmix_spend);
                 }else{
@@ -145,7 +146,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
 
                 holder.tvAmount.setText(amount);
                 holder.tvAmount.setTextColor(ContextCompat.getColor(mContext, R.color.green_ui_2));
-                if(account==WhirlpoolAccount.POSTMIX.getAccountIndex() ){
+                if(account==SamouraiAccountIndex.POSTMIX ){
                     if(_amount == 0){
                         holder.txSubText.setVisibility(View.VISIBLE);
                         holder.txSubText.setText(R.string.remix_note_tag);
@@ -161,7 +162,7 @@ public class TxAdapter extends RecyclerView.Adapter<TxAdapter.TxViewHolder> {
                 }
             }
 
-            if (this.account == WhirlpoolAccount.POSTMIX.getAccountIndex() && _amount == 0) {
+            if (this.account == SamouraiAccountIndex.POSTMIX && _amount == 0) {
                 holder.tvDirection.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_repeat_24dp));
             }
 

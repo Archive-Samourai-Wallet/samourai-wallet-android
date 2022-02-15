@@ -1,13 +1,10 @@
 package com.samourai.wallet.send.soroban.meeting;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,8 +20,6 @@ import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
 import com.samourai.wallet.util.AppUtil;
-import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.squareup.picasso.Picasso;
 
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import java8.util.Optional;
 
 public class SorobanMeetingSendActivity extends SamouraiActivity {
 
@@ -40,7 +34,7 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
     private SorobanMeetingService sorobanMeetingService;
     private static final int TIMEOUT_MS = 120000;
 
-    private WhirlpoolAccount account;
+    private int accountIndex;
     private CahootsType cahootsType;
     private long sendAmount;
     private String sendAddress;
@@ -89,21 +83,11 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
         startListen();
     }
 
-    // TODO remove on next whirlpool-client upgrade
-    public static Optional<WhirlpoolAccount> findWhirlpoolAccount(int index) {
-        for (WhirlpoolAccount whirlpoolAccount : WhirlpoolAccount.values()) {
-            if (whirlpoolAccount.getAccountIndex() == index) {
-                return Optional.of(whirlpoolAccount);
-            }
-        }
-        return Optional.empty();
-    }
-
     private void parsePayloadIntent() {
 
         try {
             if (getIntent().hasExtra("_account")) {
-                account = findWhirlpoolAccount(getIntent().getIntExtra("_account", 0)).get();
+                accountIndex = getIntent().getIntExtra("_account", 0);
             }
             if (getIntent().hasExtra("type")) {
                 int type = getIntent().getIntExtra("type", -1);
@@ -170,7 +154,7 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
                                         .subscribe(sorobanResponse -> {
                                             if (sorobanResponse.isAccept()) {
                                                 Toast.makeText(getApplicationContext(), "Cahoots request accepted!", Toast.LENGTH_LONG).show();
-                                                Intent intent = SorobanCahootsActivity.createIntentSender(this, account.getAccountIndex(), cahootsType, sendAmount, sendAddress, pcode);
+                                                Intent intent = SorobanCahootsActivity.createIntentSender(this, accountIndex, cahootsType, sendAmount, sendAddress, pcode);
                                                 startActivity(intent);
                                             } else {
                                                 Toast.makeText(getApplicationContext(), "Cahoots request refused!", Toast.LENGTH_LONG).show();

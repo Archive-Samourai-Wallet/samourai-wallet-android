@@ -66,7 +66,7 @@ class WhirlpoolHome : SamouraiActivity() {
         whirlPoolLoaderDialog.setOnInitComplete {
             initPager()
         }
-        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
+        val wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet()
         if (wallet == null) {
             whirlPoolLoaderDialog.show(supportFragmentManager, whirlPoolLoaderDialog.tag)
         } else {
