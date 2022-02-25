@@ -13,12 +13,12 @@ import com.samourai.whirlpool.client.wallet.data.dataSource.DataSource;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceFactory;
 
 public class AndroidDataSourceFactory implements DataSourceFactory {
-    private PushTx pushTx;
-    private FeeUtil feeUtil;
-    private APIFactory apiFactory;
-    private UTXOFactory utxoFactory;
-    private BIP47Util bip47Util;
-    private BIP47Meta bip47Meta;
+    protected PushTx pushTx;
+    protected FeeUtil feeUtil;
+    protected APIFactory apiFactory;
+    protected UTXOFactory utxoFactory;
+    protected BIP47Util bip47Util;
+    protected BIP47Meta bip47Meta;
 
     public AndroidDataSourceFactory(PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory, BIP47Util bip47Util, BIP47Meta bip47Meta) {
         this.pushTx = pushTx;

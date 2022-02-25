@@ -1,10 +1,8 @@
 package com.samourai.stomp.client;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.ITorManager;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
@@ -23,6 +21,8 @@ import java.util.TreeMap;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import ua.naiksoftware.stomp.dto.LifecycleEvent;
 import ua.naiksoftware.stomp.provider.AbstractConnectionProvider;
 
@@ -39,14 +39,14 @@ public class AndroidWebSocketsConnectionProvider extends AbstractConnectionProvi
     private boolean haveConnection;
     private TreeMap<String, String> mServerHandshakeHeaders;
 
-    private TorManager torManager;
+    private ITorManager torManager;
 
     /**
      * Support UIR scheme ws://host:port/path
      *
      * @param connectHttpHeaders may be null
      */
-    public AndroidWebSocketsConnectionProvider(String uri, @Nullable Map<String, String> connectHttpHeaders, TorManager torManager) {
+    public AndroidWebSocketsConnectionProvider(String uri, @Nullable Map<String, String> connectHttpHeaders, ITorManager torManager) {
         mUri = uri;
         mConnectHttpHeaders = connectHttpHeaders != null ? connectHttpHeaders : new HashMap<>();
         this.torManager = torManager;

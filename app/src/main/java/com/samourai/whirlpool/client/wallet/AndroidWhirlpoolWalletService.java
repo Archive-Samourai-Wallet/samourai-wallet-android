@@ -21,24 +21,20 @@ import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.UTXOFactory;
+import com.samourai.wallet.tor.ITorManager;
 import com.samourai.wallet.tor.TorManager;
-import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
-import com.samourai.whirlpool.client.exception.NotifiableException;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolServer;
 import com.samourai.whirlpool.client.wallet.data.AndroidDataSourceFactory;
-import com.samourai.whirlpool.client.wallet.data.AndroidWalletStateSupplier;
+import com.samourai.whirlpool.client.wallet.data.dataPersister.AndroidFileDataPersisterFactory;
 import com.samourai.whirlpool.client.wallet.data.dataPersister.DataPersisterFactory;
-import com.samourai.whirlpool.client.wallet.data.dataPersister.FileDataPersisterFactory;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceFactory;
-import com.samourai.whirlpool.client.wallet.data.walletState.WalletStateSupplier;
 import com.samourai.whirlpool.client.whirlpool.ServerApi;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.Map;
 
 import io.reactivex.Completable;
@@ -108,7 +104,7 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         return computeWhirlpoolWalletConfig(torManager, testnet, onion, scode, httpClientService, ctx);
     }
 
-    private DataSourceFactory computeDataSourceFactory(Context ctx) {
+    protected DataSourceFactory computeDataSourceFactory(Context ctx) {
         PushTx pushTx = PushTx.getInstance(ctx);
         FeeUtil feeUtil = FeeUtil.getInstance();
         APIFactory apiFactory = APIFactory.getInstance(ctx);
@@ -118,27 +114,11 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         return new AndroidDataSourceFactory(pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta);
     }
 
-    private DataPersisterFactory computeDataPersisterFactory(Context ctx) {
-        return new FileDataPersisterFactory() {
-            @Override
-            protected File computeFileIndex(String walletIdentifier) throws NotifiableException {
-                return whirlpoolUtils.computeIndexFile(walletIdentifier, ctx);
-            }
-
-            @Override
-            protected File computeFileUtxos(String walletIdentifier) throws NotifiableException {
-                return whirlpoolUtils.computeUtxosFile(walletIdentifier, ctx);
-            }
-
-            @Override
-            protected WalletStateSupplier computeWalletStateSupplier(WhirlpoolWallet whirlpoolWallet) {
-                AddressFactory addressFactory = AddressFactory.getInstance(ctx);
-                return new AndroidWalletStateSupplier(addressFactory);
-            }
-        };
+    protected DataPersisterFactory computeDataPersisterFactory(Context ctx) {
+        return new AndroidFileDataPersisterFactory(whirlpoolUtils, ctx);
     }
 
-    protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(TorManager torManager, boolean testnet, boolean onion, String scode, IHttpClientService httpClientService, Context ctx) {
+    protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(ITorManager torManager, boolean testnet, boolean onion, String scode, IHttpClientService httpClientService, Context ctx) {
         IStompClientService stompClientService = new AndroidStompClientService(torManager);
         TorClientService torClientService = new AndroidWhirlpoolTorService(torManager);
 
