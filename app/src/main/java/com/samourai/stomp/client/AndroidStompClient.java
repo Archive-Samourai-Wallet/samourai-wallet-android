@@ -1,7 +1,7 @@
 package com.samourai.stomp.client;
 
 import com.google.gson.Gson;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.ITorManager;
 import com.samourai.wallet.util.MessageErrorListener;
 import com.samourai.whirlpool.protocol.WhirlpoolProtocol;
 
@@ -28,10 +28,10 @@ import ua.naiksoftware.stomp.dto.StompMessage;
 public class AndroidStompClient implements IStompClient {
     private Logger log = LoggerFactory.getLogger(AndroidStompClient.class);
     private Gson gson;
-    private TorManager torManager;
+    private ITorManager torManager;
     private StompClient stompClient;
 
-    public AndroidStompClient(TorManager torManager) {
+    public AndroidStompClient(ITorManager torManager) {
         this.gson = new Gson();
         this.torManager = torManager;
     }

@@ -1,18 +1,13 @@
 package com.samourai.wallet.send;
 
 import android.content.Context;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.tor.TorManager;
-import com.samourai.wallet.util.LogUtil;
-import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.WebUtil;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -76,6 +71,7 @@ public class PushTx {
             return response;
         }
         catch(Exception e) {
+            e.printStackTrace();
             return null;
         }
 

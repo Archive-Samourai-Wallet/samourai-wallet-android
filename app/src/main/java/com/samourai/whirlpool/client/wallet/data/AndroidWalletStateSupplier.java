@@ -1,5 +1,6 @@
 package com.samourai.whirlpool.client.wallet.data;
 
+import com.samourai.wallet.client.indexHandler.AddressFactoryWalletStateIndexHandler;
 import com.samourai.wallet.client.indexHandler.IIndexHandler;
 import com.samourai.wallet.hd.AddressType;
 import com.samourai.wallet.hd.Chain;
@@ -26,7 +27,7 @@ public class AndroidWalletStateSupplier implements WalletStateSupplier {
         IIndexHandler indexHandlerWallet = indexHandlerWallets.get(persistKey);
         if (indexHandlerWallet == null) {
             WALLET_INDEX walletIndex = WALLET_INDEX.find(account, addressType, chain);
-            indexHandlerWallet = new AndroidWalletStateIndexHandler(addressFactory, walletIndex);
+            indexHandlerWallet = new AddressFactoryWalletStateIndexHandler(addressFactory, walletIndex);
             indexHandlerWallets.put(persistKey, indexHandlerWallet);
         }
         return indexHandlerWallet;
