@@ -60,8 +60,9 @@ public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
         IHttpClient httpClient = httpClientService.getHttpClient(HttpUsage.BACKEND);
         BackendApi backendApi = new BackendApi(httpClient, BackendServer.TESTNET.getBackendUrl(onion), null) {
             @Override
-            public void pushTx(String txHex) throws Exception {
+            public String pushTx(String txHex) throws Exception {
                 log.info("pushTX ignored for test: "+txHex);
+                return "txid-test";
             }
         };
 
@@ -85,7 +86,7 @@ public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
     @Ignore
     public void testStart() throws Exception {
         // start whirlpool wallet
-        whirlpoolWallet.start();
+        whirlpoolWallet.startAsync().blockingAwait();
 
         // list pools
         Collection<Pool> pools = whirlpoolWallet.getPoolSupplier().getPools();

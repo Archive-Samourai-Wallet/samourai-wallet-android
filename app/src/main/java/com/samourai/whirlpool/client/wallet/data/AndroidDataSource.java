@@ -1,5 +1,7 @@
 package com.samourai.whirlpool.client.wallet.data;
 
+import android.util.Pair;
+
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
@@ -11,6 +13,7 @@ import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.UTXOFactory;
+import com.samourai.whirlpool.client.exception.NotifiableException;
 import com.samourai.whirlpool.client.tx0.Tx0PreviewService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWalletConfig;
@@ -59,8 +62,12 @@ public class AndroidDataSource implements DataSource {
     }
 
     @Override
-    public void pushTx(String txHex) throws Exception {
-        pushTx.pushTx(txHex);
+    public String pushTx(String txHex) throws Exception {
+        Pair<Boolean,String> result = pushTx.pushTx(txHex);
+        if (!result.first) {
+            throw new NotifiableException("pushTx failed");
+        }
+        return result.second; // txid
     }
 
     @Override

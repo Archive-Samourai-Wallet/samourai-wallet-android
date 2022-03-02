@@ -86,7 +86,7 @@ public class CahootReviewFragment extends Fragment {
 
                         boolean success = false;
                         try {
-                            success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize()));
+                            success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize())).first;
                             if (success) {
                                 getActivity().runOnUiThread(() -> {
                                     Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
