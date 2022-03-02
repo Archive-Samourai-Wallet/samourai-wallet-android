@@ -698,7 +698,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                     progressBar.visibility = View.VISIBLE
 
                     val job = scope.launch(Dispatchers.IO) {
-                        var tx = SendFactory.getInstance(this@PayNymDetailsActivity).makeTransaction(0, outpoints, receivers)
+                        var tx = SendFactory.getInstance(this@PayNymDetailsActivity).makeTransaction(outpoints, receivers)
                         if (tx != null) {
                             val input0hash = tx.getInput(0L).outpoint.hash.toString()
                             val input0index = tx.getInput(0L).outpoint.index.toInt()

@@ -6,24 +6,24 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Looper;
-import android.widget.Toast;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.SegwitAddress;
+import com.samourai.wallet.send.exceptions.SignTxException;
 import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.PrivKeyReader;
-import com.samourai.wallet.R;
 
 import org.bitcoinj.core.Coin;
+import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -155,36 +155,38 @@ public class SweepUtil  {
 
                                 final HashMap<String, BigInteger> receivers = new HashMap<String, BigInteger>();
                                 receivers.put(receive_address, BigInteger.valueOf(amount));
-                                org.bitcoinj.core.Transaction tx = SendFactory.getInstance(context).makeTransaction(0, outpoints, receivers);
+                                org.bitcoinj.core.Transaction tx = SendFactory.getInstance(context).makeTransaction(outpoints, receivers);
 
-                                tx = SendFactory.getInstance(context).signTransactionForSweep(tx, privKeyReader);
-                                Log.d("SweepUtil", "tx size:" + tx.bitcoinSerialize().length);
-                                final String hexTx = new String(Hex.encode(tx.bitcoinSerialize()));
+                                try {
+                                    tx = SendFactory.getInstance(context).signTransactionForSweep(tx, privKeyReader);
+                                    Log.d("SweepUtil", "tx size:" + tx.bitcoinSerialize().length);
+                                    final String hexTx = new String(Hex.encode(tx.bitcoinSerialize()));
 //                                Log.d("BalanceActivity", hexTx);
 
-                                String response = null;
-                                try {
-                                    response = PushTx.getInstance(context).samourai(hexTx, null);
+                                    String response = null;
+                                    try {
+                                        response = PushTx.getInstance(context).samourai(hexTx, null);
 
-                                    if(response != null)    {
-                                        JSONObject jsonObject = new org.json.JSONObject(response);
-                                        if(jsonObject.has("status"))    {
-                                            if(jsonObject.getString("status").equals("ok"))    {
-                                                Toast.makeText(context, R.string.tx_sent, Toast.LENGTH_SHORT).show();
-                                                Intent intent = new Intent(context, JobRefreshService.class);
-                                                intent.putExtra("notifTx", false);
-                                                intent.putExtra("dragged", false);
-                                                intent.putExtra("launch", false);
-                                                JobRefreshService.enqueueWork(context.getApplicationContext(), intent);
+                                        if (response != null) {
+                                            JSONObject jsonObject = new org.json.JSONObject(response);
+                                            if (jsonObject.has("status")) {
+                                                if (jsonObject.getString("status").equals("ok")) {
+                                                    Toast.makeText(context, R.string.tx_sent, Toast.LENGTH_SHORT).show();
+                                                    Intent intent = new Intent(context, JobRefreshService.class);
+                                                    intent.putExtra("notifTx", false);
+                                                    intent.putExtra("dragged", false);
+                                                    intent.putExtra("launch", false);
+                                                    JobRefreshService.enqueueWork(context.getApplicationContext(), intent);
+                                                }
                                             }
+                                        } else {
+                                            Toast.makeText(context, R.string.pushtx_returns_null, Toast.LENGTH_SHORT).show();
                                         }
+                                    } catch (JSONException je) {
+                                        Toast.makeText(context, "pushTx:" + je.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
-                                    else    {
-                                        Toast.makeText(context, R.string.pushtx_returns_null, Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                                catch(JSONException je) {
-                                    Toast.makeText(context, "pushTx:" + je.getMessage(), Toast.LENGTH_SHORT).show();
+                                } catch (SignTxException e) {
+                                    Toast.makeText(context, "signTx:" + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 }
 
                                 if(progress != null && progress.isShowing())    {

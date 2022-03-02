@@ -1604,7 +1604,7 @@ public class SendActivity extends SamouraiActivity {
                     // fee sanity check
                     //
                     restoreChangeIndexes();
-                    Transaction tx = SendFactory.getInstance(SendActivity.this).makeTransaction(account, outpoints, receivers);
+                    Transaction tx = SendFactory.getInstance(SendActivity.this).makeTransaction(outpoints, receivers);
                     tx = SendFactory.getInstance(SendActivity.this).signTransaction(tx, account);
                     byte[] serialized = tx.bitcoinSerialize();
                     Log.d("SendActivity", "size:" + serialized.length);
@@ -2079,8 +2079,7 @@ public class SendActivity extends SamouraiActivity {
                     _receivers.put(change_address, BigInteger.valueOf(_change));
                 }
             }
-            final Transaction tx = SendFactory.getInstance(getApplication()).makeTransaction(account,
-                    outPoints, _receivers);
+            final Transaction tx = SendFactory.getInstance(getApplication()).makeTransaction(outPoints, _receivers);
             return SendFactory.getInstance(getApplication()).signTransaction(tx, account);
         })
                 .subscribeOn(Schedulers.computation())

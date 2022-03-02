@@ -111,7 +111,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
         progressView.getmArcProgress().startArc1(arcdelay);
 
         // make tx
-        final Transaction tx = SendFactory.getInstance(TxAnimUIActivity.this).makeTransaction(SendParams.getInstance().getAccount(), SendParams.getInstance().getOutpoints(), SendParams.getInstance().getReceivers());
+        final Transaction tx = SendFactory.getInstance(TxAnimUIActivity.this).makeTransaction(SendParams.getInstance().getOutpoints(), SendParams.getInstance().getReceivers());
         if (tx == null) {
             failTx(R.string.tx_creating_ko);
         } else {
