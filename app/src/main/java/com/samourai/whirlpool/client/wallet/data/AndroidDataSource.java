@@ -48,7 +48,7 @@ public class AndroidDataSource implements DataSource {
         this.tx0PreviewService = new Tx0PreviewService(minerFeeSupplier, config);
         this.poolSupplier = new ExpirablePoolSupplier(config.getRefreshPoolsDelay(), config.getServerApi(), tx0PreviewService);
         this.bipFormatSupplier = new BipFormatSupplierImpl();
-        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, dataPersister.getUtxoConfigSupplier(), chainSupplier, poolSupplier, bipFormatSupplier, config.getNetworkParameters(), utxoFactory, bip47Util, bip47Meta);
+        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, dataPersister.getUtxoConfigSupplier(), chainSupplier, poolSupplier, bipFormatSupplier, utxoFactory, bip47Util, bip47Meta);
     }
 
     @Override

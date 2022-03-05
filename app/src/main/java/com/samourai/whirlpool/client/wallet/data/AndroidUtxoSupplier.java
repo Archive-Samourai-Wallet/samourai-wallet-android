@@ -42,11 +42,10 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
                                ChainSupplier chainSupplier,
                                PoolSupplier poolSupplier,
                                BipFormatSupplier bipFormatSupplier,
-                               NetworkParameters params,
                                UTXOFactory utxoFactory,
                                BIP47Util bip47Util,
                                BIP47Meta bip47Meta) throws Exception {
-        super(walletSupplier, utxoConfigSupplier, chainSupplier, poolSupplier, bipFormatSupplier, params);
+        super(walletSupplier, utxoConfigSupplier, chainSupplier, poolSupplier, bipFormatSupplier);
         this.utxoFactory = utxoFactory;
         this.bip47Util = bip47Util;
         this.bip47Meta = bip47Meta;
@@ -112,7 +111,7 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     }
 
     @Override
-    public ECKey _getPrivKeyBip47(WhirlpoolUtxo whirlpoolUtxo) throws Exception {
+    public byte[] _getPrivKeyBip47(WhirlpoolUtxo whirlpoolUtxo) throws Exception {
         String address = whirlpoolUtxo.getUtxo().addr;
         String pcode = bip47Meta.getPCode4Addr(address);
         int idx = bip47Meta.getIdx4Addr(address);
@@ -120,6 +119,6 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
             log.debug("_getPrivKeyBip47: pcode="+pcode+", idx="+idx);
         }
         PaymentAddress addr = bip47Util.getReceiveAddress(new PaymentCode(pcode), idx);
-        return addr.getReceiveECKey();
+        return addr.getReceiveECKey().getPrivKeyBytes();
     }
 }

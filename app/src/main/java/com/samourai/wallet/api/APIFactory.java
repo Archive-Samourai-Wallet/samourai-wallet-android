@@ -1712,8 +1712,12 @@ public class APIFactory {
 
             for(String _s : UTXOUtil.getInstance().getTags().keySet())   {
                 if(!seenOutputsPostMix.contains(_s) && !seenOutputs.contains(_s))    {
-                    UTXOUtil.getInstance().remove(_s);
-                    UTXOUtil.getInstance().removeNote(_s);
+                    try {
+                        UTXOUtil.getInstance().remove(_s);
+                        UTXOUtil.getInstance().removeNote(_s);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -1727,7 +1731,11 @@ public class APIFactory {
 
             for(String _s : UTXOUtil.getInstance().getTags().keySet())   {
                 if(!seenOutputsBadBank.contains(_s) && !seenOutputs.contains(_s))    {
-                    UTXOUtil.getInstance().remove(_s);
+                    try {
+                        UTXOUtil.getInstance().remove(_s);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
