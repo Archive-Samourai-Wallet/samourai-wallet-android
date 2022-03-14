@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.bipFormat.BIP_FORMAT;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.FeeUtil;
@@ -23,7 +24,7 @@ public class AndroidCahootsWallet extends CahootsWallet {
     private AddressFactory addressFactory;
 
     public AndroidCahootsWallet(Context ctx) {
-        super(BIP84Util.getInstance(ctx).getWallet(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+        super(BIP84Util.getInstance(ctx).getWallet(), BIP_FORMAT.PROVIDER, SamouraiWallet.getInstance().getCurrentNetworkParams());
         this.apiFactory = APIFactory.getInstance(ctx);
         this.addressFactory = AddressFactory.getInstance(ctx);
     }

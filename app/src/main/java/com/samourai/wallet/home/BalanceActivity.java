@@ -30,19 +30,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.transition.ChangeBounds;
-import androidx.transition.TransitionManager;
-
 import com.dm.zbar.android.scanner.ZBarConstants;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -103,6 +90,7 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.BIP38PrivateKey;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.script.Script;
@@ -118,6 +106,18 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.transition.ChangeBounds;
+import androidx.transition.TransitionManager;
 import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -873,7 +873,8 @@ public class BalanceActivity extends SamouraiActivity {
 
                 final String strResult = data.getStringExtra(ZBarConstants.SCAN_RESULT);
 
-                PrivKeyReader privKeyReader = new PrivKeyReader(new CharSequenceX(strResult.trim()));
+                NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
+                PrivKeyReader privKeyReader = new PrivKeyReader(strResult, params);
                 try {
                     if (privKeyReader.getFormat() != null) {
                         doPrivKey(strResult.trim());
@@ -1054,7 +1055,8 @@ public class BalanceActivity extends SamouraiActivity {
 
         cameraFragmentBottomSheet.setQrCodeScanListener(code -> {
             cameraFragmentBottomSheet.dismissAllowingStateLoss();
-            PrivKeyReader privKeyReader = new PrivKeyReader(new CharSequenceX(code.trim()));
+            NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
+            PrivKeyReader privKeyReader = new PrivKeyReader(code, params);
             try {
                 if (privKeyReader.getFormat() != null) {
                     doPrivKey(code.trim());
@@ -1085,7 +1087,8 @@ public class BalanceActivity extends SamouraiActivity {
         cameraFragmentBottomSheet.show(getSupportFragmentManager(), cameraFragmentBottomSheet.getTag());
         cameraFragmentBottomSheet.setQrCodeScanListener(code -> {
             cameraFragmentBottomSheet.dismissAllowingStateLoss();
-            PrivKeyReader privKeyReader = new PrivKeyReader(new CharSequenceX(code.trim()));
+            NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
+            PrivKeyReader privKeyReader = new PrivKeyReader(code, params);
             try {
                 if (privKeyReader.getFormat() != null) {
                     doPrivKey(code.trim());
@@ -1161,12 +1164,12 @@ public class BalanceActivity extends SamouraiActivity {
     }
 
     private void doPrivKey(final String data) {
-
+        NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
         PrivKeyReader privKeyReader = null;
 
         String format = null;
         try {
-            privKeyReader = new PrivKeyReader(new CharSequenceX(data), null);
+            privKeyReader = new PrivKeyReader(data, params);
             format = privKeyReader.getFormat();
         } catch (Exception e) {
             Toast.makeText(BalanceActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -1210,7 +1213,7 @@ public class BalanceActivity extends SamouraiActivity {
                                             progress.cancel();
                                         }
 
-                                        pvr.setPassword(new CharSequenceX(password));
+                                        pvr.setPassword(password);
                                         keyDecoded = true;
 
                                         Toast.makeText(BalanceActivity.this, pvr.getFormat(), Toast.LENGTH_SHORT).show();
@@ -1227,7 +1230,7 @@ public class BalanceActivity extends SamouraiActivity {
                                 }
 
                                 if (keyDecoded) {
-                                    SweepUtil.getInstance(BalanceActivity.this).sweep(pvr, SweepUtil.TYPE_P2PKH);
+                                    SweepUtil.getInstance(BalanceActivity.this).sweep(pvr);
                                 }
 
                             }
@@ -1243,7 +1246,7 @@ public class BalanceActivity extends SamouraiActivity {
                 }
 
             } else if (privKeyReader != null) {
-                SweepUtil.getInstance(BalanceActivity.this).sweep(privKeyReader, SweepUtil.TYPE_P2PKH);
+                SweepUtil.getInstance(BalanceActivity.this).sweep(privKeyReader);
             } else {
                 ;
             }
@@ -1325,7 +1328,8 @@ public class BalanceActivity extends SamouraiActivity {
 
                 try {
                     for (int i = 0; i < s.length; i++) {
-                        PrivKeyReader privKeyReader = new PrivKeyReader(new CharSequenceX(s[i]));
+                        NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
+                        PrivKeyReader privKeyReader = new PrivKeyReader(s[i], params);
                         if (privKeyReader.getFormat() != null &&
                                 (privKeyReader.getFormat().equals(PrivKeyReader.WIF_COMPRESSED) ||
                                         privKeyReader.getFormat().equals(PrivKeyReader.WIF_UNCOMPRESSED) ||

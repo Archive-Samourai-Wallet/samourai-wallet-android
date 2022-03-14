@@ -39,13 +39,13 @@ import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.BackendApiAndroid;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.SentToFromBIP47Util;
 import com.samourai.wallet.util.WebUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
-import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Address;
@@ -235,6 +235,9 @@ public class APIFactory {
     }
 
     public void setAppToken(String token)   {
+        if (!StringUtils.equals(token, APP_TOKEN)) {
+            BackendApiAndroid.reset(); // reset BackendApi on change
+        }
         APP_TOKEN = token;
     }
 
@@ -2122,110 +2125,6 @@ public class APIFactory {
 
         Collections.sort(ret, new TxMostRecentDateComparator());
         return ret;
-    }
-
-    public synchronized UTXO getUnspentOutputsForSweep(String address) {
-
-        String _url =  WebUtil.getAPIUrl(context);
-
-        try {
-
-            String response = null;
-
-            if(!TorManager.INSTANCE.isRequired())    {
-                StringBuilder args = new StringBuilder();
-                args.append("active=");
-                args.append(address);
-                args.append("&at=");
-                args.append(getAccessToken());
-//                debug("APIFactory", args.toString());
-                response = WebUtil.getInstance(context).postURL(_url + "wallet?", args.toString());
-//                debug("APIFactory", response);
-            }
-            else    {
-                HashMap<String,String> args = new HashMap<String,String>();
-                args.put("active", address);
-                args.put("at", getAccessToken());
-//                debug("APIFactory", args.toString());
-                response = WebUtil.getInstance(context).tor_postURL(_url + "wallet", args);
-//                debug("APIFactory", response);
-            }
-
-            return parseUnspentOutputsForSweep(response);
-
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    private synchronized UTXO parseUnspentOutputsForSweep(String unspents)   {
-
-        UTXO utxo = null;
-
-        if(unspents != null)    {
-
-            try {
-                JSONObject jsonObj = new JSONObject(unspents);
-
-                if(jsonObj == null || !jsonObj.has("unspent_outputs"))    {
-                    return null;
-                }
-                JSONArray utxoArray = jsonObj.getJSONArray("unspent_outputs");
-                if(utxoArray == null || utxoArray.length() == 0) {
-                    return null;
-                }
-
-//            debug("APIFactory", "unspents found:" + outputsRoot.size());
-
-                for (int i = 0; i < utxoArray.length(); i++) {
-
-                    JSONObject outDict = utxoArray.getJSONObject(i);
-
-                    byte[] hashBytes = Hex.decode((String)outDict.get("tx_hash"));
-                    Sha256Hash txHash = Sha256Hash.wrap(hashBytes);
-                    int txOutputN = ((Number)outDict.get("tx_output_n")).intValue();
-                    BigInteger value = BigInteger.valueOf(((Number)outDict.get("value")).longValue());
-                    String script = (String)outDict.get("script");
-                    byte[] scriptBytes = Hex.decode(script);
-                    int confirmations = ((Number)outDict.get("confirmations")).intValue();
-
-                    try {
-                        String address = null;
-
-                        if(Bech32Util.getInstance().isBech32Script(script))    {
-                            address = Bech32Util.getInstance().getAddressFromScript(script);
-                            debug("address parsed:", address);
-                        }
-                        else    {
-                            address = new Script(scriptBytes).getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-                        }
-
-                        // Construct the output
-                        MyTransactionOutPoint outPoint = new MyTransactionOutPoint(SamouraiWallet.getInstance().getCurrentNetworkParams(), txHash, txOutputN, value, scriptBytes, address, confirmations);
-                        if(utxo == null)    {
-                            utxo = new UTXO();
-                        }
-                        utxo.getOutpoints().add(outPoint);
-
-                    }
-                    catch(Exception e) {
-                        ;
-                    }
-
-                }
-
-            }
-            catch(JSONException je) {
-                ;
-            }
-
-        }
-
-        return utxo;
-
     }
 
     private synchronized JSONObject getRawXPUB(String[] xpubs) {

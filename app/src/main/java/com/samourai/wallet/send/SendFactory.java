@@ -1,7 +1,6 @@
 package com.samourai.wallet.send;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.samourai.wallet.R;
@@ -23,13 +22,11 @@ import com.samourai.wallet.send.exceptions.SignTxException;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.PrivKeyReader;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DumpedPrivateKey;
 import org.bitcoinj.core.ECKey;
@@ -80,7 +77,7 @@ public class SendFactory extends SendFactoryGeneric	{
             boolean rbfOptin = PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false);
             long blockHeight = APIFactory.getInstance(context).getLatestBlockHeight();
             NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
-            tx = super.makeTransaction(unspent, receivers, rbfOptin, params, blockHeight);
+            tx = super.makeTransaction(unspent, receivers, BIP_FORMAT.PROVIDER, rbfOptin, params, blockHeight);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -131,73 +128,6 @@ public class SendFactory extends SendFactoryGeneric	{
         } catch (SignTxException e) {
             e.printStackTrace();
         }
-        if(signedTx == null)    {
-            return null;
-        }
-        else    {
-            String hexString = new String(Hex.encode(signedTx.bitcoinSerialize()));
-            if(hexString.length() > (100 * 1024)) {
-                Toast.makeText(context, R.string.tx_length_error, Toast.LENGTH_SHORT).show();
-//              Log.i("SendFactory", "Transaction length too long");
-            }
-
-            return signedTx;
-        }
-    }
-
-    public Transaction signTransactionForSweep(Transaction unsignedTx, PrivKeyReader privKeyReader) throws SignTxException    {
-
-        HashMap<String,ECKey> keyBag = new HashMap<String,ECKey>();
-
-        for (TransactionInput input : unsignedTx.getInputs()) {
-
-            try {
-                byte[] scriptBytes = input.getOutpoint().getConnectedPubKeyScript();
-
-                String script = Hex.toHexString(scriptBytes);
-                String address = null;
-                if(Bech32Util.getInstance().isBech32Script(script))    {
-                    try {
-                        address = Bech32Util.getInstance().getAddressFromScript(script);
-                    }
-                    catch(Exception e) {
-                        ;
-                    }
-                }
-                else    {
-                    address = new Script(scriptBytes).getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-                }
-
-                Log.i("address from script", address);
-
-                ECKey ecKey = null;
-                try {
-                    DumpedPrivateKey pk = new DumpedPrivateKey(SamouraiWallet.getInstance().getCurrentNetworkParams(), privKeyReader.getKey().getPrivateKeyAsWiF(SamouraiWallet.getInstance().getCurrentNetworkParams()));
-                    ecKey = pk.getKey();
-//                    Log.i("SendFactory", "ECKey address:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                } catch (AddressFormatException afe) {
-                    afe.printStackTrace();
-                    continue;
-                }
-
-                if(ecKey != null) {
-                    keyBag.put(input.getOutpoint().toString(), ecKey);
-                }
-                else {
-                    Toast.makeText(context, R.string.cannot_recognize_privkey, Toast.LENGTH_SHORT).show();
-//                    Log.i("ECKey error", "cannot process private key");
-                }
-            }
-            catch(ScriptException se) {
-                ;
-            }
-            catch(Exception e) {
-                ;
-            }
-
-        }
-
-        Transaction signedTx = signTransaction(unsignedTx, keyBag);
         if(signedTx == null)    {
             return null;
         }
