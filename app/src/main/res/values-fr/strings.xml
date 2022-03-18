@@ -230,9 +230,9 @@
     <string name="bip47_setup4_text2">sera déduit du solde de votre portefeuille.</string>
 
     <string name="bip47_add1_title">Nouveau contact</string>
-    <string name="bip47_add1_text">Scanner ou copier/coller le code de paiement pour créer une nouveau canal de paiement.</string>
+    <string name="bip47_add1_text">Scanner ou coller le code de paiement pour créer une nouveau canal de paiement.</string>
 
-    <string name="paste">Copier/Coller</string>
+    <string name="paste">Coller</string>
     <string name="label">Saisir un libellé</string>
     <string name="next">Suivant</string>
     <string name="confirm">Confirmer</string>
@@ -766,7 +766,7 @@
     <string name="unspent_outputs">Sorties non dépensées</string>
     <string name="unspent_outputs_post_mix">Sorties non dépensées - Post-mix</string>
     
-    <string name="paste_cahoots_payload">Copier/Coller charge utile cahoots</string>
+    <string name="paste_cahoots_payload">Coller charge utile cahoots</string>
 
     <string name="clipboard_empty">Presse-papiers vide</string>
     
@@ -899,7 +899,7 @@
 <string name="share_and_reuse">Partager et réutiliser sans exposer vos autres transactions et soldes</string>
 
 <string name="options_soroban_collab">Soroban recevoir/collaborer</string>
-<string name="options_paste_cahoots">Copier/Coller charge utile cahoots</string>
+<string name="options_paste_cahoots">Coller charge utile cahoots</string>
 
 
 
