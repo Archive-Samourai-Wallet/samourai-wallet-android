@@ -1,5 +1,7 @@
 package com.samourai.whirlpool.client.wallet.data;
 
+import android.content.Context;
+
 import com.samourai.wallet.bipWallet.BipDerivation;
 import com.samourai.wallet.bipWallet.BipWallet;
 import com.samourai.wallet.client.indexHandler.IIndexHandler;
@@ -13,10 +15,20 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AndroidWalletStateSupplier implements WalletStateSupplier {
+    private static AndroidWalletStateSupplier instance;
+
+    public static synchronized AndroidWalletStateSupplier getInstance(Context ctx) {
+        if (instance == null) {
+            AddressFactory addressFactory = AddressFactory.getInstance(ctx);
+            instance = new AndroidWalletStateSupplier(addressFactory);
+        }
+        return instance;
+    }
+
     private AddressFactory addressFactory;
     private Map<String, IIndexHandler> indexHandlerWallets;
 
-    public AndroidWalletStateSupplier(AddressFactory addressFactory) {
+    private AndroidWalletStateSupplier(AddressFactory addressFactory) {
         this.addressFactory = addressFactory;
         this.indexHandlerWallets = new LinkedHashMap<>();
     }
