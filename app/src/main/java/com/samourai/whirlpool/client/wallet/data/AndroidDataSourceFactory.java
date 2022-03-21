@@ -3,6 +3,7 @@ package com.samourai.whirlpool.client.wallet.data;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
+import com.samourai.wallet.bipWallet.WalletSupplier;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
@@ -19,18 +20,20 @@ public class AndroidDataSourceFactory implements DataSourceFactory {
     private UTXOFactory utxoFactory;
     private BIP47Util bip47Util;
     private BIP47Meta bip47Meta;
+    private WalletSupplier walletSupplier;
 
-    public AndroidDataSourceFactory(PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory, BIP47Util bip47Util, BIP47Meta bip47Meta) {
+    public AndroidDataSourceFactory(PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory, BIP47Util bip47Util, BIP47Meta bip47Meta, WalletSupplier walletSupplier) {
         this.pushTx = pushTx;
         this.feeUtil = feeUtil;
         this.apiFactory = apiFactory;
         this.utxoFactory = utxoFactory;
         this.bip47Util = bip47Util;
         this.bip47Meta = bip47Meta;
+        this.walletSupplier = walletSupplier;
     }
 
     @Override
     public DataSource createDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, DataPersister dataPersister) throws Exception {
-        return new AndroidDataSource(whirlpoolWallet, bip44w, dataPersister, pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta);
+        return new AndroidDataSource(whirlpoolWallet, dataPersister, pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta, walletSupplier);
     }
 }

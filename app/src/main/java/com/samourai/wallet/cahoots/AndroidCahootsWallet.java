@@ -5,13 +5,11 @@ import android.content.Context;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bipFormat.BIP_FORMAT;
-import com.samourai.wallet.hd.WALLET_INDEX;
-import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.util.AddressFactory;
+import com.samourai.whirlpool.client.wallet.AndroidWalletSupplier;
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.bitcoinj.core.ECKey;
@@ -20,24 +18,26 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class AndroidCahootsWallet extends CahootsWallet {
-    private APIFactory apiFactory;
-    private AddressFactory addressFactory;
+    private static AndroidCahootsWallet instance = null;
 
-    public AndroidCahootsWallet(Context ctx) {
-        super(BIP84Util.getInstance(ctx).getWallet(), BIP_FORMAT.PROVIDER, SamouraiWallet.getInstance().getCurrentNetworkParams());
+    private APIFactory apiFactory;
+
+    public static AndroidCahootsWallet getInstance(Context ctx) {
+        if (instance == null) {
+            instance = new AndroidCahootsWallet(ctx);
+        }
+        return instance;
+    }
+
+    private AndroidCahootsWallet(Context ctx) {
+        super(AndroidWalletSupplier.getInstance(ctx), BIP_FORMAT.PROVIDER, SamouraiWallet.getInstance().getCurrentNetworkParams());
         this.apiFactory = APIFactory.getInstance(ctx);
-        this.addressFactory = AddressFactory.getInstance(ctx);
     }
 
     @Override
     public long fetchFeePerB() {
         long feePerB = FeeUtil.getInstance().getSuggestedFeeDefaultPerB();
         return feePerB;
-    }
-
-    @Override
-    public int fetchPostChangeIndex() {
-        return addressFactory.getIndex(WALLET_INDEX.POSTMIX_CHANGE);
     }
 
     @Override

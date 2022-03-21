@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.samourai.http.client.AndroidHttpClient;
 import com.samourai.http.client.IHttpClient;
+import com.samourai.soroban.cahoots.ManualCahootsService;
 import com.samourai.soroban.client.SorobanService;
 import com.samourai.soroban.client.cahoots.OnlineCahootsService;
 import com.samourai.soroban.client.cahoots.SorobanCahootsService;
@@ -12,7 +13,6 @@ import com.samourai.soroban.client.rpc.RpcClient;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.BIP47Wallet;
-import com.samourai.soroban.cahoots.ManualCahootsService;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
 
@@ -34,7 +34,7 @@ public class AndroidSorobanCahootsService extends SorobanCahootsService {
 
     public static AndroidSorobanCahootsService getInstance(Context ctx) {
         if (instance == null) {
-            CahootsWallet cahootsWallet = new AndroidCahootsWallet(ctx);
+            CahootsWallet cahootsWallet = AndroidCahootsWallet.getInstance(ctx);
             BIP47Util bip47Util = BIP47Util.getInstance(ctx);
             NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
             BIP47Wallet bip47Wallet = bip47Util.getWallet();
@@ -43,8 +43,8 @@ public class AndroidSorobanCahootsService extends SorobanCahootsService {
             RpcClient rpcClient = new RpcClient(httpClient, onion, params);
             instance = new AndroidSorobanCahootsService(
                     new OnlineCahootsService(cahootsWallet),
-                    new SorobanService(bip47Util, params, PROVIDER, bip47Wallet, rpcClient),
-                    new SorobanMeetingService(bip47Util, params, PROVIDER, bip47Wallet, rpcClient),
+                    new SorobanService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
+                    new SorobanMeetingService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
                     new ManualCahootsService(cahootsWallet),
                     ctx
             );
