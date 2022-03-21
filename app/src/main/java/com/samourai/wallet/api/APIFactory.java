@@ -414,7 +414,7 @@ public class APIFactory {
                 args.append("&at=");
                 args.append(getAccessToken());
                 response = WebUtil.getInstance(context).postURL(_url + "wallet?", args.toString());
-                info("APIFactory", "XPUB response:" + response);
+                //info("APIFactory", "XPUB response:" + response);
             }
             else    {
                 HashMap<String,String> args = new HashMap<String,String>();
@@ -423,7 +423,7 @@ public class APIFactory {
                 args.put("at", getAccessToken());
                 info("APIFactory", "XPUB access token:" + getAccessToken());
                 response = WebUtil.getInstance(context).tor_postURL(_url + "wallet", args);
-                info("APIFactory", "XPUB response:" + response);
+                //info("APIFactory", "XPUB response:" + response);
             }
 
             try {
@@ -487,7 +487,7 @@ public class APIFactory {
                 args.append("&at=");
                 args.append(getAccessToken());
                 response = WebUtil.getInstance(context).postURL(_url + "xpub?", args.toString());
-                info("APIFactory", "XPUB response:" + response);
+                //info("APIFactory", "XPUB response:" + response);
             }
             else    {
                 HashMap<String,String> args = new HashMap<String,String>();
@@ -510,12 +510,12 @@ public class APIFactory {
                 info("APIFactory", "XPUB:" + args.toString());
                 args.put("at", getAccessToken());
                 response = WebUtil.getInstance(context).tor_postURL(_url + "xpub", args);
-                info("APIFactory", "XPUB response:" + response);
+                //info("APIFactory", "XPUB response:" + response);
             }
 
             try {
                 jsonObject = new JSONObject(response);
-                info("APIFactory", "XPUB response:" + jsonObject.toString());
+                //info("APIFactory", "XPUB response:" + jsonObject.toString());
                 if(jsonObject.has("status") && jsonObject.getString("status").equals("ok"))    {
                     if(tag != null)    {
                         PrefsUtil.getInstance(context).setValue(tag, true);
@@ -912,7 +912,7 @@ public class APIFactory {
                         info("APIFactory", "lock XPUB:" + _url);
                         info("APIFactory", "lock XPUB:" + args.toString());
                         response = WebUtil.getInstance(context).tor_postURL(_url + "xpub/" + xpub + "/lock/", args);
-                        info("APIFactory", "lock XPUB response:" + response);
+                        //info("APIFactory", "lock XPUB response:" + response);
                     }
 
                     try {
@@ -2159,7 +2159,7 @@ public class APIFactory {
                     }
                 }
                 response = WebUtil.getInstance(context).postURL(_url + "wallet?", args.toString());
-                info("APIFactory", "XPUB response:" + response);
+                //info("APIFactory", "XPUB response:" + response);
             }
             else    {
                 HashMap<String,String> args = new HashMap<String,String>();
@@ -2177,7 +2177,7 @@ public class APIFactory {
                     }
                 }
                 response = WebUtil.getInstance(context).tor_postURL(_url + "wallet", args);
-                info("APIFactory", "XPUB response:" + response);
+                //info("APIFactory", "XPUB response:" + response);
             }
 
             try {
