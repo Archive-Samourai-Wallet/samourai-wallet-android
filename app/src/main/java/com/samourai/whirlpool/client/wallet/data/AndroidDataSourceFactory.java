@@ -9,9 +9,10 @@ import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
-import com.samourai.whirlpool.client.wallet.data.dataPersister.DataPersister;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSource;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceFactory;
+import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
+import com.samourai.whirlpool.client.wallet.data.walletState.WalletStateSupplier;
 
 public class AndroidDataSourceFactory implements DataSourceFactory {
     private PushTx pushTx;
@@ -33,7 +34,7 @@ public class AndroidDataSourceFactory implements DataSourceFactory {
     }
 
     @Override
-    public DataSource createDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, DataPersister dataPersister) throws Exception {
-        return new AndroidDataSource(whirlpoolWallet, dataPersister, pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta, walletSupplier);
+    public DataSource createDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, WalletStateSupplier walletStateSupplier, UtxoConfigSupplier utxoConfigSupplier) throws Exception {
+        return new AndroidDataSource(whirlpoolWallet, pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta, walletSupplier, utxoConfigSupplier);
     }
 }
