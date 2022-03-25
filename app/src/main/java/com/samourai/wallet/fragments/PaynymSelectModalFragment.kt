@@ -186,7 +186,7 @@ class PaynymSelectModalFragment : BottomSheetDialogFragment() {
                 label += " (archived)"
             }
             if (BIP47Meta.getInstance().getOutgoingStatus(code) == BIP47Meta.STATUS_NOT_SENT) {
-                label += " (not followed)"
+                label += " (not connected)"
             }
             if (BIP47Meta.getInstance().getOutgoingStatus(code) == BIP47Meta.STATUS_SENT_NO_CFM) {
                 label += " (not confirmed)"
