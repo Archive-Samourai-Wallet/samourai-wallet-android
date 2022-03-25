@@ -655,5 +655,6 @@
     <string name="urgent">Urgente</string>
     <string name="normal">Normale</string>
     <string name="low">Bassa</string>
+    <string name="follow">Collegare</string>
 
 </resources>

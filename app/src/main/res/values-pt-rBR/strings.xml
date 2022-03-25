@@ -679,7 +679,6 @@
     <string name="preorder">pedido antecipado</string>
     <string name="add_new">Adicione novo</string>
     <string name="paynym_follow_message_2">gerar automaticamente endereços privados exclusivos para enviar bitcoin para este contato</string>
-    <string name="follow">Seguir</string>
     <string name="wallet_locked">Carteira Trancada</string>
     <string name="address">Endereço</string>
     <string name="is_offline">Samourai está offline</string>
@@ -825,5 +824,6 @@
     <string name="find_and_follow_your_friends">Ache e siga seus amigos e contatos sem prejudicar sua privacidade</string>
     <string name="unlocks_advanced">Desbloque opções avançadas de privacidade na sua carteira</string>
     <string name="share_and_reuse">Compartilhe e reuse sem compartilhar suas transações e balanços</string>
+    <string name="follow">Conectar</string>
 
 </resources>

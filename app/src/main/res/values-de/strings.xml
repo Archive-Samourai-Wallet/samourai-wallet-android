@@ -591,8 +591,8 @@
     <string name="request_amount">Angeforderter Betrag</string>
     <string name="address_type">Addresstyp</string>
     <string name="path">Pfad</string>
-	
-	
+    <string name="follow">Anschließen</string>
+
 
 </resources>
 

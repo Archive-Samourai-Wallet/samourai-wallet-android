@@ -590,5 +590,6 @@
     <string name="request_amount">Gevraagd bedrag</string>
     <string name="address_type">Adrestype</string>
     <string name="path">Pad</string>
+    <string name="follow">Aansluiten</string>
 
 </resources>
