@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
@@ -87,6 +88,7 @@ object ExternalBackupManager {
                 ask()
             }.setNegativeButton(R.string.cancel) { dialog, _ ->
                 dialog.dismiss()
+                    Toast.makeText(appContext, "Read and write permissions are needed to save backup file", Toast.LENGTH_LONG).show()
             }.show()
     }
 
