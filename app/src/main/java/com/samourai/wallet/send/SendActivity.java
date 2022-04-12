@@ -1787,7 +1787,8 @@ public class SendActivity extends SamouraiActivity {
         }
         return false;
         }catch (Exception exception){
-            if(exception.getMessage() !=null){
+            if (APIFactory.getInstance(getApplicationContext()).walletInit) return false;
+            else if(exception.getMessage() !=null){
               new   MaterialAlertDialogBuilder(this)
                       .setMessage("Exception ".concat(exception.getMessage()))
                       .setTitle("Error")
