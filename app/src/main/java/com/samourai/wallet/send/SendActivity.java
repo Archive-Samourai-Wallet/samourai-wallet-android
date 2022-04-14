@@ -353,6 +353,7 @@ public class SendActivity extends SamouraiActivity {
             final boolean[] chosen = {false};
             if (b) {
                 SelectCahootsType cahootsType = new SelectCahootsType();
+                cahootsType.setToAddress(tvToAddress.getText().toString());
                 cahootsType.show(getSupportFragmentManager(), cahootsType.getTag());
                 cahootsType.setOnSelectListener(new SelectCahootsType.OnSelectListener() {
                     @Override
