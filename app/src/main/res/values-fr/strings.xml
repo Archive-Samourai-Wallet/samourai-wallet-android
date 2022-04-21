@@ -967,7 +967,7 @@
 
 <string name="i_have_an_external_wallet">J\'ai un portefeuille externe</string>
 <string name="_12_15_18_24_mnemonic_words">12/15/18/24 mots de récupération</string>
-<string name="restoring_a_wallet_no_problem_let_s_figure">Restaurer un portefeuille? Pas de problème, voyons quel processus de restauration optimisera sa performance.</string>
+<string name="restoring_a_wallet_no_problem_let_s_figure">Restaurer un portefeuille ? Pas de problème, voyons quel processus de restauration optimisera sa performance.</string>
 <string name="i_have_a_samourai_backup_file">J\'ai une fichier de sauvegarde Samourai</string>
 <string name="encrypted_backup_file_passphrase">Fichier de sauvegarde chiffré + passphrase</string>
 
@@ -989,7 +989,7 @@
 <string name="send_cahoots">Envoyer Cahoots</string>
 
 <string name="dojo_config_detected">Configuration du dojo détectée</string>
-<string name="dojo_config_override">Configuration du dojo détectée dans fichier de sauvegarde. Passer outre la configuration actuelle du dojo dans fichier de sauvegarde?</string>
+<string name="dojo_config_override">Configuration du dojo détectée dans fichier de sauvegarde. Passer outre la configuration actuelle du dojo dans fichier de sauvegarde ?</string>
 
 
 
