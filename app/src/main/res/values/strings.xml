@@ -641,7 +641,7 @@
     <string name="preorder">preorder</string>
     <string name="add_new">Add New</string>
     <string name="paynym_follow_message_2">to participate in Cahoots CoinJoin transactions with them. No need to connect to use Cahoots!</string>
-    <string name="paynym_connect_message">to generate unique private addresses for sending bitcoin\nto this contact</string>
+    <string name="paynym_connect_message">to generate unique private addresses for sending bitcoin to this contact</string>
     <string name="follow">Follow</string>
     <string name="wallet_locked">Wallet Locked</string>
     <string name="address">Address</string>
