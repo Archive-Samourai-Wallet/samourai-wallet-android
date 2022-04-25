@@ -147,11 +147,11 @@ public class NewPoolActivity extends SamouraiActivity {
             if (tx0 != null && pool != null) {
                 tx0.setPool(pool.getDenomination());
             }
-            enableConfirmButton(pool != null);
+            enableConfirmButton(pool != null && tx0.getAmountAfterWhirlpoolFee() > pool.getDenomination());
         });
 
         newPoolViewModel.getGetPool().observe(this,poolViewModel -> {
-            if(poolViewModel != null && newPoolViewPager.getCurrentItem() == 1){
+            if(poolViewModel != null && newPoolViewPager.getCurrentItem() == 1 && poolViewModel.getTx0Preview().getNbPremix() != 0){
                 enableConfirmButton(true);
             }
         });
