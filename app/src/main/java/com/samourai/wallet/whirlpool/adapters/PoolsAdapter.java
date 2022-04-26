@@ -72,7 +72,7 @@ public class PoolsAdapter extends RecyclerView.Adapter<PoolsAdapter.ViewHolder> 
             onItemsSelected.onItemsSelected(position);
         });
 
-        if (poolViewModel.getTx0Preview() != null) {
+        if (poolViewModel.getTx0Preview() != null && poolViewModel.getTx0Preview().getNbPremix() != 0) {
             holder.layout.setOnClickListener(view -> onItemsSelected.onItemsSelected(position));
             holder.layout.setAlpha(1f);
             holder.layout.setClickable(true);
