@@ -321,6 +321,7 @@ public class PayloadUtil	{
             meta.put("is_sat", PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_SAT, false));
             meta.put("localIndexes", LocalReceiveIndexes.getInstance(context).toJSON());
             meta.put("xpubpostxreg", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTREG, false));
+            meta.put("paynym_bot_name", PrefsUtil.getInstance(context).getValue(PrefsUtil.PAYNYM_BOT_NAME, ""));
 
             if(DojoUtil.getInstance(context).getDojoParams() != null)    {
                 meta.put("dojo", DojoUtil.getInstance(context).toJSON());
@@ -492,6 +493,9 @@ public class PayloadUtil	{
                 }
                 if(meta.has("use_ricochet")) {
                     PrefsUtil.getInstance(context).setValue(PrefsUtil.USE_RICOCHET, meta.getBoolean("use_ricochet"));
+                }
+                if(meta.has("paynym_bot_name")) {
+                    PrefsUtil.getInstance(context).setValue(PrefsUtil.PAYNYM_BOT_NAME, meta.getString("paynym_bot_name"));
                 }
                 if(meta.has("ricochet_staggered_delivery")) {
                     PrefsUtil.getInstance(context).setValue(PrefsUtil.RICOCHET_STAGGERED, meta.getBoolean("ricochet_staggered_delivery"));
