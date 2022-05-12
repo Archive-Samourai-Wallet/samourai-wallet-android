@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
 
+import org.jetbrains.annotations.Nullable;
+
 public class PrefsUtil {
 
 	public static final String IS_SAT = "is_sat";
@@ -56,11 +58,12 @@ public class PrefsUtil {
 	public static final String STRICT_OUTPUTS = "strictOutputs";
 	public static final String PIN_TIMEOUT = "pinTimeout";
 	public static final String XPUBPOSTXREG = "xpubpostxreg";
+	public static final String PAYNYM_BOT_NAME= "paynymBotName";
 
 	private static Context context = null;
 	private static PrefsUtil instance = null;
 
-	private PrefsUtil() { ; }
+    private PrefsUtil() { ; }
 
 	public static PrefsUtil getInstance(Context ctx) {
 
