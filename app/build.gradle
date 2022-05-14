@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 32
@@ -51,20 +50,28 @@ android {
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
-            minSdkVersion 21
-            targetSdkVersion 30
             versionCode 190
             versionName "0.99.98e"
             resValue "string", "app_name", "Samourai Staging"
             resValue "string", "version_name", "0.99.98e"
         }
     }
+
     testOptions {
         unitTests.returnDefaultValues = true
     }
     buildFeatures {
         viewBinding true
+        compose true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
+    }
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+    namespace 'com.samourai.wallet'
 }
 
 def getApiKey(key){

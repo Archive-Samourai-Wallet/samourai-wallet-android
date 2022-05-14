@@ -19,22 +19,23 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.R
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.BlockExplorerUtil
-import kotlinx.android.synthetic.main.activity_explorer.*
 import kotlinx.coroutines.*
 import android.webkit.WebView
 import com.samourai.wallet.BuildConfig
+import com.samourai.wallet.databinding.ActivityExplorerBinding
 
 
 class ExplorerActivity : AppCompatActivity() {
 
     var txId: String = "";
+   private lateinit var  binding : ActivityExplorerBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_explorer)
-        setSupportActionBar(toolBar)
+        binding = ActivityExplorerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolBar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
         if (intent.hasExtra(TX_URI)) {
             txId = intent.extras?.getString(TX_URI, "")!!
         } else {
@@ -43,11 +44,11 @@ class ExplorerActivity : AppCompatActivity() {
         }
 
         supportActionBar?.title = "Explorer"
-        webView.setBackgroundColor(0)
+        binding.webView.setBackgroundColor(0)
 
-        swipeRefreshLayout.setOnRefreshListener {
-            webView.reload()
-            swipeRefreshLayout.isRefreshing = false;
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            binding.webView.reload()
+            binding.swipeRefreshLayout.isRefreshing = false;
         }
         TorManager.getTorStateLiveData().observe(this, {
             if (it == TorManager.TorState.ON) {
@@ -95,6 +96,8 @@ class ExplorerActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun load() {
+        val progressWeb = binding.progressWeb
+        val webView = binding.webView
         progressWeb.progress = 8
         progressWeb.isIndeterminate = false
         CookieManager.getInstance().setAcceptCookie(false)
@@ -153,6 +156,7 @@ class ExplorerActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        val webView = binding.webView
         if(webView.canGoBack()){
             webView.goBack()
         }else{
@@ -160,6 +164,7 @@ class ExplorerActivity : AppCompatActivity() {
         }
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val webView = binding.webView
         when (item.itemId) {
             android.R.id.home -> {
                 onBackPressed()
@@ -208,7 +213,7 @@ class ExplorerActivity : AppCompatActivity() {
                 else -> {
                 }
             }
-        })
+        }
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -223,6 +228,7 @@ class ExplorerActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        val webView = binding.webView
         webView.stopLoading()
         webView.clearFormData()
         webView.clearHistory()
