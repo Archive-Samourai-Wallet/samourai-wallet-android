@@ -286,7 +286,7 @@ class WhirlpoolHome : SamouraiActivity() {
         super.onDestroy()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.whirlpool_main, menu)
         return super.onCreateOptionsMenu(menu)
     }

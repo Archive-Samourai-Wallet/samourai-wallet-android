@@ -196,7 +196,7 @@ class ExplorerActivity : AppCompatActivity() {
     }
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.web_explorer, menu)
-        TorManager.getTorStateLiveData().observe(this, {
+        TorManager.getTorStateLiveData().observe(this) {
             menu.findItem(R.id.menu_web_tor).icon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_tor_on)
             val icon = menu.findItem(R.id.menu_web_tor).icon
             when (it) {
@@ -208,7 +208,7 @@ class ExplorerActivity : AppCompatActivity() {
                 }
                 TorManager.TorState.OFF -> {
                     menu.findItem(R.id.menu_web_tor).icon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_tor_on)
-                    menu.findItem(R.id.menu_web_tor).icon.setTint(ContextCompat.getColor(applicationContext,R.color.disabledRed))
+                    menu.findItem(R.id.menu_web_tor).icon.setTint(ContextCompat.getColor(applicationContext, R.color.disabledRed))
                 }
                 else -> {
                 }

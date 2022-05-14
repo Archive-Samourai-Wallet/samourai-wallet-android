@@ -98,7 +98,10 @@ class PayNymHome : SamouraiActivity() {
         paynymFab?.setOnClickListener {
             startActivity(Intent(this, AddPaynymActivity::class.java))
         }
-        payNymViewModel.pcode.observe(this, { paymentCode: String? -> paynym?.text = paymentCode })
+        payNymViewModel.pcode.observe(this) { paymentCode: String? ->
+            paynym?.text = paymentCode
+            PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.PAYNYM_BOT_NAME,paymentCode)
+        }
         payNymViewModel.loaderLiveData.observe(this, {
             swipeToRefreshPaynym?.isRefreshing = it
         })

@@ -26,7 +26,8 @@ import com.samourai.wallet.payload.ExternalBackupManager
 import com.samourai.wallet.permissions.PermissionsUtil
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.PrefsUtil
- import kotlinx.coroutines.Dispatchers
+import io.matthewnelson.topl_service.TorServiceController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -88,7 +89,7 @@ class SetUpWalletActivity : AppCompatActivity() {
                         .show()
                     return@setOnClickListener
                 }
-                TorManager.stopTor()
+                TorServiceController.stopTor()
             }
         }
         setUpWalletViewModel.errorsLiveData.observe(this) {
