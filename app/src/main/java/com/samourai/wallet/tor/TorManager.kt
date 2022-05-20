@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Process
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -63,12 +64,17 @@ object TorManager {
     ): ServiceNotification.Builder {
         var contentIntent: PendingIntent? = null
 
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_IMMUTABLE
+        } else {
+            0
+        }
         appContext?.packageManager?.getLaunchIntentForPackage(appContext!!.packageName)?.let { intent ->
             contentIntent = PendingIntent.getActivity(
                     appContext,
                     0,
                     intent,
-                    0
+                flags
             )
         }
 
