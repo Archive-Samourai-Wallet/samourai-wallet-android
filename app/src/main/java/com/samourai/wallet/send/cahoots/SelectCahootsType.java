@@ -32,6 +32,7 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
         STONEWALLX2_SOROBAN(CahootsType.STONEWALLX2, CahootsMode.SOROBAN),
         STOWAWAY_MANUAL(CahootsType.STOWAWAY, CahootsMode.MANUAL),
         STOWAWAY_SOROBAN(CahootsType.STOWAWAY, CahootsMode.SOROBAN),
+        MULTI_SOROBAN(CahootsType.MULTI, CahootsMode.SOROBAN),
         NONE(null, null);
         private CahootsType cahootsType;
         private CahootsMode cahootsMode;
@@ -126,7 +127,11 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
             }
         });
         samouraiAsParticipant.setOnClickListener(view1 -> {
-            Toast.makeText(getContext(),"Coming soon",Toast.LENGTH_SHORT).show();
+            if (onSelectListener != null) {
+                SelectCahootsType.type typeSoroban = type.MULTI_SOROBAN;
+                onSelectListener.onSelect(typeSoroban,"PM8TJXBr2UNrPuhTFrmiCrww74GCFm1WbTqpxEXACpfzAsKqM3xvgZPG2PhDGycW2Ud9RiCzVHb3NprRvGffpYbi9bw6sYjU5nZJm94syV1J67V9fRND");
+            }
+            this.dismiss();
         });
     }
 
