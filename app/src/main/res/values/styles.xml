@@ -213,6 +213,8 @@
         <item name="mpm_paddingBottom">@dimen/mpm_popup_menu_vertical_padding</item>
         <item name="mpm_paddingStart">0dp</item>
         <item name="mpm_paddingEnd">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="elevationOverlayColor">@color/off_black</item>
         <item name="mpm_paddingTop">@dimen/mpm_popup_menu_vertical_padding</item>
     </style>
 
