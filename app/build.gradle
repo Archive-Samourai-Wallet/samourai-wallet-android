@@ -83,28 +83,26 @@ def getApiKey(key){
 
 dependencies {
 
-    def lifecycle_version = "2.2.0"
+    def lifecycle_version = "2.4.1"
     def topl_android_version = "2.1.0"
     def coroutines_version = '1.5.1'
 
     api fileTree(include: ['*.jar'], dir: 'libs')
-    implementation('com.google.zxing:core:3.3.0') {
+    implementation('com.google.zxing:core:3.4.1') {
         transitive = true
     }
 
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation "androidx.core:core-ktx:1.3.2"
+    implementation "androidx.core:core-ktx:1.7.0"
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.preference:preference-ktx:1.2.0'
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
     implementation "androidx.webkit:webkit:1.4.0"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
@@ -121,7 +119,7 @@ dependencies {
     implementation 'com.lambdaworks:scrypt:1.4.0'
     implementation 'com.google.android.material:material:1.5.0-alpha02'
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
     implementation ('io.samourai.code.whirlpool:whirlpool-client:0.23.41') {
         exclude group:'org.hibernate', module:'hibernate-validator'
