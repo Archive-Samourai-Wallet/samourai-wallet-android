@@ -32,7 +32,7 @@ data class AddressDetailsModel(
     val isExternal: Boolean
 )
 
-class ToolsViewModel : ViewModel() {
+class AddressCalculatorViewModel : ViewModel() {
 
 
     private val addressLiveData: MutableLiveData<AddressDetailsModel> = MutableLiveData(
