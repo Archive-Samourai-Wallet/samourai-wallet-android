@@ -3,7 +3,9 @@ package com.samourai.wallet.home
 import android.app.ProgressDialog
 import android.content.*
 import android.content.pm.ActivityInfo
+import android.graphics.BitmapFactory
 import android.graphics.Typeface
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
@@ -20,8 +22,6 @@ import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProviders
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
@@ -29,6 +29,7 @@ import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import com.dm.zbar.android.scanner.ZBarConstants
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.shape.ShapeAppearanceModel
 import com.samourai.wallet.*
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
@@ -63,8 +64,8 @@ import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity
 import com.samourai.wallet.service.JobRefreshService
 import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity
+import com.samourai.wallet.tools.ToolsBottomSheet
 import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.tor.TorManager.getTorStateLiveData
 import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.tx.TxDetailsActivity
 import com.samourai.wallet.util.*
@@ -73,6 +74,7 @@ import com.samourai.wallet.whirlpool.WhirlpoolHome
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
 import com.samourai.wallet.widgets.ItemDividerDecorator
+import com.samourai.wallet.widgets.popUpMenu.popupMenu
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import io.matthewnelson.topl_service.TorServiceController
@@ -88,6 +90,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
+
 
 open class BalanceActivity : SamouraiActivity() {
     private var txs: MutableList<Tx>? = null
@@ -324,32 +327,87 @@ open class BalanceActivity : SamouraiActivity() {
             binding.paynymFab.visibility = View.GONE
             Handler().postDelayed({ updateDisplay(true) }, 600L)
         }
-        balanceViewModel!!.loadOfflineData()
-        val hadContentDescription = TextUtils.isEmpty(binding.toolbar.logoDescription)
-        val contentDescription: String = if (!hadContentDescription) binding.toolbar.logoDescription.toString() else "logoContentDescription"
-        binding.toolbar.logoDescription = contentDescription
-        val potentialViews = ArrayList<View>()
-        binding.toolbar.findViewsWithText(potentialViews, contentDescription, View.FIND_VIEWS_WITH_CONTENT_DESCRIPTION)
-        var logoView: View? = null
-        if (potentialViews.size > 0) {
-            logoView = potentialViews[0]
-            if (account == 0) {
-                logoView.setOnClickListener(View.OnClickListener {
-                    val _intent = Intent(this@BalanceActivity, BalanceActivity::class.java)
-                    _intent.putExtra("_account", WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix)
-                    startActivity(_intent)
-                })
-            } else {
-                logoView.setOnClickListener(View.OnClickListener {
-                    val _intent = Intent(this@BalanceActivity, BalanceActivity::class.java)
-                    _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    startActivity(_intent)
-                })
+        balanceViewModel.loadOfflineData()
+        BIP47Util.getInstance(applicationContext)
+            .payNymLogoLive.observe(this) {
+                binding.toolbarIcon.setImageBitmap(it)
             }
+
+        binding.toolbarIcon.setOnClickListener {
+            showToolOptions(it)
         }
         updateDisplay(false)
         checkDeepLinks()
         doExternalBackUp()
+    }
+
+    private fun showToolOptions(it: View) {
+        val bitmapImage = BIP47Util.getInstance(applicationContext).payNymLogoLive.value
+        var drawable = ContextCompat.getDrawable(this, R.drawable.ic_samourai_logo)
+        val nym = PrefsUtil.getInstance(applicationContext)
+            .getValue(PrefsUtil.PAYNYM_BOT_NAME, BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString()))
+        if (bitmapImage != null) {
+            drawable = BitmapDrawable(resources, bitmapImage)
+        }
+        val toolWindowSize = applicationContext.resources.displayMetrics.density * 220;
+        val popupMenu = popupMenu {
+            fixedContentWidthInPx = toolWindowSize.toInt()
+            style = R.style.Theme_Samourai_Widget_MPM_Menu_Dark
+            section {
+                item {
+                    label = nym
+                    iconDrawable = drawable
+                    iconSize = 34
+                    labelColor = ContextCompat.getColor(applicationContext,R.color.white)
+                    disableTint = true
+                    iconShapeAppearanceModel = ShapeAppearanceModel().toBuilder()
+                        .setAllCornerSizes(resources.getDimension(R.dimen.qr_image_corner_radius))
+                        .build()
+                    callback = {
+                        val intent = Intent(this@BalanceActivity, PayNymHome::class.java)
+                        startActivity(intent)
+                    }
+                }
+                item {
+                    label = "Collaborate"
+                    iconSize = 18
+                    icon = R.drawable.ic_connect_without_contact
+                }
+                item {
+                    label = "Tools"
+                    icon = R.drawable.ic_tools
+                    iconSize = 18
+                    hasNestedItems
+                    callback = {
+                        ToolsBottomSheet.showTools(supportFragmentManager)
+                    }
+                }
+
+            }
+            section {
+                item {
+                    label = getString(R.string.action_settings)
+                    icon = R.drawable.ic_cog
+                    iconSize = 18
+                    callback = {
+                        TimeOutUtil.getInstance().updatePin()
+                        val intent = Intent(this@BalanceActivity, SettingsActivity::class.java)
+                        startActivity(intent)
+                    }
+                }
+                item {
+                    label = "Exit Wallet"
+                    iconSize = 18
+                    iconColor = ContextCompat.getColor(this@BalanceActivity, R.color.mpm_red)
+                    labelColor = ContextCompat.getColor(this@BalanceActivity, R.color.mpm_red)
+                    icon = R.drawable.ic_baseline_power_settings_new_24
+                    callback ={
+                        this@BalanceActivity.onBackPressed()
+                    }
+                }
+            }
+        }
+        popupMenu.show(this@BalanceActivity, it)
     }
 
     private fun hideProgress() {
@@ -642,11 +700,11 @@ open class BalanceActivity : SamouraiActivity() {
     }
 
     private fun setUpTor() {
-        getTorStateLiveData().observe(this) { torState: TorManager.TorState ->
+        TorManager.getTorStateLiveData().observe(this) { torState: TorManager.TorState ->
             if (torState === TorManager.TorState.ON) {
                 PrefsUtil.getInstance(this).setValue(PrefsUtil.ENABLE_TOR, true)
                 binding.progressBar.visibility = View.INVISIBLE
-                menuTorIcon!!.setImageResource(R.drawable.tor_on)
+                menuTorIcon?.setImageResource(R.drawable.tor_on)
             } else if (torState === TorManager.TorState.WAITING) {
                 binding.progressBar.visibility = View.VISIBLE
                 menuTorIcon?.setImageResource(R.drawable.tor_on)
