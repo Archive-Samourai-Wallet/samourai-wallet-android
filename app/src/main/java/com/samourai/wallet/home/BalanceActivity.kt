@@ -316,7 +316,7 @@ open class BalanceActivity : SamouraiActivity() {
                 refreshTx(notifTx, false, true)
                 updateDisplay(false)
             }, 100L)
-            supportActionBar!!.setIcon(R.drawable.ic_samourai_logo)
+//            supportActionBar!!.setIcon(R.drawable.ic_samourai_logo)
         } else {
             supportActionBar!!.setIcon(R.drawable.ic_whirlpool)
             binding.receiveFab.visibility = View.GONE
@@ -477,6 +477,21 @@ open class BalanceActivity : SamouraiActivity() {
     private fun makePaynymAvatarCache() {
         try {
             val paymentCodes = ArrayList(BIP47Meta.getInstance().getSortedByLabels(false, true))
+            if (!BIP47Util.getInstance(applicationContext).avatarImage().exists()) {
+                BIP47Util.getInstance(applicationContext).fetchBotImage()
+                    .subscribe()
+                    .apply {
+                        compositeDisposable.add(this)
+                    }
+            } else {
+                try {
+                    val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                    BIP47Util.getInstance(applicationContext)
+                        .setAvatar(bitmap)
+                } catch (er: Exception) {
+
+                }
+            }
             for (code in paymentCodes) {
                 Picasso.get()
                     .load(WebUtil.PAYNYM_API + code + "/avatar").fetch(object : Callback {
