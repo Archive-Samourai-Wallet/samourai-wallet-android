@@ -1764,6 +1764,7 @@ public class SendActivity extends SamouraiActivity {
                 }
                 default: {
                     switch (selectedCahootsType.getCahootsType()) {
+                        case MULTI:
                         case STONEWALLX2:
                             sendTransactionDetailsView.showStonewallX2Layout(selectedCahootsType.getCahootsMode(),   getParticipantLabel(),1000);
                             btnSend.setBackgroundResource(R.drawable.button_blue);
