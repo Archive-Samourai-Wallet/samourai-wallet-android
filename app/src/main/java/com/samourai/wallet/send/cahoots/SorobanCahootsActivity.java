@@ -15,7 +15,10 @@ import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.client.SorobanMessage;
+import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.util.AppUtil;
+
+import org.spongycastle.util.encoders.Hex;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -124,6 +127,14 @@ public class SorobanCahootsActivity extends SamouraiActivity {
                 .subscribe(sorobanMessage -> {
                     OnlineCahootsMessage cahootsMessage = (OnlineCahootsMessage)sorobanMessage;
                     if (cahootsMessage != null) {
+                        if(cahootsMessage.isDone()) {
+                            if(cahootsMessage.getCahoots() instanceof MultiCahoots) {
+                                MultiCahoots multiCahoots = (MultiCahoots) cahootsMessage.getCahoots();
+                                System.out.println(Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize()));
+                                System.out.println(Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize()));
+                            }
+                            System.out.println("DONE!!!");
+                        }
                         cahootsUi.setCahootsMessage(cahootsMessage);
                     }
                 },

@@ -135,6 +135,7 @@ public class ManualCahootsUi {
         }
 
         if (cahootsMessage.isDone()) {
+            System.out.println("DONE!!!!");
             notifyWalletAndFinish();
         } else {
             activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());

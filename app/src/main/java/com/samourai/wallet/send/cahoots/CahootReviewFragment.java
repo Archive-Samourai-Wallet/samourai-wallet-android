@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.common.base.Optional;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
@@ -18,6 +19,8 @@ import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
 import com.samourai.wallet.cahoots.Cahoots;
+import com.samourai.wallet.cahoots.CahootsType;
+import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.widgets.EntropyBar;
@@ -86,17 +89,31 @@ public class CahootReviewFragment extends Fragment {
 
                         boolean success = false;
                         try {
-                            success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize())).first;
-                            if (success) {
-                                getActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
-                                });
-                                // notify
-                                if (onBroadcast != null) {
-                                    try {
-                                        onBroadcast.call();
-                                    } catch (Exception e) {}
+                            Optional<CahootsType> cahootsType = CahootsType.find(payload.getType());
+                            if(cahootsType.isPresent()) {
+                                if(cahootsType.get() == CahootsType.MULTI) {
+                                    MultiCahoots multiCahoots = (MultiCahoots) payload;
+                                    success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize())).first;
+                                    if(success) {
+                                        success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize())).first;
+                                        if (success) {
+                                            onSuccessfulBroadcast();
+                                        } else {
+                                            showError();
+                                        }
+                                    } else {
+                                        showError();
+                                    }
+                                } else {
+                                    success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize())).first;
+                                    if (success) {
+                                        onSuccessfulBroadcast();
+                                    } else {
+                                        showError();
+                                    }
                                 }
+
+
                             } else {
                                 Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
                                 getActivity().runOnUiThread(() -> {
@@ -122,6 +139,26 @@ public class CahootReviewFragment extends Fragment {
 
         });
         showPayloadInfo();
+    }
+
+    private void onSuccessfulBroadcast() {
+        getActivity().runOnUiThread(() -> {
+            Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
+        });
+        // notify
+        if (onBroadcast != null) {
+            try {
+                onBroadcast.call();
+            } catch (Exception e) {}
+        }
+    }
+
+    private void showError() {
+        Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
+        getActivity().runOnUiThread(() -> {
+            cahootsProgressGroup.setVisibility(View.GONE);
+        });
+        sendBtn.setEnabled(true);
     }
 
     private void calculateEntropy() {

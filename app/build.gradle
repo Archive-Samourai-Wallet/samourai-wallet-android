@@ -146,7 +146,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:b5776cef') {
+    implementation ('io.samourai.code.wallet:extlibj:b8a2a23b') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
@@ -155,7 +155,7 @@ dependencies {
         exclude group:'org.apache.commons', module:'commons-lang3'
         exclude group:'org.json', module:'json'
     }
-    implementation ('io.samourai.code.wallet:soroban-client-java:007d2d78') {
+    implementation ('io.samourai.code.wallet:soroban-client-java:d8eabc06') {
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
     implementation ('io.samourai.code.wallet:boltzmann-java:1.0.4') {
