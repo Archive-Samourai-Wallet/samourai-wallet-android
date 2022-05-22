@@ -2,6 +2,7 @@ package com.samourai.wallet.tools
 
 import AddressCalculator
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -45,10 +46,16 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
         val params = parent.layoutParams as CoordinatorLayout.LayoutParams
         behavior = params.behavior as BottomSheetBehavior<*>?
         if (behavior != null) {
-            behavior?.peekHeight = view.height
             behavior?.state = BottomSheetBehavior.STATE_EXPANDED
+            behavior?.skipCollapsed = true
         }
         super.onViewCreated(view, savedInstanceState)
+    }
+
+    //Disables tools bottom sheet dragging
+    //this will prevent accidental closing of tools dialog
+    fun disableDragging(disable: Boolean = true) {
+        behavior?.isDraggable = !disable
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -118,6 +125,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                 icon = R.drawable.ic_calculator,
                 onClick = {
                     scope.launch {
+                        toolsBottomSheet?.disableDragging()
                         //Load first account type to viewmodel
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
@@ -135,6 +143,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
         if (addressCalcBottomSheetState.currentValue != ModalBottomSheetValue.Hidden) {
             DisposableEffect(Unit) {
                 onDispose {
+                    toolsBottomSheet?.disableDragging(disable = false)
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                 }
