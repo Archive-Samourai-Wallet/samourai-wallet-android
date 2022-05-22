@@ -146,6 +146,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                     toolsBottomSheet?.disableDragging(disable = false)
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
+                    vm.setPage(0)
                 }
             }
         }

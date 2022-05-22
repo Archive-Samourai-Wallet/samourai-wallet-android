@@ -66,12 +66,12 @@ private val Int.ForIncoming: Int
 
 @Composable
 fun AddressCalculator(onDismiss: () -> Unit = {}) {
-
-    var page by remember { mutableStateOf(0) }
+    val vm = viewModel<AddressCalculatorViewModel>()
+    val page by vm.getPage().observeAsState()
     var previewAddress by remember { mutableStateOf("") }
     var previewTitle by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.requiredHeight( 420.dp)) {
+    Box(modifier = Modifier.requiredHeight(420.dp)) {
         AnimatedVisibility(
             visible = 0 == page,
             enter = fadeIn(
@@ -102,7 +102,7 @@ fun AddressCalculator(onDismiss: () -> Unit = {}) {
                 )
                 AddressCalcForm(
                     onAdvanceClick = {
-                        page = 1
+                        vm.setPage(1)
                     }
                 )
             }
@@ -138,7 +138,7 @@ fun AddressCalculator(onDismiss: () -> Unit = {}) {
                         )
                     }, navigationIcon = {
                         IconButton(onClick = {
-                            page = 0
+                            vm.setPage(0)
                         }) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24), tint = samouraiAccent,
@@ -151,7 +151,7 @@ fun AddressCalculator(onDismiss: () -> Unit = {}) {
                     AddressDetails(onSelect = { it, title ->
                         previewAddress = it
                         previewTitle = title
-                        page = 2
+                        vm.setPage(2)
                     })
                 }
             }
@@ -174,7 +174,7 @@ fun AddressCalculator(onDismiss: () -> Unit = {}) {
             )
         ) {
             AddressQRPreview(previewAddress, previewTitle, onDismiss = {
-                page = 1
+                vm.setPage(1)
             })
         }
     }
@@ -226,8 +226,7 @@ fun AddressCalcForm(onAdvanceClick: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(start = 4.dp)
-                ,
+                    .padding(start = 4.dp),
                 value = index,
                 textStyle = TextStyle(fontSize = 12.sp),
                 keyboardOptions = KeyboardOptions(
@@ -447,7 +446,7 @@ fun AddressQRPreview(previewAddress: String, previewTitle: String, onDismiss: ()
                         Text(
                             text = stringResource(
                                 id = R.string.cancel
-                            ),color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold
+                            ), color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold
                         )
                     }
                 }

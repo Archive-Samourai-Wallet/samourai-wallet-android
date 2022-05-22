@@ -27,7 +27,7 @@ data class AddressDetailsModel(
     val redeemScript: String,
     val keyType: String?,
     var selectedIndex: Int = 0,
-    var currentIndex:Int = 0,
+    var currentIndex: Int = 0,
     val ecKey: ECKey?,
     val isExternal: Boolean
 )
@@ -39,9 +39,16 @@ class AddressCalculatorViewModel : ViewModel() {
         AddressDetailsModel("", "", "", null, 0, currentIndex = 0, ecKey = null, true)
     )
 
+    private val pageLiveData: MutableLiveData<Int> = MutableLiveData(0)
+
     fun getAddressLiveData(): LiveData<AddressDetailsModel> {
         return addressLiveData
     }
+    fun setPage (value:Int) {
+        pageLiveData.value =  value
+    }
+
+    fun getPage(): LiveData<Int> = pageLiveData
 
     fun calculateAddress(type: String, isExternal: Boolean, index: Int, context: Context) {
         viewModelScope.launch {
