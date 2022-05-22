@@ -32,10 +32,18 @@
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:elevation="0dp"
                 android:backgroundTint="?attr/statusBarBackground"
                 android:layout_height="?attr/actionBarSize"
-                app:layout_collapseMode="pin" />
+                app:titleMarginStart="12dp"
+                app:layout_collapseMode="pin" >
+
+                <com.samourai.wallet.widgets.CircleImageView
+                    android:layout_width="34dp"
+                    android:src="@drawable/samourai_logo_splash"
+                    android:id="@+id/toolbarIcon"
+                    android:background="?selectableItemBackground"
+                    android:layout_height="34dp"/>
+            </androidx.appcompat.widget.Toolbar>
 
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>

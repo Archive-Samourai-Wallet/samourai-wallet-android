@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_paynymr"
+        android:icon="@drawable/ic_crop_free_white_24dp"
+        android:orderInCategory="100"
+        android:title="@string/scan_code"
+        />
+
+    <item
+        android:id="@+id/action_collaborate"
+        android:icon="@drawable/ic_crop_free_white_24dp"
+        android:orderInCategory="100"
+        android:title="@string/scan_code"
+        />
+    <item
+        android:id="@+id/action_tools"
+
+        android:icon="@drawable/ic_crop_free_white_24dp"
+        android:orderInCategory="100"
+        android:title="@string/scan_code"
+        />
+
+
+</menu>

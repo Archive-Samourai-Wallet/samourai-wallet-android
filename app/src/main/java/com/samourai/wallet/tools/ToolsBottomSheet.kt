@@ -29,7 +29,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.samourai.wallet.R
 import com.samourai.wallet.theme.SamouraiWalletTheme
@@ -37,22 +36,19 @@ import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import kotlinx.coroutines.launch
 
 
-
 class ToolsBottomSheet : BottomSheetDialogFragment() {
 
-    var behavior:BottomSheetBehavior<*>? = null
+    var behavior: BottomSheetBehavior<*>? = null
 
-    override fun onStart() {
-        super.onStart()
-        val view = view
-        view?.post {
-            val parent = view.parent as View
-            val params = parent.layoutParams as CoordinatorLayout.LayoutParams
-              behavior = params.behavior as BottomSheetBehavior<*>?
-            if (behavior != null) {
-                behavior?.peekHeight = view.measuredHeight
-            }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val parent = view.parent as View
+        val params = parent.layoutParams as CoordinatorLayout.LayoutParams
+        behavior = params.behavior as BottomSheetBehavior<*>?
+        if (behavior != null) {
+            behavior?.peekHeight = view.height
+            behavior?.state = BottomSheetBehavior.STATE_EXPANDED
         }
+        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -67,17 +63,14 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
         }
         compose.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         container?.addView(compose)
-        return compose;
+        return compose
     }
 
     companion object {
         fun showTools(fragment: FragmentManager) {
             ToolsBottomSheet()
                 .apply {
-                    val dialog = this as BottomSheetDialog
-                    dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
                     show(fragment, this.tag)
-
                 }
         }
     }
