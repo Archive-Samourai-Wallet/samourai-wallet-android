@@ -97,6 +97,7 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/app_name"
             android:launchMode="singleTask"
+            android:exported="true"
             android:theme="@style/AppTheme.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -203,6 +204,7 @@
 
         <receiver android:name=".whirlpool.service.WhirlpoolBroadCastReceiver" />
         <receiver
+            android:exported="true"
             android:name=".util.ConnectionChangeReceiver"
             android:label="NetworkChangeReceiver">
             <intent-filter>
