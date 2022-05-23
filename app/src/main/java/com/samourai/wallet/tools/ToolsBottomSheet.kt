@@ -2,7 +2,6 @@ package com.samourai.wallet.tools
 
 import AddressCalculator
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -49,6 +49,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
             behavior?.state = BottomSheetBehavior.STATE_EXPANDED
             behavior?.skipCollapsed = true
         }
+        WindowCompat.setDecorFitsSystemWindows(requireActivity().window, false)
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -90,13 +91,26 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
     val addressCalcBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val signMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+
+    BackHandler(addressCalcBottomSheetState.isVisible) {
+        scope.launch {
+            addressCalcBottomSheetState.hide()
+        }
+    }
+    BackHandler(signMessageBottomSheetState.isVisible) {
+        scope.launch {
+            addressCalcBottomSheetState.hide()
+        }
+    }
+
     Scaffold {
         Column {
-            TopAppBar(backgroundColor = MaterialTheme.colors.primary, title = { Text(text = "Tools ") }, navigationIcon = {
+            TopAppBar(backgroundColor = MaterialTheme.colors.primary, title = { Text(text = "Tools ", color = Color.White) }, navigationIcon = {
                 IconButton(onClick = {
                     toolsBottomSheet?.dismiss()
                 }) {
-                    Icon(painter = painterResource(id = R.drawable.ic_close_white_24dp), contentDescription = "")
+                    Icon(painter = painterResource(id = R.drawable.ic_close_white_24dp), contentDescription = "", tint = Color.White)
                 }
             }
             )
@@ -114,7 +128,12 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                 subTitle = "Sign messages using your wallet private key",
                 icon = R.drawable.ic_signature,
                 onClick = {
-
+                    scope.launch {
+                        toolsBottomSheet?.disableDragging()
+                        val types = context.resources.getStringArray(R.array.account_types)
+                        vm.calculateAddress(types.first(), true, index = 0, context = context)
+                        signMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
+                    }
                 }
             )
             ToolsItem(
@@ -129,16 +148,13 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                         //Load first account type to viewmodel
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
+                        vm.clearMessage()
                         addressCalcBottomSheetState.show()
                     }
                 }
             )
         }
-        BackHandler(addressCalcBottomSheetState.isVisible) {
-            scope.launch {
-                addressCalcBottomSheetState.hide()
-            }
-        }
+
         //Clear previous address calc state
         if (addressCalcBottomSheetState.currentValue != ModalBottomSheetValue.Hidden) {
             DisposableEffect(Unit) {
@@ -150,18 +166,31 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                 }
             }
         }
+        if (signMessageBottomSheetState.currentValue != ModalBottomSheetValue.Hidden) {
+            DisposableEffect(Unit) {
+                onDispose {
+                    val types = context.resources.getStringArray(R.array.account_types)
+                    vm.calculateAddress(types.first(), true, index = 0, context = context)
+                    toolsBottomSheet?.disableDragging(disable = false)
+                }
+            }
+        }
         ModalBottomSheetLayout(
             sheetState = addressCalcBottomSheetState,
             scrimColor = Color.Black.copy(alpha = 0.7f),
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
-                AddressCalculator(
-                    onDismiss = {
-                        scope.launch {
-                            addressCalcBottomSheetState.hide()
-                        }
-                    }
-                )
+                AddressCalculator()
+            },
+            sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+        ) {}
+
+        ModalBottomSheetLayout(
+            sheetState = signMessageBottomSheetState,
+            scrimColor = Color.Black.copy(alpha = 0.7f),
+            sheetBackgroundColor = samouraiBottomSheetBackground,
+            sheetContent = {
+                SignMessage()
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {
