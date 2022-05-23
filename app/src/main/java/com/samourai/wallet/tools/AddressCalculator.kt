@@ -46,10 +46,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.android.Contents
 import com.google.zxing.client.android.encode.QRCodeEncoder
 import com.samourai.wallet.R
-import com.samourai.wallet.theme.samouraiAccent
-import com.samourai.wallet.theme.samouraiBottomSheetBackground
-import com.samourai.wallet.theme.samouraiTextSecondary
-import com.samourai.wallet.theme.samouraiWindow
+import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.AddressCalculatorViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -65,11 +62,12 @@ private val Int.ForIncoming: Int
 
 
 @Composable
-fun AddressCalculator(onDismiss: () -> Unit = {}) {
+fun AddressCalculator() {
     val vm = viewModel<AddressCalculatorViewModel>()
     val page by vm.getPage().observeAsState()
     var previewAddress by remember { mutableStateOf("") }
     var previewTitle by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Box(modifier = Modifier.requiredHeight(420.dp)) {
         AnimatedVisibility(
@@ -100,11 +98,23 @@ fun AddressCalculator(onDismiss: () -> Unit = {}) {
                         )
                     },
                 )
-                AddressCalcForm(
-                    onAdvanceClick = {
+                AddressCalcForm()
+                Button(
+                    onClick = {
                         vm.setPage(1)
-                    }
-                )
+                    },
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        backgroundColor = samouraiAccent,
+                        contentColor = Color.White
+                    ),
+                ) {
+                    Text("Address Details")
+                }
+                Box(modifier = Modifier.padding(24.dp))
             }
         }
         AnimatedVisibility(
@@ -182,7 +192,7 @@ fun AddressCalculator(onDismiss: () -> Unit = {}) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun AddressCalcForm(onAdvanceClick: () -> Unit) {
+fun AddressCalcForm() {
     val context = LocalContext.current;
     val vm = viewModel<AddressCalculatorViewModel>()
     val addressDetails by vm.getAddressLiveData().observeAsState()
@@ -228,6 +238,9 @@ fun AddressCalcForm(onAdvanceClick: () -> Unit) {
                     .weight(1f)
                     .padding(start = 4.dp),
                 value = index,
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = samouraiTextFieldBg
+                ),
                 textStyle = TextStyle(fontSize = 12.sp),
                 keyboardOptions = KeyboardOptions(
                     autoCorrect = false,
@@ -241,7 +254,6 @@ fun AddressCalcForm(onAdvanceClick: () -> Unit) {
                 onValueChange = {
                     index = it
                 },
-
                 label = {
                     Text(
                         "Address Index", fontSize = 12.sp
@@ -287,20 +299,6 @@ fun AddressCalcForm(onAdvanceClick: () -> Unit) {
             modifier = Modifier.padding(vertical = 18.dp, horizontal = 12.dp),
             text = addressDetails?.pubKey ?: ""
         )
-        Button(
-            onClick = {
-                onAdvanceClick()
-            }, Modifier
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(vertical = 12.dp),
-            colors = ButtonDefaults.textButtonColors(
-                backgroundColor = samouraiAccent,
-                contentColor = Color.White
-            )
-        ) {
-            Text("Address Details")
-        }
-        Box(modifier = Modifier.padding(24.dp))
     }
 
 }
@@ -545,6 +543,9 @@ fun DropDownTextField(
             textStyle = TextStyle(fontSize = 11.sp),
             onValueChange = {
             },
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = samouraiTextFieldBg
+            ),
             label = {
                 Text(
                     label, fontSize = 12.sp
