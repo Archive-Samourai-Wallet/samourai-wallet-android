@@ -186,7 +186,7 @@
     <string name="receive_address_to_share">Share this receive address? If shared, it may be read to other applications.</string>
     <string name="sure_to_erase">Are you sure you want to erase this wallet?</string>
     <string name="wallet_erased">Wallet erased from device.</string>
-    <string name="copy_warning_generic">Do you want to copy ? If copied, key may be visible to other applications.</string>
+    <string name="copy_warning_generic">Do you want to copy ? If copied, content might be visible to other applications.</string>
 
     <string name="send_privacy_warning">Privacy warning: be aware that you have already sent funds to this address.</string>
 

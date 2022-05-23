@@ -15,11 +15,16 @@ import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.util.AddressFactory
+import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.MessageSignUtil
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.bitcoinj.core.Address
 import org.bitcoinj.core.ECKey
+import org.json.JSONException
+import org.json.JSONObject
 
 data class AddressDetailsModel(
     val pubKey: String,
@@ -41,11 +46,14 @@ class AddressCalculatorViewModel : ViewModel() {
 
     private val pageLiveData: MutableLiveData<Int> = MutableLiveData(0)
 
+    private val singedMessage: MutableLiveData<String> = MutableLiveData("")
+
     fun getAddressLiveData(): LiveData<AddressDetailsModel> {
         return addressLiveData
     }
-    fun setPage (value:Int) {
-        pageLiveData.value =  value
+
+    fun setPage(value: Int) {
+        pageLiveData.value = value
     }
 
     fun getPage(): LiveData<Int> = pageLiveData
@@ -155,4 +163,45 @@ class AddressCalculatorViewModel : ViewModel() {
 
     }
 
+    fun signMessage(messageString: String, context: Context) {
+        try {
+            viewModelScope.launch {
+                withContext(Dispatchers.Unconfined) {
+                    val ecKey = addressLiveData.value?.ecKey ?: return@withContext
+                    val addr = addressLiveData.value?.pubKey ?: return@withContext
+                    var msg = ""
+                    if (FormatsUtil.getInstance().isValidBech32(addr) || Address.fromBase58(SamouraiWallet.getInstance().currentNetworkParams, addr).isP2SHAddress) {
+                        msg = context.getString(R.string.utxo_sign_text3)
+                        try {
+                            val obj = JSONObject()
+                            obj.put("pubkey", ecKey.publicKeyAsHex)
+                            obj.put("address", addr)
+                            msg += " $obj"
+                        } catch (je: JSONException) {
+                            msg += ":"
+                            msg += addr
+                            msg += ", "
+                            msg += "pubkey:"
+                            msg += ecKey.publicKeyAsHex
+                        }
+                    } else {
+                        msg = context.getString(R.string.utxo_sign_text2)
+                    }
+                    val strSignedMessage = MessageSignUtil.getInstance().signMessageArmored(ecKey, messageString.ifEmpty { msg })
+                    singedMessage.postValue(strSignedMessage)
+                }
+            }
+        } catch (e: Exception) {
+            throw  e
+        }
+
+    }
+
+    fun getSignedMessage(): LiveData<String> {
+        return singedMessage
+    }
+
+    fun clearMessage() {
+        singedMessage.postValue("")
+    }
 }
