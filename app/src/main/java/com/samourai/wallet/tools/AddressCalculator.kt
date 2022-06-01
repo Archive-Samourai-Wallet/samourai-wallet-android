@@ -48,18 +48,9 @@ import com.google.zxing.client.android.encode.QRCodeEncoder
 import com.samourai.wallet.R
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.AddressCalculatorViewModel
+import com.samourai.wallet.tools.WrapToolsPageAnimation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-
-private const val ProgressThreshold = 0.35f
-
-private val Int.ForOutgoing: Int
-    get() = (this * ProgressThreshold).toInt()
-
-private val Int.ForIncoming: Int
-    get() = this - this.ForOutgoing
-
 
 @Composable
 fun AddressCalculator() {
@@ -67,25 +58,10 @@ fun AddressCalculator() {
     val page by vm.getPage().observeAsState()
     var previewAddress by remember { mutableStateOf("") }
     var previewTitle by remember { mutableStateOf("") }
-    val context = LocalContext.current
 
     Box(modifier = Modifier.requiredHeight(420.dp)) {
-        AnimatedVisibility(
+        WrapToolsPageAnimation(
             visible = 0 == page,
-            enter = fadeIn(
-                animationSpec = tween(
-                    durationMillis = 350.ForIncoming,
-                    delayMillis = 2.ForOutgoing,
-                    easing = LinearOutSlowInEasing
-                )
-            ),
-            exit = fadeOut(
-                animationSpec = tween(
-                    durationMillis = 350.ForOutgoing,
-                    delayMillis = 0,
-                    easing = FastOutLinearInEasing
-                )
-            )
         ) {
             Column(Modifier.background(samouraiBottomSheetBackground)) {
                 TopAppBar(
@@ -117,22 +93,8 @@ fun AddressCalculator() {
                 Box(modifier = Modifier.padding(24.dp))
             }
         }
-        AnimatedVisibility(
+        WrapToolsPageAnimation(
             visible = 1 == page,
-            enter = fadeIn(
-                animationSpec = tween(
-                    durationMillis = 350.ForIncoming,
-                    delayMillis = 2.ForOutgoing,
-                    easing = LinearOutSlowInEasing
-                )
-            ),
-            exit = fadeOut(
-                animationSpec = tween(
-                    durationMillis = 350.ForOutgoing,
-                    delayMillis = 0,
-                    easing = FastOutLinearInEasing
-                )
-            )
         ) {
             Column(
                 Modifier
@@ -166,22 +128,8 @@ fun AddressCalculator() {
                 }
             }
         }
-        AnimatedVisibility(
+        WrapToolsPageAnimation(
             visible = 2 == page,
-            enter = fadeIn(
-                animationSpec = tween(
-                    durationMillis = 350.ForIncoming,
-                    delayMillis = 2.ForOutgoing,
-                    easing = LinearOutSlowInEasing
-                )
-            ),
-            exit = fadeOut(
-                animationSpec = tween(
-                    durationMillis = 350.ForOutgoing,
-                    delayMillis = 0,
-                    easing = FastOutLinearInEasing
-                )
-            )
         ) {
             AddressQRPreview(previewAddress, previewTitle, onDismiss = {
                 vm.setPage(1)

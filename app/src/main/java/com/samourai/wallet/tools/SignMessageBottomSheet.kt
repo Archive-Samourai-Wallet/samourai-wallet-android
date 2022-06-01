@@ -2,12 +2,6 @@ package com.samourai.wallet.tools
 
 import AddressCalcForm
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,13 +34,6 @@ import com.samourai.wallet.theme.samouraiTextFieldBg
 import com.samourai.wallet.theme.samouraiWindow
 
 
-private const val ProgressThreshold = 0.35f
-
-private val Int.ForOutgoing: Int
-    get() = (this * ProgressThreshold).toInt()
-
-private val Int.ForIncoming: Int
-    get() = this - this.ForOutgoing
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -105,22 +92,8 @@ fun SignMessage() {
             )
         }
 
-        AnimatedVisibility(
+        WrapToolsPageAnimation(
             visible = signedMessage.isNullOrEmpty(),
-            enter = fadeIn(
-                animationSpec = tween(
-                    durationMillis = 350.ForIncoming,
-                    delayMillis = 2.ForOutgoing,
-                    easing = LinearOutSlowInEasing
-                )
-            ),
-            exit = fadeOut(
-                animationSpec = tween(
-                    durationMillis = 350.ForOutgoing,
-                    delayMillis = 0,
-                    easing = FastOutLinearInEasing
-                )
-            )
         ) {
             Column(
                 Modifier
@@ -208,22 +181,8 @@ fun SignMessage() {
             }
         }
 
-        AnimatedVisibility(
+        WrapToolsPageAnimation(
             visible = !signedMessage.isNullOrEmpty(),
-            enter = fadeIn(
-                animationSpec = tween(
-                    durationMillis = 350.ForIncoming,
-                    delayMillis = 2.ForOutgoing,
-                    easing = LinearOutSlowInEasing
-                )
-            ),
-            exit = fadeOut(
-                animationSpec = tween(
-                    durationMillis = 350.ForOutgoing,
-                    delayMillis = 0,
-                    easing = FastOutLinearInEasing
-                )
-            )
         ) {
             Box(
                 modifier = Modifier
