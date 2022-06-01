@@ -34,10 +34,14 @@ import java.util.List;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 public class AppUtil {
 
     public static final int MIN_BACKUP_PW_LENGTH = 6;
     public static final int MAX_BACKUP_PW_LENGTH = 255;
+    private MutableLiveData<Boolean> offlineLiveData = new MutableLiveData();
 
     public static final String TOR_PACKAGE_ID = "org.torproject.android";
     public static final String OPENVPN_PACKAGE_ID = "de.blinkt.openvpn";
@@ -74,13 +78,20 @@ public class AppUtil {
 
     public boolean isOfflineMode() {
 
-        isOfflineMode = (isUserOfflineMode() || !ConnectivityStatus.hasConnectivity(context)) ? true : false;
+        isOfflineMode = isUserOfflineMode() || !ConnectivityStatus.hasConnectivity(context);
 
         return isOfflineMode;
     }
 
+    public LiveData<Boolean> offlineStateLive(){
+        return offlineLiveData;
+    }
+    public void checkOfflineState(){
+        offlineLiveData.postValue(isOfflineMode());
+    }
     public void setOfflineMode(boolean offline) {
         isOfflineMode = offline;
+        checkOfflineState();
     }
 
     public boolean isUserOfflineMode() {
@@ -89,6 +100,7 @@ public class AppUtil {
 
     public void setUserOfflineMode(boolean offline) {
         isUserOfflineMode = offline;
+        checkOfflineState();
     }
 
     public void wipeApp() {
