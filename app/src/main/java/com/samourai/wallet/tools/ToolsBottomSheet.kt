@@ -1,7 +1,9 @@
 package com.samourai.wallet.tools
 
 import AddressCalculator
+import SweepPrivateKeyView
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -38,6 +41,12 @@ import kotlinx.coroutines.launch
 
 
 class ToolsBottomSheet : BottomSheetDialogFragment() {
+
+    enum class ToolType {
+        ADDRESS_CALC,
+        SIGN,
+        SWEEP
+    }
 
     var behavior: BottomSheetBehavior<*>? = null
 
@@ -65,7 +74,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
             SamouraiWalletTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    ToolsMainView(this)
+                    ToolsMainView(this, parentFragmentManager)
                 }
             }
         }
@@ -81,17 +90,56 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                     show(fragment, this.tag)
                 }
         }
+
+        fun showTools(fragment: FragmentManager, type: ToolType, bundle: Bundle? = null) {
+            SingleToolBottomSheet(type)
+                .apply {
+                    arguments = bundle
+                    show(fragment, this.tag)
+                }
+        }
+    }
+
+     class SingleToolBottomSheet(private val toolType: ToolType) : BottomSheetDialogFragment() {
+
+        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+            val compose = ComposeView(requireContext())
+            val model: AddressCalculatorViewModel by viewModels()
+            if (toolType != ToolType.SWEEP) {
+                val types = requireContext().resources.getStringArray(R.array.account_types)
+                model.calculateAddress(types.first(), true, index = 0, context = requireContext())
+            }
+            val key = arguments?.getString("KEY", "") ?: ""
+            compose.setContent {
+                SamouraiWalletTheme {
+                    Surface(color = MaterialTheme.colors.background) {
+                        when (toolType) {
+                            ToolType.SWEEP -> SweepPrivateKeyView(parentFragmentManager, onCloseClick = {
+                                this.dismiss()
+                            }, keyParameter = key)
+                            ToolType.SIGN -> SignMessage()
+                            ToolType.ADDRESS_CALC -> AddressCalculator()
+                        }
+                    }
+                }
+            }
+            compose.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            container?.addView(compose)
+            return compose
+        }
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
+fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?) {
     val vm = viewModel<AddressCalculatorViewModel>()
+    val sweepViewModel = viewModel<SweepViewModel>()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
     val addressCalcBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val signMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 
     BackHandler(addressCalcBottomSheetState.isVisible) {
         scope.launch {
@@ -100,7 +148,13 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
     }
     BackHandler(signMessageBottomSheetState.isVisible) {
         scope.launch {
+            sweepViewModel.clear()
             addressCalcBottomSheetState.hide()
+        }
+    }
+    BackHandler(signMessageBottomSheetState.isVisible) {
+        scope.launch {
+            sweepPrivateKeyBottomSheet.hide()
         }
     }
 
@@ -120,7 +174,11 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                         "your next bitcoin address",
                 icon = R.drawable.ic_broom,
                 onClick = {
-
+                    scope.launch {
+                        toolsBottomSheet?.disableDragging()
+                        sweepViewModel.clear()
+                        sweepPrivateKeyBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
+                    }
                 }
             )
             ToolsItem(
@@ -129,9 +187,10 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                 icon = R.drawable.ic_signature,
                 onClick = {
                     scope.launch {
-                        toolsBottomSheet?.disableDragging()
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
+                        vm.clearMessage()
+                        toolsBottomSheet?.disableDragging()
                         signMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
                     }
                 }
@@ -175,12 +234,36 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?) {
                 }
             }
         }
+
+        if (sweepPrivateKeyBottomSheet.currentValue != ModalBottomSheetValue.Hidden) {
+            DisposableEffect(Unit) {
+                onDispose {
+                    sweepViewModel.clear()
+                    toolsBottomSheet?.disableDragging(disable = false)
+                }
+            }
+        }
+
         ModalBottomSheetLayout(
             sheetState = addressCalcBottomSheetState,
             scrimColor = Color.Black.copy(alpha = 0.7f),
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
                 AddressCalculator()
+            },
+            sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+        ) {}
+
+        ModalBottomSheetLayout(
+            sheetState = sweepPrivateKeyBottomSheet,
+            scrimColor = Color.Black.copy(alpha = 0.7f),
+            sheetBackgroundColor = samouraiBottomSheetBackground,
+            sheetContent = {
+                SweepPrivateKeyView(parentFragmentManager, onCloseClick = {
+                    scope.launch {
+                        sweepPrivateKeyBottomSheet.hide()
+                    }
+                })
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {}
@@ -211,7 +294,7 @@ fun ToolsItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable() {
+                .clickable {
                     onClick()
                 }
                 .border(0.dp, Color.Transparent) // outer border
@@ -270,7 +353,7 @@ fun DefaultPreview() {
     SamouraiWalletTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-            ToolsMainView(null)
+            ToolsMainView(null, null)
         }
     }
 }

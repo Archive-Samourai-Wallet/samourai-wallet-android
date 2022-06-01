@@ -174,7 +174,7 @@ public class AddressCalcActivity extends SamouraiActivity {
 
                     String message = spType.getSelectedItem().toString();
                     message += "\n";
-                    message += (chain == 1) ? AddressCalcActivity.this.getText(R.string.change_chain) : AddressCalcActivity.this.getText(R.string.receive_chain);
+                    message += (chain == 1) ? AddressCalcActivity.this.getText(R.string.change_chain) : AddressCalcActivity.this.getText(R.string.receive_address);
                     message += "\n";
                     message += index + ":";
                     message += "\n";

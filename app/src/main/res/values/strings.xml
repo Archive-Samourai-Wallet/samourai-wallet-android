@@ -892,5 +892,9 @@
     <string name="copy_tx_id">Copy TxID</string>
     <string name="copy_url">Copy URL</string>
     <string name="title_activity_tools_main_acitivty">ToolsMainAcitivty</string>
+    <string name="preview_sweep">Preview sweep</string>
+    <string name="cost_of_sweep">Cost of sweep transaction</string>
+    <string name="balance_of_unspent">Balance of unspent output</string>
+    <string name="sweep">Sweep</string>
 
 </resources>
