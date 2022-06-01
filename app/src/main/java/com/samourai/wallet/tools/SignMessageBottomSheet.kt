@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
@@ -50,7 +51,8 @@ fun SignMessage() {
     Box(modifier = Modifier.heightIn(min = 430.dp)) {
         if (openDialog) {
             AlertDialog(
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.shadow(24.dp),
                 backgroundColor = samouraiWindow,
                 contentColor = Color.White,
                 title = {

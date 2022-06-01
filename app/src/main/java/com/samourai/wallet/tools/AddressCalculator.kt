@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -358,7 +359,8 @@ fun AddressQRPreview(previewAddress: String, previewTitle: String, onDismiss: ()
     Column(Modifier.background(samouraiBottomSheetBackground)) {
         if (openDialog) {
             AlertDialog(
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.shadow(24.dp),
                 backgroundColor = samouraiWindow,
                 contentColor = Color.White,
                 title = {

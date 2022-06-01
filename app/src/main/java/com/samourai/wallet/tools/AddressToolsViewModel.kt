@@ -1,6 +1,7 @@
 package com.samourai.wallet.tools
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -166,7 +167,7 @@ class AddressCalculatorViewModel : ViewModel() {
     fun signMessage(messageString: String, context: Context) {
         try {
             viewModelScope.launch {
-                withContext(Dispatchers.Unconfined) {
+                withContext(Dispatchers.Default) {
                     val ecKey = addressLiveData.value?.ecKey ?: return@withContext
                     val addr = addressLiveData.value?.pubKey ?: return@withContext
                     var msg = ""
