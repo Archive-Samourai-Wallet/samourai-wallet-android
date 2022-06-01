@@ -976,6 +976,7 @@ open class BalanceActivity : SamouraiActivity() {
     }
 
     private fun doPrivKey(data: String?) {
+
         val params = SamouraiWallet.getInstance().currentNetworkParams
         var privKeyReader: PrivKeyReader? = null
         var format: String? = null
@@ -987,54 +988,10 @@ open class BalanceActivity : SamouraiActivity() {
             return
         }
         if (format != null) {
-            if (format == PrivKeyReader.BIP38) {
-                val pvr: PrivKeyReader = privKeyReader
-                val password38 = EditText(this@BalanceActivity)
-                password38.isSingleLine = true
-                password38.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-                val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-                    .setTitle(R.string.app_name)
-                    .setMessage(R.string.bip38_pw)
-                    .setView(password38)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok) { _, _ ->
-                        val password = password38.text.toString()
-                        val progress = ProgressDialog(this@BalanceActivity)
-                        progress.setCancelable(false)
-                        progress.setTitle(R.string.app_name)
-                        progress.setMessage(getString(R.string.decrypting_bip38))
-                        progress.show()
-                        var keyDecoded = false
-                        try {
-                            val bip38 = BIP38PrivateKey(SamouraiWallet.getInstance().currentNetworkParams, data)
-                            val ecKey = bip38.decrypt(password)
-                            if (ecKey != null && ecKey.hasPrivKey()) {
-                                if (progress != null && progress.isShowing) {
-                                    progress.cancel()
-                                }
-                                pvr.setPassword(password)
-                                keyDecoded = true
-                                Toast.makeText(this@BalanceActivity, pvr.format, Toast.LENGTH_SHORT).show()
-                                Toast.makeText(this@BalanceActivity, pvr.key.toAddress(SamouraiWallet.getInstance().currentNetworkParams).toString(), Toast.LENGTH_SHORT).show()
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            Toast.makeText(this@BalanceActivity, R.string.bip38_pw_error, Toast.LENGTH_SHORT).show()
-                        }
-                        if (progress != null && progress.isShowing) {
-                            progress.cancel()
-                        }
-                        if (keyDecoded) {
-                            SweepUtil.getInstance(this@BalanceActivity).sweep(pvr)
-                        }
-                    }.setNegativeButton(R.string.cancel) { dialog, whichButton -> Toast.makeText(this@BalanceActivity, R.string.bip38_pw_error, Toast.LENGTH_SHORT).show() }
-                if (!isFinishing) {
-                    dlg.show()
-                }
-            } else if (privKeyReader != null) {
-                SweepUtil.getInstance(this@BalanceActivity).sweep(privKeyReader)
-            } else {
-            }
+            ToolsBottomSheet.showTools(supportFragmentManager,ToolsBottomSheet.ToolType.SWEEP,
+                bundle = Bundle().apply {
+                    putString("KEY",data)
+                })
         } else {
             Toast.makeText(this@BalanceActivity, R.string.cannot_recognize_privkey, Toast.LENGTH_SHORT).show()
         }
