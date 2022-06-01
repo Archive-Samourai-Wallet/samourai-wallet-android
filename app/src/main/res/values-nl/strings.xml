@@ -582,7 +582,7 @@
     </string-array>
 
     <string name="chain_id">Adres-chain</string>
-    <string name="receive_chain">Ontvangstadres</string>
+    <string name="receive_address">Ontvangstadres</string>
     <string name="change_chain">Wisselgeldadres</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
     <string name="encrypted_backup_detected">Versleutelde back-up gedetecteerd</string>

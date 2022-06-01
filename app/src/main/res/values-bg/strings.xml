@@ -571,7 +571,7 @@
     </string-array>
 
     <string name="chain_id">Верига на адресите</string>
-    <string name="receive_chain">Адрес за получаване</string>
+    <string name="receive_address">Адрес за получаване</string>
     <string name="change_chain">Адрес за ресто</string>
      <string name="whirlpool_postmix">Whirlpool SegWit след-микс</string>
     <string name="encrypted_backup_detected">Криптираното резервно копие изтрито</string>

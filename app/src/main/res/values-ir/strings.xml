@@ -585,7 +585,7 @@
     </string-array>
 
     <string name="chain_id">آدرسِ زنجیره</string>
-    <string name="receive_chain">آدرسِ دریافت</string>
+    <string name="receive_address">آدرسِ دریافت</string>
     <string name="change_chain">آدرسِ مابقی پول</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
     <string name="encrypted_backup_detected">بکاپِ رمزگذاری شده تشخیص داده شد </string>

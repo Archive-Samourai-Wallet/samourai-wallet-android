@@ -592,7 +592,7 @@
 
     <string name="chain_id">Цепь адресов:</string>
 
-    <string name="receive_chain">Адрес получения</string>
+    <string name="receive_address">Адрес получения</string>
 
     <string name="change_chain">Адрес для сдачи</string>
     <string name="whirlpool_postmix">Whirlpool Segwit пост-миксовый</string>

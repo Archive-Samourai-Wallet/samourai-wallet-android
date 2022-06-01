@@ -582,7 +582,7 @@
     </string-array>
 
     <string name="chain_id">Cím lánc</string>
-    <string name="receive_chain">Fogadó címek</string>
+    <string name="receive_address">Fogadó címek</string>
     <string name="change_chain">Visszajáró címek</string>
     <string name="whirlpool_postmix">Whirlpool Segwit mix után</string>
     <string name="encrypted_backup_detected">Titkosított biztonsági mentés található az eszközön</string>

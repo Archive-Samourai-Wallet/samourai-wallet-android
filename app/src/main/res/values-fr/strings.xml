@@ -556,7 +556,7 @@
     
     <string name="type_address">Type d\'adresse</string>
     <string name="chain_id">Chaîne d\'adresses</string>
-    <string name="receive_chain">Recevoir l\'adresse</string>
+    <string name="receive_address">Recevoir l\'adresse</string>
     <string name="change_chain">Changer l\'adresse</string>
     
     <string name="in_offline_mode">Le portefeuille Samourai est en mode hors-ligne.</string>

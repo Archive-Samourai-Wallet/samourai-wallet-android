@@ -594,7 +594,7 @@
     </string-array>
     ###################
     <string name="chain_id">地址链</string>
-    <string name="receive_chain">接收地址</string>
+    <string name="receive_address">接收地址</string>
     <string name="change_chain">找零地址</string>
     <string name="whirlpool_postmix">Whirlpool Segwit（混合后）</string>
     <string name="encrypted_backup_detected">已检查到加密备份</string>

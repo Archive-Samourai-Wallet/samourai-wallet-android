@@ -594,7 +594,7 @@
     </string-array> -->
 
     <string name="chain_id">Cadena de direccines</string>
-    <string name="receive_chain">Recibir dirección</string>
+    <string name="receive_address">Recibir dirección</string>
     <string name="change_chain">Cambiar dirección</string>
     <!-- <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string> -->
     <string name="encrypted_backup_detected">Copia de seguridad encriptada detectada</string>

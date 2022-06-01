@@ -583,7 +583,7 @@
     </string-array>
 
     <string name="chain_id">Addresszweig</string>
-    <string name="receive_chain">Empfangsadresse</string>
+    <string name="receive_address">Empfangsadresse</string>
     <string name="change_chain">Wechseladresse</string>
 	<string name="whirlpool_postmix">Whirlpool SegWit post-mix</string>
     <string name="encrypted_backup_detected">Verschlüsseltes Backup gefunden</string>

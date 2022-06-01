@@ -543,7 +543,7 @@
 
     <string name="chain_id">Address chain</string>
 
-    <string name="receive_chain">Receive address</string>
+    <string name="receive_address">Receive address</string>
 
     <string name="change_chain">Change address</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>

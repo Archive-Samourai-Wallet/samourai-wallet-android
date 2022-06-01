@@ -594,7 +594,7 @@
     </string-array>
 
     <string name="chain_id">Řetězec adresy</string>
-    <string name="receive_chain">Přijímající adresa</string>
+    <string name="receive_address">Přijímající adresa</string>
     <string name="change_chain">Adresa na vrácení</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
     <string name="encrypted_backup_detected">Šifrovaná záloha detekována</string>

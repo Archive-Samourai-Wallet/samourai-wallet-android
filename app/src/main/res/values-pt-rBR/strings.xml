@@ -582,7 +582,7 @@
 
     <string name="chain_id">Cadeia de endereços</string>
 
-    <string name="receive_chain">Endereço de recebimento</string>
+    <string name="receive_address">Endereço de recebimento</string>
 
     <string name="change_chain">Mudar de endereço</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>

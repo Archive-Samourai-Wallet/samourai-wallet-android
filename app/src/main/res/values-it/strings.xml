@@ -588,7 +588,7 @@
     </string-array>
 
     <string name="chain_id">Catena di indirizzi</string>
-    <string name="receive_chain">Indirizzo di ricezione</string>
+    <string name="receive_address">Indirizzo di ricezione</string>
     <string name="change_chain">Indirizzo di resto</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
     <string name="encrypted_backup_detected">Trovato backup criptato</string>
