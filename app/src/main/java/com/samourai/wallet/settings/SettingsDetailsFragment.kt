@@ -295,6 +295,9 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                                                                         }
                                                                     }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
                                                         }
+                                                        else {
+                                                            Toast.makeText(requireContext().getApplicationContext(), R.string.pin_length_error, Toast.LENGTH_LONG).show()
+                                                        }
                                                     }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
                                         } else {
                                             Toast.makeText(requireContext().getApplicationContext(), R.string.pin_error, Toast.LENGTH_SHORT).show()

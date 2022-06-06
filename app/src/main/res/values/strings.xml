@@ -890,5 +890,6 @@
     <string name="open_in_browser">Open in browser</string>
     <string name="copy_tx_id">Copy TxID</string>
     <string name="copy_url">Copy URL</string>
+    <string name="pin_length_error">Pin should be between 5 and 8 digits long</string>
 
 </resources>
