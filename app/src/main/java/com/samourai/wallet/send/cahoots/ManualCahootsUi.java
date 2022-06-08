@@ -92,14 +92,15 @@ public class ManualCahootsUi {
     }
 
     private void createSteps(FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider) {
-        for (int i = 0; i < (ManualCahootsMessage.NB_STEPS-1); i++) {
+        int nbSteps = this.cahootsType == CahootsType.MULTI ? ManualCahootsMessage.NB_STEPS_MULTI : ManualCahootsMessage.NB_STEPS;
+        for (int i = 0; i < (nbSteps-1); i++) {
             Fragment stepView = fragmentProvider.apply(i);
             steps.add(stepView);
         }
         if (CahootsTypeUser.SENDER.equals(typeUser)) {
             steps.add(cahootReviewFragment);
         } else {
-            Fragment stepView = fragmentProvider.apply(ManualCahootsMessage.NB_STEPS-1);
+            Fragment stepView = fragmentProvider.apply(nbSteps-1);
             steps.add(stepView);
         }
         stepsViewGroup.setTotalSteps(steps.size());
@@ -134,6 +135,7 @@ public class ManualCahootsUi {
         }
 
         if (cahootsMessage.isDone()) {
+            System.out.println("DONE!!!!");
             notifyWalletAndFinish();
         } else {
             activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());
@@ -154,7 +156,7 @@ public class ManualCahootsUi {
     private void setStep(final int step) {
         stepsViewGroup.post(() -> stepsViewGroup.setStep(step + 1));
         viewPager.post(() -> viewPager.setCurrentItem(step, true));
-        stepCounts.setText("Step " + (step + 1) + "/5");
+        stepCounts.setText("Step " + (step + 1) + "/" + (this.cahootsType == CahootsType.MULTI ? "9" : "5"));
     }
 
     private class StepAdapter extends FragmentPagerAdapter {
@@ -198,6 +200,8 @@ public class ManualCahootsUi {
                 return CahootsContext.newInitiatorStonewallx2(sendAmount, sendAddress);
             case STOWAWAY:
                 return CahootsContext.newInitiatorStowaway(sendAmount);
+            case MULTI:
+                return CahootsContext.newInitiatorMultiCahoots(sendAmount, sendAddress);
             default:
                 throw new Exception("Unknown #Cahoots");
         }
