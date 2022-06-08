@@ -41,10 +41,19 @@
         android:usesCleartextTraffic="true"
         tools:replace="android:allowBackup">
         <activity
+            android:name=".collaborate.CollaborateActivity"
+            android:exported="true"
+             android:theme="@style/SamouraiAppTheme" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".explorer.ExplorerActivity"
+            android:exported="false"
             android:label=""
-            android:theme="@style/Theme.Samourai.Material"
-            android:exported="false" />
+            android:theme="@style/Theme.Samourai.Material" />
         <activity
             android:name=".whirlpool.WhirlpoolHome"
             android:exported="false"
@@ -96,9 +105,9 @@
         <activity
             android:name=".MainActivity2"
             android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
             android:label="@string/app_name"
             android:launchMode="singleTask"
-            android:exported="true"
             android:theme="@style/AppTheme.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -205,8 +214,8 @@
 
         <receiver android:name=".whirlpool.service.WhirlpoolBroadCastReceiver" />
         <receiver
-            android:exported="true"
             android:name=".util.ConnectionChangeReceiver"
+            android:exported="true"
             android:label="NetworkChangeReceiver">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />

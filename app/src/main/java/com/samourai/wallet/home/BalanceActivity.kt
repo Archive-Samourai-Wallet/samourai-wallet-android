@@ -40,6 +40,7 @@ import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
+import com.samourai.wallet.collaborate.CollaborateActivity
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.databinding.ActivityBalanceBinding
@@ -371,6 +372,10 @@ open class BalanceActivity : SamouraiActivity() {
                 item {
                     label = "Collaborate"
                     iconSize = 18
+                    callback={
+                        val intent  = Intent(this@BalanceActivity,CollaborateActivity::class.java)
+                        startActivity(intent)
+                    }
                     icon = R.drawable.ic_connect_without_contact
                 }
                 item {
