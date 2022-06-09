@@ -37,6 +37,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.samourai.wallet.R
 import com.samourai.wallet.theme.SamouraiWalletTheme
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
+import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
+import com.samourai.wallet.tools.viewmodels.SweepViewModel
 import kotlinx.coroutines.launch
 
 
@@ -44,6 +46,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
 
     enum class ToolType {
         ADDRESS_CALC,
+        AUTH47,
         SIGN,
         SWEEP
     }
@@ -100,7 +103,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-     class SingleToolBottomSheet(private val toolType: ToolType) : BottomSheetDialogFragment() {
+    class SingleToolBottomSheet(private val toolType: ToolType) : BottomSheetDialogFragment() {
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
             val compose = ComposeView(requireContext())
@@ -119,6 +122,9 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                             }, keyParameter = key)
                             ToolType.SIGN -> SignMessage()
                             ToolType.ADDRESS_CALC -> AddressCalculator()
+                            ToolType.AUTH47 -> Auth47Login(param= key, onClose = {
+                                dismiss()
+                            })
                         }
                     }
                 }
@@ -135,11 +141,13 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
 fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?) {
     val vm = viewModel<AddressCalculatorViewModel>()
     val sweepViewModel = viewModel<SweepViewModel>()
+    val auth47ViewModel = viewModel<Auth47ViewModel>()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
     val addressCalcBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val signMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val auth47BottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 
     BackHandler(addressCalcBottomSheetState.isVisible) {
         scope.launch {
@@ -155,6 +163,11 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     BackHandler(signMessageBottomSheetState.isVisible) {
         scope.launch {
             sweepPrivateKeyBottomSheet.hide()
+        }
+    }
+    BackHandler(auth47BottomSheet.isVisible) {
+        scope.launch {
+            auth47BottomSheet.hide()
         }
     }
 
@@ -212,6 +225,17 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     }
                 }
             )
+            ToolsItem(
+                title = "Authenticate with paynym",
+                subTitle = "Simple and secure authentication with a Bitcoin Payment Code (see BIP47)",
+                icon = R.drawable.ic_paynym_white_24dp,
+                onClick = {
+                    scope.launch {
+                        toolsBottomSheet?.disableDragging()
+                        auth47BottomSheet.show()
+                    }
+                }
+            )
         }
 
         //Clear previous address calc state
@@ -239,6 +263,15 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             DisposableEffect(Unit) {
                 onDispose {
                     sweepViewModel.clear()
+                    toolsBottomSheet?.disableDragging(disable = false)
+                }
+            }
+        }
+
+        if (auth47BottomSheet.currentValue != ModalBottomSheetValue.Hidden) {
+            DisposableEffect(Unit) {
+                onDispose {
+                    auth47ViewModel.clear()
                     toolsBottomSheet?.disableDragging(disable = false)
                 }
             }
@@ -274,6 +307,21 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
                 SignMessage()
+            },
+            sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+        ) {
+        }
+
+        ModalBottomSheetLayout(
+            sheetState = auth47BottomSheet,
+            scrimColor = Color.Black.copy(alpha = 0.7f),
+            sheetBackgroundColor = samouraiBottomSheetBackground,
+            sheetContent = {
+                Auth47Login(onClose = {
+                    scope.launch {
+                        auth47BottomSheet.hide()
+                    }
+                })
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {

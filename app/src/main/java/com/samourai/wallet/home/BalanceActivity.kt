@@ -1,6 +1,5 @@
 package com.samourai.wallet.home
 
-import android.app.ProgressDialog
 import android.content.*
 import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory
@@ -12,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.text.InputType
-import android.text.TextUtils
 import android.util.Log
 import android.util.TypedValue
 import android.view.Menu
@@ -59,13 +57,13 @@ import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.send.SendActivity
-import com.samourai.wallet.send.SweepUtil
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity
 import com.samourai.wallet.service.JobRefreshService
 import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity
 import com.samourai.wallet.tools.ToolsBottomSheet
+import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.tx.TxDetailsActivity
@@ -83,7 +81,6 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import org.bitcoinj.crypto.BIP38PrivateKey
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.bitcoinj.script.Script
 import org.bouncycastle.util.encoders.Hex
@@ -359,7 +356,7 @@ open class BalanceActivity : SamouraiActivity() {
                     label = nym
                     iconDrawable = drawable
                     iconSize = 34
-                    labelColor = ContextCompat.getColor(applicationContext,R.color.white)
+                    labelColor = ContextCompat.getColor(applicationContext, R.color.white)
                     disableTint = true
                     iconShapeAppearanceModel = ShapeAppearanceModel().toBuilder()
                         .setAllCornerSizes(resources.getDimension(R.dimen.qr_image_corner_radius))
@@ -372,8 +369,8 @@ open class BalanceActivity : SamouraiActivity() {
                 item {
                     label = "Collaborate"
                     iconSize = 18
-                    callback={
-                        val intent  = Intent(this@BalanceActivity,CollaborateActivity::class.java)
+                    callback = {
+                        val intent = Intent(this@BalanceActivity, CollaborateActivity::class.java)
                         startActivity(intent)
                     }
                     icon = R.drawable.ic_connect_without_contact
@@ -406,7 +403,7 @@ open class BalanceActivity : SamouraiActivity() {
                     iconColor = ContextCompat.getColor(this@BalanceActivity, R.color.mpm_red)
                     labelColor = ContextCompat.getColor(this@BalanceActivity, R.color.mpm_red)
                     icon = R.drawable.ic_baseline_power_settings_new_24
-                    callback ={
+                    callback = {
                         this@BalanceActivity.onBackPressed()
                     }
                 }
@@ -561,7 +558,6 @@ open class BalanceActivity : SamouraiActivity() {
                         override fun onSuccess() {
                             /*NO OP*/
                         }
-
                         override fun onError(e: Exception) {
                             /*NO OP*/
                         }
@@ -730,6 +726,7 @@ open class BalanceActivity : SamouraiActivity() {
             }
         } else if (resultCode == RESULT_CANCELED && requestCode == SCAN_COLD_STORAGE) {
         } else if (resultCode == RESULT_OK && requestCode == SCAN_QR) {
+
             if (data?.getStringExtra(ZBarConstants.SCAN_RESULT) != null) {
                 val strResult = data.getStringExtra(ZBarConstants.SCAN_RESULT)
                 val params = SamouraiWallet.getInstance().currentNetworkParams
@@ -737,6 +734,11 @@ open class BalanceActivity : SamouraiActivity() {
                 try {
                     if (privKeyReader.format != null) {
                         doPrivKey(strResult!!.trim { it <= ' ' })
+                    } else if (strResult?.lowercase()?.startsWith(Auth47ViewModel.BIP47_AUTH_SCHEME.lowercase()) == true) {
+                        ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
+                            bundle = Bundle().apply {
+                                putString("KEY", strResult)
+                            })
                     } else if (Cahoots.isCahoots(strResult!!.trim { it <= ' ' })) {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, strResult.trim { it <= ' ' })
                         startActivity(cahootIntent)
@@ -894,6 +896,12 @@ open class BalanceActivity : SamouraiActivity() {
                     privKeyReader.format != null -> {
                         doPrivKey(code.trim { it <= ' ' })
                     }
+                    code.lowercase().startsWith(Auth47ViewModel.BIP47_AUTH_SCHEME) -> {
+                        ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
+                            bundle = Bundle().apply {
+                                putString("KEY", code)
+                            })
+                    }
                     Cahoots.isCahoots(code.trim { it <= ' ' }) -> {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, code.trim { it <= ' ' })
                         startActivity(cahootIntent)
@@ -993,9 +1001,9 @@ open class BalanceActivity : SamouraiActivity() {
             return
         }
         if (format != null) {
-            ToolsBottomSheet.showTools(supportFragmentManager,ToolsBottomSheet.ToolType.SWEEP,
+            ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.SWEEP,
                 bundle = Bundle().apply {
-                    putString("KEY",data)
+                    putString("KEY", data)
                 })
         } else {
             Toast.makeText(this@BalanceActivity, R.string.cannot_recognize_privkey, Toast.LENGTH_SHORT).show()
