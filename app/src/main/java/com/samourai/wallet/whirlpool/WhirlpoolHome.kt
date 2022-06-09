@@ -256,9 +256,7 @@ class WhirlpoolHome : SamouraiActivity() {
                 } catch (ex: Exception) {
                     Toast.makeText(this, ex.message, Toast.LENGTH_LONG).show()
                     ex.printStackTrace()
-                    val intent = Intent(applicationContext, UTXOSActivity::class.java)
-                    intent.putExtra("_account", WhirlpoolMeta.getInstance(applicationContext).whirlpoolPostmix)
-                    startActivity(intent)
+                    super.onBackPressed()
                     return
                 }
                 if (tx0.tx0 == null) {
