@@ -37,14 +37,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.theme.*
-import com.samourai.wallet.tools.SweepViewModel
+import com.samourai.wallet.tools.viewmodels.SweepViewModel
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.AddressFactory
 import com.samourai.wallet.util.AppUtil

@@ -1,4 +1,4 @@
-package com.samourai.wallet.tools
+package com.samourai.wallet.tools.viewmodels
 
 import android.content.Context
 import androidx.lifecycle.LiveData
