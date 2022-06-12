@@ -21,28 +21,26 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
-import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.Tx
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
-import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.crypto.DecryptionException
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.boost.CPFPTask
 import com.samourai.wallet.send.boost.RBFTask
-import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.tor.TorManager.isRequired
-import com.samourai.wallet.util.BlockExplorerUtil
+import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.DateUtil
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.CircleImageView
 import com.squareup.picasso.Picasso
+import io.matthewnelson.topl_service.TorServiceController
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
@@ -437,6 +435,10 @@ class TxDetailsActivity : SamouraiActivity() {
      * Opens external BlockExplorer
      */
     private fun doExplorerView() {
+        if (isConnected()) {
+            TorServiceController.newIdentity()
+        }
+
         tx?.let {
             val browserIntent = Intent(this,  ExplorerActivity::class.java)
             browserIntent.putExtra(ExplorerActivity.TX_URI,it.hash)
