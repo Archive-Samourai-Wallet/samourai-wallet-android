@@ -277,9 +277,11 @@ object ExternalBackupManager {
         val directoryUri = data?.data ?: return
         if (requestCode == STORAGE_REQ_CODE && resultCode == RESULT_OK) {
             try {
+                val flags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 this.appContext.contentResolver.takePersistableUriPermission(
                     directoryUri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    flags
                 )
                 initScopeStorage()
                 this.attach(application)
