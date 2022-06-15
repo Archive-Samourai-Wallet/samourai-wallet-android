@@ -452,15 +452,15 @@ public class SendActivity extends SamouraiActivity {
 
     private CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (compoundButton, checked) -> {
         if (compoundButton.isPressed()) {
-            if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
+            if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix() && !checked) {
                 compoundButton.setChecked(true);
+                return;
             }
-            else {
-                SPEND_TYPE = checked ? SPEND_BOLTZMANN : SPEND_SIMPLE;
-                stoneWallChecked = checked;
-                compoundButton.setChecked(checked);
-                new Handler().postDelayed(this::prepareSpend, 100);
-            }
+            Log.d(TAG, "no entra en el puto if: claro que NO");
+            SPEND_TYPE = checked ? SPEND_BOLTZMANN : SPEND_SIMPLE;
+            stoneWallChecked = checked;
+            compoundButton.setChecked(checked);
+            new Handler().postDelayed(this::prepareSpend, 100);
         }
     };
 
