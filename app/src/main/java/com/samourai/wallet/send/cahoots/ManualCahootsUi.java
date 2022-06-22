@@ -156,7 +156,7 @@ public class ManualCahootsUi {
     private void setStep(final int step) {
         stepsViewGroup.post(() -> stepsViewGroup.setStep(step + 1));
         viewPager.post(() -> viewPager.setCurrentItem(step, true));
-        stepCounts.setText("Step " + (step + 1) + "/" + (this.cahootsType == CahootsType.MULTI ? "9" : "5"));
+        stepCounts.setText("Step " + (step + 1) + "/" + (this.cahootsType == CahootsType.MULTI ? "7" : "5"));
     }
 
     private class StepAdapter extends FragmentPagerAdapter {
