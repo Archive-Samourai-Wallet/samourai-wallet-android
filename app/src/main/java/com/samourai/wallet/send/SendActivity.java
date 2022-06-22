@@ -456,7 +456,6 @@ public class SendActivity extends SamouraiActivity {
                 compoundButton.setChecked(true);
                 return;
             }
-            Log.d(TAG, "no entra en el puto if: claro que NO");
             SPEND_TYPE = checked ? SPEND_BOLTZMANN : SPEND_SIMPLE;
             stoneWallChecked = checked;
             compoundButton.setChecked(checked);
