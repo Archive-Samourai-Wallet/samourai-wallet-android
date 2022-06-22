@@ -93,6 +93,8 @@ public class CahootReviewFragment extends Fragment {
                             if(cahootsType.isPresent()) {
                                 if(cahootsType.get() == CahootsType.MULTI) {
                                     MultiCahoots multiCahoots = (MultiCahoots) payload;
+                                    System.out.println("STOWAWAY:: " + Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize()));
+                                    System.out.println("STONEWALLx2:: " + Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize()));
                                     success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize())).first;
                                     if(success) {
                                         success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize())).first;
