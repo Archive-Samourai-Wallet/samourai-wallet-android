@@ -891,5 +891,6 @@
     <string name="copy_tx_id">Copy TxID</string>
     <string name="copy_url">Copy URL</string>
     <string name="pin_length_error">Pin must be between 5 and 8 digits long</string>
+    <string name="pins_not_match">Pins do not match, try again</string>
 
 </resources>

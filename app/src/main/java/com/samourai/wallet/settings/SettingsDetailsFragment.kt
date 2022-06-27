@@ -293,6 +293,9 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                                                                                 Toast.makeText(requireContext().getApplicationContext(), R.string.success_change_pin, Toast.LENGTH_SHORT).show()
                                                                             }
                                                                         }
+                                                                        else {
+                                                                            Toast.makeText(requireContext().getApplicationContext(), R.string.pins_not_match, Toast.LENGTH_SHORT).show()
+                                                                        }
                                                                     }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
                                                         }
                                                         else {
