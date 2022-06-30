@@ -81,7 +81,6 @@ public class ManualCahootsActivity extends SamouraiActivity {
             };
             cahootsUi = new ManualCahootsUi(
                     findViewById(R.id.step_view),
-                    findViewById(R.id.step_numbers),
                     findViewById(R.id.view_flipper),
                     getIntent(),
                     getSupportFragmentManager(),

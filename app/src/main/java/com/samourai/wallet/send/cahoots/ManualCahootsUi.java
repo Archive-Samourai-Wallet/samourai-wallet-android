@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.samourai.soroban.cahoots.CahootsContext;
@@ -16,7 +15,7 @@ import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.home.BalanceActivity;
-import com.samourai.wallet.widgets.HorizontalStepsViewIndicator;
+import com.samourai.wallet.widgets.CahootsCircleProgress;
 import com.samourai.wallet.widgets.ViewPager;
 
 import java.util.ArrayList;
@@ -29,8 +28,7 @@ import java.util.function.Function;
 
 public class ManualCahootsUi {
     private Activity activity;
-    private HorizontalStepsViewIndicator stepsViewGroup;
-    private TextView stepCounts;
+    private CahootsCircleProgress stepsViewGroup;
     private ViewPager viewPager;
 
     protected CahootReviewFragment cahootReviewFragment;
@@ -53,12 +51,11 @@ public class ManualCahootsUi {
         return intent;
     }
 
-    ManualCahootsUi(HorizontalStepsViewIndicator stepsViewGroup, TextView stepCounts, ViewPager viewPager,
+    ManualCahootsUi(CahootsCircleProgress stepsViewGroup, ViewPager viewPager,
                     Intent intent, FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider,
                     Activity activity) throws Exception {
         this.activity = activity;
         this.stepsViewGroup = stepsViewGroup;
-        this.stepCounts = stepCounts;
         this.viewPager = viewPager;
 
         viewPager.enableSwipe(false);
@@ -156,7 +153,6 @@ public class ManualCahootsUi {
     private void setStep(final int step) {
         stepsViewGroup.post(() -> stepsViewGroup.setStep(step + 1));
         viewPager.post(() -> viewPager.setCurrentItem(step, true));
-        stepCounts.setText("Step " + (step + 1) + "/" + (this.cahootsType == CahootsType.MULTI ? "9" : "5"));
     }
 
     private class StepAdapter extends FragmentPagerAdapter {

@@ -3,6 +3,7 @@ package com.samourai.wallet.send.cahoots;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.samourai.soroban.client.cahoots.OnlineCahootsMessage;
@@ -61,7 +62,6 @@ public class SorobanCahootsActivity extends SamouraiActivity {
         try {
             cahootsUi = new SorobanCahootsUi(
                 findViewById(R.id.step_view),
-                findViewById(R.id.step_numbers),
                 findViewById(R.id.view_flipper),
                 getIntent(),
                 getSupportFragmentManager(),
