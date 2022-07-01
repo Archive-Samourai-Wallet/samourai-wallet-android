@@ -83,28 +83,28 @@ public class PushTx {
         boolean isOK = false;
         String txid = null;
 
-        if(DO_SPEND)    {
-            response = PushTx.getInstance(context).samourai(hexTx, null);
-            if(response != null)    {
-                JSONObject jsonObject = new org.json.JSONObject(response);
-                if(jsonObject.has("status"))    {
-                    if(jsonObject.getString("status").equals("ok"))    {
-                        isOK = true;
-                        if (jsonObject.has("data")) {
-                            txid = jsonObject.getString("data");
+            if(DO_SPEND)    {
+                response = PushTx.getInstance(context).samourai(hexTx, null);
+                if(response != null)    {
+                    JSONObject jsonObject = new org.json.JSONObject(response);
+                    if(jsonObject.has("status"))    {
+                        if(jsonObject.getString("status").equals("ok"))    {
+                            isOK = true;
+                            if (jsonObject.has("data")) {
+                                txid = jsonObject.getString("data");
+                            }
                         }
                     }
                 }
+                else    {
+                    throw new Exception(context.getString( R.string.pushtx_returns_null));
+                }
             }
             else    {
-                throw new Exception(context.getString( R.string.pushtx_returns_null));
+                debug("PushTx", hexTx);
+                isOK = true;
             }
-        }
-        else    {
-            debug("PushTx", hexTx);
-            isOK = true;
-        }
-        return new Pair<>(isOK,txid);
+            return new Pair<>(isOK,txid);
 
     }
 

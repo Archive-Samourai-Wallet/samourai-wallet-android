@@ -17,7 +17,7 @@ public class AndroidHttpClientService implements IHttpClientService {
 
     private Context ctx;
 
-    protected AndroidHttpClientService(Context ctx) {
+    private AndroidHttpClientService(Context ctx) {
         this.ctx = ctx;
     }
 

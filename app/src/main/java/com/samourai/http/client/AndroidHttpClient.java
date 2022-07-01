@@ -2,7 +2,6 @@ package com.samourai.http.client;
 
 import android.content.Context;
 
-import com.samourai.wallet.tor.ITorManager;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.WebUtil;
 
@@ -30,13 +29,13 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     private WebUtil webUtil;
-    private ITorManager torManager;
+    private TorManager torManager;
 
     private AndroidHttpClient(Context ctx) {
         this(WebUtil.getInstance(ctx), TorManager.INSTANCE);
     }
 
-    public AndroidHttpClient(WebUtil webUtil, ITorManager torManager) {
+    public AndroidHttpClient(WebUtil webUtil, TorManager torManager) {
         this.webUtil = webUtil;
         this.torManager = torManager;
     }
