@@ -49,7 +49,7 @@ class NewPoolViewModel : ViewModel() {
     }
 
     fun loadPools() {
-        val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWalletOrNull
+        val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet()
                 ?: return
         loadingPools.postValue(true)
         poolsLiveData.postValue(arrayListOf())

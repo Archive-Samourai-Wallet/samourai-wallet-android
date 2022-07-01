@@ -708,7 +708,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                         Snackbar.make(utxoList, R.string.selection_contains_blocked_utxo, Snackbar.LENGTH_LONG).show();
                         return false;
                     }
-                    WhirlpoolWallet wallet = AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWalletOrNull();
+                    WhirlpoolWallet wallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet();
 
                     if (wallet == null || !wallet.isStarted()) {
                         WhirlPoolLoaderDialog whirlPoolLoaderDialog = new WhirlPoolLoaderDialog();

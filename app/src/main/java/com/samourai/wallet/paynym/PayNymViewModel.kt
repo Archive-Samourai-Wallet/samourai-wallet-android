@@ -1,29 +1,25 @@
 package com.samourai.wallet.paynym
 
 import android.app.Application
-import android.util.Log
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
-import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.paynym.models.NymResponse
-import com.samourai.wallet.util.*
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import com.samourai.wallet.util.CharSequenceX
+import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.PrefsUtil
 import kotlinx.coroutines.*
-import okhttp3.Response
 import org.bitcoinj.core.AddressFormatException
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
-import kotlin.collections.ArrayList
 
 class PayNymViewModel(application: Application) : AndroidViewModel(application) {
 

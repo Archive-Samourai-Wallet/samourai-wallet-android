@@ -1,14 +1,16 @@
 package com.samourai.wallet.settings;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
-//import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.preference.PreferenceFragmentCompat;
 
 import com.google.android.material.transition.MaterialSharedAxis;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
+import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.util.AppUtil;
 
 public class SettingsActivity extends SamouraiActivity {
@@ -16,7 +18,8 @@ public class SettingsActivity extends SamouraiActivity {
     enum ActiveFragment {MAIN, SETTING}
 
     private ActiveFragment activeFragment = ActiveFragment.MAIN;
-    private MainSettingsFragment mainSettingsFragment = new MainSettingsFragment();
+    private final MainSettingsFragment mainSettingsFragment = new MainSettingsFragment();
+    private PreferenceFragmentCompat currentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +34,7 @@ public class SettingsActivity extends SamouraiActivity {
     }
 
     public void setFragment(PreferenceFragmentCompat preference, boolean entering) {
+        currentFragment = preference;
         MaterialSharedAxis transition = new MaterialSharedAxis(MaterialSharedAxis.Y, entering);
         preference.setEnterTransition(transition);
         if (preference instanceof MainSettingsFragment) {
@@ -80,4 +84,9 @@ public class SettingsActivity extends SamouraiActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        ExternalBackupManager.onActivityResult(requestCode, resultCode, data, getApplication());
+    }
 }

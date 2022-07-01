@@ -217,7 +217,7 @@ class CPFPTask(private val context: Context, private val hash: String) {
             context.stopService(Intent(context.applicationContext, WebSocketService::class.java))
         }
         context.startService(Intent(context.applicationContext, WebSocketService::class.java))
-        var tx = SendFactory.getInstance(context).makeTransaction(0, outPoints, receivers)
+        var tx = SendFactory.getInstance(context).makeTransaction(outPoints, receivers)
         if (tx != null) {
             tx = SendFactory.getInstance(context).signTransaction(tx, 0)
             val hexTx = String(Hex.encode(tx.bitcoinSerialize()))
@@ -226,7 +226,7 @@ class CPFPTask(private val context: Context, private val hash: String) {
             Log.d("CPFPTask", strTxHash)
             var isOK = false
             try {
-                isOK = PushTx.getInstance(context).pushTx(hexTx)
+                isOK = PushTx.getInstance(context).pushTx(hexTx).first
                 if (isOK) {
                     return true
                 } else {

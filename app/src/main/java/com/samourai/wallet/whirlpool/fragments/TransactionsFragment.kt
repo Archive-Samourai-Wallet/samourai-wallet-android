@@ -32,6 +32,7 @@ import com.samourai.wallet.whirlpool.WhirlPoolHomeViewModel
 import com.samourai.wallet.whirlpool.WhirlpoolHome.Companion.NEWPOOL_REQ_CODE
 import com.samourai.wallet.whirlpool.adapters.MixTxAdapter
 import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,7 +83,7 @@ class TransactionsFragment : Fragment() {
                 adapter?.setClickListener {  tx ->
                     val txIntent = Intent(requireContext(), TxDetailsActivity::class.java)
                     txIntent.putExtra("TX", tx.toJSON().toString())
-                    txIntent.putExtra("_account", WhirlpoolAccount.POSTMIX.accountIndex)
+                    txIntent.putExtra("_account", SamouraiAccountIndex.POSTMIX)
                     startActivity(txIntent)
                 }
                 recyclerView.adapter = adapter

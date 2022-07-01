@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <item
+        android:id="@+id/menu_web_tor"
+        android:icon="@drawable/ic_tor_on"
+        app:iconTint="@color/disabledRed"
+        android:title="@string/tor_status"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_web_copy_tx"
+        android:title="@string/copy_tx_id"
+        app:showAsAction="never" />
+
+
+    <item
+        android:id="@+id/menu_web_copy_url"
+        android:title="@string/copy_url"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_web_clear_cache"
+        android:title="Clear browser cache"
+        app:showAsAction="never" />
+
+</menu>

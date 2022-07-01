@@ -590,5 +590,6 @@
   <string name="request_amount">İstenilen Miktar</string>
   <string name="address_type">Adres Tipi</string>
   <string name="path">Yol</string>
+    <string name="follow">Pripojte sa</string>
 
 </resources>

@@ -998,7 +998,7 @@
 <string name="options_xpub44_postmix2">Afficher clé publique étendue pour compte rendu monnaie Whirlpool BIP44 post-mix.</string>
 <string name="options_xpub49_postmix">Afficher Whirlpool post-mix YPUB rendu monnaie</string>
 <string name="options_xpub49_postmix2">Afficher clé publique étendue pour compte Segwit BIP49 (P2SH-wrapped) compte rendu monnaie Whirlpool post-mix.</string>
-
+    <string name="follow">Relier</string>
 
 
 </resources>

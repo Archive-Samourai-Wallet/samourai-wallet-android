@@ -3,50 +3,32 @@ package com.samourai.wallet.send;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Looper;
 import android.widget.Toast;
-import android.util.Log;
 
-import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.R;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.api.backend.BackendApi;
+import com.samourai.wallet.bipFormat.BIP_FORMAT;
 import com.samourai.wallet.hd.WALLET_INDEX;
-import com.samourai.wallet.segwit.SegwitAddress;
+import com.samourai.wallet.send.beans.SweepPreview;
 import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.BackendApiAndroid;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.PrivKeyReader;
-import com.samourai.wallet.R;
 
 import org.bitcoinj.core.Coin;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collection;
 
-public class SweepUtil  {
-
-    public static int TYPE_P2PKH = 0;
-    public static int TYPE_P2SH_P2WPKH = 1;
-    public static int TYPE_P2WPKH = 2;
-
+public class SweepUtil extends SweepUtilGeneric {
     private static Context context = null;
     private static SweepUtil instance = null;
 
-    private static UTXO utxoP2PKH = null;
-    private static UTXO utxoP2SH_P2WPKH = null;
-    private static UTXO utxoP2WPKH = null;
-
-    private static String addressP2PKH = null;
-    private static String addressP2SH_P2WPKH = null;
-    private static String addressP2WPKH = null;
-
-    private SweepUtil() { ; }
+    private SweepUtil() { super(); }
 
     public static SweepUtil getInstance(Context ctx) {
 
@@ -59,171 +41,80 @@ public class SweepUtil  {
         return instance;
     }
 
-    public void sweep(final PrivKeyReader privKeyReader, final int type)  {
+    public void sweep(final PrivKeyReader privKeyReader)  {
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        new Thread(() -> {
 
-                Looper.prepare();
+            Looper.prepare();
 
-                try {
+            try {
+                BigInteger feePerKB = FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB();
+                long feePerB = FeeUtil.getInstance().toFeePerB(feePerKB);
+                BackendApi backendApi = BackendApiAndroid.getInstance(context);
+                Collection<SweepPreview> sweepPreviews = sweepPreviews(privKeyReader, feePerB, backendApi);
+                if (sweepPreviews.isEmpty()) {
+                    throw new Exception("No utxo found for sweep");
+                }
 
-                    if(privKeyReader == null || privKeyReader.getKey() == null || !privKeyReader.getKey().hasPrivKey())    {
-                        Toast.makeText(context, R.string.cannot_recognize_privkey, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                // sweep each bipFormat
+                for (SweepPreview sweepPreview : sweepPreviews) {
+                    long amount = sweepPreview.getAmount();
+                    String address = sweepPreview.getAddress();
+                    long fee = sweepPreview.getFee();
+                    String message = "Sweep " + Coin.valueOf(amount).toPlainString() + " from " + address + " (fee:" + Coin.valueOf(fee).toPlainString() + ")?";
 
-                    final String address;
-                    UTXO utxo = null;
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle(R.string.app_name);
+                    builder.setMessage(message);
+                    builder.setCancelable(false);
+                    builder.setPositiveButton(R.string.yes, (dialog, whichButton) -> {
 
-                    if(type == TYPE_P2SH_P2WPKH)    {
-                        utxo = utxoP2SH_P2WPKH;
-                        address = addressP2SH_P2WPKH;
-                    }
-                    else if(type == TYPE_P2WPKH)    {
-                        utxo = utxoP2WPKH;
-                        address = addressP2WPKH;
-                    }
-                    else    {
-                        addressP2PKH = privKeyReader.getKey().toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-                        Log.d("SweepUtil", "address derived P2PKH:" + addressP2PKH);
-                        addressP2SH_P2WPKH = new SegwitAddress(privKeyReader.getKey(), SamouraiWallet.getInstance().getCurrentNetworkParams()).getAddressAsString();
-                        Log.d("SweepUtil", "address derived P2SH_P2WPKH:" + addressP2SH_P2WPKH);
-                        addressP2WPKH = new SegwitAddress(privKeyReader.getKey(), SamouraiWallet.getInstance().getCurrentNetworkParams()).getBech32AsString();
-                        Log.d("SweepUtil", "address derived P2WPKH:" + addressP2WPKH);
+                        final ProgressDialog progress = new ProgressDialog(context);
+                        progress.setCancelable(false);
+                        progress.setTitle(R.string.app_name);
+                        progress.setMessage(context.getString(R.string.please_wait_sending));
+                        progress.show();
 
-                        utxoP2PKH = APIFactory.getInstance(context).getUnspentOutputsForSweep(addressP2PKH);
-                        utxoP2SH_P2WPKH = APIFactory.getInstance(context).getUnspentOutputsForSweep(addressP2SH_P2WPKH);
-                        utxoP2WPKH = APIFactory.getInstance(context).getUnspentOutputsForSweep(addressP2WPKH);
+                        try {
+                            WALLET_INDEX walletIndex = (PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_SEGWIT, true) == true ? WALLET_INDEX.BIP84_RECEIVE : WALLET_INDEX.BIP44_RECEIVE);
+                            String receive_address = AddressFactory.getInstance(context).getAddressAndIncrement(walletIndex).getRight();
+                            boolean rbfOptin = PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false);
+                            long blockHeight = APIFactory.getInstance(context).getLatestBlockHeight();
 
-                        utxo = utxoP2PKH;
-                        address = addressP2PKH;
-                    }
+                            // sweep
+                            sweep(sweepPreview, receive_address, backendApi, BIP_FORMAT.PROVIDER, rbfOptin, blockHeight);
 
-                    if(utxo != null)    {
-
-                        long total_value = 0L;
-                        final List<MyTransactionOutPoint> outpoints = utxo.getOutpoints();
-                        for(MyTransactionOutPoint outpoint : outpoints)   {
-                            total_value += outpoint.getValue().longValue();
+                            // success
+                            Toast.makeText(context, R.string.tx_sent, Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(context, JobRefreshService.class);
+                            intent.putExtra("notifTx", false);
+                            intent.putExtra("dragged", false);
+                            intent.putExtra("launch", false);
+                            JobRefreshService.enqueueWork(context.getApplicationContext(), intent);
+                        } catch (Exception e) {
+                            Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
 
-                        if(FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue() <= 1000L)    {
-                            SuggestedFee suggestedFee = new SuggestedFee();
-                            suggestedFee.setDefaultPerKB(BigInteger.valueOf(1100L));
-                            Log.d("SweepUtil", "adjusted fee:" + suggestedFee.getDefaultPerKB().longValue());
-                            FeeUtil.getInstance().setSuggestedFee(suggestedFee);
+                        if (progress != null && progress.isShowing()) {
+                            progress.dismiss();
                         }
 
-                        Log.d("SweepUtil", "outpoints:" + outpoints.size());
-                        Log.d("SweepUtil", "type:" + type);
-
-                        final BigInteger fee;
-                        if(type == TYPE_P2SH_P2WPKH)    {
-                            fee = FeeUtil.getInstance().estimatedFeeSegwit(0, outpoints.size(), 0, 1);
-                        }
-                        else if(type == TYPE_P2WPKH)    {
-                            fee = FeeUtil.getInstance().estimatedFeeSegwit(0, 0, outpoints.size(), 1);
-                        }
-                        else    {
-                            fee = FeeUtil.getInstance().estimatedFee(outpoints.size(), 1);
-                        }
-
-                        final long amount = total_value - fee.longValue();
-//                        Log.d("BalanceActivity", "Total value:" + total_value);
-//                        Log.d("BalanceActivity", "Amount:" + amount);
-                        Log.d("SweepUtil", "Fee:" + fee.toString());
-
-                        String message = "Sweep " + Coin.valueOf(amount).toPlainString() + " from " + address + " (fee:" + Coin.valueOf(fee.longValue()).toPlainString() + ")?";
-
-                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                        builder.setTitle(R.string.app_name);
-                        builder.setMessage(message);
-                        builder.setCancelable(false);
-                        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog, int whichButton) {
-
-                                final ProgressDialog progress = new ProgressDialog(context);
-                                progress.setCancelable(false);
-                                progress.setTitle(R.string.app_name);
-                                progress.setMessage(context.getString(R.string.please_wait_sending));
-                                progress.show();
-
-                                WALLET_INDEX walletIndex = (PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_SEGWIT, true) == true ? WALLET_INDEX.BIP84_RECEIVE : WALLET_INDEX.BIP44_RECEIVE);
-                                String receive_address = AddressFactory.getInstance(context).getAddressAndIncrement(walletIndex).getRight();
-
-                                final HashMap<String, BigInteger> receivers = new HashMap<String, BigInteger>();
-                                receivers.put(receive_address, BigInteger.valueOf(amount));
-                                org.bitcoinj.core.Transaction tx = SendFactory.getInstance(context).makeTransaction(0, outpoints, receivers);
-
-                                tx = SendFactory.getInstance(context).signTransactionForSweep(tx, privKeyReader);
-                                Log.d("SweepUtil", "tx size:" + tx.bitcoinSerialize().length);
-                                final String hexTx = new String(Hex.encode(tx.bitcoinSerialize()));
-//                                Log.d("BalanceActivity", hexTx);
-
-                                String response = null;
-                                try {
-                                    response = PushTx.getInstance(context).samourai(hexTx, null);
-
-                                    if(response != null)    {
-                                        JSONObject jsonObject = new org.json.JSONObject(response);
-                                        if(jsonObject.has("status"))    {
-                                            if(jsonObject.getString("status").equals("ok"))    {
-                                                Toast.makeText(context, R.string.tx_sent, Toast.LENGTH_SHORT).show();
-                                                Intent intent = new Intent(context, JobRefreshService.class);
-                                                intent.putExtra("notifTx", false);
-                                                intent.putExtra("dragged", false);
-                                                intent.putExtra("launch", false);
-                                                JobRefreshService.enqueueWork(context.getApplicationContext(), intent);
-                                            }
-                                        }
-                                    }
-                                    else    {
-                                        Toast.makeText(context, R.string.pushtx_returns_null, Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                                catch(JSONException je) {
-                                    Toast.makeText(context, "pushTx:" + je.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-
-                                if(progress != null && progress.isShowing())    {
-                                    progress.dismiss();
-                                }
-
-                            }
-                        });
-                        builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog, int whichButton) {
-                                ;
-                            }
-                        });
-
-                        AlertDialog alert = builder.create();
-                        alert.show();
-
-                    }
-                    else if(type == TYPE_P2SH_P2WPKH)    {
-                        sweep(privKeyReader, TYPE_P2WPKH);
-                    }
-                    else if(type == TYPE_P2PKH)    {
-                        sweep(privKeyReader, TYPE_P2SH_P2WPKH);
-                    }
-                    else if(type == TYPE_P2WPKH)    {
-                        Toast.makeText(context, R.string.sweep_no_amount, Toast.LENGTH_SHORT).show();
-                    }
-                    else    {
+                    });
+                    builder.setNegativeButton(R.string.no, (dialog, whichButton) -> {
                         ;
-                    }
+                    });
 
+                    AlertDialog alert = builder.create();
+                    alert.show();
                 }
-                catch(Exception e) {
-                    Toast.makeText(context, R.string.cannot_sweep_privkey, Toast.LENGTH_SHORT).show();
-                }
-
-                Looper.loop();
-
             }
+            catch(Exception e) {
+                e.printStackTrace();
+                Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+
+            Looper.loop();
+
         }).start();
 
     }

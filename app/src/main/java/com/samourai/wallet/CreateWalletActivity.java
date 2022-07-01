@@ -243,6 +243,8 @@ public class CreateWalletActivity extends AppCompatActivity implements
             if (pinCodeConfirm.equals(pinCode)) {
                 setForwardButtonEnable(true);
                 ((TextView) forwardButton.getChildAt(0)).setText(R.string.finish);
+            } else {
+                setForwardButtonEnable(false);
             }
         }
     }

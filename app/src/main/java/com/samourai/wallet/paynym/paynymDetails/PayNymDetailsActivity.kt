@@ -217,8 +217,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
             if (dialog.window != null) dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             val title = dialog.findViewById<TextView>(R.id.follow_title_paynym_dialog)
             val oneTimeFeeMessage = dialog.findViewById<TextView>(R.id.one_time_fee_message)
-            title.text = (resources.getText(R.string.follow).toString()
-                    + " " + BIP47Meta.getInstance().getLabel(pcode))
+            title.text = ("Connect " + BIP47Meta.getInstance().getLabel(pcode))
             val followBtn = dialog.findViewById<Button>(R.id.follow_paynym_btn)
             val message = resources.getText(R.string.paynym_follow_fee_message).toString()
             val part1 = message.substring(0, 28)
@@ -698,7 +697,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                     progressBar.visibility = View.VISIBLE
 
                     val job = scope.launch(Dispatchers.IO) {
-                        var tx = SendFactory.getInstance(this@PayNymDetailsActivity).makeTransaction(0, outpoints, receivers)
+                        var tx = SendFactory.getInstance(this@PayNymDetailsActivity).makeTransaction(outpoints, receivers)
                         if (tx != null) {
                             val input0hash = tx.getInput(0L).outpoint.hash.toString()
                             val input0index = tx.getInput(0L).outpoint.index.toInt()

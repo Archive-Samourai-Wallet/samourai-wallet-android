@@ -1,8 +1,10 @@
 package com.samourai.whirlpool.client.wallet.data;
 
-import com.samourai.wallet.client.indexHandler.AddressFactoryWalletStateIndexHandler;
+import android.content.Context;
+
+import com.samourai.wallet.bipWallet.BipDerivation;
+import com.samourai.wallet.bipWallet.BipWallet;
 import com.samourai.wallet.client.indexHandler.IIndexHandler;
-import com.samourai.wallet.hd.AddressType;
 import com.samourai.wallet.hd.Chain;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.util.AddressFactory;
@@ -13,29 +15,40 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AndroidWalletStateSupplier implements WalletStateSupplier {
+    private static AndroidWalletStateSupplier instance;
+
+    public static synchronized AndroidWalletStateSupplier getInstance(Context ctx) {
+        if (instance == null) {
+            AddressFactory addressFactory = AddressFactory.getInstance(ctx);
+            instance = new AndroidWalletStateSupplier(addressFactory);
+        }
+        return instance;
+    }
+
     private AddressFactory addressFactory;
     private Map<String, IIndexHandler> indexHandlerWallets;
 
-    public AndroidWalletStateSupplier(AddressFactory addressFactory) {
+    private AndroidWalletStateSupplier(AddressFactory addressFactory) {
         this.addressFactory = addressFactory;
-        this.indexHandlerWallets = new LinkedHashMap<String, IIndexHandler>();
+        this.indexHandlerWallets = new LinkedHashMap<>();
     }
 
     @Override
-    public IIndexHandler getIndexHandlerWallet(WhirlpoolAccount account, AddressType addressType, Chain chain) {
-        String persistKey = computePersistKeyWallet(account, addressType, chain);
+    public IIndexHandler getIndexHandlerWallet(BipWallet bipWallet, Chain chain) {
+        BipDerivation bipDerivation = bipWallet.getDerivation();
+        String persistKey = computePersistKeyWallet(bipWallet.getAccount(), bipDerivation.getPurpose(), chain);
+
         IIndexHandler indexHandlerWallet = indexHandlerWallets.get(persistKey);
         if (indexHandlerWallet == null) {
-            WALLET_INDEX walletIndex = WALLET_INDEX.find(account, addressType, chain);
-            indexHandlerWallet = new AddressFactoryWalletStateIndexHandler(addressFactory, walletIndex);
+            WALLET_INDEX walletIndex = WALLET_INDEX.find(bipDerivation, chain);
+            indexHandlerWallet = new AndroidWalletStateIndexHandler(addressFactory, walletIndex);
             indexHandlerWallets.put(persistKey, indexHandlerWallet);
         }
         return indexHandlerWallet;
     }
 
-    protected String computePersistKeyWallet(
-            WhirlpoolAccount account, AddressType addressType, Chain chain) {
-        return account.name() + "_" + addressType.getPurpose() + "_" + chain.getIndex();
+    protected String computePersistKeyWallet(WhirlpoolAccount account, int purpose, Chain chain) {
+        return account.name() + "_" + purpose + "_" + chain.getIndex();
     }
 
     @Override
@@ -63,5 +76,15 @@ public class AndroidWalletStateSupplier implements WalletStateSupplier {
     public boolean persist(boolean force) throws Exception {
         // ignored
         return false;
+    }
+
+    @Override
+    public boolean isNymClaimed() {
+        return false; // not implemented
+    }
+
+    @Override
+    public void setNymClaimed(boolean value) {
+        // not implemented
     }
 }

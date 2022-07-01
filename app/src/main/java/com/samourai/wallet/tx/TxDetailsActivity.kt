@@ -1,6 +1,5 @@
 package com.samourai.wallet.tx
 
-import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.DialogInterface
@@ -14,40 +13,49 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.core.content.ContextCompat
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
+import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.Tx
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.explorer.ExplorerActivity
+import com.samourai.wallet.crypto.DecryptionException
+import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.boost.CPFPTask
 import com.samourai.wallet.send.boost.RBFTask
+import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.TorManager.isRequired
+import com.samourai.wallet.util.BlockExplorerUtil
+import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.DateUtil
 import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.CircleImageView
 import com.squareup.picasso.Picasso
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import org.bitcoinj.core.Coin
+import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.json.JSONException
 import org.json.JSONObject
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
+import java.io.IOException
 
 class TxDetailsActivity : SamouraiActivity() {
     private var payNymAvatar: CircleImageView? = null
@@ -65,6 +73,10 @@ class TxDetailsActivity : SamouraiActivity() {
     private var paynymDisplayName: String? = null
     private var rbfTask: RBFTask? = null
     private var progressBar: ProgressBar? = null
+    private var deleteButton: ImageView? = null
+    private var addNote: TextView? = null
+    private var notesTextView: TextView? = null
+    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,8 +101,12 @@ class TxDetailsActivity : SamouraiActivity() {
         progressBar = findViewById(R.id.progressBar)
         minerFee = findViewById(R.id.tx_miner_fee_paid)
         minerFeeRate = findViewById(R.id.tx_miner_fee_rate)
+        addNote = findViewById(R.id.add_note_button)
+        notesTextView = findViewById(R.id.utxo_details_note)
+        deleteButton = findViewById(R.id.delete_note)
         amount?.setOnClickListener { toggleUnits() }
         setTx()
+        setNoteState()
         bottomButton?.setOnClickListener {
             if (isBoostingAvailable) {
                 doBoosting()
@@ -110,6 +126,78 @@ class TxDetailsActivity : SamouraiActivity() {
                         Toast.makeText(this@TxDetailsActivity, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
                     }.setNegativeButton(R.string.no) { _: DialogInterface?, _: Int -> }.show()
         }
+
+        deleteButton?.setOnClickListener({ view: View? ->
+            if (UTXOUtil.getInstance().getNote(tx!!.hash) != null) {
+                UTXOUtil.getInstance().removeNote(tx!!.hash)
+            }
+            setNoteState()
+            saveWalletState()
+        })
+
+        addNote?.setOnClickListener(View.OnClickListener { view: View? ->
+            val dialogView = layoutInflater.inflate(R.layout.bottom_sheet_note, null)
+            val dialog = BottomSheetDialog(this, R.style.bottom_sheet_note)
+            dialog.setContentView(dialogView)
+            dialog.show()
+            val submitButton = dialog.findViewById<Button>(R.id.submit_note)
+            if (UTXOUtil.getInstance().getNote(tx!!.hash) != null) {
+                (dialog.findViewById<View>(R.id.utxo_details_note) as EditText?)!!.setText(UTXOUtil.getInstance().getNote(tx!!.hash))
+                submitButton!!.text = "Save"
+            } else {
+                submitButton!!.text = "Add"
+            }
+            dialog.findViewById<View>(R.id.submit_note)!!.setOnClickListener { view1: View? ->
+                dialog.dismiss()
+                addNote((dialog.findViewById<View>(R.id.utxo_details_note) as EditText?)!!.text.toString())
+            }
+        })
+    }
+
+
+    fun addNote(text: String?) {
+        if (text != null && text.length > 0) {
+            UTXOUtil.getInstance().addNote(tx!!.hash, text)
+        } else {
+            UTXOUtil.getInstance().removeNote(tx!!.hash)
+        }
+        setNoteState()
+        saveWalletState()
+    }
+
+    fun setNoteState() {
+        TransitionManager.beginDelayedTransition(notesTextView!!.rootView as ViewGroup)
+        if (UTXOUtil.getInstance().getNote(tx!!.hash) == null) {
+            notesTextView!!.visibility = View.GONE
+            addNote!!.text = "Add"
+            deleteButton!!.visibility = View.GONE
+        } else {
+            notesTextView!!.visibility = View.VISIBLE
+            notesTextView!!.text = UTXOUtil.getInstance().getNote(tx!!.hash)
+            deleteButton!!.visibility = View.VISIBLE
+            addNote!!.text = "Edit"
+        }
+    }
+
+    private fun saveWalletState() {
+        val disposable = Completable.fromCallable {
+            try {
+                PayloadUtil.getInstance(applicationContext).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(applicationContext).guid + AccessFactory.getInstance().pin))
+            } catch (e: MnemonicLengthException) {
+                e.printStackTrace()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            } catch (e: DecryptionException) {
+                e.printStackTrace()
+            }
+            true
+        }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe()
+        compositeDisposable.add(disposable)
     }
 
     private fun refundOrPayAgain() {
@@ -349,12 +437,12 @@ class TxDetailsActivity : SamouraiActivity() {
      * Opens external BlockExplorer
      */
     private fun doExplorerView() {
-        var blockExplorer = "https://m.oxt.me/transaction/"
-        if (SamouraiWallet.getInstance().isTestNet) {
-            blockExplorer = "https://blockstream.info/testnet/"
+        tx?.let {
+            val browserIntent = Intent(this,  ExplorerActivity::class.java)
+            browserIntent.putExtra(ExplorerActivity.TX_URI,it.hash)
+            browserIntent.putExtra("_account",account)
+            startActivity(browserIntent)
         }
-        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + tx!!.hash))
-        startActivity(browserIntent)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

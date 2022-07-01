@@ -437,7 +437,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                                     try {
 
                                         try {
-                                            isOK = PushTx.getInstance(activity).pushTx(hexTx);
+                                            isOK = PushTx.getInstance(activity).pushTx(hexTx).first;
                                             if (isOK) {
                                                 handler.post(() -> {
                                                     Toast.makeText(activity, R.string.rbf_spent, Toast.LENGTH_SHORT).show();

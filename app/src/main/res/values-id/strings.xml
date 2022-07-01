@@ -526,5 +526,6 @@
   <string name="total_p2sh_p2wpkh">Total segwit (p2sh):</string>
   <string name="total_p2wpkh">Total segwit (bech32):</string>
   <string name="total_blocked">Total diblokir:</string>
+    <string name="follow">Menghubung</string>
 
 </resources>
