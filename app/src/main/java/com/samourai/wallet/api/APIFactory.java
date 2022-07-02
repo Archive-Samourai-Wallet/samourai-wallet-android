@@ -80,6 +80,8 @@ import static com.samourai.wallet.util.LogUtil.debug;
 import static com.samourai.wallet.util.LogUtil.info;
 import static com.samourai.wallet.util.WebUtil.SAMOURAI_API2;
 
+import androidx.lifecycle.MutableLiveData;
+
 public class APIFactory {
 
     private static String APP_TOKEN = null;         // API app token
@@ -113,6 +115,7 @@ public class APIFactory {
     //Broadcast balance changes to the application, this will be a timestamp,
     //Balance will be recalculated when the change is broadcasted
     public BehaviorSubject<Long> walletBalanceObserver = BehaviorSubject.create();
+    public MutableLiveData<Long> walletBalanceObserverLiveData = new MutableLiveData(System.currentTimeMillis());
     private static long latest_block_height = -1L;
     private static String latest_block_hash = null;
     private static long latest_block_time = -1L;
@@ -131,6 +134,7 @@ public class APIFactory {
 
     private APIFactory()	{
         walletBalanceObserver.onNext(System.currentTimeMillis());
+        walletBalanceObserverLiveData.postValue(System.currentTimeMillis());
     }
 
     public static APIFactory getInstance(Context ctx) {
@@ -436,6 +440,7 @@ public class APIFactory {
                 parseDynamicFees_bitcoind(jsonObject);
                 xpub_amounts.put(HD_WalletFactory.getInstance(context).get().getAccount(0).xpubstr(), xpub_balance - BlockedUTXO.getInstance().getTotalValueBlocked0());
                 walletBalanceObserver.onNext( System.currentTimeMillis());
+                walletBalanceObserverLiveData.postValue(System.currentTimeMillis());
             }
             catch(JSONException je) {
                 je.printStackTrace();
