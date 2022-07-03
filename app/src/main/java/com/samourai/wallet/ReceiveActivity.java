@@ -36,6 +36,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.android.Contents;
 import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.collaborate.CollaborateActivity;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.SegwitAddress;
@@ -642,7 +643,8 @@ public class ReceiveActivity extends SamouraiActivity {
 
             case R.id.receive_cahoots: {
                 // open receive activity
-                Intent intent = new Intent(this, SorobanMeetingListenActivity.class);
+                Intent intent = new Intent(this, CollaborateActivity.class);
+                intent.putExtra(CollaborateActivity.SHOW_PARTICIPATE,true);
                 startActivity(intent);
                 break;
             }

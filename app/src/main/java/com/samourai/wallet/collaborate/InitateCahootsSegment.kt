@@ -1,6 +1,5 @@
 package com.samourai.wallet.collaborate
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -187,7 +186,7 @@ fun TransactionOptionSegment(
 @Composable
 fun DefaultPreview2() {
     SamouraiWalletTheme {
-        CollaborateScreen(null)
+        CollaborateScreen(null, false)
     }
 }
 
