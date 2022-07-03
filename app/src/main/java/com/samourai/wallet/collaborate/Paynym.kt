@@ -3,7 +3,6 @@ package com.samourai.wallet.collaborate
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -39,6 +38,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.cahoots.CahootsMode
+import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
+import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
@@ -48,8 +50,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
     val collaborateViewModel = viewModel<CollaborateViewModel>()
+    val cahootsTransactionViewModel = viewModel<CahootsTransactionViewModel>()
+    val cahootType by cahootsTransactionViewModel.cahootsTypeLive.observeAsState()
     val following by collaborateViewModel.following.observeAsState(initial = listOf())
-    val loading by collaborateViewModel.loading.observeAsState(false)
+    val loading by collaborateViewModel.loadingLive.observeAsState(false)
     var enableSearch by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -108,21 +112,35 @@ fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
                 )
             }
         }
-        LazyColumn(
-
-        ){
-            items(following, key = {it}) {
-                PaynymAvatar(pcode = it,nym=BIP47Meta.getInstance().getLabel(it),
-                    modifier = Modifier.clickable
-                    {
-                        collaborateViewModel.setCollaborator(it)
-                        onClose()
-                    }.animateItemPlacement())
+        LazyColumn {
+            if (cahootType?.cahootsMode == CahootsMode.SOROBAN) {
+                item {
+                    PaynymAvatar(pcode = BIP47Meta.getMixingPartnerCode(), nym = BIP47Meta.getInstance().getLabel(BIP47Meta.getMixingPartnerCode()),
+                        modifier = Modifier
+                            .clickable
+                            {
+                                cahootsTransactionViewModel.setCollaborator(BIP47Meta.getMixingPartnerCode())
+                                onClose()
+                            }
+                    )
+                }
+                item {
+                    Divider()
+                }
+            }
+            items(following, key = { it }) {
+                PaynymAvatar(pcode = it, nym = BIP47Meta.getInstance().getLabel(it),
+                    modifier = Modifier
+                        .clickable
+                        {
+                            cahootsTransactionViewModel.setCollaborator(it)
+                            onClose()
+                        }
+                        .animateItemPlacement())
             }
         }
     }
 }
-
 
 @Composable
 fun SearchTextField(
@@ -234,7 +252,6 @@ fun PaynymAvatarPreview() {
 fun PaynymSheetPreview() {
     PaynymChooser(null, {})
 }
-
 
 @Composable
 fun PicassoImage(
