@@ -127,13 +127,13 @@ class TxDetailsActivity : SamouraiActivity() {
                     }.setNegativeButton(R.string.no) { _: DialogInterface?, _: Int -> }.show()
         }
 
-        deleteButton?.setOnClickListener { view: View? ->
+        deleteButton?.setOnClickListener({ view: View? ->
             if (UTXOUtil.getInstance().getNote(tx!!.hash) != null) {
                 UTXOUtil.getInstance().removeNote(tx!!.hash)
             }
             setNoteState()
             saveWalletState()
-        }
+        })
 
         addNote?.setOnClickListener(View.OnClickListener { view: View? ->
             val dialogView = layoutInflater.inflate(R.layout.bottom_sheet_note, null)
@@ -434,7 +434,7 @@ class TxDetailsActivity : SamouraiActivity() {
     }
 
     /**
-     * Opens external BlockExplorer
+     * Opens BlockExplorer
      */
     private fun doExplorerView() {
         tx?.let {
@@ -483,4 +483,5 @@ class TxDetailsActivity : SamouraiActivity() {
     companion object {
         private const val TAG = "TxDetailsActivity"
     }
+
 }
