@@ -1,7 +1,6 @@
 package com.samourai.wallet.collaborate
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.core.animateDp
@@ -14,23 +13,31 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
+import com.samourai.wallet.SamouraiActivity
+import com.samourai.wallet.bip47.BIP47Meta
+import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
 import com.samourai.wallet.theme.*
+import com.samourai.wallet.tools.WrapToolsPageAnimation
 import kotlinx.coroutines.launch
 
 
-class CollaborateActivity : ComponentActivity() {
+class CollaborateActivity : SamouraiActivity() {
     private val collaborateViewModel: CollaborateViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,91 +57,126 @@ class CollaborateActivity : ComponentActivity() {
 @Composable
 fun CollaborateScreen(collaborateActivity: CollaborateActivity?) {
     var selected by remember { mutableStateOf(0) }
+    val scaffoldState = rememberScaffoldState()
     val paynymChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val setUpTransactionModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val accountChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val collaborateViewModel = viewModel<CollaborateViewModel>()
+    val collaborateError by collaborateViewModel.errorsLive.observeAsState(initial = null)
+//    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
 
-    Scaffold(
-        topBar = {
-            Column {
-                TopAppBar(
-                    title = { Text(text = "Collaborate", color = samouraiTextPrimary) },
-                    backgroundColor = samouraiSlateGreyAccent,
-                    navigationIcon = {
-                        Box(modifier = Modifier.padding(12.dp)) {
-                            Icon(painter = painterResource(id = R.drawable.ic_close_white_24dp),
-                                tint = samouraiTextPrimary,
-                                contentDescription = "Close", modifier = Modifier.clickable {
-                                    collaborateActivity?.onBackPressed()
-                                })
-                        }
-                    },
-
-                    )
-
-            }
-        },
-    ) {
-
-        Column(modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp)) {
-            TabRow(
-                divider = {
-                    Box {}
-                },
-                selectedTabIndex = selected,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp),
-                indicator = { tabPositions ->
-                    TabIndicator(tabPositions, tabPage = selected)
-                },
-            ) {
-                Tab(
-                    text = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Icon(painter = painterResource(id = R.drawable.ic_collaborate_initiate), contentDescription = "")
-                            Text("Initiate", color = Color.White)
-                        }
-                    },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .padding(12.dp),
-                    selected = selected == 0,
-                    onClick = { selected = 0 }
-                )
-                Tab(
-                    text = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Icon(painter = painterResource(id = R.drawable.ic_connect_without_contact), contentDescription = "")
-                            Text("Participate", color = Color.White)
-                        }
-                    },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .padding(12.dp),
-                    selected = selected == 1,
-                    onClick = { selected = 1 }
-                )
-            }
-
-            Box(
-
-                modifier = Modifier
-            ) {
-                if (selected == 0) {
-                    InitiateSegment(
-                        onCollaboratorClick = {
-                            scope.launch {
-                                paynymChooser.show()
-                            }
-                        }
-                    )
-                } else {
-                    ParticipateSegment()
+    LaunchedEffect(key1 = collaborateError, block = {
+        if (collaborateError != null)
+            scaffoldState.snackbarHostState.showSnackbar(collaborateError!!)
+    })
+    Box(modifier = Modifier) {
+        Scaffold(
+            scaffoldState = scaffoldState,
+            snackbarHost = { host ->
+                SnackbarHost(hostState = host) {
+                    Snackbar(
+                        modifier = Modifier,
+                        contentColor = Color.White,
+                        backgroundColor = samouraiError,
+                    ) {
+                        Text(it.message, fontSize = 12.sp)
+                    }
                 }
-            }
+            },
+            topBar = {
+                Column {
+                    TopAppBar(
+                        title = { Text(text = "Collaborate", color = samouraiTextPrimary) },
+                        backgroundColor = samouraiSlateGreyAccent,
+                        navigationIcon = {
+                            Box(modifier = Modifier.padding(12.dp)) {
+                                Icon(painter = painterResource(id = R.drawable.ic_close_white_24dp),
+                                    tint = samouraiTextPrimary,
+                                    contentDescription = "Close", modifier = Modifier.clickable {
+                                        collaborateActivity?.onBackPressed()
+                                    })
+                            }
+                        },
+                    )
 
+                }
+            },
+        ) {
+            Column(modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp)) {
+                TabRow(
+                    divider = {
+                        Box {}
+                    },
+                    selectedTabIndex = selected,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    indicator = { tabPositions ->
+                        TabIndicator(tabPositions, tabPage = selected)
+                    },
+                ) {
+                    Tab(
+                        text = {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                Icon(painter = painterResource(id = R.drawable.ic_collaborate_initiate), contentDescription = "")
+                                Text("Initiate", color = Color.White)
+                            }
+                        },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .padding(12.dp),
+                        selected = selected == 0,
+                        onClick = { selected = 0 }
+                    )
+                    Tab(
+                        text = {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                Icon(painter = painterResource(id = R.drawable.ic_connect_without_contact), contentDescription = "")
+                                Text("Participate", color = Color.White)
+                            }
+                        },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(12.dp),
+                        selected = selected == 1,
+                        onClick = { selected = 1 }
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                ) {
+                    WrapToolsPageAnimation(
+                        selected == 0
+                    ) {
+                        InitiateSegment(
+                            setUpTransaction = {
+                                scope.launch {
+                                    setUpTransactionModal.animateTo(ModalBottomSheetValue.Expanded)
+                                }
+                            },
+                            onCahootTypeSelection = {
+                                scope.launch {
+                                    accountChooser.animateTo(ModalBottomSheetValue.Expanded)
+                                }
+                            },
+                            onCollaboratorClick = {
+                                scope.launch {
+                                    paynymChooser.show()
+                                }
+                            }
+                        )
+                    }
+                    WrapToolsPageAnimation(visible = selected != 0) {
+                        ParticipateSegment()
+                    }
+                }
+
+            }
         }
 
     }
@@ -143,9 +185,18 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?) {
     if (paynymChooser.currentValue != ModalBottomSheetValue.Hidden) {
         DisposableEffect(Unit) {
             onDispose {
-               scope.launch {
-                   keyboardController?.hide();
-               }
+                scope.launch {
+                    keyboardController?.hide();
+                }
+            }
+        }
+    }
+    if (setUpTransactionModal.currentValue != ModalBottomSheetValue.Hidden) {
+        DisposableEffect(Unit) {
+            onDispose {
+                scope.launch {
+                    keyboardController?.hide();
+                }
             }
         }
     }
@@ -166,48 +217,66 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?) {
     ) {
     }
 
-}
-
-
-@Preview(showBackground = true, heightDp = 620, widthDp = 420)
-@Composable
-fun DefaultPreview2() {
-    SamouraiWalletTheme {
-        CollaborateScreen(null)
-    }
-}
-
-
-@Composable
-fun InitiateSegment(
-    onCollaboratorClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier.padding(
-            vertical = 12.dp,
-            horizontal = 14.dp
-        )
-    ) {
-        Column(
-            Modifier
-                .clickable {
-                    onCollaboratorClick()
+    ModalBottomSheetLayout(
+        sheetState = setUpTransactionModal,
+        modifier = Modifier.zIndex(.4f),
+        scrimColor = Color.Black.copy(alpha = 0.7f),
+        sheetBackgroundColor = samouraiBottomSheetBackground,
+        sheetContent = {
+            SetUpTransaction(onClose = {
+                scope.launch {
+                    setUpTransactionModal.hide()
                 }
-                .padding(vertical = 12.dp)
-                .fillMaxWidth()) {
-            Text(text = "Collaborator", fontSize = 14.sp)
-            Text(text = "None selected",fontSize = 13.sp)
-        }
+            })
+        },
+        sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+    ) {
     }
+    ModalBottomSheetLayout(
+        sheetState = accountChooser,
+        modifier = Modifier
+            .zIndex(5f)
+            .fillMaxHeight(.48f),
+        scrimColor = Color.Black.copy(alpha = 0.7f),
+        sheetBackgroundColor = samouraiBottomSheetBackground,
+        sheetContent = {
+            ChooseCahootsType(onClose = {
+                scope.launch {
+                    accountChooser.hide()
+                }
+            })
+        },
+        sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+    ) {
+    }
+
 }
 
 
 @Composable
-fun ParticipateSegment() {
-    Column {
-
+fun PaynymAvatar(pcode: String?) {
+    if (pcode == null) {
+        return Box(modifier = Modifier)
+    }
+    val url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
+    Row(
+        modifier = Modifier.padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Box(modifier = Modifier.size(34.dp)) {
+            PicassoImage(
+                url = url,
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(100)),
+                contentDescription = "Avatar for ${BIP47Meta.getInstance().getLabel(pcode)}"
+            )
+        }
+        Text(BIP47Meta.getInstance().getDisplayLabel(pcode), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 8.dp))
     }
 }
+
 
 @Composable
 private fun TabIndicator(
