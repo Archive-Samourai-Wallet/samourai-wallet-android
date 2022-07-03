@@ -19,7 +19,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,31 +41,42 @@ class CollaborateActivity : SamouraiActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val showParticipateTab = intent.extras?.getBoolean(SHOW_PARTICIPATE, false) ?: false
         setContent {
             SamouraiWalletTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    CollaborateScreen(this)
+                    CollaborateScreen(this, showParticipateTab)
                 }
             }
         }
         collaborateViewModel.initWithContext(applicationContext)
     }
+
+    companion object {
+        const val SHOW_PARTICIPATE = "participate"
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun CollaborateScreen(collaborateActivity: CollaborateActivity?) {
+fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipateTab: Boolean) {
     var selected by remember { mutableStateOf(0) }
     val scaffoldState = rememberScaffoldState()
     val paynymChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val setUpTransactionModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val accountChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val collaborateViewModel = viewModel<CollaborateViewModel>()
     val collaborateError by collaborateViewModel.errorsLive.observeAsState(initial = null)
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
+
+    LaunchedEffect(true) {
+        if (showParticipateTab) {
+            collaborateViewModel.startListen()
+            selected = 1
+        }
+    }
 
     LaunchedEffect(key1 = collaborateError, block = {
         if (collaborateError != null)
