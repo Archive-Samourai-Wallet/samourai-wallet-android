@@ -9,7 +9,6 @@ import android.content.UriPermission
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
-import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
@@ -37,7 +36,6 @@ object ExternalBackupManager {
     private const val STORAGE_REQ_CODE = 4866
     private const val READ_WRITE_EXTERNAL_PERMISSION_CODE = 2009
     private var backUpDocumentFile: DocumentFile? = null
-    private var backupDirectoryUri: UriPermission? = null
     private const val strBackupFilename = "samourai.txt"
     private val permissionState = MutableLiveData(false)
     private val scope = CoroutineScope(Dispatchers.Main) + SupervisorJob()
@@ -88,7 +86,7 @@ object ExternalBackupManager {
                 ask()
             }.setNegativeButton(R.string.cancel) { dialog, _ ->
                 dialog.dismiss()
-                    Toast.makeText(appContext, "Read and write permissions are needed to save backup file", Toast.LENGTH_LONG).show()
+                Toast.makeText(appContext, "Read and write permissions are needed to save backup file", Toast.LENGTH_LONG).show()
             }.show()
     }
 
@@ -128,11 +126,9 @@ object ExternalBackupManager {
     }
 
     private fun initScopeStorage() {
-        val persistedPermissions = appContext.contentResolver.persistedUriPermissions
-        if (persistedPermissions.isNotEmpty()) {
-            backupDirectoryUri = persistedPermissions.last()
+        val backupDirectoryUri =  getBackUpURI()
+        if (backupDirectoryUri != null) {
             val backupDirectory = DocumentFile.fromTreeUri(appContext, backupDirectoryUri!!.uri)
-
             if (BuildConfig.FLAVOR == "staging") {
                 var stagingDir =
                     backupDirectory?.listFiles()?.find { it.name == "staging" && it.isDirectory }
@@ -158,7 +154,7 @@ object ExternalBackupManager {
 
     @JvmStatic
     private fun writeScopeStorage(content: String) {
-        if (backUpDocumentFile == null && backupDirectoryUri != null) {
+        if (backUpDocumentFile == null && getBackUpURI() != null) {
             initScopeStorage()
         }
         if (backUpDocumentFile == null) {
@@ -185,7 +181,7 @@ object ExternalBackupManager {
 
     @JvmStatic
     fun readScoped(): String? {
-        if (backUpDocumentFile == null && backupDirectoryUri != null) {
+        if (backUpDocumentFile == null && getBackUpURI() != null) {
             initScopeStorage()
         }
         if (backUpDocumentFile == null) {
@@ -229,15 +225,26 @@ object ExternalBackupManager {
     @JvmStatic
     fun hasPermissions(): Boolean {
         if (requireScoped()) {
-            if (backupDirectoryUri == null) {
-                return false
+            initScopeStorage()
+            val permissionURI = getBackUpURI() ?: return false
+            return if (permissionURI.isReadPermission && backUpDocumentFile != null) {
+                backUpDocumentFile!!.canRead() && backUpDocumentFile!!.canWrite()
+            } else {
+                false
             }
-            val directory =
-                DocumentFile.fromTreeUri(appContext,backupDirectoryUri!!.uri) ?: return false;
-            return directory.canRead() && directory.canWrite();
         } else {
             return hasPermission()
         }
+    }
+
+    private fun getBackUpURI(): UriPermission? {
+        val persistedPermissions = appContext.contentResolver.persistedUriPermissions
+        if (persistedPermissions.isEmpty()) {
+            return null
+        }
+        //get the latest permission
+        persistedPermissions.sortBy { it.persistedTime }
+        return persistedPermissions.last()
     }
 
     @JvmStatic
@@ -270,10 +277,13 @@ object ExternalBackupManager {
         val directoryUri = data?.data ?: return
         if (requestCode == STORAGE_REQ_CODE && resultCode == RESULT_OK) {
             try {
+                val flags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 this.appContext.contentResolver.takePersistableUriPermission(
                     directoryUri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    flags
                 )
+                initScopeStorage()
                 this.attach(application)
                 permissionState.postValue(true)
             } catch (e: Exception) {

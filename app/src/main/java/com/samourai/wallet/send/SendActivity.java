@@ -452,6 +452,10 @@ public class SendActivity extends SamouraiActivity {
 
     private CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (compoundButton, checked) -> {
         if (compoundButton.isPressed()) {
+            if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix() && !checked) {
+                compoundButton.setChecked(true);
+                return;
+            }
             SPEND_TYPE = checked ? SPEND_BOLTZMANN : SPEND_SIMPLE;
             stoneWallChecked = checked;
             compoundButton.setChecked(checked);
@@ -461,7 +465,7 @@ public class SendActivity extends SamouraiActivity {
 
     private void setUpBoltzman() {
         sendTransactionDetailsView.getStoneWallSwitch().setChecked(true);
-        sendTransactionDetailsView.getStoneWallSwitch().setEnabled(WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix() != account);
+        sendTransactionDetailsView.getStoneWallSwitch().setEnabled(true);
         sendTransactionDetailsView.enableStonewall(true);
         sendTransactionDetailsView.getStoneWallSwitch().setOnCheckedChangeListener(onCheckedChangeListener);
     }

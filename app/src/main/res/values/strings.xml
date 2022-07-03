@@ -899,5 +899,7 @@
     <string name="samourai_wallet_controlled_servers_will_act">Samourai Wallet controlled servers will act as a participant to create this CoinJoin. This is the easiest and quickest option.</string>
     <string name="manually_compose_this_transaction">Manually compose this transaction with another participant who is using Samourai Wallet. Perfect for face-to-face interaction.</string>
     <string name="compose_this_transaction_online_with">Compose this transaction online with another participant who is using Samourai Wallet over Tor.</string>
+    <string name="pin_length_error">Pin must be between 5 and 8 digits long</string>
+    <string name="pins_not_match">Pins do not match, try again.</string>
 
 </resources>

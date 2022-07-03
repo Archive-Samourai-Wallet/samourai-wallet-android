@@ -10,8 +10,8 @@ android {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
         targetSdkVersion 32
-        versionCode 190
-        versionName "0.99.98b"
+        versionCode 191
+        versionName "0.99.98e"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -23,7 +23,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
     buildTypes {
         release {
@@ -43,14 +43,14 @@ android {
     productFlavors {
         production {
             applicationId 'com.samourai.wallet'
-            versionCode 190
-            versionName "0.99.98b"
+            versionCode 191
+            versionName "0.99.98e"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98b"
+            resValue "string", "version_name", "0.99.98e"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
-            versionCode 190
+            versionCode 191
             versionName "0.99.98e"
             resValue "string", "app_name", "Samourai Staging"
             resValue "string", "version_name", "0.99.98e"
@@ -83,7 +83,7 @@ def getApiKey(key){
 
 dependencies {
 
-    def lifecycle_version = "2.4.1"
+    def lifecycle_version = "2.5.0"
     def topl_android_version = "2.1.0"
     def coroutines_version = '1.5.1'
 
@@ -132,7 +132,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:9298890e') {
+    implementation ('io.samourai.code.wallet:extlibj:26964112') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
