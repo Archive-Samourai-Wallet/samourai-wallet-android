@@ -31,6 +31,7 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.paynym.WebUtil;
 import com.samourai.wallet.crypto.DecryptionException;
+import com.samourai.wallet.explorer.ExplorerActivity;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
 import com.samourai.wallet.segwit.SegwitAddress;
@@ -641,10 +642,10 @@ public class UTXODetailsActivity extends SamouraiActivity {
     }
 
     private void viewInExplorer() {
-        String blockExplorer = BlockExplorerUtil.getInstance().getUri(true);
-
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(blockExplorer + hash));
-        startActivity(browserIntent);
+        Intent explorerIntent = new Intent(this,ExplorerActivity.class);
+        explorerIntent.putExtra(ExplorerActivity.TX_URI,hash);
+        explorerIntent.putExtra("_account",account);
+        startActivity(explorerIntent);
     }
 
 }
