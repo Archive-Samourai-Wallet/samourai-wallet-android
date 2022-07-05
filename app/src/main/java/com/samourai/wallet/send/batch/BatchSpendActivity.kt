@@ -779,7 +779,7 @@ class BatchSpendActivity : SamouraiActivity() {
             return
         }
 
-        tx = SendFactory.getInstance(applicationContext).makeTransaction(0, outpoints, receivers)
+        tx = SendFactory.getInstance(applicationContext).makeTransaction(outpoints, receivers)
 
         if (tx != null) {
             val rbf: RBFSpend?

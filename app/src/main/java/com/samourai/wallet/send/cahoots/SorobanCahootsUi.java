@@ -16,7 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import java8.util.function.Function;
+import java.util.function.Function;
 
 public class SorobanCahootsUi extends ManualCahootsUi {
 

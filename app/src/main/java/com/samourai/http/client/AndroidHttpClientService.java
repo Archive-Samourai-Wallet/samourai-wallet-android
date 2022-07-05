@@ -17,12 +17,17 @@ public class AndroidHttpClientService implements IHttpClientService {
 
     private Context ctx;
 
-    protected AndroidHttpClientService(Context ctx) {
+    private AndroidHttpClientService(Context ctx) {
         this.ctx = ctx;
     }
 
     @Override
     public AndroidHttpClient getHttpClient(HttpUsage httpUsage) {
         return AndroidHttpClient.getInstance(ctx);
+    }
+
+    @Override
+    public void stop() {
+        // nothing to do
     }
 }

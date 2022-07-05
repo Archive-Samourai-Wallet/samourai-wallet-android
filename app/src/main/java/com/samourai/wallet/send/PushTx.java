@@ -1,6 +1,7 @@
 package com.samourai.wallet.send;
 
 import android.content.Context;
+import android.util.Pair;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
@@ -71,16 +72,16 @@ public class PushTx {
             return response;
         }
         catch(Exception e) {
-            e.printStackTrace();
             return null;
         }
 
     }
 
-    public boolean pushTx(String hexTx) throws Exception {
+    public Pair<Boolean,String> pushTx(String hexTx) throws Exception {
 
         String response = null;
         boolean isOK = false;
+        String txid = null;
 
             if(DO_SPEND)    {
                 response = PushTx.getInstance(context).samourai(hexTx, null);
@@ -89,6 +90,9 @@ public class PushTx {
                     if(jsonObject.has("status"))    {
                         if(jsonObject.getString("status").equals("ok"))    {
                             isOK = true;
+                            if (jsonObject.has("data")) {
+                                txid = jsonObject.getString("data");
+                            }
                         }
                     }
                 }
@@ -100,7 +104,7 @@ public class PushTx {
                 debug("PushTx", hexTx);
                 isOK = true;
             }
-            return   isOK;
+            return new Pair<>(isOK,txid);
 
     }
 

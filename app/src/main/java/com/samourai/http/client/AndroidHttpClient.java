@@ -2,19 +2,18 @@ package com.samourai.http.client;
 
 import android.content.Context;
 
-import com.samourai.wallet.tor.ITorManager;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.WebUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import java8.util.Optional;
 
 /**
  * HTTP client used by Whirlpool.
@@ -30,13 +29,13 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     private WebUtil webUtil;
-    private ITorManager torManager;
+    private TorManager torManager;
 
     private AndroidHttpClient(Context ctx) {
         this(WebUtil.getInstance(ctx), TorManager.INSTANCE);
     }
 
-    public AndroidHttpClient(WebUtil webUtil, ITorManager torManager) {
+    public AndroidHttpClient(WebUtil webUtil, TorManager torManager) {
         this.webUtil = webUtil;
         this.torManager = torManager;
     }

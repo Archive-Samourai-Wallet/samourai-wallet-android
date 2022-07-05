@@ -3,11 +3,15 @@ package com.samourai.wallet.tor
 import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Process
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.samourai.wallet.BuildConfig
+import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiApplication
 import com.samourai.wallet.util.PrefsUtil
@@ -27,7 +31,7 @@ import java.net.Proxy
  *
  */
 
-object TorManager : ITorManager {
+object TorManager {
     lateinit var stopTorDelaySettingAtAppStartup: String
         private set
 
@@ -124,7 +128,7 @@ object TorManager : ITorManager {
                 .setEventBroadcaster(eventBroadcaster = TorEventBroadcaster())
     }
 
-    override fun isRequired(): Boolean {
+    fun isRequired(): Boolean {
         return PrefsUtil.getInstance(appContext).getValue(PrefsUtil.ENABLE_TOR, false);
     }
 
@@ -140,7 +144,7 @@ object TorManager : ITorManager {
         return torProgress
     }
 
-    override fun getProxy(): Proxy? {
+    fun getProxy(): Proxy? {
         return proxy;
     }
 

@@ -1,7 +1,6 @@
 package com.samourai.wallet.send;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.samourai.wallet.R;
@@ -11,56 +10,47 @@ import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.bip69.BIP69OutputComparator;
-import com.samourai.wallet.hd.AddressType;
+import com.samourai.wallet.bipFormat.BIP_FORMAT;
+import com.samourai.wallet.bipFormat.BipFormat;
 import com.samourai.wallet.hd.HD_Address;
-import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
-import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
+import com.samourai.wallet.send.exceptions.SignTxException;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.PrivKeyReader;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DumpedPrivateKey;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.core.TransactionWitness;
-import org.bitcoinj.crypto.MnemonicException;
-import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptException;
-import org.bitcoinj.script.ScriptOpCodes;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 import static com.samourai.wallet.util.LogUtil.debug;
 
 //import android.util.Log;
 
-public class SendFactory	{
+public class SendFactory extends SendFactoryGeneric	{
 
     private static SendFactory instance = null;
     private static Context context = null;
@@ -78,13 +68,16 @@ public class SendFactory	{
         return instance;
     }
 
-    public Transaction makeTransaction(final int accountIdx, final List<MyTransactionOutPoint> unspent, final HashMap<String, BigInteger> receivers) {
+    public Transaction makeTransaction(final List<MyTransactionOutPoint> unspent, final HashMap<String, BigInteger> receivers) {
 
         Transaction tx = null;
 
         try {
 //            int changeIdx = HD_WalletFactory.getInstance(context).get().getAccount(accountIdx).getChange().getAddrIdx();
-            tx = makeTransaction(accountIdx, receivers, unspent);
+            boolean rbfOptin = PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false);
+            long blockHeight = APIFactory.getInstance(context).getLatestBlockHeight();
+            NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
+            tx = super.makeTransaction(unspent, receivers, BIP_FORMAT.PROVIDER, rbfOptin, params, blockHeight);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -93,7 +86,7 @@ public class SendFactory	{
         return tx;
     }
 
-    public Transaction signTransaction(Transaction unsignedTx, int account)    {
+    public Transaction signTransaction(Transaction unsignedTx, int account)  {
 
         HashMap<String,ECKey> keyBag = new HashMap<String,ECKey>();
 
@@ -129,7 +122,12 @@ public class SendFactory	{
 
         }
 
-        Transaction signedTx = signTransaction(unsignedTx, keyBag);
+        Transaction signedTx = null;
+        try {
+            signedTx = signTransaction(unsignedTx, keyBag);
+        } catch (SignTxException e) {
+            e.printStackTrace();
+        }
         if(signedTx == null)    {
             return null;
         }
@@ -144,238 +142,8 @@ public class SendFactory	{
         }
     }
 
-    public Transaction signTransactionForSweep(Transaction unsignedTx, PrivKeyReader privKeyReader)    {
-
-        HashMap<String,ECKey> keyBag = new HashMap<String,ECKey>();
-
-        for (TransactionInput input : unsignedTx.getInputs()) {
-
-            try {
-                byte[] scriptBytes = input.getOutpoint().getConnectedPubKeyScript();
-
-                String script = Hex.toHexString(scriptBytes);
-                String address = null;
-                if(Bech32Util.getInstance().isBech32Script(script))    {
-                    try {
-                        address = Bech32Util.getInstance().getAddressFromScript(script);
-                    }
-                    catch(Exception e) {
-                        ;
-                    }
-                }
-                else    {
-                    address = new Script(scriptBytes).getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-                }
-
-                Log.i("address from script", address);
-
-                ECKey ecKey = null;
-                try {
-                    DumpedPrivateKey pk = new DumpedPrivateKey(SamouraiWallet.getInstance().getCurrentNetworkParams(), privKeyReader.getKey().getPrivateKeyAsWiF(SamouraiWallet.getInstance().getCurrentNetworkParams()));
-                    ecKey = pk.getKey();
-//                    Log.i("SendFactory", "ECKey address:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                } catch (AddressFormatException afe) {
-                    afe.printStackTrace();
-                    continue;
-                }
-
-                if(ecKey != null) {
-                    keyBag.put(input.getOutpoint().toString(), ecKey);
-                }
-                else {
-                    Toast.makeText(context, R.string.cannot_recognize_privkey, Toast.LENGTH_SHORT).show();
-//                    Log.i("ECKey error", "cannot process private key");
-                }
-            }
-            catch(ScriptException se) {
-                ;
-            }
-            catch(Exception e) {
-                ;
-            }
-
-        }
-
-        Transaction signedTx = signTransaction(unsignedTx, keyBag);
-        if(signedTx == null)    {
-            return null;
-        }
-        else    {
-            String hexString = new String(Hex.encode(signedTx.bitcoinSerialize()));
-            if(hexString.length() > (100 * 1024)) {
-                Toast.makeText(context, R.string.tx_length_error, Toast.LENGTH_SHORT).show();
-//              Log.i("SendFactory", "Transaction length too long");
-            }
-
-            return signedTx;
-        }
-    }
-
-    /*
-    Used by spends
-     */
-    private Transaction makeTransaction(int accountIdx, HashMap<String, BigInteger> receivers, List<MyTransactionOutPoint> unspent) throws Exception {
-
-        BigInteger amount = BigInteger.ZERO;
-        for(Iterator<Map.Entry<String, BigInteger>> iterator = receivers.entrySet().iterator(); iterator.hasNext();) {
-            Map.Entry<String, BigInteger> mapEntry = iterator.next();
-            amount = amount.add(mapEntry.getValue());
-        }
-
-        Transaction tx = new Transaction(SamouraiWallet.getInstance().getCurrentNetworkParams());
-        tx.setVersion(2);
-        if(PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false) == true)    {
-            long blockHeight = APIFactory.getInstance(context).getLatestBlockHeight();
-            if(blockHeight > 0L)    {
-                tx.setLockTime(blockHeight);
-            }
-        }
-
-        List<TransactionOutput> outputs = new ArrayList<TransactionOutput>();
-
-        for(Iterator<Map.Entry<String, BigInteger>> iterator = receivers.entrySet().iterator(); iterator.hasNext();) {
-            Map.Entry<String, BigInteger> mapEntry = iterator.next();
-            String toAddress = mapEntry.getKey();
-            BigInteger value = mapEntry.getValue();
-/*
-            if(value.compareTo(SamouraiWallet.bDust) < 1)    {
-                throw new Exception(context.getString(R.string.dust_amount));
-            }
-*/
-            if(value == null || (value.compareTo(BigInteger.ZERO) <= 0 && !FormatsUtil.getInstance().isValidBIP47OpReturn(toAddress))) {
-                throw new Exception(context.getString(R.string.invalid_amount));
-            }
-
-            TransactionOutput output = null;
-            Script toOutputScript = null;
-            if(!FormatsUtil.getInstance().isValidBitcoinAddress(toAddress) && FormatsUtil.getInstance().isValidBIP47OpReturn(toAddress))    {
-                toOutputScript = new ScriptBuilder().op(ScriptOpCodes.OP_RETURN).data(Hex.decode(toAddress)).build();
-                output = new TransactionOutput(SamouraiWallet.getInstance().getCurrentNetworkParams(), null, Coin.valueOf(0L), toOutputScript.getProgram());
-            }
-            else if(FormatsUtil.getInstance().isValidBech32(toAddress))   {
-                output = Bech32Util.getInstance().getTransactionOutput(toAddress, value.longValue());
-            }
-            else    {
-                toOutputScript = ScriptBuilder.createOutputScript(org.bitcoinj.core.Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), toAddress));
-                output = new TransactionOutput(SamouraiWallet.getInstance().getCurrentNetworkParams(), null, Coin.valueOf(value.longValue()), toOutputScript.getProgram());
-            }
-
-            outputs.add(output);
-        }
-
-        List<MyTransactionInput> inputs = new ArrayList<MyTransactionInput>();
-        for(MyTransactionOutPoint outPoint : unspent) {
-            Script script = new Script(outPoint.getScriptBytes());
-
-            if(script.getScriptType() == Script.ScriptType.NO_TYPE) {
-                continue;
-            }
-
-            MyTransactionInput input = new MyTransactionInput(SamouraiWallet.getInstance().getCurrentNetworkParams(), null, new byte[0], outPoint, outPoint.getTxHash().toString(), outPoint.getTxOutputN());
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false) == true)    {
-                input.setSequenceNumber(SamouraiWallet.RBF_SEQUENCE_VAL.longValue());
-            }
-            inputs.add(input);
-        }
-
-        //
-        // deterministically sort inputs and outputs, see BIP69 (OBPP)
-        //
-        Collections.sort(inputs, new BIP69InputComparator());
-        for(TransactionInput input : inputs) {
-            tx.addInput(input);
-        }
-
-        Collections.sort(outputs, new BIP69OutputComparator());
-        for(TransactionOutput to : outputs) {
-            tx.addOutput(to);
-        }
-
-        return tx;
-    }
-
-    private synchronized Transaction signTransaction(Transaction transaction, HashMap<String,ECKey> keyBag) throws ScriptException {
-
-        List<TransactionInput> inputs = transaction.getInputs();
-
-        TransactionInput input = null;
-        TransactionOutput connectedOutput = null;
-        byte[] connectedPubKeyScript = null;
-        TransactionSignature sig = null;
-        Script scriptPubKey = null;
-        ECKey key = null;
-
-        for (int i = 0; i < inputs.size(); i++) {
-
-            input = inputs.get(i);
-
-            key = keyBag.get(input.getOutpoint().toString());
-            connectedPubKeyScript = input.getOutpoint().getConnectedPubKeyScript();
-            connectedOutput = input.getOutpoint().getConnectedOutput();
-            scriptPubKey = connectedOutput.getScriptPubKey();
-
-            String script = Hex.toHexString(connectedPubKeyScript);
-            String address = null;
-            if(Bech32Util.getInstance().isBech32Script(script))    {
-                try {
-                    address = Bech32Util.getInstance().getAddressFromScript(script);
-                }
-                catch(Exception e) {
-                    ;
-                }
-            }
-            else    {
-                address = new Script(connectedPubKeyScript).getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-            }
-
-            if(FormatsUtil.getInstance().isValidBech32(address) || Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress())    {
-
-                final SegwitAddress segwitAddress = new SegwitAddress(key.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-//                System.out.println("pubKey:" + Hex.toHexString(key.getPubKey()));
-//                final Script scriptPubKey = p2shp2wpkh.segWitOutputScript();
-//                System.out.println("scriptPubKey:" + Hex.toHexString(scriptPubKey.getProgram()));
-//                System.out.println("to address from script:" + scriptPubKey.getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                final Script redeemScript = segwitAddress.segWitRedeemScript();
-//                System.out.println("redeem script:" + Hex.toHexString(redeemScript.getProgram()));
-                final Script scriptCode = redeemScript.scriptCode();
-//                System.out.println("script code:" + Hex.toHexString(scriptCode.getProgram()));
-
-                sig = transaction.calculateWitnessSignature(i, key, scriptCode, connectedOutput.getValue(), Transaction.SigHash.ALL, false);
-                final TransactionWitness witness = new TransactionWitness(2);
-                witness.setPush(0, sig.encodeToBitcoin());
-                witness.setPush(1, key.getPubKey());
-                transaction.setWitness(i, witness);
-
-                if(!FormatsUtil.getInstance().isValidBech32(address) && Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress())    {
-                    final ScriptBuilder sigScript = new ScriptBuilder();
-                    sigScript.data(redeemScript.getProgram());
-                    transaction.getInput(i).setScriptSig(sigScript.build());
-                    transaction.getInput(i).getScriptSig().correctlySpends(transaction, i, scriptPubKey, connectedOutput.getValue(), Script.ALL_VERIFY_FLAGS);
-                }
-
-            }
-            else    {
-                if(key != null && key.hasPrivKey() || key.isEncrypted()) {
-                    sig = transaction.calculateSignature(i, key, connectedPubKeyScript, Transaction.SigHash.ALL, false);
-                }
-                else {
-                    sig = TransactionSignature.dummy();   // watch only ?
-                }
-
-                if(scriptPubKey.isSentToAddress()) {
-                    input.setScriptSig(ScriptBuilder.createInputScript(sig, key));
-                }
-                else if(scriptPubKey.isSentToRawPubKey()) {
-                    input.setScriptSig(ScriptBuilder.createInputScript(sig));
-                }
-                else {
-                    throw new RuntimeException("Unknown script type: " + scriptPubKey);
-                }
-            }
-
-        }
-
-        return transaction;
+    private synchronized Transaction signTransaction(Transaction transaction, HashMap<String,ECKey> keyBag) throws SignTxException {
+        return super.signTransaction(transaction, keyBag);
     }
 
     public Pair<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>> boltzmann(List<UTXO> utxos, List<UTXO> utxosBis, BigInteger spendAmount, String address, int account) {
@@ -711,17 +479,17 @@ public class SendFactory	{
 
         if(account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix())    {
             // POSTMIX
-            AddressType forcedAddressType = AddressType.SEGWIT_NATIVE;
+            BipFormat forcedBipFormat = BIP_FORMAT.SEGWIT_NATIVE;
             if((type == 44 || type == 49) && useLikeType)    {
                 if(type == 49)    {
-                    forcedAddressType = AddressType.SEGWIT_COMPAT;
+                    forcedBipFormat = BIP_FORMAT.SEGWIT_COMPAT;
                 }
                 else {
-                    forcedAddressType = AddressType.LEGACY;
+                    forcedBipFormat = BIP_FORMAT.LEGACY;
                 }
             }
             // get & increment
-            Pair<Integer, String> postmixChange = AddressFactory.getInstance(context).getAddressAndIncrement(WALLET_INDEX.POSTMIX_CHANGE, forcedAddressType);
+            Pair<Integer, String> postmixChange = AddressFactory.getInstance(context).getAddressAndIncrement(WALLET_INDEX.POSTMIX_CHANGE, forcedBipFormat);
             debug("SendFactory", "change index:" + postmixChange.getLeft());
             return postmixChange.getRight();
         }

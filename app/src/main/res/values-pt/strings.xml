@@ -456,5 +456,6 @@
     <string name="fee_high_priority">Alta prioridade: estimado 2</string>
     <string name="fee_custom_priority">Taxa personalizada: estimado</string>
     <string name="blocks_to_cf">blocos antes da confirmação</string>
+    <string name="follow">Conectar</string>
 
 </resources>

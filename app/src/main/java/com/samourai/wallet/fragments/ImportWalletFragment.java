@@ -93,10 +93,10 @@ public class ImportWalletFragment extends Fragment {
         public void onClick(View view) {
             if (passPhraseContainer.getVisibility() == View.VISIBLE) {
                 passPhraseContainer.setVisibility(View.GONE);
-                addPassphraseBtn.setText(R.string.add_bip39_password);
+                addPassphraseBtn.setText(R.string.add_bip39_passphrase);
             } else {
                 passPhraseContainer.setVisibility(View.VISIBLE);
-                addPassphraseBtn.setText(R.string.close_bip39_password);
+                addPassphraseBtn.setText(R.string.close_bip39_passphrase);
             }
         }
     };

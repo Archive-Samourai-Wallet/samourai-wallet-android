@@ -3,13 +3,12 @@ package com.samourai.wallet;
 import android.content.Context;
 
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.util.BackendApiAndroid;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.MainNetParams;
 
-import java.io.IOException;
 import java.math.BigInteger;
 
 public class SamouraiWallet extends SamouraiWalletConst {
@@ -60,6 +59,9 @@ public class SamouraiWallet extends SamouraiWalletConst {
     }
 
     public void setCurrentNetworkParams(NetworkParameters params) {
+        if (params != networkParams) {
+            BackendApiAndroid.reset(); // reset BackendApi on change
+        }
         networkParams = params;
     }
 

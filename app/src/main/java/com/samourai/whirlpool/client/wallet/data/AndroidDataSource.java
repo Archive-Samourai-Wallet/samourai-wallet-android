@@ -1,56 +1,50 @@
 package com.samourai.whirlpool.client.wallet.data;
 
+import android.util.Pair;
+
 import com.samourai.wallet.api.APIFactory;
-import com.samourai.wallet.api.backend.BackendApi;
-import com.samourai.wallet.api.backend.beans.PushTxResponse;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.hd.HD_Wallet;
+import com.samourai.wallet.bipFormat.BipFormatSupplier;
+import com.samourai.wallet.bipFormat.BipFormatSupplierImpl;
+import com.samourai.wallet.bipWallet.WalletSupplier;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.UTXOFactory;
-import com.samourai.wallet.util.JSONUtils;
-import com.samourai.whirlpool.client.tx0.Tx0ParamService;
+import com.samourai.whirlpool.client.exception.NotifiableException;
+import com.samourai.whirlpool.client.tx0.Tx0PreviewService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWalletConfig;
 import com.samourai.whirlpool.client.wallet.data.chain.ChainSupplier;
-import com.samourai.whirlpool.client.wallet.data.dataPersister.DataPersister;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSource;
-import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceWithStrictMode;
 import com.samourai.whirlpool.client.wallet.data.minerFee.MinerFeeSupplier;
+import com.samourai.whirlpool.client.wallet.data.paynym.PaynymSupplier;
 import com.samourai.whirlpool.client.wallet.data.pool.ExpirablePoolSupplier;
 import com.samourai.whirlpool.client.wallet.data.pool.PoolSupplier;
 import com.samourai.whirlpool.client.wallet.data.utxo.UtxoSupplier;
-import com.samourai.whirlpool.client.wallet.data.wallet.WalletSupplier;
-import com.samourai.whirlpool.client.wallet.data.wallet.WalletSupplierImpl;
-import com.samourai.whirlpool.client.wallet.data.walletState.WalletStateSupplier;
+import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
 
-import java.util.List;
-
-public class AndroidDataSource implements DataSource, DataSourceWithStrictMode {
+public class AndroidDataSource implements DataSource {
     private PushTx pushTx;
 
-    protected WalletSupplier walletSupplier;
-    protected MinerFeeSupplier minerFeeSupplier;
-    protected ChainSupplier chainSupplier;
-    protected Tx0ParamService tx0ParamService;
-    protected ExpirablePoolSupplier poolSupplier;
-    protected UtxoSupplier utxoSupplier;
+    private WalletSupplier walletSupplier;
+    private MinerFeeSupplier minerFeeSupplier;
+    private ChainSupplier chainSupplier;
+    private Tx0PreviewService tx0PreviewService;
+    private ExpirablePoolSupplier poolSupplier;
+    private UtxoSupplier utxoSupplier;
+    private final BipFormatSupplier bipFormatSupplier;
 
-    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, DataPersister dataPersister, PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory, BIP47Util bip47Util, BIP47Meta bip47Meta) throws Exception {
+    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, UTXOFactory utxoFactory, BIP47Util bip47Util, BIP47Meta bip47Meta, WalletSupplier walletSupplier, UtxoConfigSupplier utxoConfigSupplier) throws Exception {
         this.pushTx = pushTx;
-        WalletStateSupplier walletStateSupplier = dataPersister.getWalletStateSupplier();
-        this.walletSupplier = new WalletSupplierImpl(bip44w, walletStateSupplier);
-        this.minerFeeSupplier = computeMinerFeeSupplier(feeUtil);
+        this.walletSupplier = walletSupplier;
+        this.minerFeeSupplier = new AndroidMinerFeeSupplier(feeUtil);
         this.chainSupplier = new AndroidChainSupplier(apiFactory);
         WhirlpoolWalletConfig config = whirlpoolWallet.getConfig();
-        this.tx0ParamService = new Tx0ParamService(minerFeeSupplier, config);
-        this.poolSupplier = new ExpirablePoolSupplier(config.getRefreshPoolsDelay(), config.getServerApi(), tx0ParamService);
-        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, dataPersister.getUtxoConfigSupplier(), chainSupplier, poolSupplier, tx0ParamService, config.getNetworkParameters(), utxoFactory, bip47Util, bip47Meta);
-    }
-
-    protected MinerFeeSupplier computeMinerFeeSupplier(FeeUtil feeUtil) {
-        return new AndroidMinerFeeSupplier(feeUtil);
+        this.tx0PreviewService = new Tx0PreviewService(minerFeeSupplier, config);
+        this.poolSupplier = new ExpirablePoolSupplier(config.getRefreshPoolsDelay(), config.getServerApi(), tx0PreviewService);
+        this.bipFormatSupplier = new BipFormatSupplierImpl();
+        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, utxoConfigSupplier, chainSupplier, poolSupplier, bipFormatSupplier, utxoFactory, bip47Util, bip47Meta);
     }
 
     @Override
@@ -64,17 +58,12 @@ public class AndroidDataSource implements DataSource, DataSourceWithStrictMode {
     }
 
     @Override
-    public void pushTx(String txHex) throws Exception {
-        pushTx.pushTx(txHex);
-    }
-
-    @Override
-    public void pushTx(String txHex, List<Integer> strictModeVouts) throws Exception {
-        String response = pushTx.samourai(txHex, strictModeVouts);
-
-        // check strict-mode response
-        PushTxResponse pushTxResponse = JSONUtils.getInstance().getObjectMapper().readValue(response, PushTxResponse.class);
-        BackendApi.checkPushTxResponse(pushTxResponse);
+    public String pushTx(String txHex) throws Exception {
+        Pair<Boolean,String> result = pushTx.pushTx(txHex);
+        if (!result.first) {
+            throw new NotifiableException("pushTx failed");
+        }
+        return result.second; // txid
     }
 
     @Override
@@ -103,7 +92,12 @@ public class AndroidDataSource implements DataSource, DataSourceWithStrictMode {
     }
 
     @Override
-    public Tx0ParamService getTx0ParamService() {
-        return tx0ParamService;
+    public Tx0PreviewService getTx0PreviewService() {
+        return tx0PreviewService;
+    }
+
+    @Override
+    public PaynymSupplier getPaynymSupplier() {
+        return null; // not implemented
     }
 }
