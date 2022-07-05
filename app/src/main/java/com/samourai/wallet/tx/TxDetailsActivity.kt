@@ -434,7 +434,7 @@ class TxDetailsActivity : SamouraiActivity() {
     }
 
     /**
-     * Opens external BlockExplorer
+     * Opens BlockExplorer
      */
     private fun doExplorerView() {
         tx?.let {
