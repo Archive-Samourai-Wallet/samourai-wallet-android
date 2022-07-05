@@ -92,15 +92,15 @@ public class ManualCahootsUi {
     }
 
     private void createSteps(FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider) {
-        int nbSteps = this.cahootsType == CahootsType.MULTI ? ManualCahootsMessage.NB_STEPS_MULTI : ManualCahootsMessage.NB_STEPS;
-        for (int i = 0; i < (nbSteps-1); i++) {
+        int lastStep = ManualCahootsMessage.getLastStep(this.cahootsType);
+        for (int i = 0; i < lastStep; i++) {
             Fragment stepView = fragmentProvider.apply(i);
             steps.add(stepView);
         }
         if (CahootsTypeUser.SENDER.equals(typeUser)) {
             steps.add(cahootReviewFragment);
         } else {
-            Fragment stepView = fragmentProvider.apply(nbSteps-1);
+            Fragment stepView = fragmentProvider.apply(lastStep);
             steps.add(stepView);
         }
         stepsViewGroup.setTotalSteps(steps.size());
@@ -135,7 +135,6 @@ public class ManualCahootsUi {
         }
 
         if (cahootsMessage.isDone()) {
-            System.out.println("DONE!!!!");
             notifyWalletAndFinish();
         } else {
             activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());
@@ -156,7 +155,7 @@ public class ManualCahootsUi {
     private void setStep(final int step) {
         stepsViewGroup.post(() -> stepsViewGroup.setStep(step + 1));
         viewPager.post(() -> viewPager.setCurrentItem(step, true));
-        stepCounts.setText("Step " + (step + 1) + "/" + (this.cahootsType == CahootsType.MULTI ? "7" : "5"));
+        stepCounts.setText("Step " + (step + 1) + "/" + ManualCahootsMessage.getNbSteps(this.cahootsType));
     }
 
     private class StepAdapter extends FragmentPagerAdapter {

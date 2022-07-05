@@ -133,7 +133,6 @@ public class SorobanCahootsActivity extends SamouraiActivity {
                                 System.out.println(Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize()));
                                 System.out.println(Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize()));
                             }
-                            System.out.println("DONE!!!");
                         }
                         cahootsUi.setCahootsMessage(cahootsMessage);
                     }

@@ -84,7 +84,7 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
             HD_Wallet bip84w = BIP84Util.getInstance(ctx).getWallet();
             String walletIdentifier = whirlpoolUtils.computeWalletIdentifier(bip84w); // preserve android filenames
             whirlpoolWallet = new WhirlpoolWallet(config, bip84w.getSeed(), bip84w.getPassphrase(), walletIdentifier);
-            return openWallet(whirlpoolWallet);
+            return openWallet(whirlpoolWallet, bip84w.getPassphrase());
         }
         // wallet already opened
         return whirlpoolWallet;

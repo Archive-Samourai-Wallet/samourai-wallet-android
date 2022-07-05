@@ -11,11 +11,11 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiWalletConst;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
@@ -24,7 +24,6 @@ import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 public class SelectCahootsType extends BottomSheetDialogFragment {
-
 
     public enum type {
         STONEWALLX2_MANUAL(CahootsType.STONEWALLX2, CahootsMode.MANUAL),
@@ -129,7 +128,7 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
         samouraiAsParticipant.setOnClickListener(view1 -> {
             if (onSelectListener != null) {
                 SelectCahootsType.type typeSoroban = type.MULTI_SOROBAN;
-                onSelectListener.onSelect(typeSoroban,"PM8TJXBr2UNrPuhTFrmiCrww74GCFm1WbTqpxEXACpfzAsKqM3xvgZPG2PhDGycW2Ud9RiCzVHb3NprRvGffpYbi9bw6sYjU5nZJm94syV1J67V9fRND");
+                onSelectListener.onSelect(typeSoroban, SamouraiWalletConst.MULTICAHOOTS_PCODE);
             }
             this.dismiss();
         });
