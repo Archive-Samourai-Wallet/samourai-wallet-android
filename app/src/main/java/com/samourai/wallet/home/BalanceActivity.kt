@@ -424,6 +424,15 @@ open class BalanceActivity : SamouraiActivity() {
     private fun checkDeepLinks() {
         val bundle = intent.extras ?: return
         if (bundle.containsKey("pcode") || bundle.containsKey("uri") || bundle.containsKey("amount")) {
+            if(bundle.containsKey("uri")){
+                if(bundle.getString("uri")?.startsWith("auth47") == true){
+                    ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
+                        bundle = Bundle().apply {
+                            putString("KEY", bundle.getString("uri"))
+                        })
+                    return;
+                }
+            }
             if (balanceViewModel.balance.value != null) bundle.putLong("balance", balanceViewModel.balance.value!!)
             val intent = Intent(this, SendActivity::class.java)
             intent.putExtra("_account", account)
