@@ -206,6 +206,9 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }
 
+            if ( scheme !=null && scheme.equals("auth47") && getIntent().getData()!=null) {
+                strUri = getIntent().getData().toString();
+            }
             doAppInit0(isDial, strUri, strPCode);
 
         }
