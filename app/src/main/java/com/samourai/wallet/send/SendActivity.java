@@ -353,6 +353,7 @@ public class SendActivity extends SamouraiActivity {
             final boolean[] chosen = {false};
             if (b) {
                 SelectCahootsType cahootsType = new SelectCahootsType();
+                cahootsType.setToAddress(tvToAddress.getText().toString());
                 cahootsType.show(getSupportFragmentManager(), cahootsType.getTag());
                 cahootsType.setOnSelectListener(new SelectCahootsType.OnSelectListener() {
                     @Override
@@ -451,6 +452,10 @@ public class SendActivity extends SamouraiActivity {
 
     private CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (compoundButton, checked) -> {
         if (compoundButton.isPressed()) {
+            if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix() && !checked) {
+                compoundButton.setChecked(true);
+                return;
+            }
             SPEND_TYPE = checked ? SPEND_BOLTZMANN : SPEND_SIMPLE;
             stoneWallChecked = checked;
             compoundButton.setChecked(checked);
@@ -460,7 +465,7 @@ public class SendActivity extends SamouraiActivity {
 
     private void setUpBoltzman() {
         sendTransactionDetailsView.getStoneWallSwitch().setChecked(true);
-        sendTransactionDetailsView.getStoneWallSwitch().setEnabled(WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix() != account);
+        sendTransactionDetailsView.getStoneWallSwitch().setEnabled(true);
         sendTransactionDetailsView.enableStonewall(true);
         sendTransactionDetailsView.getStoneWallSwitch().setOnCheckedChangeListener(onCheckedChangeListener);
     }
@@ -1788,7 +1793,8 @@ public class SendActivity extends SamouraiActivity {
         }
         return false;
         }catch (Exception exception){
-            if(exception.getMessage() !=null){
+            if (APIFactory.getInstance(getApplicationContext()).walletInit) return false;
+            else if(exception.getMessage() !=null){
               new   MaterialAlertDialogBuilder(this)
                       .setMessage("Exception ".concat(exception.getMessage()))
                       .setTitle("Error")

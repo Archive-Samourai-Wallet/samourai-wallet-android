@@ -3,7 +3,6 @@ package com.samourai.wallet.whirlpool
 import android.app.Activity
 import android.content.*
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
@@ -31,7 +30,6 @@ import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.JobRefreshService
 import com.samourai.wallet.util.FormatsUtil
-import com.samourai.wallet.util.LogUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.utxos.PreSelectUtil
 import com.samourai.wallet.utxos.UTXOSActivity
@@ -258,11 +256,7 @@ class WhirlpoolHome : SamouraiActivity() {
                 } catch (ex: Exception) {
                     Toast.makeText(this, ex.message, Toast.LENGTH_LONG).show()
                     ex.printStackTrace()
-                    val builder = MaterialAlertDialogBuilder(this)
-                    builder.setMessage(getString(R.string.tx0_is_not_possible_with))
-                        .setCancelable(true)
-                    builder.setPositiveButton(R.string.ok) { dialogInterface, i -> dialogInterface.dismiss() }
-                    builder.create().show()
+                    super.onBackPressed()
                     return
                 }
                 if (tx0.tx0 == null) {

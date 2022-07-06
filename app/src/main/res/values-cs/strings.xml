@@ -694,7 +694,7 @@
     <string name="preorder">předobjednat</string>
     <string name="add_new">Přidat nový</string>
     <string name="paynym_follow_message_2">automaticky generovat jedinečné soukromé adresy pro odesílání bitcoinů tomuto kontaktu</string>
-    <string name="follow">Následovat</string>
+    <string name="follow">Připojit</string>
     <string name="wallet_locked">Peněženka zamknuta</string>
     <string name="address">Adresa</string>
 

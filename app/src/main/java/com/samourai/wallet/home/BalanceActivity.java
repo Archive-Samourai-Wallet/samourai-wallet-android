@@ -386,6 +386,7 @@ public class BalanceActivity extends SamouraiActivity {
             startActivity(intent);
         });
         txSwipeLayout.setOnRefreshListener(() -> {
+            doClipboardCheck();
             refreshTx(false, true, false);
             txSwipeLayout.setRefreshing(false);
             showProgress();

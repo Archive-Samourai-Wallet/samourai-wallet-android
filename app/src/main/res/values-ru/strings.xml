@@ -694,7 +694,7 @@
     <string name="add_new">Добавить Новый</string>
     <string name="paynym_follow_message_2">в подписки мгновенно. Подпишитесь на PayNym чтобы участвовать в Cahoots CoinJoin\nтранзакциях с ними.</string>
     <string name="paynym_connect_message">генерировать уникальные приватные адреса для отправки биткоинов\nэтому контакту</string>
-    <string name="follow">Подписаться</string>
+    <string name="follow">Соединять</string>
     <string name="wallet_locked">Кошелек Заблокирован</string>
     <string name="address">Адрес</string>
     <string name="is_offline">Samourai оффлайн</string>

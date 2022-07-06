@@ -2,11 +2,8 @@ package com.samourai.wallet.explorer
 
 import android.annotation.SuppressLint
 import android.content.*
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Message
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -20,10 +17,8 @@ import androidx.webkit.ProxyController
 import androidx.webkit.WebViewFeature
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.R
-import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.BlockExplorerUtil
-import com.samourai.wallet.util.LogUtil
 import kotlinx.android.synthetic.main.activity_explorer.*
 import kotlinx.coroutines.*
 import android.webkit.WebView
@@ -181,18 +176,6 @@ class ExplorerActivity : AppCompatActivity() {
                 MaterialAlertDialogBuilder(this)
                     .setTitle("Tor status : $torStatus")
                     .setPositiveButton("Close") { dialog, _ ->
-                        dialog.dismiss()
-                    }.show()
-            }
-            R.id.menu_web_explorer -> {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.open_in_browser)
-                    .setMessage("View link in external browser?")
-                    .setPositiveButton(R.string.yes) { dialog, _ ->
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(webView.url)))
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton(R.string.no) { dialog, _ ->
                         dialog.dismiss()
                     }.show()
             }

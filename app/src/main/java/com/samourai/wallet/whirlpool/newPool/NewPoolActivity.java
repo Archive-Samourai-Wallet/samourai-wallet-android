@@ -38,6 +38,7 @@ import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
+import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.wallet.whirlpool.WhirlpoolTx0;
 import com.samourai.wallet.whirlpool.models.PoolCyclePriority;
@@ -147,11 +148,11 @@ public class NewPoolActivity extends SamouraiActivity {
             if (tx0 != null && pool != null) {
                 tx0.setPool(pool.getDenomination());
             }
-            enableConfirmButton(pool != null);
+            enableConfirmButton(pool != null && tx0.getAmountAfterWhirlpoolFee() > pool.getDenomination());
         });
 
         newPoolViewModel.getGetPool().observe(this,poolViewModel -> {
-            if(poolViewModel != null && newPoolViewPager.getCurrentItem() == 1){
+            if(poolViewModel != null && newPoolViewPager.getCurrentItem() == 1 && poolViewModel.getTx0Preview().getNbPremix() != 0){
                 enableConfirmButton(true);
             }
         });
@@ -281,12 +282,6 @@ public class NewPoolActivity extends SamouraiActivity {
                             confirmButton.setEnabled(true);
                             Snackbar.make(findViewById(R.id.new_pool_snackbar_layout), "TX0 Successfully broadcasted", Snackbar.LENGTH_LONG).show();
                             tx0Progress.setVisibility(View.GONE);
-                            Intent intent = new Intent(getApplication(), JobRefreshService.class);
-                            intent.putExtra("notifTx", false);
-                            intent.putExtra("dragged", true);
-                            intent.putExtra("launch", false);
-                            JobRefreshService.enqueueWork(getApplication(), intent);
-                            setResult(Activity.RESULT_OK, getIntent());
                             finish();
                         }, error -> {
                             confirmButton.setEnabled(true);

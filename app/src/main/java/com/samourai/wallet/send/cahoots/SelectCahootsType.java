@@ -55,6 +55,7 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
     private LinearLayout typeChooserLayout, cahootsModeChooserLayout;
     private ViewGroup samouraiAsParticipant, inPerson, soroban;
     private TextView title;
+    private String toAddress;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -76,6 +77,11 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
         closeBtn = view.findViewById(R.id.cahoots_type_close_btn);
         title = view.findViewById(R.id.cahoots_sheet_title);
 
+        if (!toAddress.equals("")) {
+            stowaway.setAlpha(.6f);
+            stowaway.setEnabled(false);
+        }
+
         stowaway.setOnClickListener(view1 -> {
             this.switchToCahootsMode(CahootsType.STOWAWAY);
         });
@@ -92,6 +98,10 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
             }
             this.dismiss();
         });
+    }
+
+    public void setToAddress (String toAddress) {
+        this.toAddress = toAddress;
     }
 
     public void setOnSelectListener(OnSelectListener onSelectListener) {

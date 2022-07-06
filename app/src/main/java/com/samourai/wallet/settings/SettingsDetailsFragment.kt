@@ -31,6 +31,8 @@ import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.payload.ExternalBackupManager
+import com.samourai.wallet.payload.ExternalBackupManager.askPermission
+import com.samourai.wallet.payload.ExternalBackupManager.hasPermissions
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.BIP49Util
@@ -291,7 +293,13 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                                                                                 Toast.makeText(requireContext().getApplicationContext(), R.string.success_change_pin, Toast.LENGTH_SHORT).show()
                                                                             }
                                                                         }
+                                                                        else {
+                                                                            Toast.makeText(requireContext().getApplicationContext(), R.string.pins_not_match, Toast.LENGTH_SHORT).show()
+                                                                        }
                                                                     }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
+                                                        }
+                                                        else {
+                                                            Toast.makeText(requireContext().getApplicationContext(), R.string.pin_length_error, Toast.LENGTH_LONG).show()
                                                         }
                                                     }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
                                         } else {
@@ -416,7 +424,15 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
         val prunePref = findPreference("prune") as Preference?
         prunePref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            doPrune()
+            val dlg = MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.app_name)
+                    .setMessage(R.string.prune_backup)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.ok) { dialog, whichButton -> doPrune() }
+                    .setNegativeButton(R.string.cancel) { dialog, whichButton -> }
+            if (!requireActivity().isFinishing()) {
+                dlg.show()
+            }
             true
         }
 
@@ -508,6 +524,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                     xpub = HD_WalletFactory.getInstance(requireContext()).get().getAccount(account).xpubstr()
                 } catch (ioe: IOException) {
                     ioe.printStackTrace()
+
                     Toast.makeText(requireContext(), "HD wallet error", Toast.LENGTH_SHORT).show()
                 } catch (mle: MnemonicLengthException) {
                     mle.printStackTrace()
@@ -606,29 +623,29 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
     }
 
     private fun doPrune() {
-        val dlg = MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.app_name)
-                .setMessage(R.string.prune_backup)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { dialog, whichButton ->
-                    try {
-
-//                            BIP47Meta.getInstance().pruneIncoming();
-                        SendAddressUtil.getInstance().reset()
-                        RicochetMeta.getInstance(requireContext()).empty()
-                        BatchSendUtil.getInstance().clear()
-                        RBFUtil.getInstance().clear()
-                        PayloadUtil.getInstance(requireContext()).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(requireContext()).guid + AccessFactory.getInstance(requireContext()).pin))
-                    } catch (je: JSONException) {
-                        je.printStackTrace()
-                        Toast.makeText(requireContext(), R.string.error_reading_payload, Toast.LENGTH_SHORT).show()
-                    } catch (mle: MnemonicLengthException) {
-                    } catch (ioe: IOException) {
-                    } catch (de: DecryptionException) {
-                    }
-                }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }
-        if (!requireActivity().isFinishing()) {
-            dlg.show()
+        if (!hasPermissions()) {
+            askPermission(requireActivity())
+            ExternalBackupManager.getPermissionStateLiveData().observe(this.viewLifecycleOwner, {
+                if (it) {
+                    doPrune()
+                }
+            })
+        }
+        else {
+            try {
+//                      BIP47Meta.getInstance().pruneIncoming();
+                SendAddressUtil.getInstance().reset()
+                RicochetMeta.getInstance(requireContext()).empty()
+                BatchSendUtil.getInstance().clear()
+                RBFUtil.getInstance().clear()
+                PayloadUtil.getInstance(requireContext()).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(requireContext()).guid + AccessFactory.getInstance(requireContext()).pin))
+            } catch (je: JSONException) {
+                je.printStackTrace()
+                Toast.makeText(requireContext(), R.string.error_reading_payload, Toast.LENGTH_SHORT).show()
+            } catch (mle: MnemonicLengthException) {
+            } catch (ioe: IOException) {
+            } catch (de: DecryptionException) {
+            }
         }
     }
 
