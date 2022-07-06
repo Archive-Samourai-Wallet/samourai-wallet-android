@@ -844,7 +844,7 @@
     <string name="passphrase_is_required_for_samourai">Passphrase is required for Samourai import</string>
     <string name="send_cahoots">Send Cahoots</string>
     <string name="dojo_config_detected">Dojo configuration detected</string>
-    <string name="dojo_config_override">Dojo configuration detected in backup file. Override current Dojo configuration in backup file?</string>
+    <string name="dojo_config_override">A previous Dojo configuration was detected in the backup file. Do you want to ignore this backed-up configuration? (Selecting No will load the Dojo configuration from the backup file)</string>
     <string name="api_key_blank_error">This field cannot be left blank!</string>
     <string name="choose">Choose</string>
     <string name="permission_dialog_scoped">Your wallet needs access to file storage so it can automatically save an encrypted backup of your wallet to your device. Please choose a directory.</string>
