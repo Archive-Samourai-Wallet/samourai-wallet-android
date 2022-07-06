@@ -104,7 +104,7 @@ fun Auth47Login(param: String? = null, onClose: () -> Unit) {
                         IconButton(onClick = {
                             showAuth47Details = !showAuth47Details
                         }) {
-                            Icon(imageVector = Icons.Outlined.Info, contentDescription =  stringResource(id = R.string.close))
+                            Icon(imageVector = Icons.Outlined.Info, contentDescription = stringResource(id = R.string.close))
                         }
                 }
             )
@@ -163,7 +163,7 @@ fun Auth47Login(param: String? = null, onClose: () -> Unit) {
 @Composable
 fun Auth47DetailsView(onClose: (() -> Unit)?) {
     val vm = viewModel<Auth47ViewModel>()
-    val authChallenge by vm.authChallengeLive.observeAsState( "")
+    val authChallenge by vm.authChallengeLive.observeAsState("")
     Box(
         modifier = Modifier
             .shadow(24.dp)
@@ -182,18 +182,18 @@ fun Auth47DetailsView(onClose: (() -> Unit)?) {
                 Arrangement.Center,
                 Alignment.Start
             ) {
-              Column {
-                  Text(stringResource(R.string.auth_challenge), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                  Spacer(modifier = Modifier.padding(8.dp))
-                  SelectionContainer {
-                      Text(
-                          text = authChallenge,
-                          color= samouraiTextPrimary,
-                          fontWeight = FontWeight.SemiBold,
-                          fontSize = 13.sp
-                      )
-                  }
-              }
+                Column {
+                    Text(stringResource(R.string.auth_challenge), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    SelectionContainer {
+                        Text(
+                            text = authChallenge,
+                            color = samouraiTextPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
             }
             TextButton(onClick = {
                 onClose?.invoke()
@@ -309,28 +309,18 @@ fun Auth47Form(onClose: (() -> Unit)? = null) {
 @Composable
 fun Auth47Authentication() {
     val vm = viewModel<Auth47ViewModel>()
-    var paynym by remember { mutableStateOf("") }
     var paynymUrl by remember { mutableStateOf("") }
     val loading by vm.loadingLive.observeAsState(true)
     val error by vm.errorsLive.observeAsState(null)
     val success by vm.authSuccessLive.observeAsState(false)
     val context = LocalContext.current.applicationContext
     val avatar by BIP47Util.getInstance(context).payNymLogoLive.observeAsState(null);
-    val authCallbackDomainValue by vm.authCallbackDomainLive.observeAsState("")
-
 
     LaunchedEffect(key1 = true) {
         val pcode = BIP47Util.getInstance(context).paymentCode.toString();
-        val label = BIP47Meta.getInstance().getDisplayLabel(pcode)
-        val nym = PrefsUtil.getInstance(context)
-            .getValue(
-                PrefsUtil.PAYNYM_BOT_NAME,
-                label
-            )
         if (avatar == null) {
             paynymUrl = "${WebUtil.PAYNYM_API}${pcode}/avatar"
         }
-        paynym = nym
     }
 
     Column(
@@ -400,73 +390,37 @@ fun Auth47Authentication() {
                     modifier = Modifier.padding(top = 18.dp, start = 18.dp, end = 18.dp)
                 )
             }
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 14.sp
-                        )
-                    ) {
-                        append("$authCallbackDomainValue ")
-                    }
-                    withStyle(
-                        SpanStyle(
-                            fontSize = 14.sp,
-                            color = Color.White
-                        )
-                    ) {
-                        append(stringResource(R.string.is_requesting_your_auth))
-                    }
-                    withStyle(
-                        SpanStyle(
-                            fontSize = 14.sp
-                        )
-                    ) {
-                        append("\n${stringResource(R.string.auth_using_paynym)} ")
-                    }
-                    withStyle(
-                        SpanStyle(
-                            fontSize = 14.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    ) {
-                        append(paynym)
-                    }
-                },
-                textAlign = TextAlign.Center,
-                maxLines = 8,
-                modifier = Modifier.padding(top = 8.dp, start = 18.dp, end = 18.dp)
-            )
-            ShowWarnings()
+            if (!success)
+                AuthMessage()
             AnimatedVisibility(visible = error != null) {
-                Box(modifier = Modifier
-                    .requiredHeightIn(max = 120.dp)
-                    .padding(
-                        vertical = 8.dp,
-                        horizontal = 24.dp
-                    )
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(samouraiError)
-                    .padding(
-                        12.dp
-                    )
-                    .fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .requiredHeightIn(max = 120.dp)
+                        .padding(
+                            vertical = 8.dp,
+                            horizontal = 24.dp
+                        )
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(samouraiError)
+                        .padding(
+                            12.dp
+                        )
+                        .fillMaxWidth()
                 ) {
-                   LazyColumn(modifier = Modifier.fillMaxHeight()
-                       ){
-                       item {
-                           Text(
-                               text = "Error $error",
-                               fontSize = 13.sp,
-                               fontWeight = FontWeight.SemiBold,
-                               modifier = Modifier
-                                   .fillMaxWidth(),
-                               color = Color.White
-                           )
-                       }
-                   }
+                    LazyColumn(
+                        modifier = Modifier.fillMaxHeight()
+                    ) {
+                        item {
+                            Text(
+                                text = "Error $error",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -492,24 +446,112 @@ fun Auth47Authentication() {
 }
 
 @Composable
-fun ShowWarnings() {
+fun AuthMessage() {
     val vm = viewModel<Auth47ViewModel>()
-    val warnings by vm.authWarningsLive.observeAsState("")
-    if (warnings.isNotEmpty()) {
-        Text(
-            text = warnings,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp, modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 24.dp, horizontal = 24.dp)
-                .clip(RoundedCornerShape(8))
-                .background(samouraiWarning)
-                .padding(vertical = 8.dp, horizontal = 6.dp)
+    val authCallbackDomainValue by vm.authCallbackDomainLive.observeAsState("")
+    val resourceHostLive by vm.resourceHostLive.observeAsState("")
+    var paynym by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
-        )
-    }
+    LaunchedEffect(key1 = true, block = {
+        val pcode = BIP47Util.getInstance(context).paymentCode.toString();
+        val label = BIP47Meta.getInstance().getDisplayLabel(pcode)
+        val nym = PrefsUtil.getInstance(context)
+            .getValue(
+                PrefsUtil.PAYNYM_BOT_NAME,
+                label
+            )
+        paynym = nym
+    })
+
+    Text(
+        text = buildAnnotatedString {
+
+            if (resourceHostLive.isNotEmpty() && resourceHostLive != authCallbackDomainValue) {
+                append("Warning: ")
+                withStyle(
+                    SpanStyle(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp
+                    )
+                ) {
+                    append("$authCallbackDomainValue ")
+                }
+                withStyle(
+                    SpanStyle(
+                        fontSize = 14.sp,
+                        color = Color.White
+                    )
+                ) {
+                    append("is requesting an authentication to ")
+                }
+                withStyle(
+                    SpanStyle(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp,
+                        color = Color.White
+                    )
+                ) {
+                    append("${resourceHostLive}.")
+                }
+                withStyle(
+                    SpanStyle(
+                        fontSize = 14.sp
+                    )
+                ) {
+                    append("\n${stringResource(R.string.auth_using_paynym)} ")
+                }
+                withStyle(
+                    SpanStyle(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp,
+                        color = Color.White
+                    )
+                ) {
+                    append("$paynym ?")
+                }
+            } else {
+                withStyle(
+                    SpanStyle(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp
+                    )
+                ) {
+                    append("$authCallbackDomainValue ")
+                }
+                withStyle(
+                    SpanStyle(
+                        fontSize = 14.sp,
+                        color = Color.White
+                    )
+                ) {
+                    append(stringResource(R.string.is_requesting_your_auth))
+                }
+                withStyle(
+                    SpanStyle(
+                        fontSize = 14.sp
+                    )
+                ) {
+                    append("\n${stringResource(R.string.auth_using_paynym)} ")
+                }
+                withStyle(
+                    SpanStyle(
+                        fontSize = 14.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                ) {
+                    append(paynym)
+                }
+            }
+
+        },
+        textAlign = TextAlign.Center,
+        maxLines = 8,
+        letterSpacing = .5.sp,
+        fontSize = 13.sp,
+        modifier = Modifier.padding(top = 8.dp, start = 18.dp, end = 18.dp)
+    )
 }
 
 @Preview(heightDp = 400)

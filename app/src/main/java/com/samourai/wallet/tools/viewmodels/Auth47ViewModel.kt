@@ -8,14 +8,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.samourai.soroban.client.SorobanContext
-import com.samourai.soroban.client.SorobanServer
-import com.samourai.soroban.client.SorobanService
 import com.samourai.wallet.bip47.BIP47Util
-import com.samourai.wallet.cahoots.AndroidSorobanCahootsService
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.util.MessageSignUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URI
 
@@ -34,12 +33,12 @@ class Auth47ViewModel : ViewModel() {
     private val authSuccess = MutableLiveData(false)
     private val authChallenge = MutableLiveData("")
     private val authCallbackDomain = MutableLiveData("")
-    private val authWarnings = MutableLiveData("")
+    private val resourceHost = MutableLiveData("")
     private val page = MutableLiveData(0)
 
     val errorsLive: LiveData<String?> get() = errors
     val authCallbackDomainLive: LiveData<String> get() = authCallbackDomain
-    val authWarningsLive: LiveData<String> get() = authWarnings
+    val resourceHostLive: LiveData<String> get() = resourceHost
     val authChallengeLive: LiveData<String> get() = authChallenge
     val loadingLive: LiveData<Boolean> get() = loading
     val authSuccessLive: LiveData<Boolean> get() = authSuccess
@@ -69,12 +68,20 @@ class Auth47ViewModel : ViewModel() {
         if (callbackValue.isNullOrEmpty()) {
             throw Auth47Exception("invalid auth callback")
         }
+        val resourceParam = UrlQuerySanitizer(challenge).getValue("r")
         val callbackURI = URI(callbackValue)
+        authCallbackDomain.postValue(callbackURI.host)
+        if (!resourceParam.isNullOrEmpty()) {
+            try {
+                val resourceParamUri = URI(resourceParam)
+                resourceHost.postValue(resourceParamUri.host)
+            } catch (e: Exception) {
+            }
+        }
         if (callbackURI.scheme == "https" || callbackURI.scheme == "http") {
-            authCallbackDomain.postValue(callbackURI.host)
             return@withContext true
         }
-        if(callbackURI.scheme == "srbn"){
+        if (callbackURI.scheme == "srbn") {
             throw Auth47Exception("Soroban url not supported yet")
         }
         throw Auth47Exception("invalid callback url")
