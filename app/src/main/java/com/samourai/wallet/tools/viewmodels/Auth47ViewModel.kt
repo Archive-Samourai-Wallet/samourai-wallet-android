@@ -8,7 +8,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.samourai.soroban.client.SorobanContext
+import com.samourai.soroban.client.SorobanServer
+import com.samourai.soroban.client.SorobanService
 import com.samourai.wallet.bip47.BIP47Util
+import com.samourai.wallet.cahoots.AndroidSorobanCahootsService
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.util.MessageSignUtil
 import kotlinx.coroutines.*
@@ -29,9 +33,13 @@ class Auth47ViewModel : ViewModel() {
     private val loading = MutableLiveData(false)
     private val authSuccess = MutableLiveData(false)
     private val authChallenge = MutableLiveData("")
+    private val authCallbackDomain = MutableLiveData("")
+    private val authWarnings = MutableLiveData("")
     private val page = MutableLiveData(0)
 
     val errorsLive: LiveData<String?> get() = errors
+    val authCallbackDomainLive: LiveData<String> get() = authCallbackDomain
+    val authWarningsLive: LiveData<String> get() = authWarnings
     val authChallengeLive: LiveData<String> get() = authChallenge
     val loadingLive: LiveData<Boolean> get() = loading
     val authSuccessLive: LiveData<Boolean> get() = authSuccess
@@ -63,7 +71,11 @@ class Auth47ViewModel : ViewModel() {
         }
         val callbackURI = URI(callbackValue)
         if (callbackURI.scheme == "https" || callbackURI.scheme == "http") {
+            authCallbackDomain.postValue(callbackURI.host)
             return@withContext true
+        }
+        if(callbackURI.scheme == "srbn"){
+            throw Auth47Exception("Soroban url not supported yet")
         }
         throw Auth47Exception("invalid callback url")
     }
