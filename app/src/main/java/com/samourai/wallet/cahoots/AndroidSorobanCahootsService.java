@@ -45,7 +45,7 @@ public class AndroidSorobanCahootsService extends SorobanCahootsService {
             RpcClient rpcClient = new RpcClient(httpClient, onion, params);
             XManagerClient xManagerClient = AndroidXManagerClient.getInstance(ctx);
             instance = new AndroidSorobanCahootsService(
-                    new OnlineCahootsService(cahootsWallet),
+                    new OnlineCahootsService(cahootsWallet, xManagerClient),
                     new SorobanService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
                     new SorobanMeetingService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
                     new ManualCahootsService(cahootsWallet, xManagerClient),
