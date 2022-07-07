@@ -512,14 +512,13 @@ class BatchSpendActivity : SamouraiActivity() {
             nf.minimumIntegerDigits = 1
             nf.minimumFractionDigits = 1
             nf.maximumFractionDigits = 8
-            try {
-                if (amount != null && amount.toDouble() != 0.0) {
-                    //                    selectPaynymBtn.setEnabled(false);
-//                    selectPaynymBtn.setAlpha(0.5f);
-                    //                    Toast.makeText(this, R.string.no_edit_BIP21_scan, Toast.LENGTH_SHORT).show();
-                }
-            } catch (nfe: NumberFormatException) {
-//                enableAmount(true)
+            if (amount != null) {
+                try {
+                    val btcFormat = NumberFormat.getInstance(Locale.US)
+                    btcFormat.maximumFractionDigits = 8
+                    btcFormat.minimumFractionDigits = 1
+                    btcEditText.setText(btcFormat.format(amount.toDouble() / 1e8))
+                } catch (nfe: java.lang.NumberFormatException) {}
             }
         } else if (FormatsUtil.getInstance().isValidBitcoinAddress(data)) {
             if (FormatsUtil.getInstance().isValidBech32(data)) {
