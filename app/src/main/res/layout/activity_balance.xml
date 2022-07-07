@@ -89,7 +89,7 @@
         fab:layout_anchor="@+id/rv_txes"
         fab:layout_anchorGravity="right|bottom"
         fab:menu_animationDelayPerItem="32"
-        fab:menu_shadowColor="#444"
+        fab:menu_shadowColor="#323232"
         fab:menu_colorNormal="@color/accent"
         fab:menu_colorPressed="#0AA1E9"
         fab:menu_colorRipple="#A8A8A8"
