@@ -110,13 +110,13 @@ dependencies {
         transitive = true
     }
 
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation "androidx.core:core-ktx:1.7.0"
+    implementation "androidx.core:core-ktx:1.8.0"
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
@@ -135,7 +135,7 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15on:1.55'
     implementation 'com.madgag.spongycastle:prov:1.54.0.0'
     implementation 'com.lambdaworks:scrypt:1.4.0'
-    implementation 'com.google.android.material:material:1.5.0-alpha02'
+    implementation 'com.google.android.material:material:1.7.0-alpha02'
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
@@ -186,7 +186,7 @@ dependencies {
 
     //JetpackCompose
     // Integration with activities
-    implementation 'androidx.activity:activity-compose:1.4.0'
+    implementation 'androidx.activity:activity-compose:1.5.0'
     // Compose Material Design
     implementation 'androidx.compose.material:material:1.1.1'
     implementation "androidx.compose.runtime:runtime-livedata:$compose_version"

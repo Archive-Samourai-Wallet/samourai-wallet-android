@@ -247,6 +247,7 @@ fun PaynymAvatarPreview() {
     PaynymAvatar("", nym = "+snowflake");
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Preview(heightDp = 320, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun PaynymSheetPreview() {
