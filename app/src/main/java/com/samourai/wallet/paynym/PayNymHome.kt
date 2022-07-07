@@ -114,10 +114,9 @@ class PayNymHome : SamouraiActivity() {
                 return@observe
             }
             val filtered = filterArchived(followersList)
+            followersFragment?.addPcodes(filtered)
             tabTitle[1] = "Followers " + " (" + filtered.size.toString() + ")"
-            followersFragment?.addPcodes(followersList)
             adapter.notifyDataSetChanged()
-            followers = followersList
         })
         payNymViewModel.following.observe(this, { followingList: ArrayList<String>? ->
             if (followingList == null ) {
