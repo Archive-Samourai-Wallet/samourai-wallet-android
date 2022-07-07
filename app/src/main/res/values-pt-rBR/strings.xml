@@ -825,9 +825,9 @@
     <string name="unlocks_advanced">Desbloque opções avançadas de privacidade na sua carteira</string>
     <string name="share_and_reuse">Compartilhe e reuse sem compartilhar suas transações e balanços</string>
     <string name="follow">Conectar</string>
-    <string name="enter_backup_password">Coloque a senha do backup/string>
+    <string name="enter_backup_password">Coloque a senha do backup</string>
     <string name="restore_backup">Restaure o backup</string>
-    <string name="whirlpool_pairing">Emparelhamento Whirlpool/string>
+    <string name="whirlpool_pairing">Emparelhamento Whirlpool</string>
     <string name="enter_pairing_password">Coloque a senha do emparelhamento</string>
     <string name="add_to_batch">Adicionar para o batch</string>
     <string name="update_to_batch">Atualizar o batch</string>
@@ -844,7 +844,7 @@
     <string name="connect_your_wallet_to_your_own">Conecte sua carteira a seu próprio nó de bitcoin com um único QR scan</string>
     <string name="get_started">Começar</string>
     <string name="restore_an_existing_wallet">Restore uma carteira existente</string>
-    <string name="create_a_new_wallet">Crie uma nova carteira/string>
+    <string name="create_a_new_wallet">Crie uma nova carteira</string>
     <string name="scan_qr">Escanei o QR</string>
     <string name="tor_initializing">Inicializando Tor</string>
     <string name="connected">Conectado</string>
