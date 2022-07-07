@@ -23,7 +23,7 @@
         app:showAsAction="never" />
     <item
         android:id="@+id/retry_notiftx"
-        android:title="Retry follow transaction"
+        android:title="Retry connect transaction"
         android:visible="false"
         app:showAsAction="never" />
 
