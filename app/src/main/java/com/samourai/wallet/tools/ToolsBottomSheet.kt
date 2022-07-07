@@ -3,10 +3,10 @@ package com.samourai.wallet.tools
 import AddressCalculator
 import SweepPrivateKeyView
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,7 +61,6 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
             behavior?.state = BottomSheetBehavior.STATE_EXPANDED
             behavior?.skipCollapsed = true
         }
-        WindowCompat.setDecorFitsSystemWindows(requireActivity().window, false)
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -71,7 +70,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
         behavior?.isDraggable = !disable
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val compose = ComposeView(requireContext())
         compose.setContent {
             SamouraiWalletTheme {
@@ -105,7 +104,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
 
     class SingleToolBottomSheet(private val toolType: ToolType) : BottomSheetDialogFragment() {
 
-        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
             val compose = ComposeView(requireContext())
             val model: AddressCalculatorViewModel by viewModels()
             if (toolType != ToolType.SWEEP) {
