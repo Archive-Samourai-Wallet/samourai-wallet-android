@@ -2,6 +2,7 @@ package com.samourai.wallet.collaborate
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -185,6 +187,8 @@ fun SendAmount() {
     val cahootsTransactionViewModel = viewModel<CahootsTransactionViewModel>()
     val amount by cahootsTransactionViewModel.amountLive.observeAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
+    var format by remember { mutableStateOf("BTC") }
+    var finalAmount = 0.0
 
     LaunchedEffect(key1 = amount) {
         amount?.let {
@@ -208,60 +212,78 @@ fun SendAmount() {
             }
         },
         secondaryText = {
-            TextField(
-                value = amountEdit,
-                onValueChange = {
-                    amountEdit = it
-                    if (amountEdit.isNotBlank()) {
-                        try {
-                            val value = amountEdit.toDouble()
-                            cahootsTransactionViewModel.setAmount(value)
-                        } catch (e: Exception) {//NO-OP
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-                    .onFocusChanged {
-                        if (amountEdit.isNotBlank()) {
-                            try {
-                                val value = amountEdit.toDouble()
-                                cahootsTransactionViewModel.setAmount(value)
-                                keyboardController?.hide()
-                            } catch (e: Exception) {//NO-OP
+            Row(modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement  =  Arrangement.SpaceEvenly)
+            {
+                TextField(
+                        value = amountEdit,
+                        onValueChange = {
+                            amountEdit = it
+                            if (amountEdit.isNotBlank()) {
+                                try {
+                                    val value = amountEdit.replace(",","").toDouble()
+                                    finalAmount = if (format == "sat") value/1e8 else value
+                                    cahootsTransactionViewModel.setAmount(value)
+                                } catch (e: Exception) {//NO-OP
+                                }
                             }
-                        }
-                    },
-                colors = TextFieldDefaults.textFieldColors(
-                    backgroundColor = samouraiTextFieldBg,
-                    cursorColor = samouraiAccent
-                ),
-                trailingIcon = {
-                    Text(text = "BTC")
-                },
-                placeholder = {
-                    Text(text = "0.00000000", fontSize = 13.sp)
-                },
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (amountEdit.isNotBlank()) {
-                            try {
-                                val value = amountEdit.toDouble()
-                                cahootsTransactionViewModel.setAmount(value)
-                                keyboardController?.hide()
-                            } catch (e: Exception) {//NO-OP
-                            }
-                        }
-                    }
-                ),
-                textStyle = TextStyle(fontSize = 13.sp),
-                keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
-                    imeAction = ImeAction.Done,
-                    keyboardType = KeyboardType.Decimal,
-                ),
-            )
+                        },
+                        modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .fillMaxWidth()
+                                .onFocusChanged {
+                                    if (amountEdit.isNotBlank()) {
+                                        try {
+                                            val value = amountEdit.replace(",","").toDouble()
+                                            finalAmount = if (format == "sat") value/1e8 else value
+                                            cahootsTransactionViewModel.setAmount(value)
+                                            keyboardController?.hide()
+                                        } catch (e: Exception) {//NO-OP
+                                        }
+                                    }
+                                },
+                        colors = TextFieldDefaults.textFieldColors(
+                                backgroundColor = samouraiTextFieldBg,
+                                cursorColor = samouraiAccent
+                        ),
+                        trailingIcon = {
+                            ClickableText(
+                                    text = AnnotatedString(format),
+                                    onClick = {
+                                        format = if (format == "BTC") "sat" else "BTC"
+                                    },
+                                    style = TextStyle(
+                                            color = Color.Gray,
+                                            fontSize = 13.sp,
+                                    ))
+                        },
+                        placeholder = {
+                            if (format == "sat")
+                                Text(text = "0", fontSize = 13.sp)
+                            else
+                                Text(text = "0.00000000", fontSize = 13.sp)
+                        },
+                        keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (amountEdit.isNotBlank()) {
+                                        try {
+                                            val value = amountEdit.toDouble()
+                                            cahootsTransactionViewModel.setAmount(value)
+                                            keyboardController?.hide()
+                                        } catch (e: Exception) {//NO-OP
+                                        }
+                                    }
+                                }
+                        ),
+                        textStyle = TextStyle(fontSize = 13.sp),
+                        keyboardOptions = KeyboardOptions(
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Decimal,
+                        ),
+                )
+            }
         }
     )
 
