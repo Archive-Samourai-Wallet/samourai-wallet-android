@@ -35,8 +35,8 @@ public class SorobanCahootsUi extends ManualCahootsUi {
                 });
     }
 
-    public CahootsContext setCahootsContextInitiator(long sendAmount, String sendAddress) throws Exception {
-        cahootsContext = computeCahootsContextInitiator(sendAmount, sendAddress);
+    public CahootsContext setCahootsContextInitiator(int account, long sendAmount, String sendAddress) throws Exception {
+        cahootsContext = computeCahootsContextInitiator(account, sendAmount, sendAddress);
 
         // verify
         if (!typeUser.equals(cahootsContext.getTypeUser())) {
@@ -48,8 +48,8 @@ public class SorobanCahootsUi extends ManualCahootsUi {
         return cahootsContext;
     }
 
-    public CahootsContext setCahootsContextCounterparty() throws Exception {
-        cahootsContext = CahootsContext.newCounterparty(cahootsType);
+    public CahootsContext setCahootsContextCounterparty(int account) throws Exception {
+        cahootsContext = CahootsContext.newCounterparty(cahootsType, account);
 
         // verify
         if (!typeUser.equals(cahootsContext.getTypeUser())) {

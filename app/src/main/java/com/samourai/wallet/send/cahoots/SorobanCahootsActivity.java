@@ -106,8 +106,8 @@ public class SorobanCahootsActivity extends SamouraiActivity {
         String sendAddress = getIntent().getStringExtra("sendAddress");
 
         AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
-        CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(sendAmount, sendAddress);
-        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.initiator(account, cahootsContext, paymentCode, TIMEOUT_MS);
+        CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, sendAmount, sendAddress);
+        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.initiator(cahootsContext, paymentCode, TIMEOUT_MS);
 
         // listen for cahoots progress
         subscribeOnMessage(sorobanListener);
@@ -115,8 +115,8 @@ public class SorobanCahootsActivity extends SamouraiActivity {
 
     private void startReceiver() throws Exception {
         AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
-        CahootsContext cahootsContext = cahootsUi.setCahootsContextCounterparty();
-        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.contributor(account, cahootsContext, paymentCode, TIMEOUT_MS);
+        CahootsContext cahootsContext = cahootsUi.setCahootsContextCounterparty(account);
+        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.contributor(cahootsContext, paymentCode, TIMEOUT_MS);
         subscribeOnMessage(sorobanListener);
         Toast.makeText(this, "Waiting for online Cahoots", Toast.LENGTH_SHORT).show();
     }
