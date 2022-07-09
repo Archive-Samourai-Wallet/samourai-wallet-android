@@ -188,7 +188,6 @@ fun SendAmount() {
     val amount by cahootsTransactionViewModel.amountLive.observeAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
     var format by remember { mutableStateOf("BTC") }
-    var finalAmount = 0.0
 
     LaunchedEffect(key1 = amount) {
         amount?.let {
@@ -222,8 +221,10 @@ fun SendAmount() {
                             amountEdit = it
                             if (amountEdit.isNotBlank()) {
                                 try {
-                                    val value = amountEdit.replace(",","").toDouble()
-                                    finalAmount = if (format == "sat") value/1e8 else value
+                                    var value = amountEdit.replace(",","").toDouble()
+                                    //if (format == "sat")
+                                      //  value = value/1e8
+
                                     cahootsTransactionViewModel.setAmount(value)
                                 } catch (e: Exception) {//NO-OP
                                 }
@@ -236,7 +237,6 @@ fun SendAmount() {
                                     if (amountEdit.isNotBlank()) {
                                         try {
                                             val value = amountEdit.replace(",","").toDouble()
-                                            finalAmount = if (format == "sat") value/1e8 else value
                                             cahootsTransactionViewModel.setAmount(value)
                                             keyboardController?.hide()
                                         } catch (e: Exception) {//NO-OP
