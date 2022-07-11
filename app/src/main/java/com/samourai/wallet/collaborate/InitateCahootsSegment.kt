@@ -113,6 +113,7 @@ fun TransactionPreview(onClick: () -> Unit) {
     val account by collaborateViewModel.transactionAccountTypeLive.observeAsState(SamouraiAccountIndex.DEPOSIT)
     val destinationAddress by collaborateViewModel.destinationAddressLive.observeAsState(null)
     val amount by collaborateViewModel.amountLive.observeAsState(0.0)
+    val isFormatSats by collaborateViewModel.formatLive.observeAsState()
 
     if (validTransaction) {
         TransactionOptionSegment(
@@ -146,7 +147,7 @@ fun TransactionPreview(onClick: () -> Unit) {
             title = "Amount to send",
             showSubSection = false,
             onClick = onClick,
-            showSubSectionText = FormatsUtil.formatBTC(amount.times(1e8).toLong())
+            showSubSectionText = if (isFormatSats!!) FormatsUtil.formatSats(amount.toLong()) else FormatsUtil.formatBTC(amount.times(1e8).toLong())
         )
         Divider()
 

@@ -44,6 +44,7 @@ class CahootsTransactionViewModel : ViewModel() {
     private val decimalFormatSatPerByte = DecimalFormat("#.##").also {
         it.isDecimalSeparatorAlwaysShown = true
     }
+    private val isFormatSats = MutableLiveData(false)
 
     fun getFeeSatsValueLive(): LiveData<String> = feesPerByte
 
@@ -60,6 +61,9 @@ class CahootsTransactionViewModel : ViewModel() {
 
     val amountLive: LiveData<Double>
         get() = amount
+
+    val formatLive: LiveData<Boolean>
+        get() = isFormatSats
 
     val destinationAddressLive: LiveData<String?>
         get() = destinationAddress
@@ -113,7 +117,11 @@ class CahootsTransactionViewModel : ViewModel() {
 
     private fun validate() {
         var isValid = true
-        val amountSats = (amount.value?.times(1e8)?.toLong() ?: 0L).toLong()
+        var amountSats = (amount.value?.toLong() ?: 0L).toLong()
+
+        if (!this.isFormatSats.value!!)
+            amountSats = (amount.value?.times(1e8)?.toLong() ?: 0L).toLong()
+
         if (balance < amountSats) {
             isValid = false
         }
@@ -141,7 +149,9 @@ class CahootsTransactionViewModel : ViewModel() {
         validTransaction.postValue(isValid)
     }
 
-    fun setAmount(amount: Double) {
+    fun setAmount(amount: Double, isSats: Boolean) {
+        this.isFormatSats.value = isSats
+        this.isFormatSats.postValue(isSats)
         this.amount.value = amount
         this.amount.postValue(amount)
         validate()
@@ -203,7 +213,11 @@ class CahootsTransactionViewModel : ViewModel() {
             }
 
         }
-        val amountInSats = amount.value?.times(1e8) ?: 0.0
+        var amountInSats = amount.value?.toLong() ?: 0.0
+
+        if (!this.isFormatSats.value!!)
+            amountInSats = (amount.value?.times(1e8) ?: 0.0).toLong()
+
         if (collaboratorPcode.value == BIP47Meta.getMixingPartnerCode()) {
             type = CahootTransactionType.MULTI_SOROBAN
         }

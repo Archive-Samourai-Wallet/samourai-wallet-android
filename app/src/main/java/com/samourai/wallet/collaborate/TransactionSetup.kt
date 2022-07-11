@@ -46,6 +46,7 @@ import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.getSupportFragmentManger
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
+import java.text.DecimalFormat
 import java.text.NumberFormat
 
 
@@ -117,7 +118,7 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
                                     val address = FormatsUtil.getInstance().getBitcoinAddress(uri)
                                     val amount = FormatsUtil.getInstance().getBitcoinAmount(uri)
                                     if (amount != null && amount.isNotEmpty()) {
-                                        cahootsTransactionViewModel.setAmount(amount.toDouble() / 100000000)
+                                        cahootsTransactionViewModel.setAmount(amount.toDouble() / 100000000, false)
                                     }
                                     if (address != null && address.isNotEmpty()) {
                                         cahootsTransactionViewModel.setAddress(address)
@@ -191,11 +192,20 @@ fun SendAmount() {
 
     LaunchedEffect(key1 = amount) {
         amount?.let {
-            val value = NumberFormat.getInstance().apply {
-                maximumFractionDigits = 8
-            }.format(it)
-            if (amountEdit != value && it != 0.0) {
-                amountEdit = value
+            if (format == "sat") {
+                val dec = DecimalFormat("#,###")
+                val value = dec.format(it)
+                if (amountEdit != value && it != 0.0) {
+                    amountEdit = value
+                }
+            }
+            else {
+                val value = NumberFormat.getInstance().apply {
+                    maximumFractionDigits = 8
+                }.format(it)
+                if (amountEdit != value && it != 0.0) {
+                    amountEdit = value
+                }
             }
         }
     }
@@ -222,10 +232,7 @@ fun SendAmount() {
                             if (amountEdit.isNotBlank()) {
                                 try {
                                     var value = amountEdit.replace(",","").toDouble()
-                                    //if (format == "sat")
-                                      //  value = value/1e8
-
-                                    cahootsTransactionViewModel.setAmount(value)
+                                    cahootsTransactionViewModel.setAmount(value, format == "sat")
                                 } catch (e: Exception) {//NO-OP
                                 }
                             }
@@ -237,7 +244,7 @@ fun SendAmount() {
                                     if (amountEdit.isNotBlank()) {
                                         try {
                                             val value = amountEdit.replace(",","").toDouble()
-                                            cahootsTransactionViewModel.setAmount(value)
+                                            cahootsTransactionViewModel.setAmount(value, format == "sat")
                                             keyboardController?.hide()
                                         } catch (e: Exception) {//NO-OP
                                         }
@@ -269,7 +276,7 @@ fun SendAmount() {
                                     if (amountEdit.isNotBlank()) {
                                         try {
                                             val value = amountEdit.toDouble()
-                                            cahootsTransactionViewModel.setAmount(value)
+                                            cahootsTransactionViewModel.setAmount(value, format == "sat")
                                             keyboardController?.hide()
                                         } catch (e: Exception) {//NO-OP
                                         }
