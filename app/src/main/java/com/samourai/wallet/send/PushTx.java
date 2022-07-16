@@ -79,35 +79,29 @@ public class PushTx implements IPushTx {
     }
 
     @Override
-    public Pair<Boolean,String> pushTx(String hexTx) throws Exception {
-
-        String response = null;
-        boolean isOK = false;
+    public String pushTx(String hexTx) throws Exception {
         String txid = null;
 
-            if(DO_SPEND)    {
-                response = PushTx.getInstance(context).samourai(hexTx, null);
-                if(response != null)    {
-                    JSONObject jsonObject = new org.json.JSONObject(response);
-                    if(jsonObject.has("status"))    {
-                        if(jsonObject.getString("status").equals("ok"))    {
-                            isOK = true;
-                            if (jsonObject.has("data")) {
-                                txid = jsonObject.getString("data");
-                            }
+        if(DO_SPEND)    {
+            String response = PushTx.getInstance(context).samourai(hexTx, null);
+            if(response != null) {
+                JSONObject jsonObject = new org.json.JSONObject(response);
+                if (jsonObject.has("status")) {
+                    if (jsonObject.getString("status").equals("ok")) {
+                        // success
+                        if (jsonObject.has("data")) {
+                            txid = jsonObject.getString("data");
                         }
+                        return txid;
                     }
                 }
-                else    {
-                    throw new Exception(context.getString( R.string.pushtx_returns_null));
-                }
             }
-            else    {
-                debug("PushTx", hexTx);
-                isOK = true;
-            }
-            return Pair.of(isOK,txid);
-
+            throw new Exception(context.getString(R.string.pushtx_returns_null));
+        }
+        else    {
+            debug("PushTx", hexTx);
+        }
+        return txid;
     }
 
 }

@@ -224,22 +224,13 @@ class CPFPTask(private val context: Context, private val hash: String) {
             Log.d("CPFPTask", hexTx)
             val strTxHash = tx.hashAsString
             Log.d("CPFPTask", strTxHash)
-            var isOK = false
             try {
-                isOK = PushTx.getInstance(context).pushTx(hexTx).left
-                if (isOK) {
-                    return true
-                } else {
-                    // reset receive index upon tx fail
-                    this.reset()
-                    return false
-                }
-            } catch (e: MnemonicLengthException) {
-                throw (e)
-            } catch (e: DecoderException) {
-                throw (e)
-            } catch (e: IOException) {
-                throw (e)
+                PushTx.getInstance(context).pushTx(hexTx)
+                return true
+            } catch (e: Exception) {
+                // reset receive index upon tx fail
+                this.reset()
+                return false
             } finally {
                 return false
             }
