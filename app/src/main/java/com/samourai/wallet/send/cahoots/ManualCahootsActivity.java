@@ -162,7 +162,7 @@ public class ManualCahootsActivity extends SamouraiActivity {
 
             if (cahootsContext == null) {
                 // start as counterparty
-                cahootsContext = CahootsContext.newCounterparty(cahootsMessage.getType(), account);
+                cahootsContext = CahootsContext.newCounterparty(cahootsUi.getCahootsWallet(), cahootsMessage.getType(), account);
             }
 
             SorobanReply reply = manualCahootsService.reply(cahootsContext, cahootsMessage);

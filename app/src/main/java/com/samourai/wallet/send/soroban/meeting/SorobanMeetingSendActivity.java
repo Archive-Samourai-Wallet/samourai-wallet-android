@@ -15,8 +15,10 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
+import com.samourai.wallet.cahoots.AndroidCahootsWallet;
 import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
 import com.samourai.wallet.cahoots.CahootsType;
+import com.samourai.wallet.cahoots.CahootsWallet;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
 import com.samourai.wallet.util.AppUtil;
@@ -32,6 +34,7 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
 
     private static final String TAG = "SorobanMeetingSend";
     private SorobanMeetingService sorobanMeetingService;
+    private CahootsWallet cahootsWallet;
     private static final int TIMEOUT_MS = 120000;
 
     private int accountIndex;
@@ -122,6 +125,7 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
 
     private void startListen(){
         sorobanMeetingService = AndroidSorobanCahootsService.getInstance(getApplicationContext()).getSorobanMeetingService();
+        cahootsWallet = AndroidCahootsWallet.getInstance(getApplicationContext());
         send();
     }
     private void setPCode(String pcode) {
@@ -142,13 +146,13 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
         try {
             PaymentCode paymentCode = new PaymentCode(pcode);
             // send meeting request
-            sorobanDisposable = sorobanMeetingService.sendMeetingRequest(paymentCode, cahootsType)
+            sorobanDisposable = sorobanMeetingService.sendMeetingRequest(cahootsWallet, paymentCode, cahootsType)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(meetingRequest -> {
                                 textViewConnecting.setText("Have your mixing partner receive online Cahoots.");
                                 // meeting request sent, receive response
-                                sorobanDisposable = sorobanMeetingService.receiveMeetingResponse(paymentCode, meetingRequest, TIMEOUT_MS)
+                                sorobanDisposable = sorobanMeetingService.receiveMeetingResponse(cahootsWallet, paymentCode, meetingRequest, TIMEOUT_MS)
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
                                         .subscribe(sorobanResponse -> {

@@ -4,19 +4,15 @@ import android.content.Context;
 
 import com.samourai.http.client.AndroidHttpClient;
 import com.samourai.http.client.IHttpClient;
-import com.samourai.soroban.cahoots.ManualCahootsService;
-import com.samourai.soroban.client.SorobanService;
-import com.samourai.soroban.client.cahoots.OnlineCahootsService;
 import com.samourai.soroban.client.cahoots.SorobanCahootsService;
-import com.samourai.soroban.client.meeting.SorobanMeetingService;
-import com.samourai.soroban.client.rpc.RpcClient;
+import com.samourai.soroban.client.rpc.RpcService;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.bip47.rpc.BIP47Wallet;
+import com.samourai.wallet.bip47.BIP47UtilGeneric;
+import com.samourai.wallet.bipFormat.BIP_FORMAT;
+import com.samourai.wallet.bipFormat.BipFormatSupplier;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
-import com.samourai.xmanager.client.AndroidXManagerClient;
-import com.samourai.xmanager.client.XManagerClient;
 
 import org.bitcoinj.core.NetworkParameters;
 
@@ -28,7 +24,6 @@ public class AndroidSorobanCahootsService extends SorobanCahootsService {
 
     private static AndroidSorobanCahootsService instance;
     private Context ctx;
-    private ManualCahootsService manualCahootsService;
 
     static {
         Security.addProvider(new org.spongycastle.jce.provider.BouncyCastleProvider());
@@ -36,33 +31,24 @@ public class AndroidSorobanCahootsService extends SorobanCahootsService {
 
     public static AndroidSorobanCahootsService getInstance(Context ctx) {
         if (instance == null) {
-            CahootsWallet cahootsWallet = AndroidCahootsWallet.getInstance(ctx);
             BIP47Util bip47Util = BIP47Util.getInstance(ctx);
             NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
-            BIP47Wallet bip47Wallet = bip47Util.getWallet();
             IHttpClient httpClient = AndroidHttpClient.getInstance(ctx);
-            boolean onion = TorManager.INSTANCE.isRequired();
-            RpcClient rpcClient = new RpcClient(httpClient, onion, params);
-            XManagerClient xManagerClient = AndroidXManagerClient.getInstance(ctx);
+            RpcService rpcService = new RpcService(httpClient, PROVIDER, TorManager.INSTANCE.isRequired());
             instance = new AndroidSorobanCahootsService(
-                    new OnlineCahootsService(cahootsWallet, xManagerClient),
-                    new SorobanService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
-                    new SorobanMeetingService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
-                    new ManualCahootsService(cahootsWallet, xManagerClient),
-                    ctx
+                    bip47Util, BIP_FORMAT.PROVIDER, params, rpcService, ctx
             );
         }
         return instance;
     }
 
-    private AndroidSorobanCahootsService(OnlineCahootsService onlineCahootsService,
-                                         SorobanService sorobanService,
-                                         SorobanMeetingService sorobanMeetingService,
-                                         ManualCahootsService manualCahootsService,
+    private AndroidSorobanCahootsService(BIP47UtilGeneric bip47Util,
+                                         BipFormatSupplier bipFormatSupplier,
+                                         NetworkParameters params,
+                                         RpcService rpcService,
                                          Context ctx) {
-        super(onlineCahootsService, sorobanService, sorobanMeetingService);
+        super(bip47Util, bipFormatSupplier, params, rpcService);
         this.ctx = ctx;
-        this.manualCahootsService = manualCahootsService;
     }
 
     @Override
@@ -71,9 +57,5 @@ public class AndroidSorobanCahootsService extends SorobanCahootsService {
         if (AppUtil.getInstance(ctx).isOfflineMode()) {
             throw new Exception("Online mode is required for online Cahoots");
         }
-    }
-
-    public ManualCahootsService getManualCahootsService() {
-        return manualCahootsService;
     }
 }

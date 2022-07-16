@@ -12,11 +12,10 @@ import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
 import com.samourai.wallet.widgets.HorizontalStepsViewIndicator;
 import com.samourai.wallet.widgets.ViewPager;
 
+import java.util.function.Function;
+
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
-import java.util.function.Function;
 
 public class SorobanCahootsUi extends ManualCahootsUi {
 
@@ -26,13 +25,6 @@ public class SorobanCahootsUi extends ManualCahootsUi {
                      Intent intent, FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider,
                      Activity activity) throws Exception {
         super(stepsViewGroup, stepCounts, viewPager, intent, fragmentManager, fragmentProvider, activity);
-
-        // listen for interactions
-        sorobanCahootsService.getSorobanService().getOnInteraction().subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(interaction -> {
-                    setInteraction(interaction);
-                });
     }
 
     public CahootsContext setCahootsContextInitiator(int account, long sendAmount, String sendAddress) throws Exception {
@@ -49,7 +41,7 @@ public class SorobanCahootsUi extends ManualCahootsUi {
     }
 
     public CahootsContext setCahootsContextCounterparty(int account) throws Exception {
-        cahootsContext = CahootsContext.newCounterparty(cahootsType, account);
+        cahootsContext = CahootsContext.newCounterparty(cahootsWallet, cahootsType, account);
 
         // verify
         if (!typeUser.equals(cahootsContext.getTypeUser())) {

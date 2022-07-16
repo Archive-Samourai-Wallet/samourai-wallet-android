@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import com.samourai.soroban.cahoots.CahootsContext;
+import com.samourai.soroban.client.SorobanMessage;
 import com.samourai.soroban.client.cahoots.OnlineCahootsMessage;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
@@ -13,8 +15,6 @@ import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
-import com.samourai.soroban.cahoots.CahootsContext;
-import com.samourai.soroban.client.SorobanMessage;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.util.AppUtil;
 
@@ -107,7 +107,10 @@ public class SorobanCahootsActivity extends SamouraiActivity {
 
         AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
         CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, sendAmount, sendAddress);
-        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.initiator(cahootsContext, paymentCode, TIMEOUT_MS);
+        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.initiator(cahootsContext, paymentCode, TIMEOUT_MS,
+                interaction -> {
+                    cahootsUi.setInteraction(interaction);
+                });
 
         // listen for cahoots progress
         subscribeOnMessage(sorobanListener);

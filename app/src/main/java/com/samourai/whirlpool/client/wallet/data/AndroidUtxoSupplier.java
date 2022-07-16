@@ -94,7 +94,7 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     private Collection<UnspentOutput> toUnspentOutputs(Collection<UTXO> utxos, BIP_WALLET bip_wallet) {
         List<UnspentOutput> unspentOutputs = new LinkedList<>();
 
-        BipWallet bipWallet = ((WalletSupplierImpl)getWalletSupplier()).getWallet(bip_wallet);
+        BipWallet bipWallet = getWalletSupplier().getWallet(bip_wallet);
         if (bipWallet == null) {
             log.error("Wallet not found for "+bip_wallet.name());
             return unspentOutputs;
