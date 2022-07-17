@@ -39,16 +39,15 @@ class CahootsTransactionViewModel : ViewModel() {
     private val validTransaction = MutableLiveData(false)
     private val cahootsType = MutableLiveData<CahootTransactionType?>(null)
     private val destinationAddress = MutableLiveData<String?>(null)
-    private val amount = MutableLiveData(0.0)
+    private val amount = MutableLiveData(0L)
     private var collaboratorPcode = MutableLiveData<String?>(null)
     private val decimalFormatSatPerByte = DecimalFormat("#.##").also {
         it.isDecimalSeparatorAlwaysShown = true
     }
-    private val isFormatSats = MutableLiveData(false)
 
     fun getFeeSatsValueLive(): LiveData<String> = feesPerByte
 
-    var balance: Long = 0L;
+    var balance: Long = 0L
     var feeLow: Long = 0L
     var feeHigh: Long = 0L
     var feeMed: Long = 0L
@@ -59,11 +58,9 @@ class CahootsTransactionViewModel : ViewModel() {
     val validTransactionLive: LiveData<Boolean>
         get() = validTransaction
 
-    val amountLive: LiveData<Double>
+    val amountLive: LiveData<Long>
         get() = amount
 
-    val formatLive: LiveData<Boolean>
-        get() = isFormatSats
 
     val destinationAddressLive: LiveData<String?>
         get() = destinationAddress
@@ -106,7 +103,7 @@ class CahootsTransactionViewModel : ViewModel() {
         this.transactionAccountType.postValue(account)
         if (account == SamouraiAccountIndex.DEPOSIT) {
             balance = APIFactory.getInstance(context)
-                .xpubBalance;
+                .xpubBalance
         }
         if (account == SamouraiAccountIndex.POSTMIX) {
             balance = APIFactory.getInstance(context)
@@ -116,42 +113,45 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     private fun validate() {
-        var isValid = true
-        var amountSats = (amount.value?.toLong() ?: 0L).toLong()
-
-        if (!this.isFormatSats.value!!)
-            amountSats = (amount.value?.times(1e8)?.toLong() ?: 0L).toLong()
-
+        var valid = true
+        val amountSats = (amount.value ?: 0L).toLong()
         if (balance < amountSats) {
-            isValid = false
+            valid = false
         }
         if (amountSats == 0L) {
-            isValid = false
+            valid = false
         }
         if (cahootsType.value?.cahootsMode == CahootsMode.SOROBAN) {
             if (!FormatsUtil.getInstance().isValidBitcoinAddress(destinationAddress.value ?: "")
                 && !FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value ?: "")
             ) {
-                isValid = false
+                valid = false
             }
         } else {
             if (!FormatsUtil.getInstance().isValidBitcoinAddress(destinationAddress.value ?: "")
                 && !FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value ?: "")
             ) {
-                isValid = false
+                valid = false
             }
         }
         if (cahootsType.value?.cahootsMode == CahootsMode.SOROBAN || cahootsType.value?.cahootsMode == CahootsMode.SAMOURAI) {
             if (collaboratorPcode.value == null) {
-                isValid = false
+                valid = false
             }
         }
-        validTransaction.postValue(isValid)
+        if (cahootsType.value?.cahootsType ==  CahootsType.STOWAWAY) {
+            if (collaboratorPcode.value == BIP47Meta.getMixingPartnerCode()) {
+                if (!FormatsUtil.getInstance().isValidBitcoinAddress(destinationAddress.value ?: "")
+                    && !FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value ?: "")
+                ) {
+                    valid = false
+                }
+            }
+        }
+        validTransaction.postValue(valid)
     }
 
-    fun setAmount(amount: Double, isSats: Boolean) {
-        this.isFormatSats.value = isSats
-        this.isFormatSats.postValue(isSats)
+    fun setAmount(amount: Long) {
         this.amount.value = amount
         this.amount.postValue(amount)
         validate()
@@ -162,8 +162,16 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     fun setCollaborator(pcode: String) {
+        this.collaboratorPcode.value = pcode
         this.collaboratorPcode.postValue(pcode)
+        if(cahootsType.value?.cahootsMode == CahootsMode.SOROBAN && !isMultiCahoots()){
+            this.destinationAddress.postValue(pcode)
+        }
         validate()
+    }
+
+    fun isMultiCahoots(): Boolean {
+        return collaboratorPcode.value == BIP47Meta.getMixingPartnerCode()
     }
 
     fun setPage(page: Int) {
@@ -186,20 +194,25 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     fun setAddress(addressEdit: String) {
+        this.destinationAddress.value = addressEdit
         this.destinationAddress.postValue(addressEdit)
         validate()
     }
 
     fun send(context: Context) {
         val account = if (transactionAccountType.value == SamouraiAccountIndex.DEPOSIT) SamouraiAccountIndex.DEPOSIT else SamouraiAccountIndex.POSTMIX
-        var type = cahootsType.value ?: return;
+        var type = cahootsType.value ?: return
         // choose Cahoots counterparty
         val value = amount.value ?: 0L
-        if (value == 0) {
-            return;
+        if (value == 0L) {
+            return
         }
         var address = destinationAddress.value
-        if (type.cahootsType == CahootsType.STOWAWAY) {
+
+        if (collaboratorPcode.value == BIP47Meta.getMixingPartnerCode()) {
+            type = CahootTransactionType.MULTI_SOROBAN
+        }
+        if (type.cahootsType == CahootsType.STOWAWAY && !isMultiCahoots()) {
             address = collaboratorPcode.value
         }
         if (FormatsUtil.getInstance().isValidPaymentCode(address)) {
@@ -213,14 +226,8 @@ class CahootsTransactionViewModel : ViewModel() {
             }
 
         }
-        var amountInSats = amount.value?.toLong() ?: 0.0
+        val amountInSats = amount.value?.toLong() ?: 0.0
 
-        if (!this.isFormatSats.value!!)
-            amountInSats = (amount.value?.times(1e8) ?: 0.0).toLong()
-
-        if (collaboratorPcode.value == BIP47Meta.getMixingPartnerCode()) {
-            type = CahootTransactionType.MULTI_SOROBAN
-        }
         if (CahootsMode.MANUAL == type.cahootsMode) {
             // Cahoots manual
             val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), address)
