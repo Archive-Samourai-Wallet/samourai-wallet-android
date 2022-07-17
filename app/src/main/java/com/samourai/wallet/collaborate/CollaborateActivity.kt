@@ -268,7 +268,11 @@ fun PaynymAvatar(pcode: String?) {
     if (pcode == null) {
         return Box(modifier = Modifier)
     }
-    val url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
+    var url by remember { mutableStateOf("${WebUtil.PAYNYM_API}${pcode}/avatar") }
+
+    LaunchedEffect(pcode){
+        url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
+    }
     Row(
         modifier = Modifier.padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -262,7 +262,7 @@ fun PicassoImage(
 ) {
     var imageBitMap by remember { mutableStateOf<ImageBitmap?>(null) }
     val scope = rememberCoroutineScope();
-    LaunchedEffect(true) {
+    LaunchedEffect(url) {
         scope.launch {
             Picasso.get()
                 .load(url)
