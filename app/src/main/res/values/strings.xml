@@ -908,5 +908,6 @@
     <string name="is_requesting_your_auth">is requesting your authentication.</string>
     <string name="auth_using_paynym">Authenticate using paynym</string>
     <string name="authenticate">Authenticate</string>
+    <string name="estimated_wait_time">Estimated wait time</string>
 
 </resources>

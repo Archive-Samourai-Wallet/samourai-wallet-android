@@ -357,6 +357,7 @@ fun SweepTransactionPreview() {
     val density = LocalDensity.current
     var confirmDialog by remember { mutableStateOf(false) }
     var satsFormat by remember { mutableStateOf(true) }
+    val nbBlocks by vm.getBlockWaitTime().observeAsState()
 
     LaunchedEffect(receiveAddressType) {
         receiveAddress = AddressFactory.getInstance().getAddress(receiveAddressType).right
@@ -434,6 +435,13 @@ fun SweepTransactionPreview() {
                         }
                         item {
                             SliderSegment()
+                        }
+
+                        item {
+                            ListItem(
+                                    title = stringResource(id = R.string.estimated_wait_time),
+                                    value = nbBlocks.toString()
+                            )
                         }
                     }
                 }
