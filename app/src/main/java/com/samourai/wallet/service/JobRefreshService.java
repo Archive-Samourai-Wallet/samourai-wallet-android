@@ -59,7 +59,7 @@ public class JobRefreshService extends JobIntentService {
         boolean notifTx = intent.getBooleanExtra("notifTx", false);
 
         Log.d("JobRefreshService", "doInBackground()");
-
+        AppUtil.getInstance(getApplicationContext()).setWalletLoading(true);
         APIFactory.getInstance(this.getApplicationContext()).stayingAlive();
         APIFactory.getInstance(this.getApplicationContext()).initWallet();
 
@@ -187,7 +187,7 @@ public class JobRefreshService extends JobIntentService {
             }
 
         }
-
+        AppUtil.getInstance(getApplicationContext()).setWalletLoading(false);
         Intent _intent = new Intent("com.samourai.wallet.BalanceFragment.DISPLAY");
         LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(_intent);
     }
