@@ -54,6 +54,7 @@ import com.samourai.wallet.util.MonetaryUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.SendAddressUtil;
 import com.samourai.wallet.util.SentToFromBIP47Util;
+import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.widgets.TransactionProgressView;
 
 import org.bitcoinj.core.Address;
@@ -492,15 +493,19 @@ public class TxAnimUIActivity extends AppCompatActivity {
                 }
 
                 new Handler().postDelayed(() -> {
-                    Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
-                    _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     if (SendParams.getInstance().getAccount() != 0) {
-                        _intent.putExtra("_account", SendParams.getInstance().getAccount());
+                        Intent intent = new Intent(TxAnimUIActivity.this, WhirlpoolHome.class);
+                        /*
+                        intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
                         TaskStackBuilder.create(getApplicationContext())
                                 .addParentStack(BalanceActivity.class)
-                                .addNextIntent(_intent)
+                                .addNextIntent(intent)
                                 .startActivities();
+                        */
+                        startActivity(intent);
                     }else{
+                        Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
+                        _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         startActivity(_intent);
                     }
 
