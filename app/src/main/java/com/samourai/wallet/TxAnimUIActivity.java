@@ -46,6 +46,7 @@ import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
+import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.BatchSendUtil;
@@ -485,31 +486,26 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     SendAddressUtil.getInstance().add(SendParams.getInstance().getDestAddress(), true);
                 }
 
-                if (SendParams.getInstance().getChangeAmount() == 0L) {
-                    Intent intent = new Intent("com.samourai.wallet.BalanceFragment.REFRESH");
-                    intent.putExtra("notifTx", false);
-                    intent.putExtra("fetch", true);
-                    LocalBroadcastManager.getInstance(TxAnimUIActivity.this).sendBroadcast(intent);
-                }
 
                 new Handler().postDelayed(() -> {
-
                     if (SendParams.getInstance().getAccount() != 0) {
                         Intent whirlPoolHome = new Intent(this, WhirlpoolHome.class);
                         whirlPoolHome.putExtra("_account", SendParams.getInstance().getAccount());
+                        whirlPoolHome.putExtra("refresh", true);
                         Intent parentIntent = new Intent(this, BalanceActivity.class);
-                        parentIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        whirlPoolHome.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        whirlPoolHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         TaskStackBuilder.create(getApplicationContext())
                                 .addNextIntent(parentIntent)
                                 .addNextIntent(whirlPoolHome)
                                 .startActivities();
                     }else{
                         Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
+                        _intent.putExtra("refresh", true);
                         _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         startActivity(_intent);
                     }
-
-                }, 600L);
+                }, 1000L);
 
             } else {
                 Toast.makeText(TxAnimUIActivity.this, R.string.tx_failed, Toast.LENGTH_SHORT).show();
