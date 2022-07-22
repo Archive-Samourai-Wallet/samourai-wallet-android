@@ -58,7 +58,6 @@ public class JobRefreshService extends JobIntentService {
         boolean launch = intent.getBooleanExtra("launch", false);
         boolean notifTx = intent.getBooleanExtra("notifTx", false);
 
-        Log.d("JobRefreshService", "doInBackground()");
         AppUtil.getInstance(getApplicationContext()).setWalletLoading(true);
         APIFactory.getInstance(this.getApplicationContext()).stayingAlive();
         APIFactory.getInstance(this.getApplicationContext()).initWallet();

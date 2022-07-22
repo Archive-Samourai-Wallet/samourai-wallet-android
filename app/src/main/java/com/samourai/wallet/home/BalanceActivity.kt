@@ -20,6 +20,7 @@ import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
@@ -81,6 +82,10 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.bitcoinj.script.Script
 import org.bouncycastle.util.encoders.Hex
@@ -337,6 +342,25 @@ open class BalanceActivity : SamouraiActivity() {
         updateDisplay(false)
         checkDeepLinks()
         doExternalBackUp()
+        AppUtil.getInstance(applicationContext).walletLoading.observe(this) {
+            if(it){
+                showProgress()
+            }else{
+                hideProgress()
+            }
+        }
+        if(intent.getBooleanExtra("refresh",false)){
+            balanceViewModel.viewModelScope.launch {
+                withContext(Dispatchers.Default){
+                    delay(800)
+                    val intent =   Intent(this@BalanceActivity, JobRefreshService::class.java)
+                    intent.putExtra("notifTx", false)
+                    intent.putExtra("dragged", false)
+                    intent.putExtra("launch", false)
+                    JobRefreshService.enqueueWork(applicationContext, intent);
+                }
+            }
+        }
     }
 
     private fun showToolOptions(it: View) {

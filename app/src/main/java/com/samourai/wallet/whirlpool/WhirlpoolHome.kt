@@ -3,6 +3,7 @@ package com.samourai.wallet.whirlpool
 import android.app.Activity
 import android.content.*
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
@@ -29,6 +30,7 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.utxos.PreSelectUtil
@@ -84,7 +86,24 @@ class WhirlpoolHome : SamouraiActivity() {
         val filterDisplay = IntentFilter(BalanceActivity.DISPLAY_INTENT)
         LocalBroadcastManager.getInstance(this@WhirlpoolHome)
             .registerReceiver(receiver, filterDisplay)
-
+        AppUtil.getInstance(applicationContext).walletLoading.observe(this) {
+            whirlPoolHomeViewModel.setRefresh(it)
+            if(!it){
+                whirlPoolHomeViewModel.loadTransactions(applicationContext)
+            }
+        }
+        if(intent.getBooleanExtra("refresh",false)){
+           whirlPoolHomeViewModel.viewModelScope.launch {
+              withContext(Dispatchers.Default){
+                  delay(800)
+                  val intent =   Intent(this@WhirlpoolHome, JobRefreshService::class.java)
+                  intent.putExtra("notifTx", false)
+                  intent.putExtra("dragged", false)
+                  intent.putExtra("launch", false)
+                  JobRefreshService.enqueueWork(applicationContext, intent);
+              }
+           }
+        }
     }
 
     //Checks if there is any previous postmix or premix activities
