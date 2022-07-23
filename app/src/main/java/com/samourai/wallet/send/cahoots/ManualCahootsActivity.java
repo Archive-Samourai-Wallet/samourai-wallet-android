@@ -13,8 +13,6 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatDialog;
-
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.cahoots.ManualCahootsMessage;
@@ -35,8 +33,7 @@ public class ManualCahootsActivity extends SamouraiActivity {
     private static final String TAG = "ManualCahootsActivity";
 
     private ManualCahootsUi cahootsUi;
-
-    private AppCompatDialog dialog;
+    private CahootsContext cahootsContext;
 
     public static Intent createIntentResume(Context ctx, int account, String payload) throws Exception {
         ManualCahootsService manualCahootsService = AndroidSorobanCahootsService.getInstance(ctx).getManualCahootsService();
@@ -113,8 +110,8 @@ public class ManualCahootsActivity extends SamouraiActivity {
         String sendAddress = getIntent().getStringExtra("sendAddress");
 
         ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
-        CahootsContext cahootsContext = cahootsUi.computeCahootsContextInitiator(sendAmount, sendAddress);
-        cahootsUi.setCahootsMessage(manualCahootsService.initiate(account, cahootsContext));
+        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, sendAmount, sendAddress);
+        cahootsUi.setCahootsMessage(manualCahootsService.initiate(cahootsContext));
     }
 
     @Override
@@ -161,7 +158,13 @@ public class ManualCahootsActivity extends SamouraiActivity {
             // continue cahoots
             ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
             ManualCahootsMessage cahootsMessage = manualCahootsService.parse(qrData);
-            SorobanReply reply = manualCahootsService.reply(account, cahootsMessage);
+
+            if (cahootsContext == null) {
+                // start as counterparty
+                cahootsContext = CahootsContext.newCounterparty(cahootsMessage.getType(), account);
+            }
+
+            SorobanReply reply = manualCahootsService.reply(cahootsContext, cahootsMessage);
             if (reply instanceof ManualCahootsMessage) {
                 cahootsUi.setCahootsMessage((ManualCahootsMessage) reply);
             } else if (reply instanceof TxBroadcastInteraction) {

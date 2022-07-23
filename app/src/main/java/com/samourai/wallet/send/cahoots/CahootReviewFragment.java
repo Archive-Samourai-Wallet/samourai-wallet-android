@@ -6,27 +6,23 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.common.base.Optional;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
 import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
+import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.cahoots.Cahoots;
-import com.samourai.wallet.cahoots.CahootsType;
-import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.widgets.EntropyBar;
 
 import org.bitcoinj.core.TransactionOutput;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -87,45 +83,13 @@ public class CahootReviewFragment extends Fragment {
                     new Thread(() -> {
                         Looper.prepare();
 
-                        boolean success = false;
                         try {
-                            Optional<CahootsType> cahootsType = CahootsType.find(payload.getType());
-                            if(cahootsType.isPresent()) {
-                                if(cahootsType.get() == CahootsType.MULTI) {
-                                    MultiCahoots multiCahoots = (MultiCahoots) payload;
-                                    System.out.println("STOWAWAY:: " + Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize()));
-                                    System.out.println("STONEWALLx2:: " + Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize()));
-                                    success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize())).first;
-                                    if(success) {
-                                        success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize())).first;
-                                        if (success) {
-                                            onSuccessfulBroadcast();
-                                        } else {
-                                            showError();
-                                        }
-                                    } else {
-                                        showError();
-                                    }
-                                } else {
-                                    success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize())).first;
-                                    if (success) {
-                                        onSuccessfulBroadcast();
-                                    } else {
-                                        showError();
-                                    }
-                                }
-
-
-                            } else {
-                                Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
-                                getActivity().runOnUiThread(() -> {
-                                    cahootsProgressGroup.setVisibility(View.GONE);
-                                });
-                                sendBtn.setEnabled(true);
-                            }
+                            IPushTx pushTx = PushTx.getInstance(getActivity());
+                            payload.pushTx(pushTx);
+                            onSuccessfulBroadcast();
                         } catch (Exception e) {
+                            showError();
                             e.printStackTrace();
-                            Toast.makeText(this.getActivity(), "Error broadcasting tx ".concat(e.getMessage()), Toast.LENGTH_SHORT).show();
                         }
 
                         Looper.loop();
@@ -159,8 +123,8 @@ public class CahootReviewFragment extends Fragment {
         Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
         getActivity().runOnUiThread(() -> {
             cahootsProgressGroup.setVisibility(View.GONE);
+            sendBtn.setEnabled(true);
         });
-        sendBtn.setEnabled(true);
     }
 
     private void calculateEntropy() {
