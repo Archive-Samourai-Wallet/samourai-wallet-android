@@ -1,17 +1,16 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 32
     buildToolsVersion "30.0.3"
     useLibrary 'org.apache.http.legacy'
     flavorDimensions "versionCode"
     defaultConfig {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
-        targetSdkVersion 30
-        versionCode 192
+        targetSdkVersion 32
+        versionCode 191
         versionName "0.99.98e"
         // Enabling multidex support.
         multiDexEnabled true
@@ -24,7 +23,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
     buildTypes {
         release {
@@ -35,6 +34,38 @@ android {
             variant.buildConfigField "String", "XOR_1", "\""+getApiKey("XOR_1")+"\""
             variant.buildConfigField "String", "XOR_2", "\""+getApiKey("XOR_2")+"\""
         }
+    }
+    packagingOptions {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}', 'META-INF/DEPENDENCIES.txt', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt', 'META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/DEPENDENCIES', 'META-INF/notice.txt', 'META-INF/license.txt', 'META-INF/dependencies.txt', 'META-INF/LGPL2.1', 'META-INF/proguard/androidx-annotations.pro']
+        }
+    }
+    productFlavors {
+        production {
+            applicationId 'com.samourai.wallet'
+            versionCode 191
+            versionName "0.99.98e"
+            resValue "string", "app_name", "Samourai"
+            resValue "string", "version_name", "0.99.98e"
+        }
+        staging {
+            applicationId 'com.samourai.wallet.staging'
+            versionCode 191
+            versionName "202207-qa"
+            resValue "string", "app_name", "Samourai Staging"
+            resValue "string", "version_name", "202207-qa"
+        }
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+    buildFeatures {
+        viewBinding true
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
     }
     lintOptions {
         checkReleaseBuilds false
@@ -58,32 +89,7 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
-    productFlavors {
-        production {
-            applicationId 'com.samourai.wallet'
-            minSdkVersion 21
-            targetSdkVersion 30
-            versionCode 192
-            versionName "0.99.98e"
-            resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98e"
-        }
-        staging {
-            applicationId 'com.samourai.wallet.staging'
-            minSdkVersion 21
-            targetSdkVersion 30
-            versionCode 192
-            versionName "0.99.98e"
-            resValue "string", "app_name", "Samourai Staging"
-            resValue "string", "version_name", "0.99.98e"
-        }
-    }
-    testOptions {
-        unitTests.returnDefaultValues = true
-    }
-    buildFeatures {
-        viewBinding true
-    }
+    namespace 'com.samourai.wallet'
 }
 
 def getApiKey(key){
@@ -95,28 +101,26 @@ def getApiKey(key){
 
 dependencies {
 
-    def lifecycle_version = "2.2.0"
-    def topl_android_version = "2.1.0"
+    def lifecycle_version = "2.5.0"
+    def topl_android_version = "2.1.2"
     def coroutines_version = '1.5.1'
 
     api fileTree(include: ['*.jar'], dir: 'libs')
-    implementation('com.google.zxing:core:3.3.0') {
+    implementation('com.google.zxing:core:3.4.1') {
         transitive = true
     }
 
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation "androidx.core:core-ktx:1.3.2"
+    implementation "androidx.core:core-ktx:1.8.0"
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.preference:preference-ktx:1.1.1'
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation "androidx.webkit:webkit:1.4.0"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
@@ -126,14 +130,14 @@ dependencies {
     implementation 'commons-io:commons-io:2.5'
     implementation 'commons-codec:commons-codec:1.4'
     implementation 'org.apache.commons:commons-lang3:3.3'
-    implementation 'com.google.guava:guava:20.0'
+    implementation 'com.google.guava:guava:27.0.1-android'
     implementation 'com.squareup.picasso:picasso:2.8'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.55'
     implementation 'com.madgag.spongycastle:prov:1.54.0.0'
     implementation 'com.lambdaworks:scrypt:1.4.0'
-    implementation 'com.google.android.material:material:1.5.0-alpha02'
+    implementation 'com.google.android.material:material:1.7.0-alpha02'
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
     implementation ('io.samourai.code.whirlpool:whirlpool-client:0.23.46') {
         exclude group:'org.hibernate', module:'hibernate-validator'
@@ -170,14 +174,33 @@ dependencies {
     implementation 'com.github.clans:fab:1.6.4'
     implementation 'io.samourai.code.wallet:android-tor-binary:0.4.5.4'
 
-    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
 
     testImplementation 'junit:junit:4.12'
 
     implementation "io.matthewnelson.topl-android:topl-core-base:$topl_android_version"
     implementation "io.matthewnelson.topl-android:topl-service:$topl_android_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+
+    //JetpackCompose
+    // Integration with activities
+    implementation 'androidx.activity:activity-compose:1.5.0'
+    // Compose Material Design
+    implementation 'androidx.compose.material:material:1.1.1'
+    implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
+    // Animations
+    implementation 'androidx.compose.animation:animation:1.1.1'
+    // Tooling support (Previews, etc.)
+    implementation 'androidx.compose.ui:ui-tooling:1.1.1'
+    // Integration with ViewModels
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
+    implementation "androidx.compose.ui:ui:$compose_version"
+    implementation "com.google.accompanist:accompanist-insets:0.24.9-beta"
+    implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 }
 repositories {
     mavenCentral()

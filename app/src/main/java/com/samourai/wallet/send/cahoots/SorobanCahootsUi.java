@@ -2,14 +2,13 @@ package com.samourai.wallet.send.cahoots;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.widget.TextView;
 
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.cahoots.TxBroadcastInteraction;
 import com.samourai.soroban.client.OnlineSorobanInteraction;
 import com.samourai.soroban.client.SorobanInteraction;
 import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
-import com.samourai.wallet.widgets.HorizontalStepsViewIndicator;
+import com.samourai.wallet.widgets.CahootsCircleProgress;
 import com.samourai.wallet.widgets.ViewPager;
 
 import androidx.fragment.app.Fragment;
@@ -22,10 +21,10 @@ public class SorobanCahootsUi extends ManualCahootsUi {
 
     private CahootsContext cahootsContext;
 
-    SorobanCahootsUi(HorizontalStepsViewIndicator stepsViewGroup, TextView stepCounts, ViewPager viewPager,
+    SorobanCahootsUi(CahootsCircleProgress stepsViewGroup, ViewPager viewPager,
                      Intent intent, FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider,
                      Activity activity) throws Exception {
-        super(stepsViewGroup, stepCounts, viewPager, intent, fragmentManager, fragmentProvider, activity);
+        super(stepsViewGroup, viewPager, intent, fragmentManager, fragmentProvider, activity);
 
         // listen for interactions
         sorobanCahootsService.getSorobanService().getOnInteraction().subscribeOn(Schedulers.io())
