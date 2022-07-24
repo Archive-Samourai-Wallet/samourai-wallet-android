@@ -139,7 +139,7 @@ class CahootsTransactionViewModel : ViewModel() {
                 valid = false
             }
         }
-        if (cahootsType.value?.cahootsType ==  CahootsType.STOWAWAY) {
+        if (cahootsType.value?.cahootsType == CahootsType.STOWAWAY) {
             if (collaboratorPcode.value == BIP47Meta.getMixingPartnerCode()) {
                 if (!FormatsUtil.getInstance().isValidBitcoinAddress(destinationAddress.value ?: "")
                     && !FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value ?: "")
@@ -158,13 +158,22 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     fun setCahootType(type: CahootTransactionType?) {
+
+        //if the user already selected multi cahoots, and try to switch manual mode
+        //Multi cahoots collaborator needs to cleared
+        if (isMultiCahoots() && type?.cahootsMode == CahootsMode.MANUAL) {
+            this.collaboratorPcode.value = null
+            this.collaboratorPcode.postValue(null)
+            validate()
+        }
+
         this.cahootsType.postValue(type)
     }
 
     fun setCollaborator(pcode: String) {
         this.collaboratorPcode.value = pcode
         this.collaboratorPcode.postValue(pcode)
-        if(cahootsType.value?.cahootsMode == CahootsMode.SOROBAN && !isMultiCahoots()){
+        if (cahootsType.value?.cahootsMode == CahootsMode.SOROBAN && !isMultiCahoots()) {
             this.destinationAddress.postValue(pcode)
         }
         validate()
@@ -240,6 +249,20 @@ class CahootsTransactionViewModel : ViewModel() {
             context.startActivity(intent)
             return
         }
+    }
+
+    fun clearTransaction() {
+        this.cahootsType.value = null
+        this.cahootsType.postValue(null)
+        this.destinationAddress.value = null
+        this.destinationAddress.postValue(null)
+        this.amount.value = 0
+        this.amount.postValue(0)
+        this.currentPage.value = 0
+        this.currentPage.postValue(0)
+        this.collaboratorPcode.value = null
+        this.collaboratorPcode.postValue(null)
+        this.validate()
     }
 
 }
