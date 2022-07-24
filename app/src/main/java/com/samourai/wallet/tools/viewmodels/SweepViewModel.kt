@@ -12,6 +12,7 @@ import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.bipFormat.BIP_FORMAT
 import com.samourai.wallet.bipFormat.BipFormat
+import com.samourai.wallet.bipFormat.BipFormatSupplierImpl
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.MyTransactionOutPoint
@@ -170,7 +171,7 @@ class SweepViewModel : ViewModel() {
     private suspend fun findUTXOs(context: Context) {
         withContext(Dispatchers.IO) {
             loading.postValue(true)
-            val bipFormats: Collection<BipFormat> = listOf(BIP_FORMAT.LEGACY, BIP_FORMAT.SEGWIT_COMPAT, BIP_FORMAT.SEGWIT_NATIVE)
+            val bipFormats: Collection<BipFormat> = listOf(BIP_FORMAT.LEGACY, BIP_FORMAT.SEGWIT_COMPAT, BIP_FORMAT.SEGWIT_NATIVE, BIP_FORMAT.TAPROOT)
             bipFormats.forEach {
                 // find utxo
                 val address: String = it.getToAddress(privKeyReader!!.key, params)
