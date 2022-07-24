@@ -65,7 +65,7 @@ fun SweepPrivateKeyView(
     }
     SamouraiWalletTheme {
         Scaffold(
-            modifier = Modifier.requiredHeight(490.dp),
+            modifier = Modifier.requiredHeight(530.dp),
             backgroundColor = samouraiBottomSheetBackground,
         ) {
             Box(
