@@ -8,6 +8,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -165,9 +166,14 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 Snackbar.make(utxoList.getRootView(), "Please wait... your wallet is still loading ", Snackbar.LENGTH_LONG).show();
                 shownWalletLoadingMessage = true;
             }
-
         }
 
+        AppUtil.getInstance(getApplicationContext()).getWalletLoading().observe(this,aBoolean -> {
+            utxoSwipeRefresh.setRefreshing(aBoolean);
+            if(!aBoolean){
+                loadUTXOs(false);
+            }
+        });
     }
 
     @Override
@@ -313,12 +319,10 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
 
         if (spendables > 0) {
-
             UTXOCoinSegment active = new UTXOCoinSegment(null, null);
             active.id = 0;
             active.isActive = true;
             sectioned.add(active);
-
         }
         for (UTXOCoin models : filteredAddress) {
             if (!models.doNotSpend) {
@@ -327,7 +331,6 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             }
         }
         if (unspendables > 0) {
-
             UTXOCoinSegment doNotSpend = new UTXOCoinSegment(null, null);
             doNotSpend.id = filteredAddress.size() + 1;
             doNotSpend.isActive = false;
@@ -402,8 +405,6 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                     if (!loadSilently) {
                         utxoProgressBar.setVisibility(View.GONE);
                     }
-
-
                 }, err -> {
                     if (!loadSilently) {
                         utxoSwipeRefresh.setRefreshing(false);
@@ -591,16 +592,10 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 if (model.amount < BlockedUTXO.BLOCKED_UTXO_THRESHOLD && BlockedUTXO.getInstance().contains(model.hash, model.idx)) {
                     BlockedUTXO.getInstance().remove(model.hash, model.idx);
                     BlockedUTXO.getInstance().addNotDusted(model.hash, model.idx);
-
                 } else if (BlockedUTXO.getInstance().contains(model.hash, model.idx)) {
-
                     BlockedUTXO.getInstance().remove(model.hash, model.idx);
-
-
                 } else if (BlockedUTXO.getInstance().containsPostMix(model.hash, model.idx)) {
-
                     BlockedUTXO.getInstance().removePostMix(model.hash, model.idx);
-
                 }
                 utxoList.post(() -> loadUTXOs(true));
                 setResult(RESULT_OK);
@@ -614,18 +609,11 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
         for (UTXOCoin model : filteredUTXOs) {
             if (model.isSelected) {
                 if (model.amount < BlockedUTXO.BLOCKED_UTXO_THRESHOLD && BlockedUTXO.getInstance().contains(model.hash, model.idx)) {
-
                     //No-op
-
-
                 } else if (BlockedUTXO.getInstance().contains(model.hash, model.idx)) {
 //No-op
-
                 } else if (BlockedUTXO.getInstance().containsPostMix(model.hash, model.idx)) {
-
-
                 } else {
-
                     if (account == 0) {
                         BlockedUTXO.getInstance().add(model.hash, model.idx, model.amount);
                     } else {
@@ -633,11 +621,8 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                     }
                     LogUtil.debug("UTXOActivity", "added:" + model.hash + "-" + model.idx);
                     setResult(RESULT_OK);
-
                 }
-
                 utxoList.post(() -> loadUTXOs(true));
-
             }
         }
         saveWalletState();
@@ -645,7 +630,6 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
     //Clears current Toolbar action mode
     void clearSelection() {
-
         ArrayList<UTXOCoin> models = new ArrayList<>();
         for (UTXOCoin model : this.filteredUTXOs) {
             model.isSelected = false;
@@ -653,25 +637,20 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
         }
         this.filteredUTXOs = new ArrayList<>();
         this.filteredUTXOs.addAll(models);
-
     }
 
     public String getPreSelected() {
-
         ArrayList<UTXOCoin> utxos = new ArrayList<>();
-
         for (UTXOCoin utxo : this.filteredUTXOs) {
             if (utxo.isSelected) {
                 utxos.add(utxo);
             }
         }
-
         String id = null;
         if (utxos.size() > 0) {
             id = UUID.randomUUID().toString();
             PreSelectUtil.getInstance().add(id, utxos);
         }
-
         return id;
     }
 
@@ -889,9 +868,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.utxo_item_layout, parent, false);
                 return new ViewHolder(view, UTXO);
-
             }
-
         }
 
         @Override
@@ -942,23 +919,18 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             if (multiSelect) {
                 if (holder.checkBox.getVisibility() != View.VISIBLE) {
                     holder.checkBox.setVisibility(View.VISIBLE);
-
                 }
             } else {
                 if (holder.checkBox.getVisibility() == View.VISIBLE) {
                     holder.checkBox.setVisibility(View.GONE);
                 }
-
             }
             holder.rootViewGroup.setOnLongClickListener(view -> onListLongPress(position));
             holder.notesLayout.removeAllViews();
             holder.tagsLayout.removeAllViews();
             if (item.amount < BlockedUTXO.BLOCKED_UTXO_THRESHOLD) {
-                holder.tagsLayout.setVisibility(View.VISIBLE);
                 View dustTag = createTag(getBaseContext(), getString(R.string.dust));
                 holder.tagsLayout.addView(dustTag);
-            } else {
-                holder.tagsLayout.setVisibility(View.GONE);
             }
 
             if (UTXOUtil.getInstance().getNote(item.hash) != null && UTXOUtil.getInstance().getNote(item.hash).length() > 0) {
@@ -980,14 +952,11 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 tx.setEllipsize(TextUtils.TruncateAt.END);
                 tx.setPadding((int) (8 * scale + 0.5f), 0, (int) (8 * scale + 0.5f), 0);
                 holder.notesLayout.addView(tx);
-            } else {
-                holder.notesLayout.setVisibility(View.GONE);
             }
 
             String utxoIdxHash = item.hash.concat("-").concat(String.valueOf(item.idx));
 
             if (UTXOUtil.getInstance().get(utxoIdxHash) != null) {
-                holder.tagsLayout.setVisibility(View.VISIBLE);
                 for (String tagString : UTXOUtil.getInstance().get(utxoIdxHash)) {
                     View tag = createTag(getBaseContext(), tagString);
                     holder.tagsLayout.addView(tag);
@@ -997,8 +966,6 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             // Whirlpool tags for PREMIX & POSTMIX
             Collection<String> whirlpoolTags = WhirlpoolUtils.getInstance().getWhirlpoolTags(item, getApplicationContext());
             if (!whirlpoolTags.isEmpty()) {
-                holder.notesLayout.setVisibility(View.VISIBLE);
-                holder.tagsLayout.setVisibility(View.VISIBLE);
                 for (String tagString : whirlpoolTags) {
                     View tag = createTag(getBaseContext(), tagString);
                     holder.tagsLayout.addView(tag);
@@ -1017,6 +984,16 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 selectOrDeselect(position);
             });
 
+            if( holder.tagsLayout.getChildCount() == 0){
+                holder.tagsLayout.setVisibility(View.GONE);
+            }else{
+                holder.tagsLayout.setVisibility(View.VISIBLE);
+            }
+            if( holder.notesLayout.getChildCount() == 0){
+                holder.notesLayout.setVisibility(View.GONE);
+            }else {
+                holder.notesLayout.setVisibility(View.VISIBLE);
+            }
         }
 
         private View createTag(Context context, String tag) {
@@ -1050,9 +1027,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                     String pcode = BIP47Meta.getInstance().getPCode4Addr(address);
                     int idx = BIP47Meta.getInstance().getIdx4Addr(address);
                     List<Integer> unspentIdxs = BIP47Meta.getInstance().getUnspent(pcode);
-
                     return unspentIdxs != null && unspentIdxs.contains(Integer.valueOf(idx));
-
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1073,8 +1048,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 super(itemView);
                 if (viewType == SECTION) {
                     section = itemView.findViewById(R.id.section_title);
-                    return;
-                }
+                }else {
                 amount = itemView.findViewById(R.id.utxo_item_amount);
 //                doNotSpend = itemView.findViewById(R.id.do_not_spend_text);
                 address = itemView.findViewById(R.id.utxo_item_address);
@@ -1085,10 +1059,9 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 checkBox.setVisibility(View.GONE);
 //                paynym = itemView.findViewById(R.id.paynym_txt);
                 rootViewGroup = (ViewGroup) itemView;
+                }
             }
         }
-
-
 
     }
 
