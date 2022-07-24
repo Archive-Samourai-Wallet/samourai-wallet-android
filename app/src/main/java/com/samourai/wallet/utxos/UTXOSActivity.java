@@ -901,7 +901,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
         @Override
         public int getItemViewType(int position) {
-            if (filteredUTXOs.get(position) instanceof UTXOCoinSegment) {
+            if (mAsyncListDiffer.getCurrentList().get(position) instanceof UTXOCoinSegment) {
                 return SECTION;
             } else {
                 return UTXO;
@@ -920,7 +920,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
         public void onBindViewHolder(ViewHolder holder, int position) {
 
             if (mAsyncListDiffer.getCurrentList().get(position) instanceof UTXOCoinSegment) {
-                UTXOCoinSegment utxoCoinSegment = (UTXOCoinSegment) filteredUTXOs.get(position);
+                UTXOCoinSegment utxoCoinSegment = (UTXOCoinSegment) mAsyncListDiffer.getCurrentList().get(position);
                 holder.section.setText(utxoCoinSegment.isActive ? getString(R.string.active) : getString(R.string.do_not_spend));
                 if (!utxoCoinSegment.isActive) {
                     holder.section.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.red));
