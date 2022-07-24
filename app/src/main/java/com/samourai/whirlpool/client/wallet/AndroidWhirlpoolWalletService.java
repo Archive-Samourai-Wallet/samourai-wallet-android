@@ -15,6 +15,7 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.AndroidSecretPointFactory;
+import com.samourai.wallet.bip47.rpc.secretPoint.ISecretPointFactory;
 import com.samourai.wallet.bipWallet.WalletSupplier;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.network.dojo.DojoUtil;
@@ -84,7 +85,7 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
             HD_Wallet bip84w = BIP84Util.getInstance(ctx).getWallet();
             String walletIdentifier = whirlpoolUtils.computeWalletIdentifier(bip84w); // preserve android filenames
             whirlpoolWallet = new WhirlpoolWallet(config, bip84w.getSeed(), bip84w.getPassphrase(), walletIdentifier);
-            return openWallet(whirlpoolWallet);
+            return openWallet(whirlpoolWallet, bip84w.getPassphrase());
         }
         // wallet already opened
         return whirlpoolWallet;
@@ -147,12 +148,12 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         NetworkParameters params = whirlpoolServer.getParams();
 
         DataSourceFactory dataSourceFactory = computeDataSourceFactory(ctx);
+        ISecretPointFactory secretPointFactory = AndroidSecretPointFactory.getInstance();
         DataPersisterFactory dataPersisterFactory = computeDataPersisterFactory(ctx);
 
         WhirlpoolWalletConfig whirlpoolWalletConfig =
-                new WhirlpoolWalletConfig(dataSourceFactory,
+                new WhirlpoolWalletConfig(dataSourceFactory, secretPointFactory,
                         httpClientService, stompClientService, torClientService, serverApi, params, true);
-        whirlpoolWalletConfig.setSecretPointFactory(AndroidSecretPointFactory.getInstance());
         whirlpoolWalletConfig.setBip47Util(BIP47Util.getInstance(ctx));
         whirlpoolWalletConfig.setDataPersisterFactory(dataPersisterFactory);
 
@@ -162,8 +163,6 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         whirlpoolWalletConfig.setScode(scode);
         whirlpoolWalletConfig.setMaxClients(1);
         whirlpoolWalletConfig.setLiquidityClient(false); // disable concurrent liquidity thread
-
-        whirlpoolWalletConfig.setSecretPointFactory(AndroidSecretPointFactory.getInstance());
 
         for (Map.Entry<String,String> configEntry : whirlpoolWalletConfig.getConfigInfo().entrySet()) {
             Log.v(TAG, "whirlpoolWalletConfig["+configEntry.getKey()+"] = "+configEntry.getValue());

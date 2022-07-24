@@ -1,14 +1,15 @@
 package com.samourai.wallet.send;
 
 import android.content.Context;
-import android.util.Pair;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.WebUtil;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import java.util.List;
 
 import static com.samourai.wallet.util.LogUtil.debug;
 
-public class PushTx {
+public class PushTx implements IPushTx {
 
     private static boolean DO_SPEND = true;
 
@@ -77,6 +78,7 @@ public class PushTx {
 
     }
 
+    @Override
     public Pair<Boolean,String> pushTx(String hexTx) throws Exception {
 
         String response = null;
@@ -104,7 +106,7 @@ public class PushTx {
                 debug("PushTx", hexTx);
                 isOK = true;
             }
-            return new Pair<>(isOK,txid);
+            return Pair.of(isOK,txid);
 
     }
 

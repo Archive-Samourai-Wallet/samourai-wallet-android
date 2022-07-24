@@ -34,7 +34,7 @@ public class AndroidDataSourceFactory implements DataSourceFactory {
     }
 
     @Override
-    public DataSource createDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, WalletStateSupplier walletStateSupplier, UtxoConfigSupplier utxoConfigSupplier) throws Exception {
+    public DataSource createDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, String passphrase, WalletStateSupplier walletStateSupplier, UtxoConfigSupplier utxoConfigSupplier) throws Exception {
         return new AndroidDataSource(whirlpoolWallet, pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta, walletSupplier, utxoConfigSupplier);
     }
 }
