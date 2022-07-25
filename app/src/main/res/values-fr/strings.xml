@@ -131,7 +131,7 @@
     <string name="bip39_unmatch">Passphrase invalide. Veuillez réessayer.</string>
     <string name="bip39_invalid">Saisissez Les caractères de votre passphrase sans espace. Veuillez réessayer.</string>
     <string name="bip39_empty">Passphrase requise.</string>
-    <string name="please_select">Veuillez sélectionner...</string>
+    <string name="please_select">Veuillez sélectionner…</string>
     <string name="create_wallet">Création du portefeuille</string>
     <string name="restore_wallet">Restauration du portefeuille</string>
     <string name="wallet_passphrase">Saisissez la passphrase de votre portefeuille</string>
@@ -142,7 +142,7 @@
     <string name="backup_read_error">Erreur de lecture du fichier de sauvegarde.</string>
     <string name="mnemonic_hex">Phrase de récupération à 12 mots ou entropie hex</string>
     <string name="pin_enter">Entrez votre code PIN</string>
-    <string name="please_wait">Veuillez patienter...</string>
+    <string name="please_wait">Veuillez patienter…</string>
     <string name="random_key_error">Erreur : impossible de générer une clé aléatoire</string>
     <string name="login_error">Échec Login</string>
     <string name="wallet_created_ok">Création du portefeuille OK.</string>
@@ -230,9 +230,9 @@
     <string name="bip47_setup4_text2">sera déduit du solde de votre portefeuille.</string>
 
     <string name="bip47_add1_title">Nouveau contact</string>
-    <string name="bip47_add1_text">Scanner ou copier/coller le code de paiement pour créer une nouveau canal de paiement.</string>
+    <string name="bip47_add1_text">Scanner ou coller le code de paiement pour créer une nouveau canal de paiement.</string>
 
-    <string name="paste">Copier/Coller</string>
+    <string name="paste">Coller</string>
     <string name="label">Saisir un libellé</string>
     <string name="next">Suivant</string>
     <string name="confirm">Confirmer</string>
@@ -378,9 +378,9 @@
     <string name="replay_text">Toutes les adresses vont être fusionnées en une seule transaction et envoyées à une adresse dans votre portefeuille. Il s\'agit là de transactions entrantes fusionnées et cela peut compromettre votre confidentialité.</string>
     <string name="replay_ENABLE">PERMETTRE LA MISE EN PLACE PROTECTION REJEU</string>
 
-    <string name="replay_broadcast_to_network">émise sur le réseau...</string>
-    <string name="replay_seen_on_network">vue sur le réseau...</string>
-    <string name="replay_split_tx_broadcast">séparer émisssion tx ...</string>
+    <string name="replay_broadcast_to_network">émise sur le réseau…</string>
+    <string name="replay_seen_on_network">vue sur le réseau…</string>
+    <string name="replay_split_tx_broadcast">séparer émisssion tx…</string>
     <string name="replay_description">Votre portefeuille va s\'adresser une transaction spéciale qui va définitivement séparer vos coins de l\'autre chaîne. Cela vous protégera des attaques par Rejeu.</string>
     <string name="replay_waiting_for_confirmations">en attente de confirmations</string>
     <string name="replay_confirmed">confirmée</string>
@@ -396,7 +396,7 @@
     <string name="send_tx">Envoyer transaction brute</string>
     <string name="tx_too_large_qr">Taille transaction brute trop grande pour un affichage en code QR.</string>
 
-    <string name="select_network">Sélectionner le réseau...</string>
+    <string name="select_network">Sélectionner le réseau…</string>
     <string name="MainNet">MainNet</string>
     <string name="TestNet">TestNet</string>
 
@@ -556,7 +556,7 @@
     
     <string name="type_address">Type d\'adresse</string>
     <string name="chain_id">Chaîne d\'adresses</string>
-    <string name="receive_address">Recevoir l\'adresse</string>
+    <string name="receive_chain">Recevoir l\'adresse</string>
     <string name="change_chain">Changer l\'adresse</string>
     
     <string name="in_offline_mode">Le portefeuille Samourai est en mode hors-ligne.</string>
@@ -580,7 +580,7 @@
     <string name="review_transaction">VÉRIFIER TRANSACTION</string>
     <string name="stonewall_increases_deniability">STONEWALL augmente la déniabilité et réduit la traçabilité de cette transaction.</string>
     <string name="title_activity_empty_whirl_pool">" "</string>
-    <string name="cycling_bitcoin">Soumettre vos bitcoin à un cycle \n whirlpool effacera les traces laissées par vos \n transactions</string>
+    <string name="cycling_bitcoin">Soumettre vos bitcoin à un cycle \n Whirlpool effacera les traces laissées par vos \n transactions</string>
     <string name="metadata_cleaner">nettoyeur médadonnées</string>
     <string name="end_to_end_trustless">procédé sans tiers de confiance de bout-en-bout</string>
     <string name="your_private_keys">Vos clés privées demeurent constamment sur votre \n appareil tout au long du\n cycle Whirlpool</string>
@@ -599,7 +599,7 @@
     <string name="select_a_cycle_type">Choisissez un cycle</string>
     <string name="supercharge">SuperCharge</string>
     <string name="transaction_broadcast">Émission Transaction</string>
-    <string name="pending">en attente</string>
+    <string name="pending">En attente</string>
     <string name="transaction_id">Identifiant Transaction</string>
     <string name="completed">Terminée</string>
     <string name="title_activity_received_tx">" "</string>
@@ -755,7 +755,7 @@
     <string name="you_will_pay">Vous règlerez :</string>
     <string name="total_miner_fee">Total Frais Mineur :</string>
     <string name="launch_qr_scanner">LANCER Scanner QR</string>
-    <string name="next_step">Prochaine Étape...</string>
+    <string name="next_step">Prochaine Étape…</string>
     <string name="scan_the_qr_code_that_your_collaborator_provides_you">Scannez le CODE QR que votre collaborateur vous fournit.</string>
     
     <string name="you_will_contribute">Votre contribution</string>
@@ -766,7 +766,7 @@
     <string name="unspent_outputs">Sorties non dépensées</string>
     <string name="unspent_outputs_post_mix">Sorties non dépensées - Post-mix</string>
     
-    <string name="paste_cahoots_payload">Copier/Coller charge utile cahoots</string>
+    <string name="paste_cahoots_payload">Coller charge utile cahoots</string>
 
     <string name="clipboard_empty">Presse-papiers vide</string>
     
@@ -799,20 +799,25 @@
     
     <string name="coming_soon">Prochainement</string>
     <string name="active">Active</string>
-    <string name="total_whirlpool_balance">Total Solde Whirlpool</string>
+    <string name="total_whirlpool_balance">Solde Total Whirlpool</string>
     <string name="change_from_postmix">Rendu monnaie d\'une dépense post-mix</string>
     <string name="selection_contains_blocked_utxo">Votre sélection comprend des utxos verrouillées. Veuillez déverrouiller et réessayer.</string>
     <string name="only_single_utxo_may_selected">Pour une dépense à partir d\'un post-mix, vous ne pouvez sélectionner qu\'une seule utxo à la fois.</string>
-    <string name="only_a_single_change_utxo_may">Pour un Whirlpooling à partir d\'un post-mix, vous ne pouvez sélectionner qu\'un seul rendu monnaie d\'utxo à la fois.</string>
+    <string name="only_a_single_utxo_may">Pour un Whirlpooling direct à partir d\'un post-mix, vous ne pouvez sélectionner qu\'une seule utxo à la fois.</string>
+    
+    
+    
+    
+    
     <string name="utxo_is_marked_as_blocked">utxo marquée comme verrouillée</string>
     <string name="only_change_utxos_allowed">Rendu monnaie d\'utxo uniquement</string>
     <string name="mixing"><em>%1$s</em> : %2$s</string>
     <string name="title_activity_tester">testeur</string>
 
-    <string name="block_tx0_change">Le rendu monnaie en sortie de cette tx0 (transaction d\'accès) fera l\'objet d\'un tag. Le verrouiller pour le rendre non dépensable ? Dans ce cas, la somme n\'apparaîtra pas dans le total solde. Toutefois, vous la retrouverez dans votre portefeuille en consultant la liste des non dépensées.</string>
+    <string name="block_tx0_change">Le rendu monnaie en sortie de cette tx0 (transaction d\'accès) fera l\'objet d\'un tag. Le verrouiller pour le rendre non dépensable ? Dans ce cas, la somme n\'apparaîtra pas dans le solde total. Toutefois, vous la retrouverez dans votre portefeuille en consultant la liste des non dépensées.</string>
     
-    <string name="total_pre_mix_balance">Total Solde Pré-mix</string>
-    <string name="total_post_mix_balance">Total Solde Post-mix</string>
+    <string name="total_pre_mix_balance">Solde Total Pré-mix</string>
+    <string name="total_post_mix_balance">Solde Total Post-mix</string>
     
     <string name="post_mix_transactions">Transactions post-mix</string>
     
@@ -878,7 +883,7 @@
 
 
 <string name="no_cahoots_detected">Pas de cahoots détectés. Rafraîchir pour relancer la recherche</string>
-<string name="waiting_for_cahoots_request">En attente de requête Cahoots...</string>
+<string name="waiting_for_cahoots_request">En attente de requête Cahoots…</string>
 
 
 <string name="paynym_follow_message_2">pour suivre immediatement. Suivre ce PayNym pour prendre part aux transactions\nCoinjoin Cahoots.</string>
@@ -894,7 +899,7 @@
 <string name="share_and_reuse">Partager et réutiliser sans exposer vos autres transactions et soldes</string>
 
 <string name="options_soroban_collab">Soroban recevoir/collaborer</string>
-<string name="options_paste_cahoots">Copier/Coller charge utile cahoots</string>
+<string name="options_paste_cahoots">Coller charge utile cahoots</string>
 
 
 
@@ -962,7 +967,7 @@
 
 <string name="i_have_an_external_wallet">J\'ai un portefeuille externe</string>
 <string name="_12_15_18_24_mnemonic_words">12/15/18/24 mots de récupération</string>
-<string name="restoring_a_wallet_no_problem_let_s_figure">Restaurer un portefeuille? Pas de problème, voyons quel processus de restauration optimisera sa performance.</string>
+<string name="restoring_a_wallet_no_problem_let_s_figure">Restaurer un portefeuille ? Pas de problème, voyons quel processus de restauration optimisera sa performance.</string>
 <string name="i_have_a_samourai_backup_file">J\'ai une fichier de sauvegarde Samourai</string>
 <string name="encrypted_backup_file_passphrase">Fichier de sauvegarde chiffré + passphrase</string>
 
@@ -972,7 +977,7 @@
 <string name="api_key">Clé API</string>
 <string name="dojo_onion_address">Adresse onion du Dojo</string>
 <string name="would_you_like_to_enable_tor">Voulez-vous activer Tor ?</string>
-<string name="would_you_like_to_connect_to">Voulez-vous vous connecter à votre\npropre serveur dojo ?</string>
+<string name="would_you_like_to_connect_to">Voulez-vous vous connecter à votre\npropre serveur Dojo ?</string>
 
 <string name="choose">Choisir</string>
 
@@ -984,7 +989,13 @@
 <string name="send_cahoots">Envoyer Cahoots</string>
 
 <string name="dojo_config_detected">Configuration du dojo détectée</string>
-<string name="dojo_config_override">Configuration du dojo détectée dans fichier de sauvegarde. Voulez-vous passer outre la configuration actuelle ?\n\nRemarque: Si vous appuyez sur oui, le processus de restauration sautera l\'étape de configuration du dojo\n</string>
+<string name="dojo_config_override">Configuration du dojo détectée dans fichier de sauvegarde. Passer outre la configuration actuelle du dojo dans fichier de sauvegarde ?</string>
+
+
+
+
+
+
 
 <string name="api_key_blank_error">Champ requis !</string>
 
@@ -998,7 +1009,59 @@
 <string name="options_xpub44_postmix2">Afficher clé publique étendue pour compte rendu monnaie Whirlpool BIP44 post-mix.</string>
 <string name="options_xpub49_postmix">Afficher Whirlpool post-mix YPUB rendu monnaie</string>
 <string name="options_xpub49_postmix2">Afficher clé publique étendue pour compte Segwit BIP49 (P2SH-wrapped) compte rendu monnaie Whirlpool post-mix.</string>
-    <string name="follow">Relier</string>
+
+
+
+
+<string name="remix_note_tag">"Remix"</string>
+<string name="mixing_title">Mixing en cours…</string>
+    
+
+
+<string name="title_activity_whilrpool_main">WhilrpoolMain</string>
+<string name="title_activity_whirlpool_home">WhirlpoolHome</string>
+<string name="transactions">Transactions</string>
+<string name="remixing">Remixing</string>
+<string name="whirlpool_completely_breaks_the">Whirlpool rompt tout lien d\'activité antérieure de votre bitcoin avec son utilisation future pour pouvoir opérer en toute confidentialité.</string>
+<string name="whirlpool_is_entirely">Whirlpool est entièrement non dépositaire. Cela signifie que vous gardez le contrôle des clés privées de votre bitcoin pendant toutes les étapes du processus</string>
+<string name="coins_that_are_currently">Les coins en attente pour le moment de terminer leur premier mix Whirlpool seront répertoriés et gérés ici.</string>
+<string name="your_coins_will_be_split">Vos coins seront automatiquement divisés en plusieurs sommes égales. Chacune de ces sommes égales sera mixée séparément.\n\nPour pouvoir mixer, votre portefeuille doit être déverrouillé et connecté.</string>
+<string name="coins_that_have_been_mixed">Les coins qui auront subi au moins un mix regagneront la file d\'attente en vue d\'une sélection aléatoire pour un remix gratuit.</string>
+<string name="whirlpool_offers_absolutely">Whirlpool offre un remixing entièrement gratuit aux coins qui auront déjà été mixés. Aucun frais de mineur ni de coordinateur ne sera appliqué à ces transactions.\n\nLe remixing vous permet de gagner en confidentialité et accroît également la confidentialité de l\'ensemble du pool de mixing.</string>
+<string name="your_mixed_coins_have_been">Vos coins mixés ont automatiquement rejoint la file d\'attente en vue d\'un Remixing.\n\nDe nouveaux coins non mixés peuvent être à tout moment ajoutés à Whirlpool.</string>
+<string name="once_you_spend_a_mixed">Une fois dépensé un coin mixé n\'est plus éligible à un Remixing gratuit.\n\nDe nouveaux coins non mixés peuvent être à tout moment ajoutés à Whirlpool.</string>
+<string name="your_coins_have_been_mixed">Vos coins ont été mixés !</string>
+<string name="you_dont_have_any">Vous ne disposez pas de coins pouvant être remixés</string>
+<string name="loading">Chargement en cours…</string>
+<string name="start_new_tx0">Démarrer nouvelle tx0</string>
+<string name="disconnected">Déconnecté</string>
+<string name="initializing_whirlpool">Initialisation de Whirlpool</string>
+<string name="connecting_to_service">Connexion au service en cours…</string>
+<string name="mix_details">Détails du Mix</string>
+<string name="mix_amount">Montant du Mix</string>
+<string name="mixes_completed">Mixs terminés</string>
+<string name="pool">Pool</string>
+<string name="mix_message">Message du Mix</string>
+<string name="toxic_change">Rendu monnaie toxique</string>
+<string name="mix_error">Erreur survenue sur le Mix</string>
+<string name="mix_utxos">Mixer les UTXOs</string>
+<string name="mixes_complete">Fin des mixs</string>
+
+
+<string name="mixed">Mixés</string>
+<string name="postmix_spend">Dépense Postmix</string>
+<string name="you_cannot_follow_your_own_paynym">Vous ne pouvez pas suivre votre propre Paynym</string>
+<string name="transfer_to_whirlpool">Transférer vers Whirlpool</string>
+
+
+<string name="total_balance">Solde Total</string>
+<string name="total_in_progress_balance">Solde Total en cours</string>
+<string name="total_remixable_balance">Solde Total Remixable</string>
+<string name="tx0_is_not_possible_with">Tx0 impossible avec cette utxo sélectionnée.</string>
+
+
+
+
 
 
 </resources>
