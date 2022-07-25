@@ -12,16 +12,12 @@ import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.bipFormat.BIP_FORMAT
 import com.samourai.wallet.bipFormat.BipFormat
-import com.samourai.wallet.bipFormat.BipFormatSupplierImpl
 import com.samourai.wallet.hd.WALLET_INDEX
+import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
-import com.samourai.wallet.send.MyTransactionOutPoint
-import com.samourai.wallet.send.PushTx
-import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.send.beans.SweepPreview
 import com.samourai.wallet.util.*
 import kotlinx.coroutines.*
-import org.bitcoinj.core.Transaction
 import java.text.DecimalFormat
 import kotlin.math.absoluteValue
 
@@ -285,33 +281,24 @@ class SweepViewModel : ViewModel() {
         broadcastError.postValue(null)
         broadcastLoading.postValue(true)
         viewModelScope.launch {
-            var transaction: Transaction? = null
             withContext(Dispatchers.IO) {
                 delay(1500)
                 try {
                     val receiveAddress = AddressFactory.getInstance(context).getAddressAndIncrement(receiveAddressType.value).right
                     val rbfOptin = PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false)
                     val blockHeight = APIFactory.getInstance(context).latestBlockHeight
-                    val receivers: MutableMap<String, Long> = LinkedHashMap()
-                    receivers[receiveAddress] = sweepPreview!!.amount
-                    val outpoints: MutableCollection<MyTransactionOutPoint> = mutableListOf()
-                    sweepPreview!!.utxos
-                        .map { unspentOutput: UnspentOutput -> unspentOutput.computeOutpoint(params) }.toCollection(outpoints);
-                    val tr = SendFactory.getInstance().makeTransaction(receivers, outpoints, BIP_FORMAT.PROVIDER, rbfOptin, params, blockHeight)
-                    transaction = SendFactory.getInstance().signTransactionForSweep(tr, sweepPreview!!.privKey, params)
-
+                    val pushTx = PushTx.getInstance(context)
+                    val txid = SweepUtil.getInstance().sweep(
+                        sweepPreview,
+                        receiveAddress,
+                        pushTx,
+                        BIP_FORMAT.PROVIDER,
+                        rbfOptin,
+                        blockHeight
+                    )
                 } catch (e: Exception) {
-                    throw  CancellationException("Sign: ${e.message}")
+                    throw  CancellationException("Sweep: ${e.message}")
                 }
-                try {
-                    if (transaction != null) {
-                        val hexTx = TxUtil.getInstance().getTxHex(transaction)
-                        PushTx.getInstance(context).pushTx(hexTx)
-                    }
-                } catch (e: Exception) {
-                    throw  CancellationException("pushTx : ${e.message}")
-                }
-
             }
         }
             .invokeOnCompletion {
