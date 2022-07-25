@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -29,6 +30,9 @@ import java.io.FileOutputStream
 
 class QRBottomSheetDialog(val qrData: String, val title: String? = "", val clipboardLabel: String? = "") : BottomSheetDialogFragment() {
 
+
+    //secure flag to dialogs window
+    private var secure: Boolean = false;
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -115,8 +119,13 @@ class QRBottomSheetDialog(val qrData: String, val title: String? = "", val clipb
             }
             dismiss()
         }
+        if(secure){
+            this.dialog?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        }
 
     }
 
-
+    fun setSecure(secure: Boolean){
+        this.secure =secure
+    }
 }

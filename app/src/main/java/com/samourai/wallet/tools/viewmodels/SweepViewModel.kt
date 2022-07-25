@@ -48,6 +48,7 @@ class SweepViewModel : ViewModel() {
     }
     private var sweepPreview: SweepPreview? = null
     private val params = SamouraiWallet.getInstance().currentNetworkParams
+    private val blocks : MutableLiveData<String> = MutableLiveData("6 blocks")
 
     var feeLow: Long = 0L
     var feeHigh: Long = 0L
@@ -67,6 +68,7 @@ class SweepViewModel : ViewModel() {
     fun getSweepFees(): LiveData<Long> = fees
     fun getSweepAddressLive(): LiveData<String> = sweepAddressLive
     fun getReceiveAddressType(): LiveData<WALLET_INDEX> = receiveAddressType
+    fun getBlockWaitTime(): LiveData<String> = blocks
 
     init {
         feeLow = FeeUtil.getInstance().lowFee.defaultPerKB.toLong()
@@ -221,10 +223,38 @@ class SweepViewModel : ViewModel() {
                     fees.postValue(transaction.fee.value)
                     foundAmount.postValue(totalValue)
                     feesPerByte.postValue(decimalFormatSatPerByte.format(transaction.fee.value.toFloat() / transaction.virtualTransactionSize.toFloat()))
+
+                    var pct: Double
+                    var nbBlocks = 6
+                    val feeForBlocks = if(getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000)
+
+                    if (feeForBlocks != null) {
+                        if (feeForBlocks <= feeLow.toDouble()) {
+                            pct = feeLow.toDouble() / feeForBlocks
+                            nbBlocks = Math.ceil(pct * 24.0).toInt()
+                        } else if (feeForBlocks >= feeHigh.toDouble()) {
+                            pct = feeHigh.toDouble() / feeForBlocks
+                            nbBlocks = Math.ceil(pct * 2.0).toInt()
+                            if (nbBlocks < 1) {
+                                nbBlocks = 1
+                            }
+                        } else {
+                            pct = feeMed.toDouble() / feeForBlocks
+                            nbBlocks = Math.ceil(pct * 6.0).toInt()
+                        }
+                    }
+                    var strBlocks = "$nbBlocks blocks"
+                    if (nbBlocks > 50) {
+                        strBlocks = "50+ blocks"
+                    }
+
+                    blocks.postValue(strBlocks)
                     loading.postValue(false)
                     setPage(1)
                 }
             } catch (e: Exception) {
+                addressValidationError.postValue("${e.message}")
+                loading.postValue(false)
                 e.printStackTrace()
             }
         }

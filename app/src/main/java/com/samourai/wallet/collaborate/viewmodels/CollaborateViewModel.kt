@@ -67,9 +67,9 @@ class CollaborateViewModel : ViewModel() {
         get() = errors
 
     fun initWithContext(context: Context) {
-        androidSorobanCahootsService = AndroidSorobanCahootsService.getInstance(context).sorobanMeetingService;
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
+                androidSorobanCahootsService = AndroidSorobanCahootsService.getInstance(context).sorobanMeetingService;
                 withContext(Dispatchers.Main) {
                     this@CollaborateViewModel.loading.postValue(true)
                 }

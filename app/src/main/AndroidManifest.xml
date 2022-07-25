@@ -76,7 +76,10 @@
             android:name=".whirlpool.WhirlpoolHome"
             android:exported="false"
             android:label=""
-            android:theme="@style/Theme.Samourai.Whirlpool.Material" />
+            android:parentActivityName=".home.BalanceActivity"
+            android:theme="@style/Theme.Samourai.Whirlpool.Material" >
+
+        </activity>
         <activity
             android:name=".onboard.RestoreOptionActivity"
             android:theme="@style/Theme.Samourai.Material" />

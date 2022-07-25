@@ -1,4 +1,8 @@
+import android.util.Log
+import android.view.Window
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.android.Contents
@@ -48,12 +53,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AddressCalculator() {
+fun AddressCalculator(window: Window?) {
     val vm = viewModel<AddressCalculatorViewModel>()
     val page by vm.getPage().observeAsState()
     var previewAddress by remember { mutableStateOf("") }
     var previewTitle by remember { mutableStateOf("") }
 
+    LaunchedEffect(key1 = page, block = {
+        if(page == 1 || page == 2){
+            window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        }else{
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        }
+    })
     Box(modifier = Modifier.requiredHeight(420.dp)) {
         WrapToolsPageAnimation(
             visible = 0 == page,
@@ -115,6 +127,7 @@ fun AddressCalculator() {
                     }
                 )
                 Box(modifier = Modifier.fillMaxSize()) {
+
                     AddressDetails(onSelect = { it, title ->
                         previewAddress = it
                         previewTitle = title
@@ -251,7 +264,7 @@ fun AddressDetails(onSelect: (address: String, title: String) -> Unit) {
 
     val vm = viewModel<AddressCalculatorViewModel>()
     val addressDetails by vm.getAddressLiveData().observeAsState()
-
+    val window = getWindow()
     Column(
         modifier = Modifier
             .fillMaxHeight(),
@@ -458,7 +471,7 @@ fun AddressQRPreview(previewAddress: String, previewTitle: String, onDismiss: ()
 @Preview(showBackground = true, widthDp = 420)
 @Composable
 fun AddressCalculatorPreview() {
-    AddressCalculator()
+    AddressCalculator(null)
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -523,3 +536,12 @@ fun DropDownTextField(
 
 }
 
+
+@Composable
+fun getWindow(): Window? {
+    val context = LocalContext.current
+    if (context is AppCompatActivity) {
+        return context.window;
+    }
+    return null
+}

@@ -2,22 +2,22 @@ package com.samourai.wallet.collaborate
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.samourai.wallet.R
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.theme.SamouraiWalletTheme
+import com.samourai.wallet.theme.samouraiError
 import com.samourai.wallet.theme.samouraiSuccess
 import com.samourai.wallet.theme.samouraiTextSecondary
 import com.samourai.wallet.util.FormatsUtil
@@ -105,15 +105,40 @@ fun InitiateSegment(
 }
 
 
-
 @Composable
 fun TransactionPreview(onClick: () -> Unit) {
     val collaborateViewModel = viewModel<CahootsTransactionViewModel>()
     val validTransaction by collaborateViewModel.validTransactionLive.observeAsState(false)
     val account by collaborateViewModel.transactionAccountTypeLive.observeAsState(SamouraiAccountIndex.DEPOSIT)
     val destinationAddress by collaborateViewModel.destinationAddressLive.observeAsState(null)
-    val amount by collaborateViewModel.amountLive.observeAsState(0.0)
-
+    val amount by collaborateViewModel.amountLive.observeAsState(0L)
+    var showClearDialog by remember { mutableStateOf(false) }
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showClearDialog = false
+            },
+            title = {
+                    Text(text = stringResource(id = R.string.confirm))
+            },
+            text = {
+                   Text("Do you want to discard?")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showClearDialog = false
+                    collaborateViewModel.clearTransaction()
+                })
+                { Text(text = "Discard") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showClearDialog = false
+                })
+                { Text(text = "Cancel") }
+            }
+        )
+    }
     if (validTransaction) {
         TransactionOptionSegment(
             title = "Account",
@@ -146,14 +171,25 @@ fun TransactionPreview(onClick: () -> Unit) {
             title = "Amount to send",
             showSubSection = false,
             onClick = onClick,
-            showSubSectionText = FormatsUtil.formatBTC(amount.times(1e8).toLong())
+            showSubSectionText = FormatsUtil.formatBTC(amount)
         )
         Divider()
-
+        Box(modifier = Modifier.fillMaxWidth()) {
+            TextButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    showClearDialog = true
+                }, colors = ButtonDefaults.textButtonColors(
+                    backgroundColor = Color.Transparent,
+                    contentColor = samouraiError
+                )
+            ) {
+                Text("Clear", textAlign = TextAlign.Center, fontSize = 12.sp)
+            }
+        }
     }
 
 }
-
 
 @Composable
 fun TransactionOptionSegment(
@@ -180,7 +216,6 @@ fun TransactionOptionSegment(
         }
     }
 }
-
 
 @Preview(showBackground = true, heightDp = 620, widthDp = 420)
 @Composable
