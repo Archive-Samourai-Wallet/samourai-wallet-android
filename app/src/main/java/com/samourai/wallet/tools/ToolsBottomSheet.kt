@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.widget.LinearLayout
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
@@ -76,7 +77,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
             SamouraiWalletTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    ToolsMainView(this, parentFragmentManager)
+                    ToolsMainView(this, parentFragmentManager,this@ToolsBottomSheet.dialog?.window)
                 }
             }
         }
@@ -120,7 +121,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                                 this.dismiss()
                             }, keyParameter = key)
                             ToolType.SIGN -> SignMessage()
-                            ToolType.ADDRESS_CALC -> AddressCalculator()
+                            ToolType.ADDRESS_CALC -> AddressCalculator(this@SingleToolBottomSheet.dialog?.window)
                             ToolType.AUTH47 -> Auth47Login(param= key, onClose = {
                                 dismiss()
                             })
@@ -137,7 +138,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?) {
+fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?,window: Window?) {
     val vm = viewModel<AddressCalculatorViewModel>()
     val sweepViewModel = viewModel<SweepViewModel>()
     val auth47ViewModel = viewModel<Auth47ViewModel>()
@@ -281,7 +282,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             scrimColor = Color.Black.copy(alpha = 0.7f),
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
-                AddressCalculator()
+                AddressCalculator(window)
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {}
@@ -400,7 +401,7 @@ fun DefaultPreview() {
     SamouraiWalletTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-            ToolsMainView(null, null)
+            ToolsMainView(null,  null,null)
         }
     }
 }
