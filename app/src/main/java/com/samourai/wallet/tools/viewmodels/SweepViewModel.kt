@@ -253,6 +253,8 @@ class SweepViewModel : ViewModel() {
                     setPage(1)
                 }
             } catch (e: Exception) {
+                addressValidationError.postValue("${e.message}")
+                loading.postValue(false)
                 e.printStackTrace()
             }
         }
