@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.CahootsMode
+import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
@@ -113,7 +114,7 @@ fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
             }
         }
         LazyColumn {
-            if (cahootType?.cahootsMode == CahootsMode.SOROBAN) {
+            if (cahootType?.cahootsMode == CahootsMode.SOROBAN && cahootType?.cahootsType != CahootsType.STOWAWAY) {
                 item {
                     PaynymAvatar(pcode = BIP47Meta.getMixingPartnerCode(), nym = BIP47Meta.getInstance().getLabel(BIP47Meta.getMixingPartnerCode()),
                         modifier = Modifier
