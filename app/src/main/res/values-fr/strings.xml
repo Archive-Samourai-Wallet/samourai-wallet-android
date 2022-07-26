@@ -767,7 +767,6 @@
     <string name="refresh">Actualiser</string>
     <string name="unspent_outputs">Sorties non dépensées</string>
     <string name="unspent_outputs_post_mix">Sorties non dépensées - Post-mix</string>
-    
 
     <string name="paste_cahoots_payload">Coller charge utile Cahoots</string>
 
@@ -808,8 +807,8 @@
     <string name="selection_contains_blocked_utxo">Votre sélection comprend des UTXOS verrouillées. Veuillez déverrouiller et réessayer.</string>
     <string name="only_single_utxo_may_selected">Pour une dépense à partir d\'un post-mix, vous ne pouvez sélectionner qu\'une seule UTXO à la fois.</string>
     <string name="only_a_single_utxo_may">Pour un Whirlpooling direct à partir d\'un post-mix, vous ne pouvez sélectionner qu\'une seule UTXO à la fois.</string>
-
-
+    
+    
     <string name="utxo_is_marked_as_blocked">UTXO marquée comme verrouillée</string>
     <string name="only_change_utxos_allowed">Rendu monnaie d\'UTXO uniquement</string>
     <string name="mixing"><em>%1$s</em> : %2$s</string>
@@ -883,11 +882,8 @@
     <string name="attachment_summary_off">Ne télécharger les pièces jointes qu\'en cas de requête manuelle</string>
 
 
-
-    <string name="no_cahoots_detected">Pas de Cahoots détectés. Rafraîchir pour relancer la recherche</string>
+<string name="no_cahoots_detected">Pas de Cahoots détectés. Rafraîchir pour relancer la recherche</string>
 <string name="waiting_for_cahoots_request">En attente de requête Cahoots…</string>
-
-
 
 <string name="paynym_connect_message">pour générer des adresses privées uniques pour l\'envoi de bitcoin à ce contact</string>
 <string name="follow_paynym_fee_free">Frais : Gratuit</string>
@@ -902,13 +898,7 @@
 
 <string name="options_soroban_collab">Soroban recevoir/collaborer</string>
 <string name="options_paste_cahoots">Coller charge utile Cahoots</string>
-
-
-
 <string name="paynym_follow_message">Ces frais couvrent les coûts de création d\'une transaction unique pour un enregistrement sur la blockchain. Ceci maintient les PayNyms décentralisés</string>
-
-
-
 <string name="backup_password">Définir un mot de passe de sauvegarde: (6–255 caractères)</string>
 
 <string name="enter_backup_password">Saisir le mot de passe de sauvegarde</string>
@@ -988,10 +978,6 @@
 <string name="dojo_config_detected">Configuration du Dojo détectée</string>
 <string name="dojo_config_override">Configuration du Dojo détectée dans fichier de sauvegarde. Passer outre la configuration actuelle du dojo dans fichier de sauvegarde ?</string>
 
-
-
-
-
 <string name="api_key_blank_error">Champ requis !</string>
 
 <string name="please_try_again_in">Veuillez réessayer dans</string>
@@ -1004,9 +990,7 @@
 <string name="options_xpub44_postmix2">Afficher clé publique étendue pour compte rendu monnaie Whirlpool BIP44 post-mix.</string>
 <string name="options_xpub49_postmix">Afficher Whirlpool post-mix YPUB rendu monnaie</string>
 <string name="options_xpub49_postmix2">Afficher clé publique étendue pour compte Segwit BIP49 (P2SH-wrapped) compte rendu monnaie Whirlpool post-mix.</string>
-
-    <string name="follow">Suivre</string>
-
+<string name="follow">Suivre</string>
 
 <string name="remix_note_tag">"Remix"</string>
 <string name="mixing_title">Mixing en cours…</string>
@@ -1029,9 +1013,9 @@
 <string name="you_dont_have_any">Vous ne disposez pas de coins pouvant être remixés</string>
 <string name="loading">Chargement en cours…</string>
 
-    <string name="start_new_tx0">Démarrer nouvelle Tx0</string>
+<string name="start_new_tx0">Démarrer nouvelle Tx0</string>
+<string name="disconnected">Déconnecté</string>
 
-    <string name="disconnected">Déconnecté</string>
 <string name="initializing_whirlpool">Initialisation de Whirlpool</string>
 <string name="connecting_to_service">Connexion au service en cours…</string>
 <string name="mix_details">Détails du Mix</string>
@@ -1054,9 +1038,7 @@
 <string name="total_balance">Solde Total</string>
 <string name="total_in_progress_balance">Solde Total en cours</string>
 <string name="total_remixable_balance">Solde Total Remixable</string>
-
-    <string name="tx0_is_not_possible_with">Tx0 impossible avec cette UTXO sélectionnée.</string>
-
+<string name="tx0_is_not_possible_with">Tx0 impossible avec cette UTXO sélectionnée.</string>
 
 <string name="tor_status">Situation de Tor</string>
 <string name="open_in_browser">Ouvrir dans le browser</string>
@@ -1074,7 +1056,6 @@
 
 
 <string name="paynym_follow_fee_message">Des frais uniques de connexion d\'un montant de  seront facturés pour accéder à ce PayNym</string>
-
 
 
 
