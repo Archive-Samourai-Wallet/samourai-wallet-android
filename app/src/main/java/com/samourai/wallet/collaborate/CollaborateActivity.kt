@@ -1,6 +1,7 @@
 package com.samourai.wallet.collaborate
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.core.animateDp
@@ -101,7 +102,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                 }
             },
             topBar = {
-                Column (modifier = Modifier.fillMaxWidth()){
+                Column(modifier = Modifier.fillMaxWidth()) {
                     TopAppBar(
                         title = { Text(text = "Collaborate", color = samouraiTextPrimary) },
                         backgroundColor = samouraiSlateGreyAccent,
@@ -115,8 +116,8 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                             }
                         },
                     )
-                    if(walletLoading)
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), backgroundColor = Color.Transparent, color = samouraiAccent)
+                    if (walletLoading)
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), backgroundColor = Color.Transparent, color = samouraiAccent)
                 }
             },
         ) {
@@ -216,6 +217,22 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         }
     }
 
+    val handleBackPress = setUpTransactionModal.currentValue != ModalBottomSheetValue.Hidden ||
+            paynymChooser.currentValue != ModalBottomSheetValue.Hidden ||
+            accountChooser.currentValue != ModalBottomSheetValue.Hidden
+
+    BackHandler(enabled = handleBackPress) {
+        scope.launch {
+            if (setUpTransactionModal.currentValue != ModalBottomSheetValue.Hidden) {
+                setUpTransactionModal.hide()
+            } else if (paynymChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                paynymChooser.hide()
+            } else if (accountChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                accountChooser.hide()
+            }
+        }
+
+    }
     ModalBottomSheetLayout(
         sheetState = paynymChooser,
         modifier = Modifier.zIndex(5f),
