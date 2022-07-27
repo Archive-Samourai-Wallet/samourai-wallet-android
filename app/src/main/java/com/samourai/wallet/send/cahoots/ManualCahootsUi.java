@@ -173,14 +173,9 @@ public class ManualCahootsUi {
     private void notifyWalletAndFinish() {
         activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots success", Toast.LENGTH_LONG).show());
 
-        // refresh txs
-        Intent intent = new Intent("com.samourai.wallet.BalanceFragment.REFRESH");
-        intent.putExtra("notifTx", false);
-        intent.putExtra("fetch", true);
-        LocalBroadcastManager.getInstance(activity.getApplicationContext()).sendBroadcast(intent);
-
-        // finish
+        // finish and refresh
         Intent i = new Intent(activity, BalanceActivity.class);
+        i.putExtra("refresh",true);
         activity.finish();
         activity.startActivity(i);
     }
