@@ -493,7 +493,6 @@ public class TxAnimUIActivity extends AppCompatActivity {
                         whirlPoolHome.putExtra("_account", SendParams.getInstance().getAccount());
                         whirlPoolHome.putExtra("refresh", true);
                         Intent parentIntent = new Intent(this, BalanceActivity.class);
-                        whirlPoolHome.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         whirlPoolHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         TaskStackBuilder.create(getApplicationContext())
                                 .addNextIntent(parentIntent)
