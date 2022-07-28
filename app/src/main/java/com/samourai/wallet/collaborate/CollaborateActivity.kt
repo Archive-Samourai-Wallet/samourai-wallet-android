@@ -1,6 +1,7 @@
 package com.samourai.wallet.collaborate
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.core.animateDp
@@ -19,6 +20,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +35,7 @@ import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
+import com.samourai.wallet.util.AppUtil
 import kotlinx.coroutines.launch
 
 
@@ -60,6 +63,7 @@ class CollaborateActivity : SamouraiActivity() {
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipateTab: Boolean) {
+    val context = LocalContext.current;
     var selected by remember { mutableStateOf(0) }
     val scaffoldState = rememberScaffoldState()
     val paynymChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
@@ -69,6 +73,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
     val keyboardController = LocalSoftwareKeyboardController.current
     val collaborateViewModel = viewModel<CollaborateViewModel>()
     val collaborateError by collaborateViewModel.errorsLive.observeAsState(initial = null)
+    val walletLoading by AppUtil.getInstance(context).walletLoading.observeAsState(false);
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
 
     LaunchedEffect(true) {
@@ -97,7 +102,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                 }
             },
             topBar = {
-                Column {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     TopAppBar(
                         title = { Text(text = "Collaborate", color = samouraiTextPrimary) },
                         backgroundColor = samouraiSlateGreyAccent,
@@ -111,7 +116,8 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                             }
                         },
                     )
-
+                    if (walletLoading)
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), backgroundColor = Color.Transparent, color = samouraiAccent)
                 }
             },
         ) {
@@ -211,6 +217,22 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         }
     }
 
+    val handleBackPress = setUpTransactionModal.currentValue != ModalBottomSheetValue.Hidden ||
+            paynymChooser.currentValue != ModalBottomSheetValue.Hidden ||
+            accountChooser.currentValue != ModalBottomSheetValue.Hidden
+
+    BackHandler(enabled = handleBackPress) {
+        scope.launch {
+            if (setUpTransactionModal.currentValue != ModalBottomSheetValue.Hidden) {
+                setUpTransactionModal.hide()
+            } else if (paynymChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                paynymChooser.hide()
+            } else if (accountChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                accountChooser.hide()
+            }
+        }
+
+    }
     ModalBottomSheetLayout(
         sheetState = paynymChooser,
         modifier = Modifier.zIndex(5f),
@@ -270,7 +292,7 @@ fun PaynymAvatar(pcode: String?) {
     }
     var url by remember { mutableStateOf("${WebUtil.PAYNYM_API}${pcode}/avatar") }
 
-    LaunchedEffect(pcode){
+    LaunchedEffect(pcode) {
         url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
     }
     Row(

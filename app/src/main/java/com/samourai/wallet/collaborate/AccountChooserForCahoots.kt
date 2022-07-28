@@ -33,6 +33,8 @@ import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -68,8 +70,10 @@ fun ChooseAccount() {
             balancePostMix = FormatsUtil.formatBTC(postMixBalance)
         }
 
-        depositUtxos = "${APIFactory.getInstance(context).getUtxos(true).size}";
-        postMixUtxos = "${APIFactory.getInstance(context).getUtxosPostMix(true).size}";
+        withContext(Dispatchers.Unconfined){
+            depositUtxos = "${APIFactory.getInstance(context).getUtxos(true).size}";
+            postMixUtxos = "${APIFactory.getInstance(context).getUtxosPostMix(true).size}";
+        }
     }
 
     Column(

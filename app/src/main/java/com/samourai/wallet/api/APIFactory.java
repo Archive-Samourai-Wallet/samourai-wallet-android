@@ -1980,7 +1980,7 @@ public class APIFactory {
         return unspentBIP84;
     }
 
-    public List<UTXO> getUtxos(boolean filter) {
+    synchronized public List<UTXO> getUtxos(boolean filter) {
 
         long amount = 0L;
 
