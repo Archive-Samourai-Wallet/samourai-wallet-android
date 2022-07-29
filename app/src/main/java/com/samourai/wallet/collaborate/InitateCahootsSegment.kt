@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
+import com.samourai.wallet.cahoots.CahootsMode
+import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.theme.SamouraiWalletTheme
 import com.samourai.wallet.theme.samouraiError
@@ -57,7 +59,11 @@ fun InitiateSegment(
             )
 
             Divider()
-            if (cahootType != null) {
+            var enableCollabSelection = cahootType != null
+            if (cahootType?.cahootsType == CahootsType.STONEWALLX2 && cahootType?.cahootsMode == CahootsMode.MANUAL) {
+                enableCollabSelection = false
+            }
+            if (enableCollabSelection) {
                 TransactionOptionSegment(
                     title = "Collaborator",
                     showSubSection = collaboratorPcode != null,
@@ -69,7 +75,11 @@ fun InitiateSegment(
                 )
                 Divider()
             }
-            if (cahootType != null && collaboratorPcode != null && !validTransaction) {
+            var enableTransaction = cahootType != null && collaboratorPcode != null
+            if (cahootType?.cahootsType == CahootsType.STONEWALLX2 && cahootType?.cahootsMode == CahootsMode.MANUAL) {
+                enableTransaction = true
+            }
+            if (enableTransaction && !validTransaction) {
                 TransactionOptionSegment(
                     title = "Set up transaction",
                     showSubSection = false,
@@ -119,10 +129,10 @@ fun TransactionPreview(onClick: () -> Unit) {
                 showClearDialog = false
             },
             title = {
-                    Text(text = stringResource(id = R.string.confirm))
+                Text(text = stringResource(id = R.string.confirm))
             },
             text = {
-                   Text("Do you want to discard?")
+                Text("Do you want to discard?")
             },
             confirmButton = {
                 TextButton(onClick = {
