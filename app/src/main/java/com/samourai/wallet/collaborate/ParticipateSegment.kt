@@ -34,12 +34,16 @@ import com.samourai.wallet.theme.samouraiTextSecondary
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ParticipateSegment() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val collaborateViewModel = viewModel<CollaborateViewModel>()
     val timeout by collaborateViewModel.sorobanTimeoutLive.observeAsState(null)
     val accountType by collaborateViewModel.meetingAccountLive.observeAsState()
@@ -58,19 +62,23 @@ fun ParticipateSegment() {
     }
 
     LaunchedEffect(walletBalanceTicker) {
-        val balance = APIFactory.getInstance(context)
-            .xpubBalance
-        val postMixBalance = APIFactory.getInstance(context)
-            .xpubPostMixBalance
-        if (PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_SAT, true)) {
-            balanceDeposit = FormatsUtil.formatSats(balance)
-            balancePostMix = FormatsUtil.formatSats(postMixBalance)
-        } else {
-            balanceDeposit = FormatsUtil.formatBTC(balance)
-            balancePostMix = FormatsUtil.formatBTC(postMixBalance)
-        }
-        depositUtxos = "${APIFactory.getInstance(context).getUtxos(true).size}"
-        postMixUtxos = "${APIFactory.getInstance(context).getUtxosPostMix(true).size}"
+       scope.launch {
+           withContext(Dispatchers.Default){
+               val balance = APIFactory.getInstance(context)
+                   .xpubBalance
+               val postMixBalance = APIFactory.getInstance(context)
+                   .xpubPostMixBalance
+               if (PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_SAT, true)) {
+                   balanceDeposit = FormatsUtil.formatSats(balance)
+                   balancePostMix = FormatsUtil.formatSats(postMixBalance)
+               } else {
+                   balanceDeposit = FormatsUtil.formatBTC(balance)
+                   balancePostMix = FormatsUtil.formatBTC(postMixBalance)
+               }
+               depositUtxos = "${APIFactory.getInstance(context).getUtxos(true).size}"
+               postMixUtxos = "${APIFactory.getInstance(context).getUtxosPostMix(true).size}"
+           }
+       }
     }
 
     Box(modifier = Modifier) {

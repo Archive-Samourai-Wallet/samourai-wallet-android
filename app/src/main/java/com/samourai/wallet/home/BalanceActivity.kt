@@ -578,9 +578,13 @@ open class BalanceActivity : SamouraiActivity() {
                     }
             } else {
                 try {
-                    val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
-                    BIP47Util.getInstance(applicationContext)
-                        .setAvatar(bitmap)
+                    balanceViewModel.viewModelScope.launch {
+                        withContext(Dispatchers.Default){
+                            val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                            BIP47Util.getInstance(applicationContext)
+                                .setAvatar(bitmap)
+                        }
+                    }
                 } catch (er: Exception) {
 
                 }

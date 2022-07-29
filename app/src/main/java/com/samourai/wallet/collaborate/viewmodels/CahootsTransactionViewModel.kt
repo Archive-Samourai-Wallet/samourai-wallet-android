@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.android.material.math.MathUtils
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.api.APIFactory
@@ -18,6 +19,9 @@ import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.send.soroban.meeting.SorobanMeetingSendActivity
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
 import kotlin.math.absoluteValue
 
@@ -99,17 +103,23 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     fun setAccountType(account: Int, context: Context) {
-        this.transactionAccountType.value = account
-        this.transactionAccountType.postValue(account)
-        if (account == SamouraiAccountIndex.DEPOSIT) {
-            balance = APIFactory.getInstance(context)
-                .xpubBalance
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                withContext(Dispatchers.Main) {
+                    transactionAccountType.value = account
+                    transactionAccountType.postValue(account)
+                }
+                if (account == SamouraiAccountIndex.DEPOSIT) {
+                    balance = APIFactory.getInstance(context)
+                        .xpubBalance
+                }
+                if (account == SamouraiAccountIndex.POSTMIX) {
+                    balance = APIFactory.getInstance(context)
+                        .xpubPostMixBalance
+                }
+                validate()
+            }
         }
-        if (account == SamouraiAccountIndex.POSTMIX) {
-            balance = APIFactory.getInstance(context)
-                .xpubPostMixBalance
-        }
-        validate()
     }
 
     private fun validate() {
@@ -158,15 +168,8 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     fun setCahootType(type: CahootTransactionType?) {
-
-        //if the user already selected multi cahoots, and try to switch manual mode
-        //Multi cahoots collaborator needs to cleared
-        if (isMultiCahoots() && type?.cahootsMode == CahootsMode.MANUAL) {
-            this.collaboratorPcode.value = null
-            this.collaboratorPcode.postValue(null)
-            validate()
-        }
-
+        this.collaboratorPcode.value = null
+        this.collaboratorPcode.postValue(null)
         this.cahootsType.postValue(type)
     }
 
