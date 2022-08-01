@@ -104,6 +104,18 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
     }
 
     class SingleToolBottomSheet(private val toolType: ToolType) : BottomSheetDialogFragment() {
+        var behavior: BottomSheetBehavior<*>? = null
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            val parent = view.parent as View
+            val params = parent.layoutParams as CoordinatorLayout.LayoutParams
+            behavior = params.behavior as BottomSheetBehavior<*>?
+            if (behavior != null) {
+                behavior?.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior?.skipCollapsed = true
+            }
+            super.onViewCreated(view, savedInstanceState)
+        }
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
             val compose = ComposeView(requireContext())
