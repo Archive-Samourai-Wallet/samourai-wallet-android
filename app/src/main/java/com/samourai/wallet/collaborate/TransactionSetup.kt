@@ -58,10 +58,6 @@ import kotlin.math.roundToLong
 fun SetUpTransaction(onClose: (() -> Unit)?) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
     val context = LocalContext.current
-    LaunchedEffect(true) {
-        ///Initialize to default account
-        transactionViewModel.setAccountType(account = SamouraiAccountIndex.DEPOSIT, context = context)
-    }
     val page by transactionViewModel.pageLive.observeAsState(0)
     Box(modifier = Modifier.requiredHeight(420.dp)) {
         WrapToolsPageAnimation(visible = page == 0) {

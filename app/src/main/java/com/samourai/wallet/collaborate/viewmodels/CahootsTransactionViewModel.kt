@@ -118,11 +118,12 @@ class CahootsTransactionViewModel : ViewModel() {
                         .xpubPostMixBalance
                 }
                 validate()
+                setPage(1)
             }
         }
     }
 
-    private fun validate() {
+    private fun validate(): Boolean {
         var valid = true
         val amountSats = (amount.value ?: 0L).toLong()
         if (balance < amountSats) {
@@ -159,6 +160,7 @@ class CahootsTransactionViewModel : ViewModel() {
             }
         }
         validTransaction.postValue(valid)
+        return valid;
     }
 
     fun setAmount(amount: Long) {

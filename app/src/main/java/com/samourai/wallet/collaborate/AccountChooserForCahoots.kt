@@ -4,13 +4,17 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -76,7 +81,7 @@ fun ChooseAccount() {
     }
 
     Column(
-        verticalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxHeight(),
     ) {
         Box(modifier = Modifier.padding(12.dp)) {
@@ -84,69 +89,44 @@ fun ChooseAccount() {
         }
         Column(
             modifier = Modifier
+                .fillMaxHeight()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.SpaceEvenly
+            horizontalAlignment = CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.padding(top = 4.dp))
             ListItem(
                 modifier = Modifier
                     .clickable {
                         transactionViewModel.setAccountType(SamouraiAccountIndex.DEPOSIT, context)
                     },
-                icon = {
-                    RadioButton(selected = accountType == SamouraiAccountIndex.DEPOSIT, onClick = {
-                        transactionViewModel.setAccountType(SamouraiAccountIndex.DEPOSIT, context)
-                    })
+                trailing = {
+                   Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription ="")
                 },
                 text = {
-                    Text(text = "Deposit account")
+                    Text(text = "Deposit account" ,style = MaterialTheme.typography.subtitle2)
                 },
                 secondaryText = {
-                    Text(text = "$balanceDeposit · $depositUtxos UTXOs")
+                    Text(text = "$balanceDeposit · $depositUtxos UTXOs", style = MaterialTheme.typography.caption)
                 }
+            )
+            Divider(
+                modifier = Modifier.padding(vertical = 12.dp)
             )
             ListItem(
                 modifier = Modifier
                     .clickable {
                         transactionViewModel.setAccountType(SamouraiAccountIndex.POSTMIX, context)
                     },
-                icon = {
-                    RadioButton(selected = accountType == SamouraiAccountIndex.POSTMIX, onClick = {
-                        transactionViewModel.setAccountType(SamouraiAccountIndex.POSTMIX, context)
-
-                    })
+                trailing = {
+                    Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription ="")
                 },
                 text = {
-                    Text(text = "Postmix account")
+                    Text(text = "Postmix account" ,style = MaterialTheme.typography.subtitle2)
                 },
                 secondaryText = {
-                    Text(text = "$balancePostMix · $postMixUtxos UTXOs")
+                    Text(text = "$balancePostMix · $postMixUtxos UTXOs",style = MaterialTheme.typography.caption)
                 }
             )
-        }
-        Box(
-            modifier = Modifier
-                .align(alignment = CenterHorizontally)
-                .padding(bottom = 16.dp)
-        ) {
-            val isValid = if (accountType == SamouraiAccountIndex.DEPOSIT) depositUtxos.isNotEmpty() else postMixUtxos.isNotEmpty()
-            if (isValid) {
-                Button(
-                    onClick = {
-                        transactionViewModel.setPage(1)
-                    },
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp),
-                    colors = ButtonDefaults.textButtonColors(
-                        backgroundColor = samouraiAccent,
-                        contentColor = Color.White
-                    ),
-                ) {
-                    Text("Continue")
-                }
-            }
         }
     }
 }
