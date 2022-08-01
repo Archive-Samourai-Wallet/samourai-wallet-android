@@ -65,7 +65,6 @@ class CahootsTransactionViewModel : ViewModel() {
     val amountLive: LiveData<Long>
         get() = amount
 
-
     val destinationAddressLive: LiveData<String?>
         get() = destinationAddress
 
@@ -173,6 +172,13 @@ class CahootsTransactionViewModel : ViewModel() {
         this.collaboratorPcode.value = null
         this.collaboratorPcode.postValue(null)
         this.cahootsType.postValue(type)
+        this.collaboratorPcode.value = null
+        this.collaboratorPcode.postValue(null)
+        this.destinationAddress.value = null
+        this.destinationAddress.postValue(null)
+        this.amount.value = 0
+        this.amount.postValue(0)
+        this.setPage(0)
     }
 
     fun setCollaborator(pcode: String) {

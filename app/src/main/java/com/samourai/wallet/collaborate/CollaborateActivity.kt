@@ -129,7 +129,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                     selectedTabIndex = selected,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp),
+                        .height(80.dp),
                     indicator = { tabPositions ->
                         TabIndicator(tabPositions, tabPage = selected)
                     },
@@ -142,7 +142,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                             }
                         },
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(36.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .padding(12.dp),
                         selected = selected == 0,
@@ -156,7 +156,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                             }
                         },
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(36.dp)
                             .padding(12.dp),
                         selected = selected == 1,
                         onClick = { selected = 1 }

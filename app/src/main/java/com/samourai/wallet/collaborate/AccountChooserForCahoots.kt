@@ -4,25 +4,20 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -63,7 +58,7 @@ fun ChooseAccount() {
     }
 
     LaunchedEffect(walletBalanceTicker) {
-        withContext(Dispatchers.Default){
+        withContext(Dispatchers.Default) {
             val balance = APIFactory.getInstance(context)
                 .xpubBalance
             val postMixBalance = APIFactory.getInstance(context)
@@ -100,10 +95,10 @@ fun ChooseAccount() {
                         transactionViewModel.setAccountType(SamouraiAccountIndex.DEPOSIT, context)
                     },
                 trailing = {
-                   Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription ="")
+                    Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "")
                 },
                 text = {
-                    Text(text = "Deposit account" ,style = MaterialTheme.typography.subtitle2)
+                    Text(text = "Deposit account", style = MaterialTheme.typography.subtitle2)
                 },
                 secondaryText = {
                     Text(text = "$balanceDeposit · $depositUtxos UTXOs", style = MaterialTheme.typography.caption)
@@ -118,13 +113,13 @@ fun ChooseAccount() {
                         transactionViewModel.setAccountType(SamouraiAccountIndex.POSTMIX, context)
                     },
                 trailing = {
-                    Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription ="")
+                    Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "")
                 },
                 text = {
-                    Text(text = "Postmix account" ,style = MaterialTheme.typography.subtitle2)
+                    Text(text = "Postmix account", style = MaterialTheme.typography.subtitle2)
                 },
                 secondaryText = {
-                    Text(text = "$balancePostMix · $postMixUtxos UTXOs",style = MaterialTheme.typography.caption)
+                    Text(text = "$balancePostMix · $postMixUtxos UTXOs", style = MaterialTheme.typography.caption)
                 }
             )
         }
@@ -144,9 +139,6 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
     val titleOffset: Dp by animateDpAsState(
         if (cahootsType == null) 8.dp else 44.dp,
     )
-    LaunchedEffect(true) {
-
-    }
     Scaffold(
         modifier = Modifier.requiredHeight(380.dp),
         backgroundColor = samouraiBottomSheetBackground,
@@ -190,27 +182,22 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
     ) {
         WrapToolsPageAnimation(visible = cahootsType == null) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                horizontalAlignment = CenterHorizontally,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(vertical = 18.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 ListItem(
-                    icon = {
-                        RadioButton(selected = cahootsType == CahootsType.STONEWALLX2, onClick = {
-                            cahootsType = CahootsType.STONEWALLX2
-                        })
-                    },
                     modifier = Modifier
                         .clickable {
                             cahootsType = CahootsType.STONEWALLX2
                         },
+                    trailing = {
+                        Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "")
+                    },
                     text = {
-                        Text(
-                            text = "STONEWALLx2",
-                            fontSize = 14.sp,
-                        )
+                        Text(text = "STONEWALLx2", style = MaterialTheme.typography.subtitle2)
                     },
                     secondaryText = {
                         Text(
@@ -218,45 +205,44 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                             text = "You initiate a transaction to a third party with\n" +
                                     "the help of a collaborator to create a high\n" +
                                     "entropy transaction",
+                            style = MaterialTheme.typography.caption,
                             modifier = Modifier.padding(bottom = 6.dp),
                         )
                     }
+
+                )
+                Divider(
+                    modifier = Modifier.padding(vertical = 12.dp)
                 )
                 ListItem(
-                    icon = {
-                        RadioButton(selected = cahootsType == CahootsType.STOWAWAY, onClick = {
-                            cahootsType = CahootsType.STOWAWAY
-                        })
-                    },
                     modifier = Modifier
                         .clickable {
-                            cahootsType = CahootsType.STOWAWAY
+                            cahootsType = CahootsType.STONEWALLX2
                         },
+                    trailing = {
+                        Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "")
+                    },
                     text = {
-                        Text(
-                            text = "Stowaway",
-                            fontSize = 14.sp,
-                        )
+                        Text(text = "Stowaway", style = MaterialTheme.typography.subtitle2)
                     },
                     secondaryText = {
                         Text(
-                            fontSize = 12.sp,
                             text = "You initiate a transaction to the collaborator\n" +
                                     "while making use of their UTXOs to create a\n" +
                                     "type of swap transaction.",
-                            modifier = Modifier.padding(bottom = 6.dp),
+                            style = MaterialTheme.typography.caption
                         )
                     }
                 )
-
             }
         }
         WrapToolsPageAnimation(visible = cahootsType != null) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(vertical = 18.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 ListItem(
                     modifier = Modifier
@@ -278,6 +264,7 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                     text = {
                         Text(
                             text = "In Person / Manual ",
+                            style = MaterialTheme.typography.subtitle2,
                             fontSize = 14.sp,
                         )
                     },
@@ -285,11 +272,14 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                         Text(
                             fontSize = 12.sp,
                             modifier = Modifier.padding(bottom = 6.dp),
-                            text = stringResource(id = R.string.manually_compose_this_transaction)
+
+                            text = stringResource(id = R.string.manually_compose_this_transaction), style = MaterialTheme.typography.caption
                         )
                     }
                 )
-                Divider()
+                Divider(
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
                 ListItem(
                     modifier = Modifier
                         .clickable {
@@ -300,6 +290,7 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                     text = {
                         Text(
                             text = "Online",
+                            style = MaterialTheme.typography.subtitle2,
                             fontSize = 14.sp,
                         )
                     },
@@ -317,7 +308,8 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                         Text(
                             fontSize = 12.sp,
                             modifier = Modifier.padding(bottom = 6.dp),
-                            text = stringResource(id = R.string.compose_this_transaction_online_with)
+                            text = stringResource(id = R.string.compose_this_transaction_online_with),
+                            style = MaterialTheme.typography.caption
                         )
                     }
                 )
