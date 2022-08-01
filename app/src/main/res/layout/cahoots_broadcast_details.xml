@@ -77,6 +77,22 @@
             app:layout_constraintVertical_bias="0.0" />
 
         <TextView
+            android:id="@+id/samourai_fee_label_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="38dp"
+            android:layout_marginBottom="8dp"
+            android:text="Samourai Service"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/textView29"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/textView29"
+            app:layout_constraintTop_toBottomOf="@+id/textView29"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
             android:id="@+id/textView15"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -88,7 +104,7 @@
             app:layout_constraintEnd_toEndOf="@+id/textView29"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/textView29"
-            app:layout_constraintTop_toBottomOf="@+id/textView29" />
+            app:layout_constraintTop_toBottomOf="@+id/samourai_fee_label_textview" />
 
         <TextView
             android:id="@+id/cahoots_review_amount"
@@ -145,6 +161,37 @@
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/textView29"
             app:layout_constraintTop_toBottomOf="@+id/cahoots_review_fee"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+            android:id="@+id/cahoots_review_fee_samourai"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            tools:text="0.0004 BTC"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@+id/cahoots_review_fee"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/samourai_fee_label_textview"
+            app:layout_constraintTop_toTopOf="@+id/samourai_fee_label_textview" />
+
+        <TextView
+            android:id="@+id/cahoots_review_fee_samourai_sats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="40000 sat"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/cahoots_review_fee_samourai"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/samourai_fee_label_textview"
+            app:layout_constraintTop_toBottomOf="@+id/cahoots_review_fee_samourai"
             app:layout_constraintVertical_bias="0.0" />
 
         <TextView
