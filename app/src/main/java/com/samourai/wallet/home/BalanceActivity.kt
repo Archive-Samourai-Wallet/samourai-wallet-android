@@ -634,7 +634,6 @@ open class BalanceActivity : SamouraiActivity() {
         menu.findItem(R.id.action_batch).isVisible = false
         WhirlpoolMeta.getInstance(applicationContext)
         if (account == WhirlpoolMeta.getInstance(applicationContext).whirlpoolPostmix) {
-            menu.findItem(R.id.action_sweep).isVisible = false
             menu.findItem(R.id.action_backup).isVisible = false
             menu.findItem(R.id.action_postmix).isVisible = false
             menu.findItem(R.id.action_network_dashboard).isVisible = false
@@ -689,17 +688,11 @@ open class BalanceActivity : SamouraiActivity() {
                 Toast.makeText(this, R.string.clipboard_empty, Toast.LENGTH_SHORT).show()
             }
         }
-        if (id == R.id.action_settings) {
-            doSettings()
-        } else if (id == R.id.action_support) {
+
+        if (id == R.id.action_support) {
             doSupport()
-        } else if (id == R.id.action_sweep) {
-            if (!AppUtil.getInstance(this@BalanceActivity).isOfflineMode) {
-                doSweep()
-            } else {
-                Toast.makeText(this@BalanceActivity, R.string.in_offline_mode, Toast.LENGTH_SHORT).show()
-            }
-        } else if (id == R.id.action_utxo) {
+        }
+        else if (id == R.id.action_utxo) {
             doUTXO()
         } else if (id == R.id.action_backup) {
             if (SamouraiWallet.getInstance().hasPassphrase(this@BalanceActivity)) {
@@ -998,34 +991,6 @@ open class BalanceActivity : SamouraiActivity() {
                 }
             } catch (e: Exception) {
             }
-        }
-    }
-
-    private fun doSweep() {
-        val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-            .setTitle(R.string.app_name)
-            .setMessage(R.string.action_sweep)
-            .setCancelable(true)
-            .setPositiveButton(R.string.enter_privkey) { dialog, whichButton ->
-                val privkey = EditText(this@BalanceActivity)
-                privkey.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-                val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-                    .setTitle(R.string.app_name)
-                    .setMessage(R.string.enter_privkey)
-                    .setView(privkey)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok) { _, _ ->
-                        val strPrivKey = privkey.text.toString()
-                        if (strPrivKey.isNotEmpty()) {
-                            doPrivKey(strPrivKey)
-                        }
-                    }.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                if (!isFinishing) {
-                    dlg.show()
-                }
-            }.setNegativeButton(R.string.scan) { _, _ -> doSweepViaScan() }
-        if (!isFinishing) {
-            dlg.show()
         }
     }
 
