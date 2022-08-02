@@ -9,7 +9,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -30,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,7 +59,14 @@ fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
     val loading by collaborateViewModel.loadingLive.observeAsState(false)
     var enableSearch by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
+    val listState = rememberLazyListState()
+    var paynyms = arrayListOf<String>().apply { addAll(following) }
+    if (cahootType?.cahootsMode == CahootsMode.SOROBAN && cahootType?.cahootsType != CahootsType.STOWAWAY) {
+        paynyms = arrayListOf<String>().apply {
+            add(BIP47Meta.getMixingPartnerCode())
+            addAll(following)
+        }
+    }
     Scaffold(
         backgroundColor = samouraiBottomSheetBackground,
         topBar = {
@@ -113,32 +122,42 @@ fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
                 )
             }
         }
-        LazyColumn {
+        LazyColumn(
+            state = listState,
+        ) {
             if (cahootType?.cahootsMode == CahootsMode.SOROBAN && cahootType?.cahootsType != CahootsType.STOWAWAY) {
                 item {
-                    PaynymAvatar(pcode = BIP47Meta.getMixingPartnerCode(), nym = BIP47Meta.getInstance().getLabel(BIP47Meta.getMixingPartnerCode()),
-                        modifier = Modifier
-                            .clickable
-                            {
-                                cahootsTransactionViewModel.setCollaborator(BIP47Meta.getMixingPartnerCode())
-                                onClose()
-                            }
-                    )
+
                 }
                 item {
-                    Divider()
                 }
             }
-            items(following, key = { it }) {
-                PaynymAvatar(pcode = it, nym = BIP47Meta.getInstance().getLabel(it),
-                    modifier = Modifier
-                        .clickable
-                        {
-                            cahootsTransactionViewModel.setCollaborator(it)
-                            onClose()
-                        }
-                        .animateItemPlacement())
+            itemsIndexed(paynyms) { index, it ->
+                if (it == BIP47Meta.getMixingPartnerCode()) {
+                    Column(modifier = Modifier.layoutId(it)) {
+                        PaynymAvatar(pcode = BIP47Meta.getMixingPartnerCode(), nym = BIP47Meta.getInstance().getLabel(BIP47Meta.getMixingPartnerCode()),
+                            modifier = Modifier
+                                .clickable
+                                {
+                                    cahootsTransactionViewModel.setCollaborator(BIP47Meta.getMixingPartnerCode())
+                                    onClose()
+                                }
+                        )
+                        Divider()
+                    }
+                } else {
+                    PaynymAvatar(pcode = it, nym = BIP47Meta.getInstance().getLabel(it),
+                        modifier = Modifier
+                            .layoutId(it)
+                            .clickable
+                            {
+                                cahootsTransactionViewModel.setCollaborator(it)
+                                onClose()
+                            }
+                            .animateItemPlacement())
+                }
             }
+
         }
     }
 }

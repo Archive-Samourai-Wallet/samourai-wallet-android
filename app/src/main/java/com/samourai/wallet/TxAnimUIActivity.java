@@ -489,14 +489,15 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
                 new Handler().postDelayed(() -> {
                     if (SendParams.getInstance().getAccount() != 0) {
-                        Intent whirlPoolHome = new Intent(this, WhirlpoolHome.class);
-                        whirlPoolHome.putExtra("_account", SendParams.getInstance().getAccount());
-                        whirlPoolHome.putExtra("refresh", true);
+                        Intent balanceHome = new Intent(this, BalanceActivity.class);
+                        balanceHome.putExtra("_account", SendParams.getInstance().getAccount());
+                        balanceHome.putExtra("refresh", true);
                         Intent parentIntent = new Intent(this, BalanceActivity.class);
-                        whirlPoolHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        parentIntent.putExtra("_account", 0);
+                        balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         TaskStackBuilder.create(getApplicationContext())
                                 .addNextIntent(parentIntent)
-                                .addNextIntent(whirlPoolHome)
+                                .addNextIntent(balanceHome)
                                 .startActivities();
                     }else{
                         Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);

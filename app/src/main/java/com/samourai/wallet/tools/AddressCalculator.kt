@@ -1,4 +1,3 @@
-import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
@@ -40,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.android.Contents
@@ -76,7 +74,7 @@ fun AddressCalculator(window: Window?) {
                     backgroundColor = samouraiBottomSheetBackground,
                     title = {
                         Text(
-                            text = "Address Calculator", fontSize = 13.sp,
+                            text = stringResource(id = R.string.options_address_calc), fontSize = 13.sp,
                             color = samouraiAccent
                         )
                     },
@@ -95,7 +93,7 @@ fun AddressCalculator(window: Window?) {
                         contentColor = Color.White
                     ),
                 ) {
-                    Text("Address Details")
+                    Text(stringResource(R.string.address_details))
                 }
                 Box(modifier = Modifier.padding(24.dp))
             }
@@ -112,7 +110,7 @@ fun AddressCalculator(window: Window?) {
                     backgroundColor = samouraiBottomSheetBackground,
                     title = {
                         Text(
-                            text = "Address Calculator", fontSize = 13.sp,
+                            text = stringResource(id = R.string.options_address_calc), fontSize = 13.sp,
                             color = samouraiAccent
                         )
                     }, navigationIcon = {
@@ -212,7 +210,7 @@ fun AddressCalcForm() {
                 },
                 label = {
                     Text(
-                        "Address Index", fontSize = 12.sp
+                        stringResource(R.string.address_index), fontSize = 12.sp
                     )
                 },
             )
@@ -232,7 +230,7 @@ fun AddressCalcForm() {
                 isExternal = true
                 applyChanges()
             })
-            Text("Receive address (external)", Modifier.clickable {
+            Text(stringResource(R.string.receive_address_external), Modifier.clickable {
                 isExternal = true
                 applyChanges()
             })
@@ -246,7 +244,7 @@ fun AddressCalcForm() {
                 isExternal = false
                 applyChanges()
             })
-            Text("Change address (internal)", Modifier.clickable {
+            Text(stringResource(R.string.change_address_internal), Modifier.clickable {
                 isExternal = false
                 applyChanges()
             })
@@ -264,7 +262,7 @@ fun AddressDetails(onSelect: (address: String, title: String) -> Unit) {
 
     val vm = viewModel<AddressCalculatorViewModel>()
     val addressDetails by vm.getAddressLiveData().observeAsState()
-    val window = getWindow()
+    val stringReceiveAddress = stringResource(R.string.receive_address_external)
     Column(
         modifier = Modifier
             .fillMaxHeight(),
@@ -273,13 +271,13 @@ fun AddressDetails(onSelect: (address: String, title: String) -> Unit) {
             Modifier
                 .fillMaxWidth()
                 .clickable {
-                    onSelect(addressDetails?.pubKey ?: "", "Receive address (external)")
+                    onSelect(addressDetails?.pubKey ?:""  ,stringReceiveAddress)
                 }
                 .padding(horizontal = 40.dp, vertical = 24.dp),
 
             ) {
             Text(
-                "Receive address (external)",
+                stringResource(R.string.receive_address_external),
                 style = MaterialTheme.typography.subtitle1,
                 fontSize = 16.sp
             )
@@ -293,16 +291,17 @@ fun AddressDetails(onSelect: (address: String, title: String) -> Unit) {
                     .padding(top = 4.dp)
             )
         }
+        val stringPrivateKey = stringResource(R.string.private_key)
         Column(
             Modifier
                 .clickable {
-                    onSelect(addressDetails?.privateKey ?: "", "Private key")
+                    onSelect(addressDetails?.privateKey ?: "",stringPrivateKey)
                 }
                 .padding(horizontal = 40.dp, vertical = 24.dp)
                 .fillMaxWidth()
         ) {
             Text(
-                text = "Private key",
+                text = stringResource(R.string.private_key),
                 style = MaterialTheme.typography.subtitle1,
                 fontSize = 16.sp,
                 color = Color.White
@@ -317,18 +316,18 @@ fun AddressDetails(onSelect: (address: String, title: String) -> Unit) {
                     .padding(top = 4.dp)
             )
         }
-
+        val stringRedeemScript = stringResource(R.string.redeem_script)
         Column(
             Modifier
                 .clickable {
-                    onSelect(addressDetails?.redeemScript ?: "", "Redeem Script")
+                    onSelect(addressDetails?.redeemScript ?: "", stringRedeemScript)
                 }
                 .padding(horizontal = 40.dp, vertical = 24.dp)
                 .fillMaxWidth()
                 .fillMaxWidth()
         ) {
             Text(
-                text = "Redeem Script",
+                text =  stringResource(R.string.redeem_script),
                 style = MaterialTheme.typography.subtitle1,
                 fontSize = 16.sp
             )

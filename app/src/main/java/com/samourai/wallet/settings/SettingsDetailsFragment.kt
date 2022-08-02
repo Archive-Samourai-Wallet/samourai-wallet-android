@@ -442,12 +442,6 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             true
         }
 
-        val addressCalcPref = findPreference("acalc") as Preference?
-        addressCalcPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            doAddressCalc()
-            true
-        }
-
         val paynymCalcPref = findPreference("pcalc") as Preference?
         paynymCalcPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             doPayNymCalc()

@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
-import android.widget.LinearLayout
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,12 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -104,6 +103,18 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
     }
 
     class SingleToolBottomSheet(private val toolType: ToolType) : BottomSheetDialogFragment() {
+        var behavior: BottomSheetBehavior<*>? = null
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            val parent = view.parent as View
+            val params = parent.layoutParams as CoordinatorLayout.LayoutParams
+            behavior = params.behavior as BottomSheetBehavior<*>?
+            if (behavior != null) {
+                behavior?.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior?.skipCollapsed = true
+            }
+            super.onViewCreated(view, savedInstanceState)
+        }
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
             val compose = ComposeView(requireContext())
@@ -182,9 +193,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             }
             )
             ToolsItem(
-                title = "Sweep Private Key",
-                subTitle = "Enter a private key and sweep any funds to\n" +
-                        "your next bitcoin address",
+                title = stringResource(id = R.string.action_sweep),
+                subTitle = stringResource(R.string.enter_a_private_key_and) ,
                 icon = R.drawable.ic_broom,
                 onClick = {
                     scope.launch {
@@ -195,8 +205,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             )
             ToolsItem(
-                title = "Sign message",
-                subTitle = "Sign messages using your wallet private key",
+                title = stringResource(id = R.string.sign_message),
+                subTitle = stringResource(R.string.sign_messages_using_your),
                 icon = R.drawable.ic_signature,
                 onClick = {
                     scope.launch {
@@ -209,10 +219,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             )
             ToolsItem(
-                title = "Wallet address calculator",
-                subTitle = "Calculate any address derived from your " +
-                        "wallet seed. Sign messages using your private" +
-                        "key",
+                title = stringResource(R.string.wallet_address_calc),
+                subTitle = stringResource(R.string.calculate_any_address_derived) ,
                 icon = R.drawable.ic_calculator,
                 onClick = {
                     scope.launch {
@@ -226,8 +234,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             )
             ToolsItem(
-                title = "Authenticate with paynym",
-                subTitle = "Simple and secure authentication with a Bitcoin Payment Code (see BIP47)",
+                title = stringResource(id = R.string.auth_using_paynym),
+                subTitle = stringResource(R.string.simple_and_secure_auth_with),
                 icon = R.drawable.ic_paynym_white_24dp,
                 onClick = {
                     scope.launch {

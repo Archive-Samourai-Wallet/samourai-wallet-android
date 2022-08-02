@@ -222,7 +222,7 @@ open class BalanceActivity : SamouraiActivity() {
         //Switch themes based on accounts (blue theme for whirlpool account)
         setSwitchThemes(true)
         super.onCreate(savedInstanceState)
-        binding = ActivityBalanceBinding.inflate(layoutInflater);
+        binding = ActivityBalanceBinding.inflate(layoutInflater)
         setContentView(binding.root)
         balanceViewModel.setAccount(account)
         makePaynymAvatarCache()
@@ -312,6 +312,13 @@ open class BalanceActivity : SamouraiActivity() {
         initViewModel()
         showProgress()
         if (account == 0) {
+            BIP47Util.getInstance(applicationContext)
+                .payNymLogoLive.observe(this) {
+                    binding.toolbarIcon.setImageBitmap(it)
+                }
+            binding.toolbarIcon.setOnClickListener {
+                showToolOptions(it)
+            }
             val delayedHandler = Handler()
             delayedHandler.postDelayed({
                 var notifTx = false
@@ -322,23 +329,20 @@ open class BalanceActivity : SamouraiActivity() {
                 refreshTx(notifTx, false, true)
                 updateDisplay(false)
             }, 100L)
-//            supportActionBar!!.setIcon(R.drawable.ic_samourai_logo)
         } else {
-            supportActionBar!!.setIcon(R.drawable.ic_whirlpool)
+            binding.toolbarIcon.visibility = View.GONE
+            binding.toolbar.setTitleMargin(0,0,0,0)
+            binding.toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
+            binding.toolbar.setNavigationOnClickListener {
+                super.onBackPressed()
+            }
             binding.receiveFab.visibility = View.GONE
             binding.whirlpoolFab.visibility = View.GONE
             binding.paynymFab.visibility = View.GONE
             Handler().postDelayed({ updateDisplay(true) }, 600L)
         }
         balanceViewModel.loadOfflineData()
-        BIP47Util.getInstance(applicationContext)
-            .payNymLogoLive.observe(this) {
-                binding.toolbarIcon.setImageBitmap(it)
-            }
 
-        binding.toolbarIcon.setOnClickListener {
-            showToolOptions(it)
-        }
         updateDisplay(false)
         checkDeepLinks()
         doExternalBackUp()
@@ -578,9 +582,13 @@ open class BalanceActivity : SamouraiActivity() {
                     }
             } else {
                 try {
-                    val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
-                    BIP47Util.getInstance(applicationContext)
-                        .setAvatar(bitmap)
+                    balanceViewModel.viewModelScope.launch {
+                        withContext(Dispatchers.Default){
+                            val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                            BIP47Util.getInstance(applicationContext)
+                                .setAvatar(bitmap)
+                        }
+                    }
                 } catch (er: Exception) {
 
                 }
@@ -626,7 +634,6 @@ open class BalanceActivity : SamouraiActivity() {
         menu.findItem(R.id.action_batch).isVisible = false
         WhirlpoolMeta.getInstance(applicationContext)
         if (account == WhirlpoolMeta.getInstance(applicationContext).whirlpoolPostmix) {
-            menu.findItem(R.id.action_sweep).isVisible = false
             menu.findItem(R.id.action_backup).isVisible = false
             menu.findItem(R.id.action_postmix).isVisible = false
             menu.findItem(R.id.action_network_dashboard).isVisible = false
@@ -681,17 +688,11 @@ open class BalanceActivity : SamouraiActivity() {
                 Toast.makeText(this, R.string.clipboard_empty, Toast.LENGTH_SHORT).show()
             }
         }
-        if (id == R.id.action_settings) {
-            doSettings()
-        } else if (id == R.id.action_support) {
+
+        if (id == R.id.action_support) {
             doSupport()
-        } else if (id == R.id.action_sweep) {
-            if (!AppUtil.getInstance(this@BalanceActivity).isOfflineMode) {
-                doSweep()
-            } else {
-                Toast.makeText(this@BalanceActivity, R.string.in_offline_mode, Toast.LENGTH_SHORT).show()
-            }
-        } else if (id == R.id.action_utxo) {
+        }
+        else if (id == R.id.action_utxo) {
             doUTXO()
         } else if (id == R.id.action_backup) {
             if (SamouraiWallet.getInstance().hasPassphrase(this@BalanceActivity)) {
@@ -990,34 +991,6 @@ open class BalanceActivity : SamouraiActivity() {
                 }
             } catch (e: Exception) {
             }
-        }
-    }
-
-    private fun doSweep() {
-        val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-            .setTitle(R.string.app_name)
-            .setMessage(R.string.action_sweep)
-            .setCancelable(true)
-            .setPositiveButton(R.string.enter_privkey) { dialog, whichButton ->
-                val privkey = EditText(this@BalanceActivity)
-                privkey.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-                val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-                    .setTitle(R.string.app_name)
-                    .setMessage(R.string.enter_privkey)
-                    .setView(privkey)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok) { _, _ ->
-                        val strPrivKey = privkey.text.toString()
-                        if (strPrivKey.isNotEmpty()) {
-                            doPrivKey(strPrivKey)
-                        }
-                    }.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                if (!isFinishing) {
-                    dlg.show()
-                }
-            }.setNegativeButton(R.string.scan) { _, _ -> doSweepViaScan() }
-        if (!isFinishing) {
-            dlg.show()
         }
     }
 

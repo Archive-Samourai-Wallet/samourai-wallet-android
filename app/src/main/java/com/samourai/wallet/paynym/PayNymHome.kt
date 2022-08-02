@@ -8,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -232,7 +231,7 @@ class PayNymHome : SamouraiActivity() {
     }
 
     private fun doSign() {
-        MessageSignUtil.getInstance(this).doSign(this.getString(R.string.bip47_sign),
+        MessageSignUtil.getInstance(this).doSign(this.getString(R.string.sign_message),
                 this.getString(R.string.bip47_sign_text1),
                 this.getString(R.string.bip47_sign_text2),
                 BIP47Util.getInstance(this).notificationAddress.ecKey)

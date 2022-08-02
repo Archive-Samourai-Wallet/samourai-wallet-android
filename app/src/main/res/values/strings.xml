@@ -265,7 +265,7 @@
     <string name="bip47_status_incoming">Ready to receive</string>
     <string name="bip47_cannot_scan_own_pcode">Cannot scan your own payment code</string>
     <string name="bip47_spend_to_pcode">Send through this payment channel?</string>
-    <string name="bip47_sign">Sign message</string>
+    <string name="sign_message">Sign message</string>
     <string name="bip47_sign_text1">Sign message using BIP47 notification address private key?</string>
     <string name="bip47_sign_text2">Signed using my BIP47 notification address.</string>
     <string name="bip47_wait_for_confirmation_or_retry">This payment channel is waiting for 1 confirmation before sending is activated. Would you like to discard the previous attempt and resend a notification?</string>
@@ -909,5 +909,16 @@
     <string name="auth_using_paynym">Authenticate using paynym</string>
     <string name="authenticate">Authenticate</string>
     <string name="estimated_wait_time">Estimated wait time</string>
+    <string name="enter_a_private_key_and">Enter a private key and sweep any funds to\nyour next bitcoin address</string>
+    <string name="sign_messages_using_your">Sign messages using your wallet private key</string>
+    <string name="wallet_address_calc">Wallet address calculator</string>
+    <string name="calculate_any_address_derived">Calculate any address derived from your\nwallet seed. Sign messages using your private key</string>
+    <string name="simple_and_secure_auth_with">Simple and secure authentication with a Bitcoin Payment Code (see BIP47)</string>
+    <string name="address_details">Address Details</string>
+    <string name="address_index">Address Index</string>
+    <string name="receive_address_external">Receive address (external)</string>
+    <string name="change_address_internal">Change address (internal)</string>
+    <string name="private_key">Private key</string>
+    <string name="redeem_script">Redeem Script</string>
 
 </resources>

@@ -253,7 +253,7 @@
     <string name="bip47_status_incoming">آماده‌ي دریافت</string>
     <string name="bip47_cannot_scan_own_pcode">نمی‌توانید کد پرداخت خودتان را اسکن کنید</string>
     <string name="bip47_spend_to_pcode">ارسال از طریق همین کانالِ پرداخت؟</string>
-    <string name="bip47_sign">امضاء کردن پیام</string>
+    <string name="sign_message">امضاء کردن پیام</string>
     <string name="bip47_sign_text1">امضا کردن پیام با استفاده از کلید خصوصیِ آدرس نوتیفیکیشن بیپ47؟</string>
     <string name="bip47_sign_text2">BIP47 امضا شده با آدرس نوتیفیکیشنِ</string>
     <string name="bip47_wait_for_confirmation_or_retry"> این کانال پرداخت در انتظار 1 تأیید است تا ارسال آن فعال شود. می‌خواهید تلاشِ قبلی را لغو کرده و دوباره یک نوتیفیکیشن ارسال کنید؟ </string>

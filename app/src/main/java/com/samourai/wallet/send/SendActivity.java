@@ -148,11 +148,10 @@ public class SendActivity extends SamouraiActivity {
     private SendTransactionDetailsView sendTransactionDetailsView;
     private ViewSwitcher amountViewSwitcher;
     private EditText toAddressEditText, btcEditText, satEditText;
-    private TextView tvMaxAmount, tvReviewSpendAmount, tvReviewSpendAmountInSats, tvTotalFee, tvToAddress, tvEstimatedBlockWait, tvSelectedFeeRate, tvSelectedFeeRateLayman, ricochetTitle, ricochetDesc, cahootsStatusText, cahootsNotice, satbText;
+    private TextView tvMaxAmount, tvReviewSpendAmount, tvReviewSpendAmountInSats, tvTotalFee, tvToAddress, tvEstimatedBlockWait, tvSelectedFeeRate, tvSelectedFeeRateLayman, ricochetTitle, ricochetDesc, satbText;
     private MaterialButton btnReview, btnSend;
     private SwitchCompat ricochetHopsSwitch, ricochetStaggeredDelivery;
     private ViewGroup totalMinerFeeLayout;
-    private SwitchCompat cahootsSwitch;
     private Slider feeSeekBar;
     private Group ricochetStaggeredOptionGroup;
     private boolean shownWalletLoadingMessage = false;
@@ -182,7 +181,6 @@ public class SendActivity extends SamouraiActivity {
     private long _change;
     private HashMap<String, BigInteger> receivers;
     private int changeType;
-    private ConstraintLayout cahootsGroup;
     private ConstraintLayout premiumAddons;
     private TextView addonsNotAvailableMessage;
     private String address;
@@ -236,7 +234,6 @@ public class SendActivity extends SamouraiActivity {
         //view elements from review segment and transaction segment can be access through respective
         //methods which returns root viewGroup
         btnReview = sendTransactionDetailsView.getTransactionView().findViewById(R.id.review_button);
-        cahootsSwitch = sendTransactionDetailsView.getTransactionView().findViewById(R.id.cahoots_switch);
         ricochetHopsSwitch = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_hops_switch);
         ricochetTitle = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_desc);
         ricochetDesc = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_title);
@@ -248,12 +245,9 @@ public class SendActivity extends SamouraiActivity {
         btnSend = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.send_btn);
         tvEstimatedBlockWait = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.est_block_time);
         feeSeekBar = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.fee_seekbar);
-        cahootsGroup = sendTransactionDetailsView.findViewById(R.id.cohoots_options);
         premiumAddons = sendTransactionDetailsView.findViewById(R.id.premium_addons);
         addonsNotAvailableMessage = sendTransactionDetailsView.findViewById(R.id.addons_not_available_message);
-        cahootsStatusText = sendTransactionDetailsView.findViewById(R.id.cahoot_status_text);
         totalMinerFeeLayout = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.total_miner_fee_group);
-        cahootsNotice = sendTransactionDetailsView.findViewById(R.id.cahoots_not_enabled_notice);
         progressBar = findViewById(R.id.send_activity_progress);
 
         btcEditText.addTextChangedListener(BTCWatcher);
@@ -283,8 +277,6 @@ public class SendActivity extends SamouraiActivity {
 
         setUpRicochet();
 
-        setUpCahoots();
-
         setUpFee();
 
         setBalance();
@@ -307,7 +299,6 @@ public class SendActivity extends SamouraiActivity {
             }
             if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1000000L) {
                 premiumAddons.setVisibility(View.GONE);
-                cahootsGroup.setVisibility(View.GONE);
                 addonsNotAvailableMessage.setVisibility(View.VISIBLE);
             }
 
@@ -341,75 +332,8 @@ public class SendActivity extends SamouraiActivity {
         }
 
 
-    } 
-
-
-    private void setUpCahoots() {
-        if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
-            cahootsNotice.setVisibility(View.VISIBLE);
-        }
-        cahootsSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
-            // to check whether bottomsheet is closed or selected a value
-            final boolean[] chosen = {false};
-            if (b) {
-                SelectCahootsType cahootsType = new SelectCahootsType();
-                cahootsType.setToAddress(tvToAddress.getText().toString());
-                cahootsType.show(getSupportFragmentManager(), cahootsType.getTag());
-                cahootsType.setOnSelectListener(new SelectCahootsType.OnSelectListener() {
-                    @Override
-                    public void onSelect(SelectCahootsType.type type, String pcode) {
-
-                        if (pcode != null) {
-                            strPcodeCounterParty = pcode;
-                            if(type.getCahootsType() == CahootsType.STOWAWAY){
-                                strPCode = pcode;
-                            }
-                        }
-                        chosen[0] = true;
-                        selectedCahootsType = type;
-                        switch (selectedCahootsType) {
-                            case NONE: {
-                                cahootsStatusText.setText("Off");
-                                cahootsStatusText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.warning_yellow));
-                                break;
-                            }
-                            default: {
-                                cahootsStatusText.setText(selectedCahootsType.getCahootsType().getLabel()+" "+selectedCahootsType.getCahootsMode().getLabel());
-                                cahootsStatusText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.green_ui_2));
-
-                                if (CahootsType.STOWAWAY.equals(selectedCahootsType.getCahootsType())) {
-                                    toAddressEditText.setText(getParticipantLabel());
-                                    toAddressEditText.setEnabled(false);
-                                    address = "";
-                                }
-                            }
-                        }
-                        validateSpend();
-                    }
-
-                    @Override
-                    public void onDismiss() {
-                        if (!chosen[0]) {
-                            strPcodeCounterParty = null;
-                            compoundButton.setChecked(false);
-                            selectedCahootsType = SelectCahootsType.type.NONE;
-                            hideToAddressForStowaway();
-                        }
-                        validateSpend();
-                    }
-
-                });
-            } else {
-                selectedCahootsType = SelectCahootsType.type.NONE;
-                cahootsStatusText.setText("Off");
-                strPCode =null;
-                cahootsStatusText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.warning_yellow));
-                hideToAddressForStowaway();
-                validateSpend();
-                enableReviewButton(false);
-            }
-        });
     }
+
 
     private void hideToAddressForStowaway() {
         toAddressEditText.setEnabled(true);
@@ -724,7 +648,6 @@ public class SendActivity extends SamouraiActivity {
     private void setUpRicochet() {
         ricochetHopsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             sendTransactionDetailsView.enableForRicochet(isChecked);
-            enableCahoots(!isChecked);
             ricochetStaggeredOptionGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             if (isChecked) {
                 SPEND_TYPE = SPEND_RICOCHET;
@@ -782,16 +705,6 @@ public class SendActivity extends SamouraiActivity {
         }
     }
 
-    private void enableCahoots(boolean enable) {
-
-        if (enable) {
-            cahootsGroup.setVisibility(View.VISIBLE);
-        } else {
-            cahootsGroup.setVisibility(View.GONE);
-            selectedCahootsType = SelectCahootsType.type.NONE;
-        }
-
-    }
 
     private void setBalance() {
 

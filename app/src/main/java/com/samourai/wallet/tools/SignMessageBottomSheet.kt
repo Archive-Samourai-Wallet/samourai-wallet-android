@@ -204,7 +204,7 @@ fun SignMessage() {
                         backgroundColor = samouraiBottomSheetBackground,
                         title = {
                             Text(
-                                text = "Sign Message", fontSize = 13.sp,
+                                text = stringResource(id = R.string.sign_message), fontSize = 13.sp,
                                 color = samouraiAccent
                             )
                         },

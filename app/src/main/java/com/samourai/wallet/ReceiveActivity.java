@@ -641,14 +641,6 @@ public class ReceiveActivity extends SamouraiActivity {
                 break;
             }
 
-            case R.id.receive_cahoots: {
-                // open receive activity
-                Intent intent = new Intent(this, CollaborateActivity.class);
-                intent.putExtra(CollaborateActivity.SHOW_PARTICIPATE,true);
-                startActivity(intent);
-                break;
-            }
-
 //           Handle Toolbar back button press
             case android.R.id.home: {
                 finish();

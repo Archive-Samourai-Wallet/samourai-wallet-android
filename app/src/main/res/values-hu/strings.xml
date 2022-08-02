@@ -253,7 +253,7 @@
     <string name="bip47_status_incoming">Fogadásra kész</string>
     <string name="bip47_cannot_scan_own_pcode">Nem használhatod a saját fizetési kódodat.</string>
     <string name="bip47_spend_to_pcode">Szeretnél ezen a fizetési csatornán keresztül küldeni?</string>
-    <string name="bip47_sign">Üzenet aláírása</string>
+    <string name="sign_message">Üzenet aláírása</string>
     <string name="bip47_sign_text1">Aláírod az üzenetet a BIP47-es értesítési cím privát kulcsával?</string>
     <string name="bip47_sign_text2">A BIP47-es értesítési címemmel aláírva.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Ennek a fizetési csatornának még nincs egy megerősítése sem. Legalább egy megerősítésnek lennie kell, mielőtt a küldés elérhetővé válik. Szeretnéd eldobni az előző próbálkozást, és újra elküldeni az értesítést?</string>

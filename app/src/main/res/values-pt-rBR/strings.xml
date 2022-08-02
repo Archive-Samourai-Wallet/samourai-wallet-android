@@ -265,7 +265,7 @@
     <string name="bip47_status_incoming">Pronto para receber</string>
     <string name="bip47_cannot_scan_own_pcode">Não é possível escanear seu próprio código de pagamento</string>
     <string name="bip47_spend_to_pcode">Enviar através deste canal de pagamento?</string>
-    <string name="bip47_sign">Assinar mensagem</string>
+    <string name="sign_message">Assinar mensagem</string>
     <string name="bip47_sign_text1">Assinar mensagem utilizando endereço de notificação BIP47?</string>
     <string name="bip47_sign_text2">Assinado utilizando meu endereço de notificação BIP47.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Este canal de pagamento está esperando por 1 confirmação antes do envio ser ativado. Você gostaria de descartar a tentativa anterior e reenviar a notificação?</string>
