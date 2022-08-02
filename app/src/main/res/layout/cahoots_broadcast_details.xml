@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="4dp"
         app:cardCornerRadius="8dp"
@@ -21,76 +21,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView73"
         app:layout_constraintVertical_bias="0.0">
-
-        <androidx.appcompat.widget.LinearLayoutCompat
+        <ScrollView
             android:layout_width="match_parent"
-            android:id="@+id/cahoots_review_segment"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:orientation="vertical">
-
+            android:layout_height="match_parent">
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
+                android:id="@+id/cahoots_review_segment"
                 android:layout_height="wrap_content"
-                android:gravity="start"
                 android:padding="8dp"
-                android:orientation="horizontal"
-
-                >
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight="1"
-                    android:text="@string/to"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/cahoots_review_address"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:maxLines="2"
-                    android:textAlignment="textEnd"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    tools:text="32jf5AMate5Pgu72aS7ScJtHaXHMobdHok" />
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="8dp"
-                >
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:text="@string/amount"
-                    android:textStyle="bold" />
-
+                android:orientation="vertical">
                 <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:gravity="start"
+                    android:padding="8dp"
+                    android:orientation="horizontal"
+                    >
 
                     <TextView
-                        android:id="@+id/cahoots_review_amount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight="1"
+                        android:text="@string/to"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/cahoots_review_address"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="end"
@@ -101,174 +58,216 @@
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        tools:text="0.233 BTC" />
-
-                    <TextView
-                        android:id="@+id/cahoots_review_amount_sats"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:textAlignment="textEnd"
-                        android:textSize="12sp"
-                        tools:text="23300000 sat" />
+                        tools:text="32jf5AMate5Pgu72aS7ScJtHaXHMobdHok" />
                 </androidx.appcompat.widget.LinearLayoutCompat>
-            </androidx.appcompat.widget.LinearLayoutCompat>
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:orientation="horizontal"
-                android:padding="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:text="Total Miner Fee"
-                    android:textStyle="bold" />
-
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:padding="8dp"
+                    >
 
                     <TextView
-                        android:id="@+id/cahoots_review_fee"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="end"
+                        android:layout_gravity="center_vertical"
                         android:layout_weight="1"
-                        android:gravity="end"
-                        android:maxLines="2"
-                        android:textAlignment="textEnd"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        tools:text="0.233 BTC" />
+                        android:text="@string/amount"
+                        android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/cahoots_review_fee_sats"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:textAlignment="textEnd"
-                        android:textSize="12sp"
-                        tools:text="23300000 sat" />
-                </androidx.appcompat.widget.LinearLayoutCompat>
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:id="@+id/cahoots_samourai_fee_group_divider"
-                android:layout_height="wrap_content" />
-
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:id="@+id/cahoots_samourai_fee_group"
-                android:orientation="horizontal"
-                android:padding="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:text="Samourai Service"
-                    android:textStyle="bold" />
-
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/cahoots_review_fee_samourai"
+                    <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="end"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/cahoots_review_amount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:maxLines="2"
+                            android:textAlignment="textEnd"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            tools:text="0.233 BTC" />
+
+                        <TextView
+                            android:id="@+id/cahoots_review_amount_sats"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:textAlignment="textEnd"
+                            android:textSize="12sp"
+                            tools:text="23300000 sat" />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
                         android:layout_weight="1"
-                        android:gravity="end"
-                        android:maxLines="2"
-                        android:textAlignment="textEnd"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        tools:text="0.233 BTC" />
+                        android:text="Total Miner Fee"
+                        android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/cahoots_review_fee_samourai_sats"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:textAlignment="textEnd"
-                        android:textSize="12sp"
-                        tools:text="10 sat" />
-                </androidx.appcompat.widget.LinearLayoutCompat>
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:id="@+id/cahoots_entropy_group_divider"
-                android:layout_height="wrap_content" />
-
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:id="@+id/cahoots_entropy_group"
-                android:orientation="horizontal"
-                android:padding="8dp" >
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight="1"
-                    android:text="Estimated Entropy"
-                    android:textStyle="bold" />
-
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:orientation="horizontal">
-
-                    <com.samourai.wallet.widgets.EntropyBar
-                        android:id="@+id/cahoots_entropy_bar"
-                        android:layout_width="24dp"
-                        android:layout_gravity="end"
-                        android:layout_height="match_parent"
-                        android:layout_marginEnd="4dp"
-                        app:layout_constraintBottom_toBottomOf="@+id/cahoots_entropy_value"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@+id/cahoots_entropy_value" />
-
-                    <TextView
-                        android:id="@+id/cahoots_entropy_value"
+                    <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/roboto_mono"
-                        android:text="0 bits"
-                        android:textColor="@color/white"
-                        android:textSize="13sp" />
+                        android:orientation="vertical">
 
+                        <TextView
+                            android:id="@+id/cahoots_review_fee"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:maxLines="2"
+                            android:textAlignment="textEnd"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            tools:text="0.233 BTC" />
+
+                        <TextView
+                            android:id="@+id/cahoots_review_fee_sats"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:textAlignment="textEnd"
+                            android:textSize="12sp"
+                            tools:text="23300000 sat" />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
                 </androidx.appcompat.widget.LinearLayoutCompat>
+
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:id="@+id/cahoots_samourai_fee_group_divider"
+                    android:layout_height="wrap_content" />
+
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:id="@+id/cahoots_samourai_fee_group"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        android:text="Samourai Service"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/cahoots_review_fee_samourai"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:maxLines="2"
+                            android:textAlignment="textEnd"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            tools:text="0.233 BTC" />
+
+                        <TextView
+                            android:id="@+id/cahoots_review_fee_samourai_sats"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:textAlignment="textEnd"
+                            android:textSize="12sp"
+                            tools:text="10 sat" />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:id="@+id/cahoots_entropy_group_divider"
+                    android:layout_height="wrap_content" />
+
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:id="@+id/cahoots_entropy_group"
+                    android:orientation="horizontal"
+                    android:padding="6dp" >
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight="1"
+                        android:text="Estimated Entropy"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:orientation="horizontal">
+
+                        <com.samourai.wallet.widgets.EntropyBar
+                            android:id="@+id/cahoots_entropy_bar"
+                            android:layout_width="24dp"
+                            android:layout_gravity="end"
+                            android:layout_height="match_parent"
+                            android:layout_marginEnd="4dp"
+                            app:layout_constraintBottom_toBottomOf="@+id/cahoots_entropy_value"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@+id/cahoots_entropy_value" />
+
+                        <TextView
+                            android:id="@+id/cahoots_entropy_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/roboto_mono"
+                            android:text="0 bits"
+                            android:textColor="@color/white"
+                            android:textSize="13sp" />
+
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+
             </androidx.appcompat.widget.LinearLayoutCompat>
-
-
-        </androidx.appcompat.widget.LinearLayoutCompat>
+        </ScrollView>
 
     </androidx.cardview.widget.CardView>
 
