@@ -222,7 +222,7 @@ open class BalanceActivity : SamouraiActivity() {
         //Switch themes based on accounts (blue theme for whirlpool account)
         setSwitchThemes(true)
         super.onCreate(savedInstanceState)
-        binding = ActivityBalanceBinding.inflate(layoutInflater);
+        binding = ActivityBalanceBinding.inflate(layoutInflater)
         setContentView(binding.root)
         balanceViewModel.setAccount(account)
         makePaynymAvatarCache()

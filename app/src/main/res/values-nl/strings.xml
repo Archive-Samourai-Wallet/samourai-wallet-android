@@ -253,7 +253,7 @@
     <string name="bip47_status_incoming">Klaar om te ontvangen</string>
     <string name="bip47_cannot_scan_own_pcode">Kan je eigen betalingscode niet scannen</string>
     <string name="bip47_spend_to_pcode">Verzenden via dit betalingskanaal?</string>
-    <string name="bip47_sign">Bericht ondertekenen</string>
+    <string name="sign_message">Bericht ondertekenen</string>
     <string name="bip47_sign_text1">Bericht ondertekenen met een BIP47-meldingsadresprivésleutel?</string>
     <string name="bip47_sign_text2">Ondertekend met mijn BIP47-meldingsadres.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Dit betalingskanaal wacht op 1 bevestiging voordat verzenden mogelijk wordt. Wil je de vorige poging annuleren en opnieuw een melding verzenden?</string>
