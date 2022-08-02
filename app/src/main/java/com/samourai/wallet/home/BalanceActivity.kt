@@ -312,6 +312,13 @@ open class BalanceActivity : SamouraiActivity() {
         initViewModel()
         showProgress()
         if (account == 0) {
+            BIP47Util.getInstance(applicationContext)
+                .payNymLogoLive.observe(this) {
+                    binding.toolbarIcon.setImageBitmap(it)
+                }
+            binding.toolbarIcon.setOnClickListener {
+                showToolOptions(it)
+            }
             val delayedHandler = Handler()
             delayedHandler.postDelayed({
                 var notifTx = false
@@ -322,23 +329,20 @@ open class BalanceActivity : SamouraiActivity() {
                 refreshTx(notifTx, false, true)
                 updateDisplay(false)
             }, 100L)
-//            supportActionBar!!.setIcon(R.drawable.ic_samourai_logo)
         } else {
-            supportActionBar!!.setIcon(R.drawable.ic_whirlpool)
+            binding.toolbarIcon.visibility = View.GONE
+            binding.toolbar.setTitleMargin(0,0,0,0)
+            binding.toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
+            binding.toolbar.setNavigationOnClickListener {
+                super.onBackPressed()
+            }
             binding.receiveFab.visibility = View.GONE
             binding.whirlpoolFab.visibility = View.GONE
             binding.paynymFab.visibility = View.GONE
             Handler().postDelayed({ updateDisplay(true) }, 600L)
         }
         balanceViewModel.loadOfflineData()
-        BIP47Util.getInstance(applicationContext)
-            .payNymLogoLive.observe(this) {
-                binding.toolbarIcon.setImageBitmap(it)
-            }
 
-        binding.toolbarIcon.setOnClickListener {
-            showToolOptions(it)
-        }
         updateDisplay(false)
         checkDeepLinks()
         doExternalBackUp()
