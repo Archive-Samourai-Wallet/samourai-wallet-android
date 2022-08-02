@@ -52,7 +52,9 @@ public class CahootReviewFragment extends Fragment {
     TextView toAddress, amountInBtc, amountInSats, feeInBtc, feeInSats, entropyBits, step, samouraiFeeBtc, samouraiFeeSats, samouraiFeeLabel;
     EntropyBar entropyBar;
     MaterialButton sendBtn;
-    Group cahootsEntropyGroup, cahootsProgressGroup;
+    ViewGroup cahootsEntropyGroup, cahootsSamouraiFeeGroup;
+    Group cahootsProgressGroup;
+    View cahootsSamouraiFeeGroupDivider,cahootsSamouraiEntropyGroupDivider;
     private Cahoots payload;
     private Callable onBroadcast;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -140,6 +142,8 @@ public class CahootReviewFragment extends Fragment {
 
                     @Override
                     public void onNext(TxProcessorResult entropyResult) {
+                        cahootsEntropyGroup.setVisibility(View.VISIBLE);
+                        cahootsSamouraiEntropyGroupDivider.setVisibility(View.VISIBLE);
                         entropyBar.setRange(entropyResult);
                         DecimalFormat decimalFormat = new DecimalFormat("##.00");
                         entropyBits.setText(decimalFormat.format(entropyResult.getEntropy()).concat(" bits"));
@@ -171,21 +175,20 @@ public class CahootReviewFragment extends Fragment {
                 feeInBtc.setText(formatForBtc(payload.getFeeAmount()));
                 feeInSats.setText(String.valueOf(payload.getFeeAmount()).concat(" sat"));
                 if(payload instanceof MultiCahoots) {
-                    samouraiFeeSats.setVisibility(View.VISIBLE);
-                    samouraiFeeBtc.setVisibility(View.VISIBLE);
-                    samouraiFeeLabel.setVisibility(View.VISIBLE);
-
+                    cahootsSamouraiFeeGroup.setVisibility(View.VISIBLE);
+                    cahootsSamouraiFeeGroupDivider.setVisibility(View.VISIBLE);
                     MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
                     samouraiFeeBtc.setText(formatForBtc(multiCahootsPayload.getStowaway().getSpendAmount()));
                     samouraiFeeSats.setText(String.valueOf(multiCahootsPayload.getStowaway().getSpendAmount()).concat(" sat"));
                 } else {
-                    samouraiFeeSats.setVisibility(View.GONE);
-                    samouraiFeeBtc.setVisibility(View.GONE);
-                    samouraiFeeLabel.setVisibility(View.GONE);
+                    cahootsSamouraiFeeGroup.setVisibility(View.GONE);
+                    cahootsSamouraiFeeGroupDivider.setVisibility(View.GONE);
+
                 }
             }
             if (payload instanceof Stowaway) {
                 cahootsEntropyGroup.setVisibility(View.GONE);
+                cahootsSamouraiEntropyGroupDivider.setVisibility(View.GONE);
             } else {
                 calculateEntropy();
             }
@@ -206,12 +209,14 @@ public class CahootReviewFragment extends Fragment {
         entropyBar = view.findViewById(R.id.cahoots_entropy_bar);
         feeInSats = view.findViewById(R.id.cahoots_review_fee_sats);
         cahootsEntropyGroup = view.findViewById(R.id.cahoots_entropy_group);
+        cahootsSamouraiFeeGroupDivider = view.findViewById(R.id.cahoots_samourai_fee_group_divider);
+        cahootsSamouraiEntropyGroupDivider = view.findViewById(R.id.cahoots_entropy_group_divider);
+        cahootsSamouraiFeeGroup = view.findViewById(R.id.cahoots_samourai_fee_group);
         cahootsProgressGroup = view.findViewById(R.id.cahoots_progress_group);
         step = view.findViewById(R.id.textView56);
         samouraiFeeBtc = view.findViewById(R.id.cahoots_review_fee_samourai);
         samouraiFeeSats = view.findViewById(R.id.cahoots_review_fee_samourai_sats);
-        samouraiFeeLabel = view.findViewById(R.id.samourai_fee_label_textview);
-        return view;
+         return view;
     }
 
     public void setCahoots(Cahoots payload) {
