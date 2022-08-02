@@ -5,216 +5,236 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.cardview.widget.CardView
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:elevation="1dp"
-        app:cardCornerRadius="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="#5d5d5d"
         app:layout_constraintBottom_toTopOf="@+id/cahoot_send_btn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView73"
-        app:layout_constraintVertical_bias="0.04000002">
+        app:layout_constraintVertical_bias="0.0">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayout2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/textView26"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="32dp"
+            android:text="@string/to"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toTopOf="@+id/cahoots_review_amount"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/cahoots_review_address" />
+        <TextView
+            android:id="@+id/cahoots_review_address"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:maxLines="2"
+            android:textAlignment="textEnd"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/textView26"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/textView26"
+            app:layout_constraintTop_toTopOf="@+id/textView26"
+            tools:text="32jf5AMate5Pgu72aS7ScJtHaXHMobdHok" />
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                app:layout_constraintBottom_toTopOf="@+id/textView15"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/cahoots_review_fee_sats" />
+        <TextView
+            android:id="@+id/textView28"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="38dp"
+            android:text="Amount"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@+id/textView26"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/textView26"
+            app:layout_constraintTop_toBottomOf="@+id/textView26" />
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toTopOf="@+id/cahoots_review_fee"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/cahoots_review_amount_sats" />
+        <TextView
+            android:id="@+id/textView29"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="38dp"
+            android:layout_marginBottom="8dp"
+            android:text="Total Miner Fee"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/textView28"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/textView28"
+            app:layout_constraintTop_toBottomOf="@+id/textView28"
+            app:layout_constraintVertical_bias="0.0" />
 
-            <TextView
-                android:id="@+id/textView26"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="12dp"
-                android:text="@string/to"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/samourai_fee_label_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="38dp"
+            android:layout_marginBottom="8dp"
+            android:text="Samourai Service"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/textView29"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/textView29"
+            app:layout_constraintTop_toBottomOf="@+id/textView29"
+            app:layout_constraintVertical_bias="0.0" />
 
-            <TextView
-                android:id="@+id/cahoots_review_address"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="24dp"
-                android:gravity="end"
-                android:maxLines="2"
-                android:textAlignment="textEnd"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="@+id/textView26"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textView26"
-                app:layout_constraintTop_toTopOf="@+id/textView26"
-                tools:text="32jf5AMate5Pgu72aS7ScJtHaXHMobdHok" />
+        <TextView
+            android:id="@+id/textView15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="38dp"
+            android:layout_marginBottom="32dp"
+            android:text="Estimated Entropy"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/textView29"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/textView29"
+            app:layout_constraintTop_toBottomOf="@+id/samourai_fee_label_textview" />
 
-            <TextView
-                android:id="@+id/textView28"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:text="Amount"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="@+id/textView26"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/textView26"
-                app:layout_constraintTop_toBottomOf="@+id/textView26" />
+        <TextView
+            android:id="@+id/cahoots_review_amount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            tools:text="0.233 BTC"
+            android:textAlignment="textEnd"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/textView28"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/textView28"
+            app:layout_constraintTop_toTopOf="@+id/textView28" />
 
-            <TextView
-                android:id="@+id/textView29"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:layout_marginBottom="8dp"
-                android:text="Total Miner Fee"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/textView28"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/textView28"
-                app:layout_constraintTop_toBottomOf="@+id/textView28"
-                app:layout_constraintVertical_bias="0.060000002" />
+        <TextView
+            android:id="@+id/cahoots_review_amount_sats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="23300000 sat"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@+id/cahoots_review_amount"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="@+id/cahoots_review_amount"
+            app:layout_constraintTop_toBottomOf="@+id/cahoots_review_amount" />
 
-            <TextView
-                android:id="@+id/textView15"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="28dp"
-                android:layout_marginBottom="12dp"
-                android:text="Estimated Entropy"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/textView29"
-                app:layout_constraintStart_toStartOf="@+id/textView29"
-                app:layout_constraintTop_toBottomOf="@+id/textView29" />
+        <TextView
+            android:id="@+id/cahoots_review_fee"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            tools:text="0.0004 BTC"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@+id/cahoots_review_amount"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/textView29"
+            app:layout_constraintTop_toTopOf="@+id/textView29" />
 
-            <TextView
-                android:id="@+id/cahoots_review_amount"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="24dp"
-                android:gravity="end"
-                android:textAlignment="textEnd"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="@+id/textView28"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textView28"
-                app:layout_constraintTop_toTopOf="@+id/textView28"
-                tools:text="0.233 BTC" />
+        <TextView
+            android:id="@+id/cahoots_review_fee_sats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="40000 sat"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/cahoots_review_fee"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/textView29"
+            app:layout_constraintTop_toBottomOf="@+id/cahoots_review_fee"
+            app:layout_constraintVertical_bias="0.0" />
 
-            <TextView
-                android:id="@+id/cahoots_review_amount_sats"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                app:layout_constraintEnd_toEndOf="@+id/cahoots_review_amount"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toStartOf="@+id/cahoots_review_amount"
-                app:layout_constraintTop_toBottomOf="@+id/cahoots_review_amount"
-                tools:text="23300000 sat" />
+        <TextView
+            android:id="@+id/cahoots_review_fee_samourai"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            tools:text="0.0004 BTC"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@+id/cahoots_review_fee"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/samourai_fee_label_textview"
+            app:layout_constraintTop_toTopOf="@+id/samourai_fee_label_textview" />
 
-            <TextView
-                android:id="@+id/cahoots_review_fee"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="@+id/cahoots_review_amount"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toEndOf="@+id/textView29"
-                app:layout_constraintTop_toTopOf="@+id/textView29"
-                tools:text="0.0004 BTC" />
+        <TextView
+            android:id="@+id/cahoots_review_fee_samourai_sats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="40000 sat"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/cahoots_review_fee_samourai"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/samourai_fee_label_textview"
+            app:layout_constraintTop_toBottomOf="@+id/cahoots_review_fee_samourai"
+            app:layout_constraintVertical_bias="0.0" />
 
-            <TextView
-                android:id="@+id/cahoots_review_fee_sats"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="40000 sat"
-                android:textSize="12sp"
-                app:layout_constraintEnd_toEndOf="@+id/cahoots_review_fee"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toEndOf="@+id/textView29"
-                app:layout_constraintTop_toBottomOf="@+id/cahoots_review_fee" />
+        <TextView
+            android:id="@+id/cahoots_entropy_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="@font/roboto_mono"
+            android:text="0 bits"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@+id/textView15"
+            app:layout_constraintEnd_toStartOf="@+id/cahoots_entropy_bar"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/textView80"
+            app:layout_constraintTop_toTopOf="@+id/textView15" />
 
-            <TextView
-                android:id="@+id/cahoots_entropy_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:fontFamily="@font/roboto_mono"
-                android:text="0 bits"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                app:layout_constraintBottom_toBottomOf="@+id/textView15"
-                app:layout_constraintEnd_toStartOf="@+id/cahoots_entropy_bar"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintTop_toTopOf="@+id/textView15" />
+        <com.samourai.wallet.widgets.EntropyBar
+            android:id="@+id/cahoots_entropy_bar"
+            android:layout_width="24dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintBottom_toBottomOf="@+id/cahoots_entropy_value"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/cahoots_entropy_value" />
 
-            <com.samourai.wallet.widgets.EntropyBar
-                android:id="@+id/cahoots_entropy_bar"
-                android:layout_width="24dp"
-                android:layout_height="0dp"
-                android:layout_marginEnd="24dp"
-                app:layout_constraintBottom_toBottomOf="@+id/cahoots_entropy_value"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/cahoots_entropy_value" />
-
-            <androidx.constraintlayout.widget.Group
-                android:id="@+id/cahoots_entropy_group"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="visible"
-                app:constraint_referenced_ids="textView15,cahoots_entropy_value,cahoots_entropy_bar" />
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/cahoots_entropy_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            app:constraint_referenced_ids="textView15,cahoots_entropy_value,cahoots_entropy_bar" />
 
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.cardview.widget.CardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
         android:id="@+id/textView56"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
         android:fontFamily="sans-serif-light"
         android:text="Step 5"
