@@ -217,7 +217,7 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            cahootsType = CahootsType.STONEWALLX2
+                            cahootsType = CahootsType.STOWAWAY
                         },
                     trailing = {
                         Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "")
