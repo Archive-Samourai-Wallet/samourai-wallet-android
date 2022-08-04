@@ -30,6 +30,7 @@ import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
 import com.samourai.wallet.theme.SamouraiWalletTheme
 import com.samourai.wallet.theme.samouraiAccent
+import com.samourai.wallet.theme.samouraiSlateGreyAccent
 import com.samourai.wallet.theme.samouraiTextSecondary
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
@@ -148,15 +149,21 @@ fun ListenCahootsButton() {
     val collaborateViewModel = viewModel<CollaborateViewModel>()
     val listenState by collaborateViewModel.cahootsListenStateLive.observeAsState(initial = CollaborateViewModel.CahootListenState.WAITING)
     val timeout by collaborateViewModel.sorobanTimeoutLive.observeAsState(initial = 0)
+    val accountType by collaborateViewModel.meetingAccountLive.observeAsState()
 
     Box(modifier = Modifier.height(48.dp)) {
 
         when (listenState) {
             CollaborateViewModel.CahootListenState.STOPPED -> {
                 TextButton(onClick = {
-                    collaborateViewModel.startListen()
+                    if (accountType != -1)
+                        collaborateViewModel.startListen()
+                    else
+                        println("Please select account first")
+
+
                 }) {
-                    Text(text = "LISTEN FOR CAHOOTS REQUESTS", color = samouraiAccent)
+                    Text(text = "LISTEN FOR CAHOOTS REQUESTS", color = if (accountType != -1) samouraiAccent else samouraiSlateGreyAccent)
                 }
             }
             CollaborateViewModel.CahootListenState.WAITING -> {
