@@ -83,7 +83,7 @@ fun Auth47Login(param: String? = null, onClose: () -> Unit) {
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxHeight(.54f),
+        modifier = Modifier.fillMaxHeight(.5f),
         backgroundColor = samouraiBottomSheetBackground,
         topBar = {
             TopAppBar(
@@ -432,7 +432,7 @@ fun Auth47Authentication() {
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .padding(top = 28.dp),
+                    .padding(top = 1.dp),
                 contentPadding = PaddingValues(vertical = 12.dp),
                 colors = ButtonDefaults.textButtonColors(
                     backgroundColor = samouraiAccent,
