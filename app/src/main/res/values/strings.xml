@@ -920,5 +920,7 @@
     <string name="change_address_internal">Change address (internal)</string>
     <string name="private_key">Private key</string>
     <string name="redeem_script">Redeem Script</string>
+    <string name="select_collaborator">Select Collaborator</string>
+    <string name="select_paynym">Select Paynym</string>
 
 </resources>

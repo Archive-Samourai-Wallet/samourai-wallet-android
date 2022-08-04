@@ -32,6 +32,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
@@ -67,12 +68,15 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
     var selected by remember { mutableStateOf(0) }
     val scaffoldState = rememberScaffoldState()
     val paynymChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val paynymSpendChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val setUpTransactionModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val accountChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
     val collaborateViewModel = viewModel<CollaborateViewModel>()
+    val cahootsTransactionViewModel = viewModel<CahootsTransactionViewModel>()
     val collaborateError by collaborateViewModel.errorsLive.observeAsState(initial = null)
+    val showSpendFromPaynymChooser by cahootsTransactionViewModel.showSpendFromPaynymChooserLive.observeAsState(false)
     val walletLoading by AppUtil.getInstance(context).walletLoading.observeAsState(false);
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
 
@@ -81,6 +85,18 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
             collaborateViewModel.startListen()
             selected = 1
         }
+    }
+
+    LaunchedEffect(showSpendFromPaynymChooser) {
+       if(showSpendFromPaynymChooser && paynymSpendChooser.currentValue == ModalBottomSheetValue.Hidden){
+           scope.launch {
+               paynymSpendChooser.show()
+           }
+       }else{
+           if(!showSpendFromPaynymChooser && paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden){
+               paynymSpendChooser.hide()
+           }
+       }
     }
 
     LaunchedEffect(key1 = collaborateError, block = {
@@ -202,7 +218,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         DisposableEffect(Unit) {
             onDispose {
                 scope.launch {
-                    keyboardController?.hide();
+                    keyboardController?.hide()
                 }
             }
         }
@@ -217,9 +233,21 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         }
     }
 
+ if (paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
+        DisposableEffect(Unit) {
+            onDispose {
+                scope.launch {
+                    keyboardController?.hide()
+                    cahootsTransactionViewModel.showSpendPaynymChooser(false)
+                }
+            }
+        }
+    }
+
     val handleBackPress = setUpTransactionModal.currentValue != ModalBottomSheetValue.Hidden ||
             paynymChooser.currentValue != ModalBottomSheetValue.Hidden ||
-            accountChooser.currentValue != ModalBottomSheetValue.Hidden
+            accountChooser.currentValue != ModalBottomSheetValue.Hidden ||
+            paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden
 
     BackHandler(enabled = handleBackPress) {
         scope.launch {
@@ -229,21 +257,45 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                 paynymChooser.hide()
             } else if (accountChooser.currentValue != ModalBottomSheetValue.Hidden) {
                 accountChooser.hide()
+            } else if (paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                cahootsTransactionViewModel.showSpendPaynymChooser(false)
             }
         }
 
     }
+
+
     ModalBottomSheetLayout(
         sheetState = paynymChooser,
         modifier = Modifier.zIndex(5f),
         scrimColor = Color.Black.copy(alpha = 0.7f),
         sheetBackgroundColor = samouraiBottomSheetBackground,
         sheetContent = {
-            PaynymChooser(paynymChooser) {
+            PaynymChooser(paynymChooser, PaynymChooserType.COLLABORATE, {
+                cahootsTransactionViewModel.setCollaborator(it)
+            }, {
                 scope.launch {
                     paynymChooser.hide()
                 }
-            }
+            })
+        },
+        sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+    ) {
+    }
+
+    ModalBottomSheetLayout(
+        sheetState = paynymSpendChooser,
+        modifier = Modifier.zIndex(5f),
+        scrimColor = Color.Black.copy(alpha = 0.7f),
+        sheetBackgroundColor = samouraiBottomSheetBackground,
+        sheetContent = {
+            PaynymChooser(paynymSpendChooser, PaynymChooserType.SPEND, {
+                cahootsTransactionViewModel.setAddress(it)
+            }, {
+                scope.launch {
+                    cahootsTransactionViewModel.showSpendPaynymChooser(false)
+                }
+            })
         },
         sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
     ) {

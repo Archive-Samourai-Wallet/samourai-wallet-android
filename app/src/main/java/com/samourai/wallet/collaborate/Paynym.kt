@@ -32,12 +32,14 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.CahootsMode
@@ -49,9 +51,21 @@ import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import kotlinx.coroutines.launch
 
+
+enum class PaynymChooserType {
+    COLLABORATE,
+    SPEND,
+    FOLLOWERS
+}
+
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
+fun PaynymChooser(
+    paynymChooser: ModalBottomSheetState?,
+    paynymChooserType: PaynymChooserType = PaynymChooserType.COLLABORATE,
+    onChoosePaynym: (pcode:String)-> Unit = {},
+    onClose: () -> Unit
+) {
     val collaborateViewModel = viewModel<CollaborateViewModel>()
     val cahootsTransactionViewModel = viewModel<CahootsTransactionViewModel>()
     val cahootType by cahootsTransactionViewModel.cahootsTypeLive.observeAsState()
@@ -61,18 +75,35 @@ fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     var paynyms = arrayListOf<String>().apply { addAll(following) }
-    if (cahootType?.cahootsMode == CahootsMode.SOROBAN && cahootType?.cahootsType != CahootsType.STOWAWAY) {
-        paynyms = arrayListOf<String>().apply {
-            add(BIP47Meta.getMixingPartnerCode())
-            addAll(following)
+    if (paynymChooserType == PaynymChooserType.COLLABORATE) {
+        if (cahootType?.cahootsMode == CahootsMode.SOROBAN && cahootType?.cahootsType != CahootsType.STOWAWAY) {
+            paynyms = arrayListOf<String>().apply {
+                add(BIP47Meta.getMixingPartnerCode())
+                addAll(following)
+            }
         }
+    }
+    if (paynymChooserType == PaynymChooserType.SPEND) {
+        //Show only paynym that are connected
+        paynyms = arrayListOf<String>().apply {
+            addAll(following.filter {
+                BIP47Meta.getInstance().getOutgoingStatus(it) == BIP47Meta.STATUS_SENT_CFM
+            })
+        }
+    }
+    var title = ""
+     if(paynymChooserType == PaynymChooserType.COLLABORATE){
+         title = stringResource(R.string.select_collaborator)
+    }
+    if(paynymChooserType == PaynymChooserType.SPEND){
+         title = stringResource(R.string.select_paynym)
     }
     Scaffold(
         backgroundColor = samouraiBottomSheetBackground,
         topBar = {
             if (!enableSearch) TopAppBar(title = {
                 Text(
-                    "Select Collaborator", fontSize = 13.sp
+                    title, fontSize = 13.sp
                 )
             },
                 modifier = Modifier.shadow(1.dp),
@@ -139,19 +170,20 @@ fun PaynymChooser(paynymChooser: ModalBottomSheetState?, onClose: () -> Unit) {
                             modifier = Modifier
                                 .clickable
                                 {
-                                    cahootsTransactionViewModel.setCollaborator(BIP47Meta.getMixingPartnerCode())
+                                    onChoosePaynym.invoke(it)
                                     onClose()
                                 }
                         )
                         Divider()
                     }
                 } else {
-                    PaynymAvatar(pcode = it, nym = BIP47Meta.getInstance().getLabel(it),
+                    val connected = BIP47Meta.getInstance().getOutgoingStatus(it) == BIP47Meta.STATUS_SENT_CFM
+                    PaynymAvatar(pcode = it, nym = "${BIP47Meta.getInstance().getLabel(it)} ${if(connected) "(connected)" else ""}",
                         modifier = Modifier
                             .layoutId(it)
                             .clickable
                             {
-                                cahootsTransactionViewModel.setCollaborator(it)
+                                onChoosePaynym.invoke(it)
                                 onClose()
                             }
                             .animateItemPlacement())
@@ -271,7 +303,7 @@ fun PaynymAvatarPreview() {
 @Preview(heightDp = 320, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun PaynymSheetPreview() {
-    PaynymChooser(null, {})
+    PaynymChooser(null,PaynymChooserType.FOLLOWERS, {},{})
 }
 
 @Composable
