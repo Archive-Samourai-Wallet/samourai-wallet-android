@@ -65,7 +65,7 @@ fun InitiateSegment(
 
                         Divider()
                         var enableCollabSelection = cahootType != null
-                        if (cahootType?.cahootsType == CahootsType.STONEWALLX2 && cahootType?.cahootsMode == CahootsMode.MANUAL) {
+                        if ((cahootType?.cahootsType == CahootsType.STONEWALLX2 || cahootType?.cahootsType == CahootsType.STOWAWAY) && cahootType?.cahootsMode == CahootsMode.MANUAL) {
                             enableCollabSelection = false
                         }
                         if (enableCollabSelection) {
@@ -81,7 +81,7 @@ fun InitiateSegment(
                             Divider()
                         }
                         var enableTransaction = cahootType != null && collaboratorPcode != null
-                        if (cahootType?.cahootsType == CahootsType.STONEWALLX2 && cahootType?.cahootsMode == CahootsMode.MANUAL) {
+                        if ((cahootType?.cahootsType == CahootsType.STONEWALLX2 || cahootType?.cahootsType == CahootsType.STOWAWAY) && cahootType?.cahootsMode == CahootsMode.MANUAL) {
                             enableTransaction = true
                         }
                         if (enableTransaction && !validTransaction) {
