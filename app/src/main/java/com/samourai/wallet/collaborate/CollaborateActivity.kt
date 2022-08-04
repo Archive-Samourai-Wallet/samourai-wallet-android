@@ -1,5 +1,6 @@
 package com.samourai.wallet.collaborate
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -23,7 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -34,10 +37,14 @@ import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
+import com.samourai.wallet.paynym.PayNymHome
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.PrefsUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class CollaborateActivity : SamouraiActivity() {
@@ -46,14 +53,35 @@ class CollaborateActivity : SamouraiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val showParticipateTab = intent.extras?.getBoolean(SHOW_PARTICIPATE, false) ?: false
+        val claimed = PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED, false);
         setContent {
             SamouraiWalletTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    CollaborateScreen(this, showParticipateTab)
+                if (claimed) {
+                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+                        CollaborateScreen(this, showParticipateTab)
+                    }
+                } else {
+                    val scope = rememberCoroutineScope()
+                    PaynymNotClaimed(
+                        onBackPressed = {
+                            onBackPressed()
+                        },
+                        onClaim = {
+                            scope.launch {
+                                withContext(Dispatchers.Main){
+                                    val intent = Intent(this@CollaborateActivity, PayNymHome::class.java)
+                                    startActivity(intent)
+                                    finish()
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }
-        collaborateViewModel.initWithContext(applicationContext)
+        if(claimed){
+            collaborateViewModel.initWithContext(applicationContext)
+        }
     }
 
     companion object {
@@ -80,7 +108,9 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
     val walletLoading by AppUtil.getInstance(context).walletLoading.observeAsState(false);
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
 
+
     LaunchedEffect(true) {
+
         if (showParticipateTab) {
             collaborateViewModel.startListen()
             selected = 1
@@ -88,15 +118,15 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
     }
 
     LaunchedEffect(showSpendFromPaynymChooser) {
-       if(showSpendFromPaynymChooser && paynymSpendChooser.currentValue == ModalBottomSheetValue.Hidden){
-           scope.launch {
-               paynymSpendChooser.show()
-           }
-       }else{
-           if(!showSpendFromPaynymChooser && paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden){
-               paynymSpendChooser.hide()
-           }
-       }
+        if (showSpendFromPaynymChooser && paynymSpendChooser.currentValue == ModalBottomSheetValue.Hidden) {
+            scope.launch {
+                paynymSpendChooser.show()
+            }
+        } else {
+            if (!showSpendFromPaynymChooser && paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                paynymSpendChooser.hide()
+            }
+        }
     }
 
     LaunchedEffect(key1 = collaborateError, block = {
@@ -233,7 +263,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         }
     }
 
- if (paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
+    if (paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
         DisposableEffect(Unit) {
             onDispose {
                 scope.launch {
@@ -400,4 +430,44 @@ private fun TabIndicator(
                 RoundedCornerShape(8.dp)
             )
     )
+}
+
+
+@Composable
+fun PaynymNotClaimed(onBackPressed: () -> Unit = {}, onClaim: () -> Unit = {}) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                backgroundColor = samouraiSlateGreyAccent,
+                title = { Text(text = "Collaborate", color = samouraiTextPrimary) },
+                navigationIcon = {
+                    Box(modifier = Modifier.padding(12.dp)) {
+                        Icon(painter = painterResource(id = R.drawable.ic_close_white_24dp),
+                            tint = samouraiTextPrimary,
+                            contentDescription = "Close", modifier = Modifier.clickable {
+                                onBackPressed.invoke()
+                            })
+                    }
+                },
+            )
+        }
+    ) {
+        Column(
+            Modifier.fillMaxSize(),
+            Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Button(onClick = {
+                onClaim.invoke()
+            }) {
+                Text(stringResource(id = R.string.claim_paynym))
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun PaynymNotClaimedPreview() {
+    PaynymNotClaimed()
 }
