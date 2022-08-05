@@ -45,6 +45,7 @@ class CahootsTransactionViewModel : ViewModel() {
     private val destinationAddress = MutableLiveData<String?>(null)
     private val amount = MutableLiveData(0L)
     private var collaboratorPcode = MutableLiveData<String?>(null)
+    private val showSpendFromPaynymChooser = MutableLiveData(false)
     private val decimalFormatSatPerByte = DecimalFormat("#.##").also {
         it.isDecimalSeparatorAlwaysShown = true
     }
@@ -58,6 +59,9 @@ class CahootsTransactionViewModel : ViewModel() {
 
     val transactionAccountTypeLive: LiveData<Int>
         get() = transactionAccountType
+
+    val showSpendFromPaynymChooserLive: LiveData<Boolean>
+        get() = showSpendFromPaynymChooser
 
     val validTransactionLive: LiveData<Boolean>
         get() = validTransaction
@@ -274,6 +278,10 @@ class CahootsTransactionViewModel : ViewModel() {
         this.collaboratorPcode.value = null
         this.collaboratorPcode.postValue(null)
         this.validate()
+    }
+
+    fun showSpendPaynymChooser(show: Boolean = true) {
+        showSpendFromPaynymChooser.postValue(show)
     }
 
 }

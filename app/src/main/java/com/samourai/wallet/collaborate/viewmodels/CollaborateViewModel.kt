@@ -39,7 +39,7 @@ class CollaborateViewModel : ViewModel() {
     private var loading = MutableLiveData<Boolean>()
     private var cahootsListenState = MutableLiveData(CahootListenState.STOPPED)
     private var sorobanTimeout = MutableLiveData<Long?>()
-    private var meetingAccount = MutableLiveData(SamouraiAccountIndex.DEPOSIT)
+    private var meetingAccount = MutableLiveData(-1)
     private var androidSorobanCahootsService: SorobanMeetingService? = null;
     private var sorobanRequest = MutableLiveData<SorobanRequestMessage?>()
 

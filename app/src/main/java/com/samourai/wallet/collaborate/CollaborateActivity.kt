@@ -1,5 +1,6 @@
 package com.samourai.wallet.collaborate
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -23,7 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -32,11 +35,16 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
+import com.samourai.wallet.paynym.PayNymHome
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.PrefsUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class CollaborateActivity : SamouraiActivity() {
@@ -45,14 +53,35 @@ class CollaborateActivity : SamouraiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val showParticipateTab = intent.extras?.getBoolean(SHOW_PARTICIPATE, false) ?: false
+        val claimed = PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED, false);
         setContent {
             SamouraiWalletTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    CollaborateScreen(this, showParticipateTab)
+                if (claimed) {
+                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+                        CollaborateScreen(this, showParticipateTab)
+                    }
+                } else {
+                    val scope = rememberCoroutineScope()
+                    PaynymNotClaimed(
+                        onBackPressed = {
+                            onBackPressed()
+                        },
+                        onClaim = {
+                            scope.launch {
+                                withContext(Dispatchers.Main){
+                                    val intent = Intent(this@CollaborateActivity, PayNymHome::class.java)
+                                    startActivity(intent)
+                                    finish()
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }
-        collaborateViewModel.initWithContext(applicationContext)
+        if(claimed){
+            collaborateViewModel.initWithContext(applicationContext)
+        }
     }
 
     companion object {
@@ -67,19 +96,36 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
     var selected by remember { mutableStateOf(0) }
     val scaffoldState = rememberScaffoldState()
     val paynymChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val paynymSpendChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val setUpTransactionModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val accountChooser = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
     val collaborateViewModel = viewModel<CollaborateViewModel>()
+    val cahootsTransactionViewModel = viewModel<CahootsTransactionViewModel>()
     val collaborateError by collaborateViewModel.errorsLive.observeAsState(initial = null)
+    val showSpendFromPaynymChooser by cahootsTransactionViewModel.showSpendFromPaynymChooserLive.observeAsState(false)
     val walletLoading by AppUtil.getInstance(context).walletLoading.observeAsState(false);
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
 
+
     LaunchedEffect(true) {
+
         if (showParticipateTab) {
             collaborateViewModel.startListen()
             selected = 1
+        }
+    }
+
+    LaunchedEffect(showSpendFromPaynymChooser) {
+        if (showSpendFromPaynymChooser && paynymSpendChooser.currentValue == ModalBottomSheetValue.Hidden) {
+            scope.launch {
+                paynymSpendChooser.show()
+            }
+        } else {
+            if (!showSpendFromPaynymChooser && paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                paynymSpendChooser.hide()
+            }
         }
     }
 
@@ -202,7 +248,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         DisposableEffect(Unit) {
             onDispose {
                 scope.launch {
-                    keyboardController?.hide();
+                    keyboardController?.hide()
                 }
             }
         }
@@ -217,9 +263,21 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         }
     }
 
+    if (paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
+        DisposableEffect(Unit) {
+            onDispose {
+                scope.launch {
+                    keyboardController?.hide()
+                    cahootsTransactionViewModel.showSpendPaynymChooser(false)
+                }
+            }
+        }
+    }
+
     val handleBackPress = setUpTransactionModal.currentValue != ModalBottomSheetValue.Hidden ||
             paynymChooser.currentValue != ModalBottomSheetValue.Hidden ||
-            accountChooser.currentValue != ModalBottomSheetValue.Hidden
+            accountChooser.currentValue != ModalBottomSheetValue.Hidden ||
+            paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden
 
     BackHandler(enabled = handleBackPress) {
         scope.launch {
@@ -229,21 +287,45 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                 paynymChooser.hide()
             } else if (accountChooser.currentValue != ModalBottomSheetValue.Hidden) {
                 accountChooser.hide()
+            } else if (paynymSpendChooser.currentValue != ModalBottomSheetValue.Hidden) {
+                cahootsTransactionViewModel.showSpendPaynymChooser(false)
             }
         }
 
     }
+
+
     ModalBottomSheetLayout(
         sheetState = paynymChooser,
         modifier = Modifier.zIndex(5f),
         scrimColor = Color.Black.copy(alpha = 0.7f),
         sheetBackgroundColor = samouraiBottomSheetBackground,
         sheetContent = {
-            PaynymChooser(paynymChooser) {
+            PaynymChooser(paynymChooser, PaynymChooserType.COLLABORATE, {
+                cahootsTransactionViewModel.setCollaborator(it)
+            }, {
                 scope.launch {
                     paynymChooser.hide()
                 }
-            }
+            })
+        },
+        sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+    ) {
+    }
+
+    ModalBottomSheetLayout(
+        sheetState = paynymSpendChooser,
+        modifier = Modifier.zIndex(5f),
+        scrimColor = Color.Black.copy(alpha = 0.7f),
+        sheetBackgroundColor = samouraiBottomSheetBackground,
+        sheetContent = {
+            PaynymChooser(paynymSpendChooser, PaynymChooserType.SPEND, {
+                cahootsTransactionViewModel.setAddress(it)
+            }, {
+                scope.launch {
+                    cahootsTransactionViewModel.showSpendPaynymChooser(false)
+                }
+            })
         },
         sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
     ) {
@@ -348,4 +430,44 @@ private fun TabIndicator(
                 RoundedCornerShape(8.dp)
             )
     )
+}
+
+
+@Composable
+fun PaynymNotClaimed(onBackPressed: () -> Unit = {}, onClaim: () -> Unit = {}) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                backgroundColor = samouraiSlateGreyAccent,
+                title = { Text(text = "Collaborate", color = samouraiTextPrimary) },
+                navigationIcon = {
+                    Box(modifier = Modifier.padding(12.dp)) {
+                        Icon(painter = painterResource(id = R.drawable.ic_close_white_24dp),
+                            tint = samouraiTextPrimary,
+                            contentDescription = "Close", modifier = Modifier.clickable {
+                                onBackPressed.invoke()
+                            })
+                    }
+                },
+            )
+        }
+    ) {
+        Column(
+            Modifier.fillMaxSize(),
+            Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Button(onClick = {
+                onClaim.invoke()
+            }) {
+                Text(stringResource(id = R.string.claim_paynym))
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun PaynymNotClaimedPreview() {
+    PaynymNotClaimed()
 }

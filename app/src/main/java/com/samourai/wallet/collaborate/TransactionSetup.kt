@@ -41,13 +41,10 @@ import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
-import com.samourai.wallet.fragments.PaynymSelectModalFragment
-import com.samourai.wallet.fragments.PaynymSelectModalFragment.Companion.newInstance
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.getSupportFragmentManger
 import com.samourai.wallet.util.FormatsUtil
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.*
@@ -57,7 +54,6 @@ import kotlin.math.roundToLong
 @Composable
 fun SetUpTransaction(onClose: (() -> Unit)?) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
-    val context = LocalContext.current
     val page by transactionViewModel.pageLive.observeAsState(0)
     Box(modifier = Modifier.requiredHeight(420.dp)) {
         WrapToolsPageAnimation(visible = page == 0) {
@@ -297,7 +293,7 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
             .replace(" ", "")
         if (amountText.isNotEmpty() && amountText != "0") {
             try {
-                val  amountFormatted = if (format == "BTC") {
+                val amountFormatted = if (format == "BTC") {
                     amountText.toLong()
                 } else {
                     amountText.toDouble()
@@ -457,9 +453,6 @@ fun SendDestination(modifier: Modifier = Modifier) {
     val cahootsType by cahootsTransactionViewModel.cahootsTypeLive.observeAsState()
     val collaborator by cahootsTransactionViewModel.collaboratorPcodeLive.observeAsState()
     var pcode by remember { mutableStateOf<String?>(null) }
-    val paynym = stringResource(id = R.string.paynym)
-
-    val getSupportFragmentManager = getSupportFragmentManger()
 
     fun validateAddress() {
         keyboardController?.hide()
@@ -577,14 +570,7 @@ fun SendDestination(modifier: Modifier = Modifier) {
                                 },
                             trailingIcon = {
                                 IconButton(onClick = {
-                                    getSupportFragmentManager?.let {
-                                        val paynymSelectModalFragment = newInstance(selectListener = object : PaynymSelectModalFragment.Listener {
-                                            override fun onPaynymSelectItemClicked(code: String?) {
-                                                code?.let { it1 -> cahootsTransactionViewModel.setAddress(it1) }
-                                            }
-                                        }, paynym, false)
-                                        paynymSelectModalFragment.show(getSupportFragmentManager, "paynym_select")
-                                    }
+                                   cahootsTransactionViewModel.showSpendPaynymChooser()
                                 }) {
                                     Icon(painter = painterResource(id = R.drawable.ic_action_account_circle), contentDescription = "")
                                 }

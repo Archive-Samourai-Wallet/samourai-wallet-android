@@ -332,6 +332,7 @@ open class BalanceActivity : SamouraiActivity() {
         } else {
             binding.toolbarIcon.visibility = View.GONE
             binding.toolbar.setTitleMargin(0,0,0,0)
+            binding.toolbar.titleMarginEnd = -50
             binding.toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
             binding.toolbar.setNavigationOnClickListener {
                 super.onBackPressed()
