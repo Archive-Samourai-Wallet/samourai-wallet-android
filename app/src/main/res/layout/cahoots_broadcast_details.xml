@@ -183,7 +183,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
-                        android:text="Samourai Service"
+                        android:text="Service Fee"
                         android:textStyle="bold" />
 
                     <androidx.appcompat.widget.LinearLayoutCompat
