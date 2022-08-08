@@ -144,6 +144,7 @@ class CahootsTransactionViewModel : ViewModel() {
         } else {
             if (!FormatsUtil.getInstance().isValidBitcoinAddress(destinationAddress.value ?: "")
                 && !FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value ?: "")
+                    && !(cahootsType.value?.cahootsType == CahootsType.STOWAWAY && cahootsType.value?.cahootsMode == CahootsMode.MANUAL)
             ) {
                 valid = false
             }
