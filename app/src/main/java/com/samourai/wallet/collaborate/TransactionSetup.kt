@@ -317,21 +317,21 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
                     var value = amountEdit.text
                         .replace(" ", "")
                         .toDouble()
-                    if (format == "sat") {
-                        if (value >= 21000000.times(1e8)) {
-                            value = 0.0;
-                            amountEdit = TextFieldValue(
-                                text = ""
-                            )
-                        }
-                    } else {
-                        if (value >= 21000000) {
-                            value = 0.0
-                            amountEdit = TextFieldValue(
-                                text = ""
-                            )
-                        }
+
+                    if (format == "BTC" && amountEdit.text.split(".")[1].length > 8) {
+                        value = it.text.dropLast(1).toDouble()
+                        amountEdit = TextFieldValue(
+                                text = it.text.dropLast(1)
+                        )
                     }
+                    println("Sema maxima: " + amountEdit.text.replace(" ", "").toDouble())
+                    if (format == "sat" && amountEdit.text.replace(" ", "").toDouble() > 2.1E15) {
+                        value = it.text.dropLast(1).toDouble()
+                        amountEdit = TextFieldValue(
+                                text = it.text.dropLast(1)
+                        )
+                    }
+
                     amountInSats = if (format == "sat") {
                         value.toLong()
                     } else {
