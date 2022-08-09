@@ -74,7 +74,7 @@
     <string name="options_use_trusted_node">Utiliser un noeud sécurisé</string>
     <string name="options_use_trusted_node2">Émettre les transactions à partir de votre propre noeud.</string>
     <string name="options_rbf0">Envoyer en utilisant RBF</string>
-    <string name="options_rbf0_2">Les Dépenses vont utiliser replace-by-fee pour permettre l\'envolée des frais de transaction.</string>
+    <string name="options_rbf0_2">Les Dépenses vont utiliser replace-by-fee pour permettre une hausse des frais de transaction.</string>
     <string name="options_troubleshoot">Dépannage</string>
     <string name="options_passphrase_test">Passphrase/test sauvegarde</string>
     <string name="options_passphrase_test2">Vérifier l\'accès au portefeuille et à l\'assistance sauvegarde.</string>
@@ -890,7 +890,7 @@
 <string name="connect_paynym_fee">Frais : 0.00015000 BTC</string>
 <string name="connect"> Se connecter</string>
 <string name="blockchain_connect_with">Se connecter avec</string>
-<string name="following">Abonnement</string>
+<string name="following">Contacts suivis</string>
 <string name="based_on_cryptography_and">Repose sur la cryptographie et les maths et non sur vos informations personnelles</string>
 <string name="find_and_follow_your_friends">Retrouvez vos amis et contacts et suivez-les sans compromettre la confidentialité de vos données</string>
 <string name="unlocks_advanced">Déverrouille la fonctionnalité avancée de confidentialité dans votre portefeuille</string>
@@ -1040,7 +1040,8 @@
 <string name="total_remixable_balance">Solde Total Remixable</string>
 <string name="tx0_is_not_possible_with">Tx0 impossible avec cette UTXO sélectionnée.</string>
 
-<string name="tor_status">Situation de Tor</string>
+
+<string name="tor_status">Statut de Tor</string>
 <string name="open_in_browser">Ouvrir dans le browser</string>
 <string name="copy_tx_id">Copier TxID</string>
 <string name="copy_url">Coller URL</string>
@@ -1063,5 +1064,8 @@
 <string name="pin_length_error">Le code PIN doit comporter entre cinq et maximum huit chiffres</string>
 <string name="pins_not_match">Les codes PIN ne correspondent pas, veuillez réessayer.</string>
 
+<string name="add_new">Ajouter Nouveau</string>
+<string name="advanced">Fonctionnalité Avancée</string>
 
 </resources>
+
