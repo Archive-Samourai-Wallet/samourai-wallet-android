@@ -26,6 +26,7 @@ import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.psbt.PSBT;
+import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.QRBottomSheetDialog;
 
@@ -102,15 +103,17 @@ public class ManualCahootsActivity extends SamouraiActivity {
     }
 
     private void startSender() throws Exception {
-        // send cahoots
+        // TODO Sarath allow fee selection
+        long feePerB = FeeUtil.getInstance().getSuggestedFeeDefaultPerB();
         long sendAmount = getIntent().getLongExtra("sendAmount", 0);
         if (sendAmount <= 0) {
             throw new Exception("Invalid sendAmount");
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
 
+        // send cahoots
         ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
-        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, sendAmount, sendAddress);
+        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
         cahootsUi.setCahootsMessage(manualCahootsService.initiate(cahootsContext));
     }
 

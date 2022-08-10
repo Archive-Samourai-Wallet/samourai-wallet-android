@@ -216,14 +216,14 @@ public class ManualCahootsUi {
         return (CahootsTypeUser.SENDER.equals(typeUser) ? "Sending" : "Receiving") + " " + cahootsMode.getLabel().toLowerCase() + " " + cahootsType.getLabel();
     }
 
-    public CahootsContext computeCahootsContextInitiator(int account, long sendAmount, String sendAddress) throws Exception {
+    public CahootsContext computeCahootsContextInitiator(int account, long feePerB, long sendAmount, String sendAddress) throws Exception {
         switch (cahootsType) {
             case STONEWALLX2:
-                return CahootsContext.newInitiatorStonewallx2(account, sendAmount, sendAddress);
+                return CahootsContext.newInitiatorStonewallx2(account, feePerB, sendAmount, sendAddress);
             case STOWAWAY:
-                return CahootsContext.newInitiatorStowaway(account, sendAmount);
+                return CahootsContext.newInitiatorStowaway(account, feePerB, sendAmount);
             case MULTI:
-                return CahootsContext.newInitiatorMultiCahoots(account, sendAmount, sendAddress);
+                return CahootsContext.newInitiatorMultiCahoots(account, feePerB, sendAmount, sendAddress);
             default:
                 throw new Exception("Unknown #Cahoots");
         }
