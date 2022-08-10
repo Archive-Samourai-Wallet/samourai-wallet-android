@@ -1,6 +1,5 @@
 package com.samourai.wallet.collaborate
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.slideInHorizontally
@@ -133,7 +132,7 @@ fun ChooseAccount() {
 fun ChooseCahootsType(modalBottomSheetState: ModalBottomSheetState? = null) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
     val selectedCahootType by transactionViewModel.cahootsTypeLive.observeAsState()
-    val  scope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     val density = LocalDensity.current
     var cahootsType by remember {
@@ -144,11 +143,17 @@ fun ChooseCahootsType(modalBottomSheetState: ModalBottomSheetState? = null) {
     )
     DisposableEffect(modalBottomSheetState?.isVisible, effect = {
         onDispose {
-            if(selectedCahootType == null && modalBottomSheetState?.isVisible == false){
+            if (selectedCahootType == null && modalBottomSheetState?.isVisible == false) {
                 cahootsType = null
             }
         }
     })
+    LaunchedEffect(selectedCahootType, block = {
+        if (selectedCahootType == null && cahootsType != null) {
+            cahootsType = null
+        }
+    })
+
     Scaffold(
         modifier = Modifier.requiredHeight(380.dp),
         backgroundColor = samouraiBottomSheetBackground,
@@ -259,9 +264,9 @@ fun ChooseCahootsType(modalBottomSheetState: ModalBottomSheetState? = null) {
                         .clickable {
                             val typeInPerson = if (CahootsType.STONEWALLX2 == cahootsType) CahootsTransactionViewModel.CahootTransactionType.STONEWALLX2_MANUAL else CahootsTransactionViewModel.CahootTransactionType.STOWAWAY_MANUAL
                             transactionViewModel.setCahootType(typeInPerson)
-                           scope.launch{
-                               modalBottomSheetState?.hide()
-                           }
+                            scope.launch {
+                                modalBottomSheetState?.hide()
+                            }
                         },
                     trailing = {
                         if (
@@ -297,7 +302,7 @@ fun ChooseCahootsType(modalBottomSheetState: ModalBottomSheetState? = null) {
                         .clickable {
                             val typeInPerson = if (CahootsType.STONEWALLX2 == cahootsType) CahootsTransactionViewModel.CahootTransactionType.STONEWALLX2_SOROBAN else CahootsTransactionViewModel.CahootTransactionType.STOWAWAY_SOROBAN
                             transactionViewModel.setCahootType(typeInPerson)
-                            scope.launch{
+                            scope.launch {
                                 modalBottomSheetState?.hide()
                             }
                         },
