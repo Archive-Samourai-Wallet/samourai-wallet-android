@@ -3,11 +3,7 @@ package com.samourai.wallet.tools
 import AddressCalculator
 import SweepPrivateKeyView
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import androidx.activity.compose.BackHandler
+import android.view.*
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +11,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
@@ -76,7 +73,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
             SamouraiWalletTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    ToolsMainView(this, parentFragmentManager,this@ToolsBottomSheet.dialog?.window)
+                    ToolsMainView(this, parentFragmentManager, this@ToolsBottomSheet.dialog?.window)
                 }
             }
         }
@@ -101,6 +98,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                 }
         }
     }
+
 
     class SingleToolBottomSheet(private val toolType: ToolType) : BottomSheetDialogFragment() {
         var behavior: BottomSheetBehavior<*>? = null
@@ -133,7 +131,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                             }, keyParameter = key)
                             ToolType.SIGN -> SignMessage()
                             ToolType.ADDRESS_CALC -> AddressCalculator(this@SingleToolBottomSheet.dialog?.window)
-                            ToolType.AUTH47 -> Auth47Login(param= key, onClose = {
+                            ToolType.AUTH47 -> Auth47Login(param = key, onClose = {
                                 dismiss()
                             })
                         }
@@ -149,7 +147,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?,window: Window?) {
+fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?, window: Window?) {
     val vm = viewModel<AddressCalculatorViewModel>()
     val sweepViewModel = viewModel<SweepViewModel>()
     val auth47ViewModel = viewModel<Auth47ViewModel>()
@@ -160,26 +158,40 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val auth47BottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 
-    BackHandler(addressCalcBottomSheetState.isVisible) {
-        scope.launch {
-            addressCalcBottomSheetState.hide()
+    //Handle BackPress
+    LaunchedEffect(true) {
+        toolsBottomSheet?.dialog?.setOnKeyListener { dialog, keyCode, _ ->
+            if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_ESCAPE) {
+                scope.launch {
+                    if (addressCalcBottomSheetState.isVisible) {
+                        addressCalcBottomSheetState.hide()
+                    } else if (signMessageBottomSheetState.isVisible) {
+                        signMessageBottomSheetState.hide()
+                    } else if (auth47BottomSheet.isVisible) {
+                        auth47BottomSheet.hide()
+                    } else if (sweepPrivateKeyBottomSheet.isVisible) {
+                        sweepPrivateKeyBottomSheet.hide()
+                    } else {
+                        dialog.dismiss()
+                    }
+                }
+            }
+            true
         }
     }
-    BackHandler(signMessageBottomSheetState.isVisible) {
-        scope.launch {
-            sweepViewModel.clear()
-            addressCalcBottomSheetState.hide()
-        }
-    }
-    BackHandler(signMessageBottomSheetState.isVisible) {
-        scope.launch {
-            sweepPrivateKeyBottomSheet.hide()
-        }
-    }
-    BackHandler(auth47BottomSheet.isVisible) {
-        scope.launch {
-            auth47BottomSheet.hide()
-        }
+
+    LaunchedEffect(
+        addressCalcBottomSheetState.isVisible,
+        signMessageBottomSheetState.isVisible,
+        auth47BottomSheet.isVisible,
+        sweepPrivateKeyBottomSheet.isVisible,
+    ) {
+        val anyToolWindowIsVisible = (
+                addressCalcBottomSheetState.isVisible ||
+                        signMessageBottomSheetState.isVisible ||
+                        auth47BottomSheet.isVisible ||
+                        sweepPrivateKeyBottomSheet.isVisible)
+        toolsBottomSheet?.dialog?.setCancelable(!anyToolWindowIsVisible)
     }
 
     Scaffold {
@@ -194,7 +206,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             )
             ToolsItem(
                 title = stringResource(id = R.string.action_sweep),
-                subTitle = stringResource(R.string.enter_a_private_key_and) ,
+                subTitle = stringResource(R.string.enter_a_private_key_and),
                 icon = R.drawable.ic_broom,
                 onClick = {
                     scope.launch {
@@ -220,7 +232,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             )
             ToolsItem(
                 title = stringResource(R.string.wallet_address_calc),
-                subTitle = stringResource(R.string.calculate_any_address_derived) ,
+                subTitle = stringResource(R.string.calculate_any_address_derived),
                 icon = R.drawable.ic_calculator,
                 onClick = {
                     scope.launch {
@@ -409,7 +421,7 @@ fun DefaultPreview() {
     SamouraiWalletTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-            ToolsMainView(null,  null,null)
+            ToolsMainView(null, null, null)
         }
     }
 }

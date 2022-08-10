@@ -75,6 +75,7 @@ import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.wallet.widgets.popUpMenu.popupMenu
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import io.matthewnelson.topl_service.TorServiceController
@@ -663,6 +664,12 @@ open class BalanceActivity : SamouraiActivity() {
             refreshTx(false, true, false)
             binding.txSwipeContainer.isRefreshing = false
             showProgress()
+            return super.onOptionsItemSelected(item)
+        }
+        if (id == R.id.action_postmix_balance) {
+             startActivity(Intent(this,BalanceActivity::class.java).apply {
+                 putExtra("_account",SamouraiAccountIndex.POSTMIX)
+             })
             return super.onOptionsItemSelected(item)
         }
 

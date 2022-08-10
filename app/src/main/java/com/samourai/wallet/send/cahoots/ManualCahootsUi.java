@@ -6,6 +6,11 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.app.TaskStackBuilder;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.cahoots.ManualCahootsMessage;
 import com.samourai.soroban.cahoots.ManualCahootsService;
@@ -17,13 +22,9 @@ import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.widgets.CahootsCircleProgress;
 import com.samourai.wallet.widgets.ViewPager;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import java.util.ArrayList;
-
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import java.util.function.Function;
 
 public class ManualCahootsUi {
@@ -111,7 +112,7 @@ public class ManualCahootsUi {
 
         // check cahootsType
         if (cahootsType != null) {
-            if(!msg.getType().equals(cahootsType)) {
+            if (!msg.getType().equals(cahootsType)) {
                 // possible attack?
                 throw new Exception("Unexpected Cahoots cahootsType");
             }
@@ -170,14 +171,45 @@ public class ManualCahootsUi {
         }
     }
 
+    /**
+     * Following a transaction broadcast after user have collaborated, wallet will be navigated to the following screens:
+     * <p>
+     * 1:Initiate Stonewall X2 or Stowaway: always returned to the account which user selected
+     * 2:Participate —> Stonewall X2: always returned to the account which user selected .
+     * 3:Participate —> Stowaway: always returned to the Deposit screen
+     */
     private void notifyWalletAndFinish() {
         activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots success", Toast.LENGTH_LONG).show());
+        if (typeUser == CahootsTypeUser.COUNTERPARTY) {
+            if (cahootsType == CahootsType.STOWAWAY) {
+                Intent _intent = new Intent(activity, BalanceActivity.class);
+                _intent.putExtra("refresh", true);
+                _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                activity.startActivity(_intent);
+                return;
+            }
+        }
+        navigateToAccountBalanceScreen();
+    }
 
-        // finish and refresh
-        Intent i = new Intent(activity, BalanceActivity.class);
-        i.putExtra("refresh",true);
-        activity.finish();
-        activity.startActivity(i);
+    public void navigateToAccountBalanceScreen() {
+        if (account == SamouraiAccountIndex.POSTMIX) {
+            Intent balanceHome = new Intent(activity, BalanceActivity.class);
+            balanceHome.putExtra("_account", SamouraiAccountIndex.POSTMIX);
+            balanceHome.putExtra("refresh", true);
+            Intent parentIntent = new Intent(activity, BalanceActivity.class);
+            parentIntent.putExtra("_account", 0);
+            balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            TaskStackBuilder.create(activity.getApplicationContext())
+                    .addNextIntent(parentIntent)
+                    .addNextIntent(balanceHome)
+                    .startActivities();
+        } else {
+            Intent _intent = new Intent(activity, BalanceActivity.class);
+            _intent.putExtra("refresh", true);
+            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            activity.startActivity(_intent);
+        }
     }
 
     public String getTitle(CahootsMode cahootsMode) {

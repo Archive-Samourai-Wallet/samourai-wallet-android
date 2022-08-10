@@ -133,6 +133,8 @@ fun TransactionPreview(onClick: () -> Unit) {
     val destinationAddress by collaborateViewModel.destinationAddressLive.observeAsState(null)
     val amount by collaborateViewModel.amountLive.observeAsState(0L)
     var showClearDialog by remember { mutableStateOf(false) }
+    val cahootType by collaborateViewModel.cahootsTypeLive.observeAsState()
+
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -167,25 +169,27 @@ fun TransactionPreview(onClick: () -> Unit) {
             showSubSectionText = if (account == SamouraiAccountIndex.DEPOSIT) "Deposit account" else "Postmix account",
         )
         Divider()
-        if (FormatsUtil.getInstance().isValidPaymentCode(destinationAddress)) {
-            TransactionOptionSegment(
-                title = "Destination",
-                showSubSection = true,
-                onClick = onClick,
-                subSection = {
-                    if (destinationAddress != null)
-                        PaynymAvatar(destinationAddress)
-                }
-            )
-            Divider()
-        } else {
-            TransactionOptionSegment(
-                title = "Destination",
-                showSubSection = false,
-                onClick = onClick,
-                showSubSectionText = if (destinationAddress != null) destinationAddress!! else ""
-            )
-            Divider()
+        if (!(cahootType?.cahootsType == CahootsType.STOWAWAY && cahootType?.cahootsMode == CahootsMode.MANUAL)) {
+            if (FormatsUtil.getInstance().isValidPaymentCode(destinationAddress)) {
+                TransactionOptionSegment(
+                        title = "Destination",
+                        showSubSection = true,
+                        onClick = onClick,
+                        subSection = {
+                            if (destinationAddress != null)
+                                PaynymAvatar(destinationAddress)
+                        }
+                )
+                Divider()
+            } else {
+                TransactionOptionSegment(
+                        title = "Destination",
+                        showSubSection = false,
+                        onClick = onClick,
+                        showSubSectionText = if (destinationAddress != null) destinationAddress!! else ""
+                )
+                Divider()
+            }
         }
         TransactionOptionSegment(
             title = "Amount to send",

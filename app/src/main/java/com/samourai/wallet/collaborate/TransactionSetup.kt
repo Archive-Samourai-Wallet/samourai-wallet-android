@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.cahoots.CahootsMode
 import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
@@ -316,21 +317,21 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
                     var value = amountEdit.text
                         .replace(" ", "")
                         .toDouble()
-                    if (format == "sat") {
-                        if (value >= 21000000.times(1e8)) {
-                            value = 0.0;
-                            amountEdit = TextFieldValue(
-                                text = ""
-                            )
-                        }
-                    } else {
-                        if (value >= 21000000) {
-                            value = 0.0
-                            amountEdit = TextFieldValue(
-                                text = ""
-                            )
-                        }
+
+                    if (format == "BTC" && amountEdit.text.split(".")[1].length > 8) {
+                        value = it.text.dropLast(1).toDouble()
+                        amountEdit = TextFieldValue(
+                                text = it.text.dropLast(1)
+                        )
                     }
+                    println("Sema maxima: " + amountEdit.text.replace(" ", "").toDouble())
+                    if (format == "sat" && amountEdit.text.replace(" ", "").toDouble() > 2.1E15) {
+                        value = it.text.dropLast(1).toDouble()
+                        amountEdit = TextFieldValue(
+                                text = it.text.dropLast(1)
+                        )
+                    }
+
                     amountInSats = if (format == "sat") {
                         value.toLong()
                     } else {
@@ -519,94 +520,96 @@ fun SendDestination(modifier: Modifier = Modifier) {
         }
     }
     Box(modifier = modifier) {
-        ListItem(
-            text = {
-                Box(modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text(
-                        text = "Send Destination", fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = samouraiTextSecondary
-                    )
-                }
-            },
-            secondaryText = {
-                if (pcode != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            PicassoImage(
-                                modifier = modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(40.dp)),
-                                url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
-                            )
-                            Text(text = BIP47Meta.getInstance().getDisplayLabel(pcode))
-                        }
-                        if (allowPaynymClear) IconButton(onClick = {
-                            cahootsTransactionViewModel.setAddress("")
-                        }) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "")
-                        }
-                    }
-
-                } else {
-                    Column(modifier = Modifier) {
-                        TextField(
-                            value = addressEdit,
-                            onValueChange = {
-                                addressEdit = it
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .onFocusChanged {
-                                    cahootsTransactionViewModel.setAddress(addressEdit)
-                                },
-                            trailingIcon = {
-                                IconButton(onClick = {
-                                   cahootsTransactionViewModel.showSpendPaynymChooser()
-                                }) {
-                                    Icon(painter = painterResource(id = R.drawable.ic_action_account_circle), contentDescription = "")
-                                }
-                            },
-                            colors = TextFieldDefaults.textFieldColors(
-                                backgroundColor = samouraiTextFieldBg,
-                                cursorColor = samouraiAccent
-                            ),
-                            textStyle = TextStyle(fontSize = 12.sp),
-                            keyboardOptions = KeyboardOptions(
-                                autoCorrect = false,
-                                imeAction = ImeAction.Done,
-                                keyboardType = KeyboardType.Text,
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    cahootsTransactionViewModel.setAddress(addressEdit)
-                                    keyboardController?.hide()
-                                }
-                            ),
-                            isError = addressError != null,
-
-                            )
-                        if (addressError != null)
+        if (!(cahootsType?.cahootsType == CahootsType.STOWAWAY && cahootsType?.cahootsMode == CahootsMode.MANUAL)) {
+            ListItem(
+                    text = {
+                        Box(modifier = Modifier.padding(bottom = 12.dp)) {
                             Text(
-                                text = "$addressError",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                fontSize = 12.sp, color = samouraiError
+                                    text = "Send Destination", fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = samouraiTextSecondary
                             )
-                    }
-                }
+                        }
+                    },
+                    secondaryText = {
+                        if (pcode != null) {
+                            Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Row(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    PicassoImage(
+                                            modifier = modifier
+                                                    .size(40.dp)
+                                                    .clip(RoundedCornerShape(40.dp)),
+                                            url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
+                                    )
+                                    Text(text = BIP47Meta.getInstance().getDisplayLabel(pcode))
+                                }
+                                if (allowPaynymClear) IconButton(onClick = {
+                                    cahootsTransactionViewModel.setAddress("")
+                                }) {
+                                    Icon(imageVector = Icons.Default.Close, contentDescription = "")
+                                }
+                            }
 
-            }
-        )
+                        } else {
+                            Column(modifier = Modifier) {
+                                TextField(
+                                        value = addressEdit,
+                                        onValueChange = {
+                                            addressEdit = it
+                                        },
+                                        modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 4.dp)
+                                                .onFocusChanged {
+                                                    cahootsTransactionViewModel.setAddress(addressEdit)
+                                                },
+                                        trailingIcon = {
+                                            IconButton(onClick = {
+                                                cahootsTransactionViewModel.showSpendPaynymChooser()
+                                            }) {
+                                                Icon(painter = painterResource(id = R.drawable.ic_action_account_circle), contentDescription = "")
+                                            }
+                                        },
+                                        colors = TextFieldDefaults.textFieldColors(
+                                                backgroundColor = samouraiTextFieldBg,
+                                                cursorColor = samouraiAccent
+                                        ),
+                                        textStyle = TextStyle(fontSize = 12.sp),
+                                        keyboardOptions = KeyboardOptions(
+                                                autoCorrect = false,
+                                                imeAction = ImeAction.Done,
+                                                keyboardType = KeyboardType.Text,
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                                onDone = {
+                                                    cahootsTransactionViewModel.setAddress(addressEdit)
+                                                    keyboardController?.hide()
+                                                }
+                                        ),
+                                        isError = addressError != null,
+
+                                        )
+                                if (addressError != null)
+                                    Text(
+                                            text = "$addressError",
+                                            modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 4.dp),
+                                            fontSize = 12.sp, color = samouraiError
+                                    )
+                            }
+                        }
+
+                    }
+            )
+        }
     }
 }
 
