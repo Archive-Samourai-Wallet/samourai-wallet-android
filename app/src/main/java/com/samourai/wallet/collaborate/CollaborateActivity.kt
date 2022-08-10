@@ -354,11 +354,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
         scrimColor = Color.Black.copy(alpha = 0.7f),
         sheetBackgroundColor = samouraiBottomSheetBackground,
         sheetContent = {
-            ChooseCahootsType(onClose = {
-                scope.launch {
-                    accountChooser.hide()
-                }
-            })
+            ChooseCahootsType(accountChooser)
         },
         sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
     ) {

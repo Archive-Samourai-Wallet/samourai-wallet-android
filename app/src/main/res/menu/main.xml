@@ -73,6 +73,12 @@
         android:title="@string/options_postmix"
         app:showAsAction="never" />
 
+  <item
+        android:id="@+id/action_postmix_balance"
+        android:orderInCategory="100"
+        android:title="Postmix transactions"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/action_copy_cahoots"
         android:orderInCategory="100"
