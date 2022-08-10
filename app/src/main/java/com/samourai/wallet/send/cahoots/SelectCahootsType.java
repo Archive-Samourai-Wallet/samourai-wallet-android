@@ -16,6 +16,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWalletConst;
+import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
@@ -138,7 +139,7 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
         samouraiAsParticipant.setOnClickListener(view1 -> {
             if (onSelectListener != null) {
                 SelectCahootsType.type typeSoroban = type.MULTI_SOROBAN;
-                onSelectListener.onSelect(typeSoroban, SamouraiWalletConst.MULTICAHOOTS_PCODE);
+                onSelectListener.onSelect(typeSoroban, BIP47Meta.getMixingPartnerCode());
             }
             this.dismiss();
         });
