@@ -1,5 +1,6 @@
 package com.samourai.wallet.collaborate
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.slideInHorizontally
@@ -34,6 +35,7 @@ import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
@@ -128,9 +130,10 @@ fun ChooseAccount() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
+fun ChooseCahootsType(modalBottomSheetState: ModalBottomSheetState? = null) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
     val selectedCahootType by transactionViewModel.cahootsTypeLive.observeAsState()
+    val  scope = rememberCoroutineScope()
 
     val density = LocalDensity.current
     var cahootsType by remember {
@@ -139,6 +142,13 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
     val titleOffset: Dp by animateDpAsState(
         if (cahootsType == null) 8.dp else 44.dp,
     )
+    DisposableEffect(modalBottomSheetState?.isVisible, effect = {
+        onDispose {
+            if(selectedCahootType == null && modalBottomSheetState?.isVisible == false){
+                cahootsType = null
+            }
+        }
+    })
     Scaffold(
         modifier = Modifier.requiredHeight(380.dp),
         backgroundColor = samouraiBottomSheetBackground,
@@ -249,7 +259,9 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                         .clickable {
                             val typeInPerson = if (CahootsType.STONEWALLX2 == cahootsType) CahootsTransactionViewModel.CahootTransactionType.STONEWALLX2_MANUAL else CahootsTransactionViewModel.CahootTransactionType.STOWAWAY_MANUAL
                             transactionViewModel.setCahootType(typeInPerson)
-                            onClose?.invoke()
+                           scope.launch{
+                               modalBottomSheetState?.hide()
+                           }
                         },
                     trailing = {
                         if (
@@ -285,7 +297,9 @@ fun ChooseCahootsType(onClose: (() -> Unit)? = null) {
                         .clickable {
                             val typeInPerson = if (CahootsType.STONEWALLX2 == cahootsType) CahootsTransactionViewModel.CahootTransactionType.STONEWALLX2_SOROBAN else CahootsTransactionViewModel.CahootTransactionType.STOWAWAY_SOROBAN
                             transactionViewModel.setCahootType(typeInPerson)
-                            onClose?.invoke()
+                            scope.launch{
+                                modalBottomSheetState?.hide()
+                            }
                         },
                     text = {
                         Text(
@@ -324,8 +338,9 @@ fun ChooseAccountPreview() {
     ChooseAccount()
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Preview
 @Composable
 fun ChooseCahootsTypePreview() {
-    ChooseCahootsType()
+    ChooseCahootsType(null)
 }
