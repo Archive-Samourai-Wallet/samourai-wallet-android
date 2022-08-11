@@ -123,7 +123,7 @@ public class CahootReviewFragment extends Fragment {
     }
 
     private void showError() {
-        Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
+         Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
         getActivity().runOnUiThread(() -> {
             cahootsProgressGroup.setVisibility(View.GONE);
             sendBtn.setEnabled(true);

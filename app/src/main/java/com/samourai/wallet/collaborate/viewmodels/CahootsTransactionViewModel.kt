@@ -1,6 +1,7 @@
 package com.samourai.wallet.collaborate.viewmodels
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -46,8 +47,9 @@ class CahootsTransactionViewModel : ViewModel() {
     private val amount = MutableLiveData(0L)
     private var collaboratorPcode = MutableLiveData<String?>(null)
     private val showSpendFromPaynymChooser = MutableLiveData(false)
-    private val decimalFormatSatPerByte = DecimalFormat("#.##").also {
-        it.isDecimalSeparatorAlwaysShown = true
+    private val decimalFormatSatPerByte = DecimalFormat("#").also {
+        it.isDecimalSeparatorAlwaysShown = false
+        it.minimumFractionDigits = 0
     }
 
     fun getFeeSatsValueLive(): LiveData<String> = feesPerByte
@@ -86,6 +88,10 @@ class CahootsTransactionViewModel : ViewModel() {
 
 
     init {
+        initFee();
+    }
+
+    private fun initFee(){
         feeLow = FeeUtil.getInstance().lowFee.defaultPerKB.toLong()
         feeMed = FeeUtil.getInstance().suggestedFee.defaultPerKB.toLong()
         feeHigh = FeeUtil.getInstance().highFee.defaultPerKB.toLong()
@@ -94,8 +100,7 @@ class CahootsTransactionViewModel : ViewModel() {
         }
         if (feeHigh > feeLow && (feeMed - feeHigh) != 0L) {
             try {
-                val currentSlider = ((feeMed.toFloat() - feeHigh.toFloat())
-                    .div(feeHigh.toFloat().minus(feeLow.toFloat()))).absoluteValue
+                val currentSlider = ( feeMed.toFloat() - feeLow.toFloat()) .div( feeHigh.toFloat().minus(feeLow.toFloat()))
                 feeRange.value = currentSlider
                 feeRange.postValue(currentSlider)
                 calculateFees(feeRange.value ?: 0.5f)
@@ -204,6 +209,8 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     fun setFeeRange(it: Float) {
+        feeRange.value= it
+        feeRange.postValue(it)
         calculateFees(it)
     }
 
@@ -216,7 +223,7 @@ class CahootsTransactionViewModel : ViewModel() {
         }
         val fees = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), it).coerceAtLeast(1f)
         feesPerByte.postValue(decimalFormatSatPerByte.format(fees / 1000))
-    }
+     }
 
     fun setAddress(addressEdit: String) {
         this.destinationAddress.value = addressEdit
@@ -252,16 +259,17 @@ class CahootsTransactionViewModel : ViewModel() {
 
         }
         val amountInSats = amount.value?.toLong() ?: 0.0
+        val feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value!!.toFloat()).coerceAtLeast(1000f).div(1000.0).toLong()
 
         if (CahootsMode.MANUAL == type.cahootsMode) {
             // Cahoots manual
-            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), address)
+            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address)
             context.startActivity(intent)
             return
         }
         if (CahootsMode.SOROBAN == type.cahootsMode) {
             // choose Cahoots counterparty
-            val intent = SorobanMeetingSendActivity.createIntent(context, account, type.cahootsType, amountInSats.toLong(), address, collaboratorPcode.value)
+            val intent = SorobanMeetingSendActivity.createIntent(context, account, type.cahootsType, amountInSats.toLong(),feePerKb, address, collaboratorPcode.value)
             context.startActivity(intent)
             return
         }

@@ -38,9 +38,10 @@ public class SorobanCahootsActivity extends SamouraiActivity {
 
     private Disposable sorobanDisposable;
 
-    public static Intent createIntentSender(Context ctx, int account, CahootsType type, long amount, String address, String pcode) {
+    public static Intent createIntentSender(Context ctx, int account, CahootsType type, long sendAmount, long fees, String address, String pcode) {
         Intent intent = ManualCahootsUi.createIntent(ctx, SorobanCahootsActivity.class, account, type, CahootsTypeUser.SENDER);
-        intent.putExtra("sendAmount", amount);
+        intent.putExtra("sendAmount", sendAmount);
+        intent.putExtra("fees", fees);
         intent.putExtra("sendAddress", address);
         intent.putExtra("pcode", pcode);
         return intent;
@@ -99,14 +100,12 @@ public class SorobanCahootsActivity extends SamouraiActivity {
     }
 
     private void startSender() throws Exception {
-        // TODO Sarath allow fee selection
-        long feePerB = FeeUtil.getInstance().getSuggestedFeeDefaultPerB();
+        long feePerB = getIntent().getLongExtra("fees", FeeUtil.getInstance().getSuggestedFeeDefaultPerB()) ;
         long sendAmount = getIntent().getLongExtra("sendAmount", 0);
         if (sendAmount <=0) {
             throw new Exception("Invalid sendAmount");
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
-
         // send cahoots
         AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
         CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
