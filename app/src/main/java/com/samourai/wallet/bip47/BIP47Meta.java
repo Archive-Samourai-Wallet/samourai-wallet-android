@@ -29,7 +29,7 @@ public class BIP47Meta {
 
     public static final String strSamouraiDonationPCode = "PM8TJVzLGqWR3dtxZYaTWn3xJUop3QP3itR4eYzX7XvV5uAfctEEuHhKNo3zCcqfAbneMhyfKkCthGv5werVbwLruhZyYNTxqbCrZkNNd2pPJA2e2iAh";
 //    public static final String strSamouraiDonationMeta = "?title=Samourai Donations&desc=Donate to help fund development of Samourai Bitcoin Wallet&user=K6tS2X8";
-
+    public static final  String getStrSamouraiMixingPcodeMainnet = "PM8TJUYeU1rF5zcVkNsiN6LEzikQXH4NTtgzL7bCbnznNtef5mWVi9i3LetDByv9HHMTq5czDppAP4gyimC7LyNLiC1hfAyQCHvDBP3EzPU5sx3yyxRY";
     public static final  String getStrSamouraiMixingPcodeTestnet = "PM8TJXBr2UNrPuhTFrmiCrww74GCFm1WbTqpxEXACpfzAsKqM3xvgZPG2PhDGycW2Ud9RiCzVHb3NprRvGffpYbi9bw6sYjU5nZJm94syV1J67V9fRND";
     public static final int INCOMING_LOOKAHEAD = 3;
 //    public static final int OUTGOING_LOOKAHEAD = 3;
@@ -733,12 +733,11 @@ public class BIP47Meta {
 
     }
 
-    //TODO: add mainnet pcode
     public static String getMixingPartnerCode() {
         if(SamouraiWallet.getInstance().isTestNet()){
             return getStrSamouraiMixingPcodeTestnet;
         }else{
-            return getStrSamouraiMixingPcodeTestnet;
+            return getStrSamouraiMixingPcodeMainnet;
         }
     }
 }

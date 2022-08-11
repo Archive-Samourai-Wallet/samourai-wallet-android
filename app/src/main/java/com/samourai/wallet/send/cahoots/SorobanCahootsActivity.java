@@ -17,6 +17,7 @@ import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.client.SorobanMessage;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
+import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.AppUtil;
 
 import org.spongycastle.util.encoders.Hex;
@@ -98,15 +99,17 @@ public class SorobanCahootsActivity extends SamouraiActivity {
     }
 
     private void startSender() throws Exception {
-        // send cahoots
+        // TODO Sarath allow fee selection
+        long feePerB = FeeUtil.getInstance().getSuggestedFeeDefaultPerB();
         long sendAmount = getIntent().getLongExtra("sendAmount", 0);
         if (sendAmount <=0) {
             throw new Exception("Invalid sendAmount");
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
 
+        // send cahoots
         AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
-        CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, sendAmount, sendAddress);
+        CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
         Observable<SorobanMessage> sorobanListener = sorobanCahootsService.initiator(cahootsContext, paymentCode, TIMEOUT_MS);
 
         // listen for cahoots progress
