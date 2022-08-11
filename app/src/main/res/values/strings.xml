@@ -922,5 +922,7 @@
     <string name="redeem_script">Redeem Script</string>
     <string name="select_collaborator">Select Collaborator</string>
     <string name="select_paynym">Select Paynym</string>
+    <string name="sweep_dust_warning">Unable to compose transaction, output value will be dust</string>
+    <string name="sweep_invalid_fee_warning">Unable to compose transaction invalid fees.</string>
 
 </resources>
