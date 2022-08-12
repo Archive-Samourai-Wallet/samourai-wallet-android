@@ -35,6 +35,7 @@ fun InitiateSegment(
 ) {
     val collaborateViewModel = viewModel<CahootsTransactionViewModel>()
     val collaboratorPcode by collaborateViewModel.collaboratorPcodeLive.observeAsState()
+    val feeRate by collaborateViewModel.getFeeSatsValueLive().observeAsState("")
     val validTransaction by collaborateViewModel.validTransactionLive.observeAsState(false)
     val cahootType by collaborateViewModel.cahootsTypeLive.observeAsState()
     val context = LocalContext.current
@@ -134,6 +135,7 @@ fun TransactionPreview(onClick: () -> Unit) {
     val amount by collaborateViewModel.amountLive.observeAsState(0L)
     var showClearDialog by remember { mutableStateOf(false) }
     val cahootType by collaborateViewModel.cahootsTypeLive.observeAsState()
+    val feeRate by collaborateViewModel.getFeeSatsValueLive().observeAsState("")
 
     if (showClearDialog) {
         AlertDialog(
@@ -196,6 +198,12 @@ fun TransactionPreview(onClick: () -> Unit) {
             showSubSection = false,
             onClick = onClick,
             showSubSectionText = FormatsUtil.formatBTC(amount)
+        )
+        TransactionOptionSegment(
+            title = "Fee rate",
+            showSubSection = false,
+            onClick = onClick,
+            showSubSectionText = "${feeRate} sat/b"
         )
         Divider()
         Box(modifier = Modifier.fillMaxWidth()) {

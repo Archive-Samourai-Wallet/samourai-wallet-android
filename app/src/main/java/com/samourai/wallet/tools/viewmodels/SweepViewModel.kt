@@ -1,6 +1,8 @@
 package com.samourai.wallet.tools.viewmodels
 
 import android.content.Context
+import android.content.Intent
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,18 +14,17 @@ import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.bipFormat.BIP_FORMAT
 import com.samourai.wallet.bipFormat.BipFormat
-import com.samourai.wallet.bipFormat.BipFormatSupplierImpl
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.PushTx
 import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.send.beans.SweepPreview
+import com.samourai.wallet.service.JobRefreshService
 import com.samourai.wallet.util.*
 import kotlinx.coroutines.*
 import org.bitcoinj.core.Transaction
 import java.text.DecimalFormat
-import kotlin.math.absoluteValue
 
 class SweepViewModel : ViewModel() {
 
@@ -32,6 +33,8 @@ class SweepViewModel : ViewModel() {
     private val addressValidationError: MutableLiveData<String?> = MutableLiveData()
     private val privateKeyFormat: MutableLiveData<String?> = MutableLiveData()
     private val loading: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val validFees: MutableLiveData<Boolean> = MutableLiveData(true)
+    private val dustOutput: MutableLiveData<Boolean> = MutableLiveData(false)
     private val broadcastLoading: MutableLiveData<Boolean> = MutableLiveData(false)
     private val broadcastError: MutableLiveData<String?> = MutableLiveData(null)
     private val feeRange: MutableLiveData<Float> = MutableLiveData(0.5f)
@@ -48,8 +51,7 @@ class SweepViewModel : ViewModel() {
     }
     private var sweepPreview: SweepPreview? = null
     private val params = SamouraiWallet.getInstance().currentNetworkParams
-    private val blocks : MutableLiveData<String> = MutableLiveData("6 blocks")
-
+    private val blocks: MutableLiveData<String> = MutableLiveData("6 blocks")
     var feeLow: Long = 0L
     var feeHigh: Long = 0L
     var feeMed: Long = 0L
@@ -58,10 +60,13 @@ class SweepViewModel : ViewModel() {
     fun getAddressLive(): LiveData<String?> = addressLiveData
     fun getAddressValidationLive(): LiveData<String?> = addressValidationError
     fun getFeeSatsValueLive(): LiveData<String> = feesPerByte
+    fun getFeeRangeLive(): LiveData<Float> = feeRange
     fun getAmountLive(): LiveData<Long> = foundAmount
     fun getPrivateKeyFormatLive(): LiveData<String?> = privateKeyFormat
     fun getPageLive(): LiveData<Int> = page
     fun getLoadingLive(): LiveData<Boolean> = loading
+    fun getValidFees(): LiveData<Boolean> = validFees
+    fun getDustStatus(): LiveData<Boolean> = dustOutput
     fun getBroadcastStateLive(): LiveData<Boolean> = broadcastLoading
     fun getBroadcastErrorStateLive(): LiveData<String?> = broadcastError
     fun getBIP38PassphraseLive(): LiveData<String?> = bip38Passphrase
@@ -71,7 +76,11 @@ class SweepViewModel : ViewModel() {
     fun getBlockWaitTime(): LiveData<String> = blocks
 
     init {
-        feeLow = FeeUtil.getInstance().lowFee.defaultPerKB.toLong()
+        initFeeRange()
+    }
+
+    private fun  initFeeRange(){
+        feeLow = 1000L
         feeMed = FeeUtil.getInstance().suggestedFee.defaultPerKB.toLong()
         feeHigh = FeeUtil.getInstance().highFee.defaultPerKB.toLong()
         if (feeHigh == 1000L && feeLow == 1000L) {
@@ -79,7 +88,7 @@ class SweepViewModel : ViewModel() {
         }
         if (feeHigh > feeLow && (feeMed - feeHigh) != 0L) {
             try {
-                val currentSlider = ((feeMed.toFloat() - feeHigh.toFloat()).div(feeHigh.toFloat().minus(feeLow.toFloat()))).absoluteValue
+                val currentSlider = ( feeMed.toFloat() - feeLow.toFloat()) .div( feeHigh.toFloat().minus(feeLow.toFloat()))
                 feeRange.value = currentSlider
                 feeRange.postValue(currentSlider)
             } catch (e: Exception) {
@@ -96,10 +105,13 @@ class SweepViewModel : ViewModel() {
         feesPerByte.postValue("")
         fees.postValue(0L)
         foundAmount.postValue(0L)
+        validFees.postValue(true)
+        dustOutput.postValue(false)
         unspentOutputs.postValue(listOf())
         bip38Passphrase.postValue("")
         addressLiveData.postValue("")
         page.postValue(0)
+        initFeeRange()
     }
 
     fun setAddressType(type: WALLET_INDEX) {
@@ -153,7 +165,7 @@ class SweepViewModel : ViewModel() {
             }.invokeOnCompletion {
                 if (it != null) {
                     it.printStackTrace()
-                    if(it.message?.contains(context.getString(R.string.in_offline_mode)) == false){
+                    if (it.message?.contains(context.getString(R.string.in_offline_mode)) == false) {
                         addressValidationError.postValue("Error $it")
                     }
                 }
@@ -166,6 +178,21 @@ class SweepViewModel : ViewModel() {
             return
         }
         this.addressLiveData.postValue(privKey)
+    }
+
+
+    //Check if the amount and fees are feasible for a tx
+    private suspend fun validateFees(): Boolean {
+        val totalValue = UnspentOutput.sumValue(unspentOutputs.value)
+        val feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value ?: 0f).coerceAtLeast(1f)
+        val fee: Long = computeFee(bipFormat.value!!, unspentOutputs.value!!, feePerKb.div(1000.0).toLong())
+        val amount = totalValue - fee
+        withContext(Dispatchers.Main) {
+            dustOutput.postValue((totalValue - fee) <= SamouraiWallet.bDust.toLong())
+            fees.postValue(fee)
+            validFees.postValue(!(amount == 0L || fee > amount))
+        }
+        return !(amount == 0L || fee > amount)
     }
 
     private suspend fun findUTXOs(context: Context) {
@@ -189,11 +216,11 @@ class SweepViewModel : ViewModel() {
         }
     }
 
-    fun makeTransaction(context: Context) {
+    private fun makeTransaction(context: Context) {
         if (bipFormat.value == null || unspentOutputs.value == null || privKeyReader == null) {
             return
         }
-        feeLow = FeeUtil.getInstance().lowFee.defaultPerKB.toLong()
+        feeLow = 1000L
         feeMed = FeeUtil.getInstance().suggestedFee.defaultPerKB.toLong()
         feeHigh = FeeUtil.getInstance().highFee.defaultPerKB.toLong()
         if (feeHigh == 1000L && feeLow == 1000L) {
@@ -206,10 +233,21 @@ class SweepViewModel : ViewModel() {
                     val rbfOptin = PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false)
                     val blockHeight = APIFactory.getInstance(context).latestBlockHeight
                     val totalValue = UnspentOutput.sumValue(unspentOutputs.value)
-                    val feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value ?: 0f).coerceAtLeast(1f)
                     val address: String? = bipFormat.value?.getToAddress(privKeyReader!!.key, privKeyReader!!.params)
-                    val fee: Long = computeFee(bipFormat.value!!, unspentOutputs.value!!, feePerKb.div(1000.0).toLong())
-                    val amount = totalValue - fee
+                    var feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value ?: 0f).coerceAtLeast(1f)
+                    var fee: Long = computeFee(bipFormat.value!!, unspentOutputs.value!!, feePerKb.div(1000.0).toLong())
+                    var amount = totalValue - fee
+                    //Check if the amount too low for a tx or miner fee is high
+                    if (amount == 0L || fee > amount) {
+                        //check if the tx is possible with 1sat/b rate
+                        withContext(Dispatchers.Main) {
+                            feeRange.value = 0.1f
+                            feeRange.postValue(0.1f)
+                        }
+                         feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), 0.0f).coerceAtLeast(1f)
+                        fee = computeFee(bipFormat.value!!, unspentOutputs.value!!, feePerKb.div(1000.0).toLong())
+                        amount = totalValue - fee
+                    }
                     sweepPreview = SweepPreview(amount, address, bipFormat.value, fee, unspentOutputs.value, privKeyReader!!.key, privKeyReader!!.params)
                     val params = sweepPreview!!.params
                     val receivers: MutableMap<String, Long> = LinkedHashMap()
@@ -226,7 +264,7 @@ class SweepViewModel : ViewModel() {
 
                     var pct: Double
                     var nbBlocks = 6
-                    val feeForBlocks = if(getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000)
+                    val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000)
 
                     if (feeForBlocks != null) {
                         if (feeForBlocks <= feeLow.toDouble()) {
@@ -263,7 +301,13 @@ class SweepViewModel : ViewModel() {
 
     fun setFeeRange(it: Float, context: Context) {
         feeRange.postValue(it)
-        makeTransaction(context = context)
+        feeRange.value = it
+        viewModelScope.launch {
+            if (validateFees()) {
+                makeTransaction(context = context)
+            }
+        }
+
     }
 
     private fun computeFee(bipFormat: BipFormat, unspentOutputs: Collection<UnspentOutput?>, feePerB: Long): Long {
@@ -299,7 +343,11 @@ class SweepViewModel : ViewModel() {
                         .map { unspentOutput: UnspentOutput -> unspentOutput.computeOutpoint(params) }.toCollection(outpoints);
                     val tr = SendFactory.getInstance().makeTransaction(receivers, outpoints, BIP_FORMAT.PROVIDER, rbfOptin, params, blockHeight)
                     transaction = SendFactory.getInstance().signTransactionForSweep(tr, sweepPreview!!.privKey, params)
-
+                    val intent =   Intent(context, JobRefreshService::class.java)
+                    intent.putExtra("notifTx", false)
+                    intent.putExtra("dragged", false)
+                    intent.putExtra("launch", false)
+                    JobRefreshService.enqueueWork(context, intent)
                 } catch (e: Exception) {
                     throw  CancellationException("Sign: ${e.message}")
                 }

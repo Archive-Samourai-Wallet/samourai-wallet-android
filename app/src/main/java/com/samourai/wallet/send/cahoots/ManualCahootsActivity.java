@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,9 +46,14 @@ public class ManualCahootsActivity extends SamouraiActivity {
         return intent;
     }
 
-    public static Intent createIntentSender(Context ctx, int account, CahootsType type, long amount, String address) {
+    public static Intent createIntentSender(Context ctx,
+                                            int account,
+                                            CahootsType type,
+                                            long fees,
+                                            long amount, String address) {
         Intent intent = ManualCahootsUi.createIntent(ctx, ManualCahootsActivity.class, account, type, CahootsTypeUser.SENDER);
         intent.putExtra("sendAmount", amount);
+        intent.putExtra("fees", fees);
         intent.putExtra("sendAddress", address);
         return intent;
     }
@@ -103,15 +109,12 @@ public class ManualCahootsActivity extends SamouraiActivity {
     }
 
     private void startSender() throws Exception {
-        // TODO Sarath allow fee selection
-        long feePerB = FeeUtil.getInstance().getSuggestedFeeDefaultPerB();
+        long feePerB =   getIntent().getLongExtra("fees", FeeUtil.getInstance().getSuggestedFeeDefaultPerB()) ;
         long sendAmount = getIntent().getLongExtra("sendAmount", 0);
         if (sendAmount <= 0) {
             throw new Exception("Invalid sendAmount");
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
-
-        // send cahoots
         ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
         cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
         cahootsUi.setCahootsMessage(manualCahootsService.initiate(cahootsContext));

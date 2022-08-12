@@ -18,6 +18,7 @@ import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
+import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
 import com.samourai.wallet.util.AppUtil;
 import com.squareup.picasso.Picasso;
@@ -48,9 +49,10 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
 
     private String pcode;
 
-    public static Intent createIntent(Context ctx, int account, CahootsType type, long amount, String address, String pcode) {
+    public static Intent createIntent(Context ctx, int account, CahootsType type, long amount,long fees, String address, String pcode) {
         Intent intent = new Intent(ctx, SorobanMeetingSendActivity.class);
         intent.putExtra("_account", account);
+        intent.putExtra("fees", fees);
         intent.putExtra("type", type.getValue());
         intent.putExtra("sendAmount", amount);
         intent.putExtra("sendAddress", address);
@@ -154,7 +156,12 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
                                         .subscribe(sorobanResponse -> {
                                             if (sorobanResponse.isAccept()) {
                                                 Toast.makeText(getApplicationContext(), "Cahoots request accepted!", Toast.LENGTH_LONG).show();
-                                                Intent intent = SorobanCahootsActivity.createIntentSender(this, accountIndex, cahootsType, sendAmount, sendAddress, pcode);
+                                                Intent intent = SorobanCahootsActivity.createIntentSender(this,
+                                                        accountIndex,
+                                                        cahootsType,
+                                                        sendAmount,
+                                                        getIntent().getLongExtra("fees", FeeUtil.getInstance().getSuggestedFeeDefaultPerB()),
+                                                        sendAddress, pcode);
                                                 startActivity(intent);
                                             } else {
                                                 Toast.makeText(getApplicationContext(), "Cahoots request refused!", Toast.LENGTH_LONG).show();

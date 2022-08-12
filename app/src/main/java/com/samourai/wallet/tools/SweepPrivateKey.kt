@@ -43,8 +43,8 @@ import com.samourai.wallet.R
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.theme.*
-import com.samourai.wallet.tools.viewmodels.SweepViewModel
 import com.samourai.wallet.tools.WrapToolsPageAnimation
+import com.samourai.wallet.tools.viewmodels.SweepViewModel
 import com.samourai.wallet.util.AddressFactory
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.FormatsUtil
@@ -349,6 +349,8 @@ fun SweepTransactionPreview() {
     val context = LocalContext.current
     val sweepAddress by vm.getSweepAddressLive().observeAsState()
     val sweepAmount by vm.getAmountLive().observeAsState()
+    val validFees by vm.getValidFees().observeAsState(true)
+    val dustOutput by vm.getDustStatus().observeAsState(true)
     val sweepFees by vm.getSweepFees().observeAsState()
     val receiveAddressType by vm.getReceiveAddressType().observeAsState()
     var showAdvanceOption by rememberSaveable { mutableStateOf(false) }
@@ -361,10 +363,6 @@ fun SweepTransactionPreview() {
 
     LaunchedEffect(receiveAddressType) {
         receiveAddress = AddressFactory.getInstance().getAddress(receiveAddressType).right
-    }
-
-    LaunchedEffect(Unit) {
-        vm.makeTransaction(context)
     }
 
     Box(modifier = Modifier
@@ -439,16 +437,19 @@ fun SweepTransactionPreview() {
 
                         item {
                             ListItem(
-                                    title = stringResource(id = R.string.estimated_wait_time),
-                                    value = nbBlocks.toString()
+                                title = stringResource(id = R.string.estimated_wait_time),
+                                value = nbBlocks.toString()
                             )
                         }
                     }
                 }
                 Box(modifier = Modifier.padding(vertical = 12.dp)) {
+                    val enable = validFees &&  !dustOutput;
                     Button(
+                        enabled = enable,
                         onClick = {
-                            confirmDialog = true
+                            if (enable)
+                                confirmDialog = true
                         },
                         contentPadding = PaddingValues(
                             vertical = 12.dp
@@ -457,7 +458,7 @@ fun SweepTransactionPreview() {
                             .fillMaxWidth()
                             .padding(top = 8.dp),
                         colors = ButtonDefaults.textButtonColors(
-                            backgroundColor = samouraiAccent,
+                            backgroundColor = if (enable) samouraiAccent else samouraiSlateGreyAccent.copy(alpha = 0.6f),
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(4.dp)
@@ -524,41 +525,63 @@ fun SweepTransactionPreview() {
 fun SliderSegment() {
     val vm = viewModel<SweepViewModel>()
     var sliderPosition by rememberSaveable { mutableStateOf(0.5f) }
+    val feeRange by vm.getFeeRangeLive().observeAsState(0.5f)
     val satsPerByte by vm.getFeeSatsValueLive().observeAsState()
+    val validFees by vm.getValidFees().observeAsState(true)
+    val dustOutput by vm.getDustStatus().observeAsState(false)
+    LaunchedEffect(true) {
+        sliderPosition = feeRange
+    }
     val context = LocalContext.current
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Slider(value = sliderPosition,
-            modifier = Modifier
-                .weight(.7f)
-                .padding(horizontal = 4.dp),
-            colors = SliderDefaults.colors(
-                thumbColor = samouraiAccent,
-                activeTickColor = samouraiAccent,
-                activeTrackColor = samouraiAccent,
-                inactiveTickColor = Color.Gray,
-                inactiveTrackColor = samouraiWindow
-            ),
-            onValueChange = {
-                sliderPosition = it;
-                vm.setFeeRange(it, context = context)
-            })
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(.3f)
+    Column(modifier = Modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "$satsPerByte sats/b",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                textAlign = TextAlign.End,
+            Slider(value = sliderPosition,
                 modifier = Modifier
-            )
+                    .weight(.7f)
+                    .padding(horizontal = 4.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = if (validFees) samouraiAccent else samouraiError,
+                    activeTickColor = if (validFees) samouraiAccent else samouraiError,
+                    activeTrackColor = if (validFees) samouraiAccent else samouraiError,
+                    inactiveTickColor = Color.Gray,
+                    inactiveTrackColor = samouraiWindow
+                ),
+                onValueChange = {
+                    sliderPosition = it;
+                    vm.setFeeRange(it, context = context)
+                })
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(.3f)
+            ) {
+                Text(
+                    text = if(validFees) "$satsPerByte sats/b" else "_.__",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                )
+            }
         }
+        if (!validFees)
+            Text(
+                text = stringResource(R.string.sweep_invalid_fee_warning),
+                fontSize = 10.sp,
+                color = samouraiError,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+        if (dustOutput)
+            Text(
+                text = stringResource(R.string.sweep_dust_warning),
+                fontSize = 10.sp,
+                color = samouraiError,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
     }
 }
 

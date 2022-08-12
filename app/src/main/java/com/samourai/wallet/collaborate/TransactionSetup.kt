@@ -1,6 +1,8 @@
 package com.samourai.wallet.collaborate
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -17,9 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,6 +48,7 @@ import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.getSupportFragmentManger
 import com.samourai.wallet.util.FormatsUtil
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.*
@@ -56,20 +59,23 @@ import kotlin.math.roundToLong
 fun SetUpTransaction(onClose: (() -> Unit)?) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
     val page by transactionViewModel.pageLive.observeAsState(0)
-    Box(modifier = Modifier.requiredHeight(420.dp)) {
-        WrapToolsPageAnimation(visible = page == 0) {
-            ChooseAccount()
-        }
-        WrapToolsPageAnimation(visible = page == 1) {
-            ComposeCahootsTransaction(
-                onReviewClick = {
-                    onClose?.invoke()
-                }
-            )
+    BoxWithConstraints(modifier = Modifier) {
+        Box(modifier = Modifier.requiredHeight(this.maxHeight.times(0.546f))) {
+            WrapToolsPageAnimation(visible = page == 0) {
+                ChooseAccount()
+            }
+            WrapToolsPageAnimation(visible = page == 1) {
+                ComposeCahootsTransaction(
+                    onReviewClick = {
+                        onClose?.invoke()
+                    }
+                )
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
 
@@ -142,9 +148,25 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
             Column {
                 SendDestination()
                 SendAmount()
-//                Box(modifier = Modifier.padding(horizontal = 8.dp)) {
-//                    SliderSegment()
-//                }
+                Box(modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(
+                        top = 10.dp
+                    )) {
+                    Text(
+                        text = "Miner fee rate", fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = samouraiTextSecondary
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 13.dp)
+                        .padding(bottom = 8.dp, end = 1.dp)
+                ) {
+                    SliderSegment()
+                }
+
             }
             ReviewButton(onClick = {
                 onReviewClick.invoke()
@@ -321,17 +343,16 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
                     if (format == "BTC" && amountEdit.text.split(".")[1].length > 8) {
                         value = it.text.dropLast(1).toDouble()
                         amountEdit = TextFieldValue(
-                                text = it.text.dropLast(1)
+                            text = it.text.dropLast(1)
                         )
                     }
                     println("Sema maxima: " + amountEdit.text.replace(" ", "").toDouble())
                     if (format == "sat" && amountEdit.text.replace(" ", "").toDouble() > 2.1E15) {
                         value = it.text.dropLast(1).toDouble()
                         amountEdit = TextFieldValue(
-                                text = it.text.dropLast(1)
+                            text = it.text.dropLast(1)
                         )
                     }
-
                     amountInSats = if (format == "sat") {
                         value.toLong()
                     } else {
@@ -522,92 +543,92 @@ fun SendDestination(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         if (!(cahootsType?.cahootsType == CahootsType.STOWAWAY && cahootsType?.cahootsMode == CahootsMode.MANUAL)) {
             ListItem(
-                    text = {
-                        Box(modifier = Modifier.padding(bottom = 12.dp)) {
-                            Text(
-                                    text = "Send Destination", fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = samouraiTextSecondary
-                            )
-                        }
-                    },
-                    secondaryText = {
-                        if (pcode != null) {
-                            Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Row(
-                                        modifier = Modifier.padding(vertical = 4.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    PicassoImage(
-                                            modifier = modifier
-                                                    .size(40.dp)
-                                                    .clip(RoundedCornerShape(40.dp)),
-                                            url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
-                                    )
-                                    Text(text = BIP47Meta.getInstance().getDisplayLabel(pcode))
-                                }
-                                if (allowPaynymClear) IconButton(onClick = {
-                                    cahootsTransactionViewModel.setAddress("")
-                                }) {
-                                    Icon(imageVector = Icons.Default.Close, contentDescription = "")
-                                }
-                            }
-
-                        } else {
-                            Column(modifier = Modifier) {
-                                TextField(
-                                        value = addressEdit,
-                                        onValueChange = {
-                                            addressEdit = it
-                                        },
-                                        modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 4.dp)
-                                                .onFocusChanged {
-                                                    cahootsTransactionViewModel.setAddress(addressEdit)
-                                                },
-                                        trailingIcon = {
-                                            IconButton(onClick = {
-                                                cahootsTransactionViewModel.showSpendPaynymChooser()
-                                            }) {
-                                                Icon(painter = painterResource(id = R.drawable.ic_action_account_circle), contentDescription = "")
-                                            }
-                                        },
-                                        colors = TextFieldDefaults.textFieldColors(
-                                                backgroundColor = samouraiTextFieldBg,
-                                                cursorColor = samouraiAccent
-                                        ),
-                                        textStyle = TextStyle(fontSize = 12.sp),
-                                        keyboardOptions = KeyboardOptions(
-                                                autoCorrect = false,
-                                                imeAction = ImeAction.Done,
-                                                keyboardType = KeyboardType.Text,
-                                        ),
-                                        keyboardActions = KeyboardActions(
-                                                onDone = {
-                                                    cahootsTransactionViewModel.setAddress(addressEdit)
-                                                    keyboardController?.hide()
-                                                }
-                                        ),
-                                        isError = addressError != null,
-
-                                        )
-                                if (addressError != null)
-                                    Text(
-                                            text = "$addressError",
-                                            modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 4.dp),
-                                            fontSize = 12.sp, color = samouraiError
-                                    )
-                            }
-                        }
-
+                text = {
+                    Box(modifier = Modifier.padding(bottom = 12.dp)) {
+                        Text(
+                            text = "Send Destination", fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = samouraiTextSecondary
+                        )
                     }
+                },
+                secondaryText = {
+                    if (pcode != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                PicassoImage(
+                                    modifier = modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(40.dp)),
+                                    url = "${WebUtil.PAYNYM_API}${pcode}/avatar"
+                                )
+                                Text(text = BIP47Meta.getInstance().getDisplayLabel(pcode))
+                            }
+                            if (allowPaynymClear) IconButton(onClick = {
+                                cahootsTransactionViewModel.setAddress("")
+                            }) {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = "")
+                            }
+                        }
+
+                    } else {
+                        Column(modifier = Modifier) {
+                            TextField(
+                                value = addressEdit,
+                                onValueChange = {
+                                    addressEdit = it
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .onFocusChanged {
+                                        cahootsTransactionViewModel.setAddress(addressEdit)
+                                    },
+                                trailingIcon = {
+                                    IconButton(onClick = {
+                                        cahootsTransactionViewModel.showSpendPaynymChooser()
+                                    }) {
+                                        Icon(painter = painterResource(id = R.drawable.ic_action_account_circle), contentDescription = "")
+                                    }
+                                },
+                                colors = TextFieldDefaults.textFieldColors(
+                                    backgroundColor = samouraiTextFieldBg,
+                                    cursorColor = samouraiAccent
+                                ),
+                                textStyle = TextStyle(fontSize = 12.sp),
+                                keyboardOptions = KeyboardOptions(
+                                    autoCorrect = false,
+                                    imeAction = ImeAction.Done,
+                                    keyboardType = KeyboardType.Text,
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        cahootsTransactionViewModel.setAddress(addressEdit)
+                                        keyboardController?.hide()
+                                    }
+                                ),
+                                isError = addressError != null,
+
+                                )
+                            if (addressError != null)
+                                Text(
+                                    text = "$addressError",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    fontSize = 12.sp, color = samouraiError
+                                )
+                        }
+                    }
+
+                }
             )
         }
     }
@@ -622,16 +643,18 @@ fun ComposeCahootsTransactionPreview() {
 @Composable
 fun SliderSegment() {
     val vm = viewModel<CahootsTransactionViewModel>()
-    val feeSliderValue by vm.feeSliderValue.observeAsState()
+    val feeSliderValue by vm.feeSliderValue.observeAsState(0.5f)
     var sliderPosition by rememberSaveable { mutableStateOf(feeSliderValue ?: 0.5f) }
-    val satsPerByte by vm.getFeeSatsValueLive().observeAsState(feeSliderValue)
-    val context = LocalContext.current
+    LaunchedEffect(true) {
+        sliderPosition = feeSliderValue
+    }
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         Slider(value = sliderPosition,
             modifier = Modifier
-                .fillMaxWidth(.75f)
+                .fillMaxWidth(0.8f)
                 .padding(horizontal = 4.dp),
             colors = SliderDefaults.colors(
                 thumbColor = samouraiAccent,
@@ -647,16 +670,26 @@ fun SliderSegment() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(color = Color.Transparent)
         ) {
-            Text(
-                text = "$satsPerByte sats/b",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                textAlign = TextAlign.End,
-                modifier = Modifier
-            )
+            SatsPerByte()
         }
     }
+}
+
+@Composable
+fun SatsPerByte() {
+    val vm = viewModel<CahootsTransactionViewModel>()
+    val satsPerByte by vm.getFeeSatsValueLive().observeAsState("0")
+
+    Text(
+        text = "$satsPerByte sat/b",
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Bold,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+        textAlign = TextAlign.Start,
+        modifier = Modifier.fillMaxWidth()
+    )
+
 }
