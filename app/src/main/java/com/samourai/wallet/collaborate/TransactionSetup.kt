@@ -340,17 +340,29 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
                         .replace(" ", "")
                         .toDouble()
 
+                    if (format == "BTC" && amountEdit.text[0] == '0'
+                            && amountEdit.text.replace(".", "").isDigitsOnly()
+                            && amountEdit.text.split(".")[0].length > 1
+                            && amountEdit.text[1] != '.') {
+                        amountEdit = TextFieldValue(
+                                text = it.text.drop(1),
+                                selection = TextRange(it.text.length)
+                        )
+                    }
+
                     if (format == "BTC" && amountEdit.text.split(".")[1].length > 8) {
                         value = it.text.dropLast(1).toDouble()
                         amountEdit = TextFieldValue(
-                            text = it.text.dropLast(1)
+                                text = it.text.dropLast(amountEdit.text.split(".")[1].length - 8),
+                                selection = TextRange(it.text.length)
                         )
                     }
-                    println("Sema maxima: " + amountEdit.text.replace(" ", "").toDouble())
+
                     if (format == "sat" && amountEdit.text.replace(" ", "").toDouble() > 2.1E15) {
                         value = it.text.dropLast(1).toDouble()
                         amountEdit = TextFieldValue(
-                            text = it.text.dropLast(1)
+                                text = it.text.dropLast(1),
+                                selection = TextRange(it.text.length)
                         )
                     }
                     amountInSats = if (format == "sat") {
