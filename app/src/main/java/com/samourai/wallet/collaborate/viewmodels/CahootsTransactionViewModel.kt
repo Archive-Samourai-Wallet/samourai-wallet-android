@@ -24,7 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
-import kotlin.math.absoluteValue
+import kotlin.math.ceil
 
 class CahootsTransactionViewModel : ViewModel() {
 
@@ -38,6 +38,7 @@ class CahootsTransactionViewModel : ViewModel() {
     }
 
     private val feesPerByte: MutableLiveData<String> = MutableLiveData("")
+    private val estBlocks: MutableLiveData<String> = MutableLiveData("")
     private val currentPage = MutableLiveData(0)
     private val feeRange: MutableLiveData<Float> = MutableLiveData(0.5f)
     private val transactionAccountType = MutableLiveData(SamouraiAccountIndex.DEPOSIT)
@@ -64,6 +65,9 @@ class CahootsTransactionViewModel : ViewModel() {
 
     val showSpendFromPaynymChooserLive: LiveData<Boolean>
         get() = showSpendFromPaynymChooser
+
+    val estBlockLive: LiveData<String>
+        get() = estBlocks
 
     val validTransactionLive: LiveData<Boolean>
         get() = validTransaction
@@ -222,7 +226,30 @@ class CahootsTransactionViewModel : ViewModel() {
             feeHigh = 3000L
         }
         val fees = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), it).coerceAtLeast(1f)
-        feesPerByte.postValue(decimalFormatSatPerByte.format(fees / 1000))
+        val feesPerByteValue = decimalFormatSatPerByte.format(fees / 1000);
+        feesPerByte.postValue(feesPerByteValue)
+
+        //Calculate Block confirm estimation
+        val pct: Double
+        var nbBlocks = 6
+        if (fees <= feeLow.toDouble()) {
+            pct = feeLow.toDouble() / fees
+            nbBlocks = ceil(pct * 24.0).toInt()
+        } else if (fees >= feeHigh.toDouble()) {
+            pct = feeHigh.toDouble() / fees
+            nbBlocks = ceil(pct * 2.0).toInt()
+            if (nbBlocks < 1) {
+                nbBlocks = 1
+            }
+        } else  {
+            pct = feeMed.toDouble() / fees
+            nbBlocks = ceil(pct * 6.0).toInt()
+        }
+        var strBlocks = "$nbBlocks blocks"
+        if (nbBlocks > 50) {
+            strBlocks = "50+ blocks"
+        }
+        estBlocks.postValue(strBlocks)
      }
 
     fun setAddress(addressEdit: String) {

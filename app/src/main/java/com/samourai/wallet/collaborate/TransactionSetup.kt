@@ -60,7 +60,7 @@ fun SetUpTransaction(onClose: (() -> Unit)?) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
     val page by transactionViewModel.pageLive.observeAsState(0)
     BoxWithConstraints(modifier = Modifier) {
-        Box(modifier = Modifier.requiredHeight(this.maxHeight.times(0.546f))) {
+        Box(modifier = Modifier.requiredHeight(this.maxHeight.times(0.576f))) {
             WrapToolsPageAnimation(visible = page == 0) {
                 ChooseAccount()
             }
@@ -151,7 +151,7 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
                 Box(modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .padding(
-                        top = 10.dp
+                        top = 4.dp
                     )) {
                     Text(
                         text = "Miner fee rate", fontSize = 13.sp,
@@ -162,17 +162,49 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
                 Box(
                     modifier = Modifier
                         .padding(horizontal = 13.dp)
-                        .padding(bottom = 8.dp, end = 1.dp)
+                        .padding(bottom = 2.dp, end = 1.dp)
                 ) {
                     SliderSegment()
                 }
-
+                Box(modifier = Modifier
+                    .padding(horizontal = 16.dp)
+               ) {
+                   EstimatedBlockConfirm()
+                }
             }
             ReviewButton(onClick = {
                 onReviewClick.invoke()
             })
         }
     }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun EstimatedBlockConfirm() {
+    val cahootsTransactionViewModel = viewModel<CahootsTransactionViewModel>()
+    val estBlockConfirm by cahootsTransactionViewModel.estBlockLive.observeAsState("__")
+
+    Column(
+        modifier = Modifier.padding(
+            vertical = 1.dp,
+        )
+    ) {
+        Text(
+            text = stringResource(id = R.string.estimated_wait_time),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = samouraiTextSecondary
+        )
+        Text(
+            text = estBlockConfirm,
+            style = MaterialTheme.typography.subtitle2,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+
 }
 
 @Composable
@@ -578,6 +610,7 @@ fun SendDestination(modifier: Modifier = Modifier) {
                             }
                         }
 
+
                     } else {
                         Column(modifier = Modifier) {
                             TextField(
@@ -693,3 +726,4 @@ fun SatsPerByte() {
     )
 
 }
+
