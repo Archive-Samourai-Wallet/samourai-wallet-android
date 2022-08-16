@@ -359,7 +359,6 @@ fun SweepTransactionPreview() {
     val density = LocalDensity.current
     var confirmDialog by remember { mutableStateOf(false) }
     var satsFormat by remember { mutableStateOf(true) }
-    val nbBlocks by vm.getBlockWaitTime().observeAsState()
 
     LaunchedEffect(receiveAddressType) {
         receiveAddress = AddressFactory.getInstance().getAddress(receiveAddressType).right
@@ -434,17 +433,13 @@ fun SweepTransactionPreview() {
                         item {
                             SliderSegment()
                         }
-
                         item {
-                            ListItem(
-                                title = stringResource(id = R.string.estimated_wait_time),
-                                value = nbBlocks.toString()
-                            )
+                            SweepEstimatedBlockConfirm()
                         }
                     }
                 }
                 Box(modifier = Modifier.padding(vertical = 12.dp)) {
-                    val enable = validFees &&  !dustOutput;
+                    val enable = validFees && !dustOutput;
                     Button(
                         enabled = enable,
                         onClick = {
@@ -522,6 +517,16 @@ fun SweepTransactionPreview() {
 }
 
 @Composable
+fun SweepEstimatedBlockConfirm() {
+    val vm = viewModel<SweepViewModel>()
+    val nbBlocks by vm.getBlockWaitTime().observeAsState()
+    ListItem(
+        title = stringResource(id = R.string.estimated_wait_time),
+        value = nbBlocks.toString()
+    )
+}
+
+@Composable
 fun SliderSegment() {
     val vm = viewModel<SweepViewModel>()
     var sliderPosition by rememberSaveable { mutableStateOf(0.5f) }
@@ -540,7 +545,7 @@ fun SliderSegment() {
             Slider(value = sliderPosition,
                 modifier = Modifier
                     .weight(.7f)
-                    .padding(horizontal = 4.dp),
+                    .padding(horizontal = 2.dp),
                 colors = SliderDefaults.colors(
                     thumbColor = if (validFees) samouraiAccent else samouraiError,
                     activeTickColor = if (validFees) samouraiAccent else samouraiError,
@@ -558,7 +563,7 @@ fun SliderSegment() {
                     .weight(.3f)
             ) {
                 Text(
-                    text = if(validFees) "$satsPerByte sats/b" else "_.__",
+                    text = if (validFees) "$satsPerByte sats/b" else "_.__",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     overflow = TextOverflow.Ellipsis,
@@ -568,20 +573,22 @@ fun SliderSegment() {
                 )
             }
         }
-        if (!validFees)
+        AnimatedVisibility(visible = !validFees) {
             Text(
                 text = stringResource(R.string.sweep_invalid_fee_warning),
                 fontSize = 10.sp,
                 color = samouraiError,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
-        if (dustOutput)
+        }
+        AnimatedVisibility(visible = dustOutput) {
             Text(
                 text = stringResource(R.string.sweep_dust_warning),
                 fontSize = 10.sp,
                 color = samouraiError,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
+        }
     }
 }
 
@@ -687,21 +694,21 @@ fun ListItem(title: String, value: String, modifier: Modifier = Modifier) {
     }
 }
 
-//@Composable
-//@Preview(widthDp = 320, heightDp = 480)
-//fun SweepPreviewCompose() {
-//    SweepTransactionPreview()
-//}
+@Composable
+@Preview(widthDp = 320, heightDp = 480)
+fun SweepPreviewCompose() {
+    SweepTransactionPreview()
+}
 
 @Composable
 @Preview(widthDp = 320, heightDp = 480)
 fun SweepFormPreview() {
     SweepFormSweepForm(null)
 }
-//
-//
-//@Composable
-//@Preview(widthDp = 320, heightDp = 480)
-//fun SweepBroadcastPreview() {
-//    SweepBroadcast(onCloseClick = {})
-//}
+
+
+@Composable
+@Preview(widthDp = 320, heightDp = 480)
+fun SweepBroadcastPreview() {
+    SweepBroadcast(onCloseClick = {})
+}

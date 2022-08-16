@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.material.math.MathUtils
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiWallet
+import com.samourai.wallet.SamouraiWalletConst
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.bipFormat.BIP_FORMAT
@@ -25,6 +26,7 @@ import com.samourai.wallet.util.*
 import kotlinx.coroutines.*
 import org.bitcoinj.core.Transaction
 import java.text.DecimalFormat
+import kotlin.math.ceil
 
 class SweepViewModel : ViewModel() {
 
@@ -79,7 +81,7 @@ class SweepViewModel : ViewModel() {
         initFeeRange()
     }
 
-    private fun  initFeeRange(){
+    private fun initFeeRange() {
         feeLow = 1000L
         feeMed = FeeUtil.getInstance().suggestedFee.defaultPerKB.toLong()
         feeHigh = FeeUtil.getInstance().highFee.defaultPerKB.toLong()
@@ -88,7 +90,7 @@ class SweepViewModel : ViewModel() {
         }
         if (feeHigh > feeLow && (feeMed - feeHigh) != 0L) {
             try {
-                val currentSlider = ( feeMed.toFloat() - feeLow.toFloat()) .div( feeHigh.toFloat().minus(feeLow.toFloat()))
+                val currentSlider = (feeMed.toFloat() - feeLow.toFloat()).div(feeHigh.toFloat().minus(feeLow.toFloat()))
                 feeRange.value = currentSlider
                 feeRange.postValue(currentSlider)
             } catch (e: Exception) {
@@ -187,12 +189,13 @@ class SweepViewModel : ViewModel() {
         val feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value ?: 0f).coerceAtLeast(1f)
         val fee: Long = computeFee(bipFormat.value!!, unspentOutputs.value!!, feePerKb.div(1000.0).toLong())
         val amount = totalValue - fee
+        val isDust = amount <= SamouraiWallet.bDust.toLong();
         withContext(Dispatchers.Main) {
-            dustOutput.postValue((totalValue - fee) <= SamouraiWallet.bDust.toLong())
+            dustOutput.postValue(isDust)
             fees.postValue(fee)
-            validFees.postValue(!(amount == 0L || fee > amount))
+            validFees.postValue(!(amount == 0L || fee > totalValue))
         }
-        return !(amount == 0L || fee > amount)
+        return !(amount == 0L || fee > totalValue || amount <= SamouraiWalletConst.bDust.toLong())
     }
 
     private suspend fun findUTXOs(context: Context) {
@@ -228,6 +231,7 @@ class SweepViewModel : ViewModel() {
         }
         viewModelScope.launch {
             try {
+                Log.i(TAG, "makeTransaction: Making Tx")
                 withContext(Dispatchers.Default) {
                     val receiveAddress = AddressFactory.getInstance(context).getAddress(receiveAddressType.value).right
                     val rbfOptin = PrefsUtil.getInstance(context).getValue(PrefsUtil.RBF_OPT_IN, false)
@@ -238,13 +242,13 @@ class SweepViewModel : ViewModel() {
                     var fee: Long = computeFee(bipFormat.value!!, unspentOutputs.value!!, feePerKb.div(1000.0).toLong())
                     var amount = totalValue - fee
                     //Check if the amount too low for a tx or miner fee is high
-                    if (amount == 0L || fee > amount) {
+                    if (amount == 0L || fee > totalValue || amount <= SamouraiWalletConst.bDust.toLong()) {
                         //check if the tx is possible with 1sat/b rate
                         withContext(Dispatchers.Main) {
                             feeRange.value = 0.1f
                             feeRange.postValue(0.1f)
                         }
-                         feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), 0.0f).coerceAtLeast(1f)
+                        feePerKb = MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), 0.0f).coerceAtLeast(1f)
                         fee = computeFee(bipFormat.value!!, unspentOutputs.value!!, feePerKb.div(1000.0).toLong())
                         amount = totalValue - fee
                     }
@@ -262,30 +266,29 @@ class SweepViewModel : ViewModel() {
                     foundAmount.postValue(totalValue)
                     feesPerByte.postValue(decimalFormatSatPerByte.format(transaction.fee.value.toFloat() / transaction.virtualTransactionSize.toFloat()))
 
-                    var pct: Double
+                    val pct: Double
                     var nbBlocks = 6
                     val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000)
 
                     if (feeForBlocks != null) {
                         if (feeForBlocks <= feeLow.toDouble()) {
                             pct = feeLow.toDouble() / feeForBlocks
-                            nbBlocks = Math.ceil(pct * 24.0).toInt()
+                            nbBlocks = ceil(pct * 24.0).toInt()
                         } else if (feeForBlocks >= feeHigh.toDouble()) {
                             pct = feeHigh.toDouble() / feeForBlocks
-                            nbBlocks = Math.ceil(pct * 2.0).toInt()
+                            nbBlocks = ceil(pct * 2.0).toInt()
                             if (nbBlocks < 1) {
                                 nbBlocks = 1
                             }
                         } else {
                             pct = feeMed.toDouble() / feeForBlocks
-                            nbBlocks = Math.ceil(pct * 6.0).toInt()
+                            nbBlocks = ceil(pct * 6.0).toInt()
                         }
                     }
                     var strBlocks = "$nbBlocks blocks"
                     if (nbBlocks > 50) {
                         strBlocks = "50+ blocks"
                     }
-
                     blocks.postValue(strBlocks)
                     loading.postValue(false)
                     setPage(1)
@@ -343,11 +346,6 @@ class SweepViewModel : ViewModel() {
                         .map { unspentOutput: UnspentOutput -> unspentOutput.computeOutpoint(params) }.toCollection(outpoints);
                     val tr = SendFactory.getInstance().makeTransaction(receivers, outpoints, BIP_FORMAT.PROVIDER, rbfOptin, params, blockHeight)
                     transaction = SendFactory.getInstance().signTransactionForSweep(tr, sweepPreview!!.privKey, params)
-                    val intent =   Intent(context, JobRefreshService::class.java)
-                    intent.putExtra("notifTx", false)
-                    intent.putExtra("dragged", false)
-                    intent.putExtra("launch", false)
-                    JobRefreshService.enqueueWork(context, intent)
                 } catch (e: Exception) {
                     throw  CancellationException("Sign: ${e.message}")
                 }
@@ -355,6 +353,11 @@ class SweepViewModel : ViewModel() {
                     if (transaction != null) {
                         val hexTx = TxUtil.getInstance().getTxHex(transaction)
                         PushTx.getInstance(context).pushTx(hexTx)
+                        val intent = Intent(context, JobRefreshService::class.java)
+                        intent.putExtra("notifTx", false)
+                        intent.putExtra("dragged", false)
+                        intent.putExtra("launch", false)
+                        JobRefreshService.enqueueWork(context, intent)
                     }
                 } catch (e: Exception) {
                     throw  CancellationException("pushTx : ${e.message}")
