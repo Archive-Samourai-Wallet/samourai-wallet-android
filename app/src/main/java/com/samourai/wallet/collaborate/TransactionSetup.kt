@@ -1,5 +1,6 @@
 package com.samourai.wallet.collaborate
 
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
@@ -48,6 +50,7 @@ import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.getSupportFragmentManger
 import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.LogUtil
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -60,7 +63,11 @@ fun SetUpTransaction(onClose: (() -> Unit)?) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
     val page by transactionViewModel.pageLive.observeAsState(0)
     BoxWithConstraints(modifier = Modifier) {
-        Box(modifier = Modifier.requiredHeight(this.maxHeight.times(0.576f))) {
+        var height =  this.maxHeight.times(0.576f)
+        if(height < 464.dp){
+            height = 464.dp
+        }
+        Box(modifier = Modifier.requiredHeight(height)) {
             WrapToolsPageAnimation(visible = page == 0) {
                 ChooseAccount()
             }
@@ -117,13 +124,17 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
                                     uri = uri.trim()
                                 }
                                 if (FormatsUtil.getInstance().isBitcoinUri(uri)) {
-                                    val address = FormatsUtil.getInstance().getBitcoinAddress(uri)
-                                    val amount = FormatsUtil.getInstance().getBitcoinAmount(uri)
-                                    if (amount != null && amount.isNotEmpty()) {
-                                        cahootsTransactionViewModel.setAmount(amount.toLong())
-                                    }
-                                    if (address != null && address.isNotEmpty()) {
-                                        cahootsTransactionViewModel.setAddress(address)
+                                    try {
+                                        val address = FormatsUtil.getInstance().getBitcoinAddress(uri)
+                                        if (address != null && address.isNotEmpty()) {
+                                            cahootsTransactionViewModel.setAddress(address)
+                                        }
+                                        val amount = FormatsUtil.getInstance().getBitcoinAmount(uri)
+                                        if (amount != null && amount.isNotEmpty() && amount != "0.0000" ) {
+                                            cahootsTransactionViewModel.setAmount(amount.toLong())
+                                        }
+                                    } catch (e: Exception) {
+                                        LogUtil.error("ScanError ",e)
                                     }
                                 } else {
                                     if (FormatsUtil.getInstance().isValidBitcoinAddress(it)) {
@@ -142,7 +153,7 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 6.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column {

@@ -1,11 +1,13 @@
 package com.samourai.wallet.collaborate
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +41,9 @@ fun InitiateSegment(
     val validTransaction by collaborateViewModel.validTransactionLive.observeAsState(false)
     val cahootType by collaborateViewModel.cahootsTypeLive.observeAsState()
     val context = LocalContext.current
+    var showClearDialog by remember { mutableStateOf(false) }
+
+
     Box(modifier = Modifier.fillMaxHeight()) {
         LazyColumn(
             verticalArrangement =  Arrangement.SpaceBetween,
@@ -47,7 +52,7 @@ fun InitiateSegment(
             item {
                 Column(
                     modifier = Modifier
-                        .fillMaxHeight(0.9f)
+                        .fillMaxHeight(1f)
                         .padding(
                             vertical = 12.dp,
                             horizontal = 14.dp
@@ -57,6 +62,7 @@ fun InitiateSegment(
                     Column() {
                         TransactionOptionSegment(
                             title = "Transaction type",
+                            modifier = Modifier.fillMaxWidth(),
                             showSubSection = cahootType != null,
                             onClick = onCahootTypeSelection,
                             subSection = {
@@ -72,6 +78,7 @@ fun InitiateSegment(
                         if (enableCollabSelection) {
                             TransactionOptionSegment(
                                 title = "Collaborator",
+                                modifier = Modifier.fillMaxWidth(),
                                 showSubSection = collaboratorPcode != null,
                                 onClick = onCollaboratorClick,
                                 subSection = {
@@ -88,6 +95,7 @@ fun InitiateSegment(
                         if (enableTransaction && !validTransaction) {
                             TransactionOptionSegment(
                                 title = "Set up transaction",
+                                modifier = Modifier.fillMaxWidth(),
                                 showSubSection = false,
                                 onClick = setUpTransaction,
                             )
@@ -102,6 +110,32 @@ fun InitiateSegment(
             }
             item {
                 if (validTransaction) {
+                    if (showClearDialog) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                showClearDialog = false
+                            },
+                            title = {
+                                Text(text = stringResource(id = R.string.confirm))
+                            },
+                            text = {
+                                Text("Do you want to discard?")
+                            },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showClearDialog = false
+                                    collaborateViewModel.clearTransaction()
+                                })
+                                { Text(text = "Discard") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = {
+                                    showClearDialog = false
+                                })
+                                { Text(text = "Cancel") }
+                            }
+                        )
+                    }
                     Button(
                         onClick = {
                             collaborateViewModel.send(context)
@@ -110,7 +144,8 @@ fun InitiateSegment(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp)
-                            .padding(bottom = 12.dp),
+                            .padding(bottom = 4.dp)
+                            .padding(top = 0.dp),
                         contentPadding = PaddingValues(vertical = 12.dp, horizontal = 12.dp),
                         colors = ButtonDefaults.textButtonColors(
                             backgroundColor = samouraiSuccess,
@@ -119,7 +154,21 @@ fun InitiateSegment(
                     ) {
                         Text("BEGIN TRANSACTION")
                     }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TextButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                showClearDialog = true
+                            }, colors = ButtonDefaults.textButtonColors(
+                                backgroundColor = Color.Transparent,
+                                contentColor = samouraiError
+                            )
+                        ) {
+                            Text("Clear", textAlign = TextAlign.Center, fontSize = 12.sp)
+                        }
+                    }
                 }
+
             }
         }
     }
@@ -133,36 +182,10 @@ fun TransactionPreview(onClick: () -> Unit) {
     val account by collaborateViewModel.transactionAccountTypeLive.observeAsState(SamouraiAccountIndex.DEPOSIT)
     val destinationAddress by collaborateViewModel.destinationAddressLive.observeAsState(null)
     val amount by collaborateViewModel.amountLive.observeAsState(0L)
-    var showClearDialog by remember { mutableStateOf(false) }
     val cahootType by collaborateViewModel.cahootsTypeLive.observeAsState()
     val feeRate by collaborateViewModel.getFeeSatsValueLive().observeAsState("")
 
-    if (showClearDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showClearDialog = false
-            },
-            title = {
-                Text(text = stringResource(id = R.string.confirm))
-            },
-            text = {
-                Text("Do you want to discard?")
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    showClearDialog = false
-                    collaborateViewModel.clearTransaction()
-                })
-                { Text(text = "Discard") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showClearDialog = false
-                })
-                { Text(text = "Cancel") }
-            }
-        )
-    }
+
     if (validTransaction) {
         TransactionOptionSegment(
             title = "Account",
@@ -176,7 +199,9 @@ fun TransactionPreview(onClick: () -> Unit) {
                 TransactionOptionSegment(
                         title = "Destination",
                         showSubSection = true,
-                        onClick = onClick,
+                    modifier = Modifier.fillMaxWidth(),
+
+                    onClick = onClick,
                         subSection = {
                             if (destinationAddress != null)
                                 PaynymAvatar(destinationAddress)
@@ -187,38 +212,34 @@ fun TransactionPreview(onClick: () -> Unit) {
                 TransactionOptionSegment(
                         title = "Destination",
                         showSubSection = false,
-                        onClick = onClick,
+                    modifier = Modifier.fillMaxWidth(),
+
+                    onClick = onClick,
                         showSubSectionText = if (destinationAddress != null) destinationAddress!! else ""
                 )
                 Divider()
             }
         }
-        TransactionOptionSegment(
-            title = "Amount to send",
-            showSubSection = false,
-            onClick = onClick,
-            showSubSectionText = FormatsUtil.formatBTC(amount)
-        )
-        TransactionOptionSegment(
-            title = "Fee rate",
-            showSubSection = false,
-            onClick = onClick,
-            showSubSectionText = "${feeRate} sat/b"
-        )
-        Divider()
-        Box(modifier = Modifier.fillMaxWidth()) {
-            TextButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    showClearDialog = true
-                }, colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = Color.Transparent,
-                    contentColor = samouraiError
-                )
-            ) {
-                Text("Clear", textAlign = TextAlign.Center, fontSize = 12.sp)
-            }
+        Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            TransactionOptionSegment(
+                title = "Amount to send",
+                showSubSection = false,
+                modifier = Modifier.fillMaxWidth(.5f),
+                onClick = onClick,
+                showSubSectionText = FormatsUtil.formatBTC(amount)
+            )
+            TransactionOptionSegment(
+                title = "Fee rate",
+                showSubSection = false,
+                modifier = Modifier.fillMaxWidth(.5f),
+                onClick = onClick,
+                textAlign = TextAlign.End,
+                showSubSectionText = "${feeRate} sat/b"
+            )
         }
+        Divider()
     }
 
 }
@@ -226,22 +247,24 @@ fun TransactionPreview(onClick: () -> Unit) {
 @Composable
 fun TransactionOptionSegment(
     title: String,
+    modifier: Modifier=Modifier,
+    textAlign: TextAlign=TextAlign.Start,
     showSubSectionText: String = "None selected",
     onClick: () -> Unit,
     showSubSection: Boolean = false,
     subSection: @Composable () -> Unit = {}
 ) {
     Column(
-        Modifier
+        modifier
             .clickable {
                 onClick()
             }
-            .padding(vertical = 12.dp)
-            .fillMaxWidth()) {
-        Text(text = title, color = samouraiTextSecondary, fontSize = 13.sp)
+            .padding(vertical = 9.dp)
+           ) {
+        Text(text = title, color = samouraiTextSecondary, fontSize = 13.sp,textAlign=textAlign)
         Box(Modifier.padding(vertical = 4.dp)) {
             if (!showSubSection) {
-                Text(text = showSubSectionText, fontSize = 13.sp)
+                Text(text = showSubSectionText, fontSize = 13.sp,textAlign= textAlign)
             } else {
                 subSection()
             }
