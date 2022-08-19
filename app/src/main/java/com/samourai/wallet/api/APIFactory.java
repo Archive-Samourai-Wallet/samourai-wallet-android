@@ -74,7 +74,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
-
+import java.util.Objects;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
@@ -455,7 +455,7 @@ public class APIFactory {
                 args.append("xpub=");
                 args.append(xpub);
                 args.append("&type=");
-                if(PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_RESTORE, false) == true)    {
+                if(Objects.equals(PrefsUtil.getInstance(context).getValue(PrefsUtil.WALLET_ORIGIN, "restored"), "restored"))   {
                     args.append("restore");
                 }
                 else    {
