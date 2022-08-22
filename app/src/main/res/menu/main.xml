@@ -72,12 +72,6 @@
         android:orderInCategory="100"
         android:title="Postmix transactions"
         app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_copy_cahoots"
-        android:orderInCategory="100"
-        android:title="Paste cahoots payload"
-        app:showAsAction="never" />
     <item
         android:id="@+id/action_soroban_collab"
         android:orderInCategory="100"
