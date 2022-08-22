@@ -1,7 +1,10 @@
 package com.samourai.wallet.collaborate
 
+import android.annotation.SuppressLint
+import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -14,6 +17,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -27,17 +32,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
+import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.collaborate.viewmodels.CollaborateViewModel
 import com.samourai.wallet.paynym.PayNymHome
+import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.AppUtil
@@ -89,6 +99,7 @@ class CollaborateActivity : SamouraiActivity() {
     }
 }
 
+@SuppressLint("ServiceCast")
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipateTab: Boolean) {
@@ -106,6 +117,9 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
     val collaborateError by collaborateViewModel.errorsLive.observeAsState(initial = null)
     val showSpendFromPaynymChooser by cahootsTransactionViewModel.showSpendFromPaynymChooserLive.observeAsState(false)
     val walletLoading by AppUtil.getInstance(context).walletLoading.observeAsState(false);
+    var expanded by remember { mutableStateOf(false) }
+    val listItems = ArrayList<String>()
+    listItems.add("Paste cahoots payload")
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
 
 
@@ -161,6 +175,64 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                                     })
                             }
                         },
+                            actions = {
+
+                                IconButton(onClick = {
+                                    expanded = true
+                                }) {
+                                    Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "Open Options"
+                                    )
+                                }
+
+                                DropdownMenu(
+                                        modifier = Modifier.width(width = 150.dp),
+                                        expanded = expanded,
+                                        onDismissRequest = {
+                                            expanded = false
+                                        },
+
+                                        offset = DpOffset(x = (-102).dp, y = (-64).dp),
+                                        properties = PopupProperties()
+                                ) {
+
+                                    listItems.forEach { menuItemData ->
+                                        DropdownMenuItem(
+                                                onClick = {
+                                                    expanded = false
+                                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+                                                    if (clipboard.hasPrimaryClip()) {
+                                                        val clipItem = clipboard.primaryClip!!.getItemAt(0)
+                                                        if (Cahoots.isCahoots(clipItem.text.toString().trim { it <= ' ' })) {
+                                                            try {
+                                                                val cahootIntent = ManualCahootsActivity.createIntentResume(context, 0, clipItem.text.toString().trim { it <= ' ' })
+                                                                startActivity(context, cahootIntent, null)
+                                                            } catch (e: Exception) {
+                                                                Toast.makeText(context, R.string.cannot_process_cahoots, Toast.LENGTH_SHORT).show()
+                                                                e.printStackTrace()
+                                                            }
+                                                        } else {
+                                                            Toast.makeText(context, R.string.cannot_process_cahoots, Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    } else {
+                                                        Toast.makeText(context, R.string.clipboard_empty, Toast.LENGTH_SHORT).show()
+                                                    }
+                                                },
+                                                enabled = true
+                                        ) {
+                                            Spacer(modifier = Modifier.width(width = 8.dp))
+
+                                            Text(
+                                                    text = menuItemData,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 16.sp,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                     )
                     if (walletLoading)
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), backgroundColor = Color.Transparent, color = samouraiAccent)
