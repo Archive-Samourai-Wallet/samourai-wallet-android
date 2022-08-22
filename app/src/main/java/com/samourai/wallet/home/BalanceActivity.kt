@@ -637,7 +637,6 @@ open class BalanceActivity : SamouraiActivity() {
         WhirlpoolMeta.getInstance(applicationContext)
         if (account == WhirlpoolMeta.getInstance(applicationContext).whirlpoolPostmix) {
             menu.findItem(R.id.action_backup).isVisible = false
-            menu.findItem(R.id.action_postmix).isVisible = false
             menu.findItem(R.id.action_network_dashboard).isVisible = false
             val item = menu.findItem(R.id.action_menu_account)
             item.actionView = createTag(" POST-MIX ")
@@ -729,10 +728,6 @@ open class BalanceActivity : SamouraiActivity() {
             }
         } else if (id == R.id.action_scan_qr) {
             doScan()
-        } else if (id == R.id.action_postmix) {
-            val intent = Intent(this@BalanceActivity, SendActivity::class.java)
-            intent.putExtra("_account", WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix)
-            startActivity(intent)
         } else if (id == R.id.action_soroban_collab) {
             val intent = Intent(this, SorobanMeetingListenActivity::class.java)
             intent.putExtra("_account", WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix)
