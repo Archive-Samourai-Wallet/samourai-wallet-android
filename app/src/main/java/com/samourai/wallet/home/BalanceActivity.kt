@@ -637,7 +637,6 @@ open class BalanceActivity : SamouraiActivity() {
         WhirlpoolMeta.getInstance(applicationContext)
         if (account == WhirlpoolMeta.getInstance(applicationContext).whirlpoolPostmix) {
             menu.findItem(R.id.action_backup).isVisible = false
-            menu.findItem(R.id.action_postmix).isVisible = false
             menu.findItem(R.id.action_network_dashboard).isVisible = false
             val item = menu.findItem(R.id.action_menu_account)
             item.actionView = createTag(" POST-MIX ")
@@ -677,26 +676,6 @@ open class BalanceActivity : SamouraiActivity() {
         if (id == R.id.action_network_dashboard) {
             startActivity(Intent(this, NetworkDashboard::class.java))
         } // noinspection SimplifiableIfStatement
-        if (id == R.id.action_copy_cahoots) {
-            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-            if (clipboard.hasPrimaryClip()) {
-                val clipItem = clipboard.primaryClip!!.getItemAt(0)
-                if (Cahoots.isCahoots(clipItem.text.toString().trim { it <= ' ' })) {
-                    try {
-                        val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, clipItem.text.toString().trim { it <= ' ' })
-                        startActivity(cahootIntent)
-                    } catch (e: Exception) {
-                        Toast.makeText(this, R.string.cannot_process_cahoots, Toast.LENGTH_SHORT).show()
-                        e.printStackTrace()
-                    }
-                } else {
-                    Toast.makeText(this, R.string.cannot_process_cahoots, Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(this, R.string.clipboard_empty, Toast.LENGTH_SHORT).show()
-            }
-        }
-
         if (id == R.id.action_support) {
             doSupport()
         }
@@ -729,10 +708,6 @@ open class BalanceActivity : SamouraiActivity() {
             }
         } else if (id == R.id.action_scan_qr) {
             doScan()
-        } else if (id == R.id.action_postmix) {
-            val intent = Intent(this@BalanceActivity, SendActivity::class.java)
-            intent.putExtra("_account", WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix)
-            startActivity(intent)
         } else if (id == R.id.action_soroban_collab) {
             val intent = Intent(this, SorobanMeetingListenActivity::class.java)
             intent.putExtra("_account", WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix)
