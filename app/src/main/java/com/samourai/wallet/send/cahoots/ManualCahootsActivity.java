@@ -116,7 +116,8 @@ public class ManualCahootsActivity extends SamouraiActivity {
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
         ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
-        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
+        String paynymDestination = null; // TODO Sarath set destination pCode
+        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
         cahootsUi.setCahootsMessage(manualCahootsService.initiate(cahootsContext));
     }
 

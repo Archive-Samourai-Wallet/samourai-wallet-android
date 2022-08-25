@@ -106,9 +106,10 @@ public class SorobanCahootsActivity extends SamouraiActivity {
             throw new Exception("Invalid sendAmount");
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
+        String paynymDestination = null; // TODO Sarath set destination pCode
         // send cahoots
         AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
-        CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
+        CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
         Observable<SorobanMessage> sorobanListener = sorobanCahootsService.initiator(cahootsContext, paymentCode, TIMEOUT_MS);
 
         // listen for cahoots progress

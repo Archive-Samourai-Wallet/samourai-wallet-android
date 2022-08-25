@@ -17,12 +17,14 @@ import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
 import com.samourai.wallet.api.backend.IPushTx;
+import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.Cahoots;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.widgets.EntropyBar;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.text.DecimalFormat;
@@ -111,6 +113,12 @@ public class CahootReviewFragment extends Fragment {
     }
 
     private void onSuccessfulBroadcast() {
+        // increment paynymDestination if any
+        String paynymDestination = payload.getPaynymDestination();
+        if (!StringUtils.isEmpty(paynymDestination)) {
+            BIP47Meta.getInstance().incOutgoingIdx(paynymDestination);
+        }
+
         getActivity().runOnUiThread(() -> {
             Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
         });

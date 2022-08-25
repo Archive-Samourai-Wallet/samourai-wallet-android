@@ -34,8 +34,8 @@ public class SorobanCahootsUi extends ManualCahootsUi {
                 });
     }
 
-    public CahootsContext setCahootsContextInitiator(int account, long feePerB, long sendAmount, String sendAddress) throws Exception {
-        cahootsContext = computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
+    public CahootsContext setCahootsContextInitiator(int account, long feePerB, long sendAmount, String sendAddress, String paynymDestination) throws Exception {
+        cahootsContext = computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
 
         // verify
         if (!typeUser.equals(cahootsContext.getTypeUser())) {
