@@ -63,7 +63,7 @@ public class ManualCahootsUi {
         this.viewPager = viewPager;
 
         viewPager.enableSwipe(false);
-        cahootReviewFragment = CahootReviewFragment.newInstance();
+        cahootReviewFragment = CahootReviewFragment.newInstance(intent);
 
         // sender+receiver
         if (intent.hasExtra("_account")) {
@@ -138,7 +138,7 @@ public class ManualCahootsUi {
         if (cahootsMessage.isDone()) {
             notifyWalletAndFinish();
         } else {
-            activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());
+//            activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());
         }
     }
 

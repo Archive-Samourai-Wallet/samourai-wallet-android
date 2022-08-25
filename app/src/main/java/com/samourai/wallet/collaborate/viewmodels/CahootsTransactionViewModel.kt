@@ -293,16 +293,23 @@ class CahootsTransactionViewModel : ViewModel() {
         //If the custom fee is not null the value will be taken as fee
         val feePerKb = if (customFee.value != null) customFee.value!!.times(1000)
         else MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value!!.toFloat()).coerceAtLeast(1000f).div(1000.0).toLong()
-        Log.i("TAG", "send:FeePerKB ${feePerKb}")
         if (CahootsMode.MANUAL == type.cahootsMode) {
+            var destinationPcode: String? = null;
+            if (FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value)) {
+                destinationPcode = destinationAddress.value
+            }
             // Cahoots manual
-            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address)
+            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, destinationPcode)
             context.startActivity(intent)
             return
         }
         if (CahootsMode.SOROBAN == type.cahootsMode) {
+            var destinationPcode: String? = null;
+            if (FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value)) {
+                destinationPcode = destinationAddress.value
+            }
             // choose Cahoots counterparty
-            val intent = SorobanMeetingSendActivity.createIntent(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, collaboratorPcode.value)
+            val intent = SorobanMeetingSendActivity.createIntent(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, collaboratorPcode.value,destinationPcode)
             context.startActivity(intent)
             return
         }

@@ -1,6 +1,9 @@
 package com.samourai.wallet.send.cahoots;
 
+import static com.samourai.wallet.send.SendActivity.stubAddress;
+
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.LayoutInflater;
@@ -8,6 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.Group;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
@@ -19,6 +27,7 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.Cahoots;
+import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
@@ -34,18 +43,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.Group;
-import androidx.fragment.app.Fragment;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-
-import static com.samourai.wallet.send.SendActivity.stubAddress;
 
 public class CahootReviewFragment extends Fragment {
 
@@ -56,21 +59,19 @@ public class CahootReviewFragment extends Fragment {
     MaterialButton sendBtn;
     ViewGroup cahootsEntropyGroup, cahootsSamouraiFeeGroup;
     Group cahootsProgressGroup;
-    View cahootsSamouraiFeeGroupDivider,cahootsSamouraiEntropyGroupDivider;
+    View cahootsSamouraiFeeGroupDivider, cahootsSamouraiEntropyGroupDivider;
     private Cahoots payload;
     private Callable onBroadcast;
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    public static CahootReviewFragment newInstance() {
-        Bundle args = new Bundle();
+    public static CahootReviewFragment newInstance(Intent intent) {
         CahootReviewFragment fragment = new CahootReviewFragment();
-        fragment.setArguments(args);
+        fragment.setArguments(intent.getExtras());
         return fragment;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-
 
 
         sendBtn.setOnClickListener(view1 -> {
@@ -113,25 +114,38 @@ public class CahootReviewFragment extends Fragment {
     }
 
     private void onSuccessfulBroadcast() {
-        // increment paynymDestination if any
-        String paynymDestination = payload.getPaynymDestination();
-        if (!StringUtils.isEmpty(paynymDestination)) {
-            BIP47Meta.getInstance().incOutgoingIdx(paynymDestination);
+        // increment paynym index if destination
+        if (getArguments() != null) {
+            if (getArguments().containsKey("typeUser")) {
+                int typeUserInt = getArguments().getInt("typeUser", -1);
+                CahootsTypeUser typeUser = CahootsTypeUser.find(typeUserInt).get();
+                if (typeUser == CahootsTypeUser.SENDER) {
+                    String paynymDestination = payload.getPaynymDestination();
+                    if (getArguments().containsKey("destPcode")) {
+                        paynymDestination = getArguments().getString("destPcode");
+                    }
+                    if (!StringUtils.isEmpty(paynymDestination)) {
+                        BIP47Meta.getInstance().incOutgoingIdx(paynymDestination);
+                    }
+                }
+            }
         }
+
 
         getActivity().runOnUiThread(() -> {
             Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
         });
-        // notify
+//        // notify
         if (onBroadcast != null) {
             try {
                 onBroadcast.call();
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
     }
 
     private void showError() {
-         Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
         getActivity().runOnUiThread(() -> {
             cahootsProgressGroup.setVisibility(View.GONE);
             sendBtn.setEnabled(true);
@@ -170,10 +184,10 @@ public class CahootReviewFragment extends Fragment {
                 });
     }
 
-    private void showPayloadInfo(){
+    private void showPayloadInfo() {
         if (payload != null) {
             toAddress.setText(payload.getDestination());
-            sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount()+payload.getFeeAmount())));
+            sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
             amountInBtc.setText(formatForBtc(payload.getSpendAmount()));
             amountInSats.setText(String.valueOf(payload.getSpendAmount()).concat(" sat"));
             if ((payload.getFeeAmount() == 0)) {
@@ -182,7 +196,7 @@ public class CahootReviewFragment extends Fragment {
             } else {
                 feeInBtc.setText(formatForBtc(payload.getFeeAmount()));
                 feeInSats.setText(String.valueOf(payload.getFeeAmount()).concat(" sat"));
-                if(payload instanceof MultiCahoots) {
+                if (payload instanceof MultiCahoots) {
                     cahootsSamouraiFeeGroup.setVisibility(View.VISIBLE);
                     cahootsSamouraiFeeGroupDivider.setVisibility(View.VISIBLE);
                     MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
@@ -204,6 +218,7 @@ public class CahootReviewFragment extends Fragment {
         }
 
     }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -224,12 +239,12 @@ public class CahootReviewFragment extends Fragment {
         step = view.findViewById(R.id.textView56);
         samouraiFeeBtc = view.findViewById(R.id.cahoots_review_fee_samourai);
         samouraiFeeSats = view.findViewById(R.id.cahoots_review_fee_samourai_sats);
-         return view;
+        return view;
     }
 
     public void setCahoots(Cahoots payload) {
         this.payload = payload;
-        if(isAdded()){
+        if (isAdded()) {
             showPayloadInfo();
         }
     }
