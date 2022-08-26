@@ -1,10 +1,10 @@
 package com.samourai.wallet.collaborate
 
-import android.util.Log
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
@@ -15,12 +15,12 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -34,9 +34,9 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
@@ -51,6 +51,7 @@ import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.getSupportFragmentManger
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.LogUtil
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -63,8 +64,8 @@ fun SetUpTransaction(onClose: (() -> Unit)?) {
     val transactionViewModel = viewModel<CahootsTransactionViewModel>()
     val page by transactionViewModel.pageLive.observeAsState(0)
     BoxWithConstraints(modifier = Modifier) {
-        var height =  this.maxHeight.times(0.576f)
-        if(height < 464.dp){
+        var height = this.maxHeight.times(0.576f)
+        if (height < 464.dp) {
             height = 464.dp
         }
         Box(modifier = Modifier.requiredHeight(height)) {
@@ -130,11 +131,11 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
                                             cahootsTransactionViewModel.setAddress(address)
                                         }
                                         val amount = FormatsUtil.getInstance().getBitcoinAmount(uri)
-                                        if (amount != null && amount.isNotEmpty() && amount != "0.0000" ) {
+                                        if (amount != null && amount.isNotEmpty() && amount != "0.0000") {
                                             cahootsTransactionViewModel.setAmount(amount.toLong())
                                         }
                                     } catch (e: Exception) {
-                                        LogUtil.error("ScanError ",e)
+                                        LogUtil.error("ScanError ", e)
                                     }
                                 } else {
                                     if (FormatsUtil.getInstance().isValidBitcoinAddress(it)) {
@@ -159,11 +160,13 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
             Column {
                 SendDestination()
                 SendAmount()
-                Box(modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(
-                        top = 4.dp
-                    )) {
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(
+                            top = 4.dp
+                        )
+                ) {
                     Text(
                         text = "Miner fee rate", fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -177,10 +180,11 @@ fun ComposeCahootsTransaction(onReviewClick: () -> Unit = {}) {
                 ) {
                     SliderSegment()
                 }
-                Box(modifier = Modifier
-                    .padding(horizontal = 16.dp)
-               ) {
-                   EstimatedBlockConfirm()
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                ) {
+                    EstimatedBlockConfirm()
                 }
             }
             ReviewButton(onClick = {
@@ -384,28 +388,29 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
                         .toDouble()
 
                     if (format == "BTC" && amountEdit.text[0] == '0'
-                            && amountEdit.text.replace(".", "").isDigitsOnly()
-                            && amountEdit.text.split(".")[0].length > 1
-                            && amountEdit.text[1] != '.') {
+                        && amountEdit.text.replace(".", "").isDigitsOnly()
+                        && amountEdit.text.split(".")[0].length > 1
+                        && amountEdit.text[1] != '.'
+                    ) {
                         amountEdit = TextFieldValue(
-                                text = it.text.drop(1),
-                                selection = TextRange(it.text.length)
+                            text = it.text.drop(1),
+                            selection = TextRange(it.text.length)
                         )
                     }
 
                     if (format == "BTC" && amountEdit.text.split(".")[1].length > 8) {
                         value = it.text.dropLast(1).toDouble()
                         amountEdit = TextFieldValue(
-                                text = it.text.dropLast(amountEdit.text.split(".")[1].length - 8),
-                                selection = TextRange(it.text.length)
+                            text = it.text.dropLast(amountEdit.text.split(".")[1].length - 8),
+                            selection = TextRange(it.text.length)
                         )
                     }
 
                     if (format == "sat" && amountEdit.text.replace(" ", "").toDouble() > 2.1E15) {
                         value = it.text.dropLast(1).toDouble()
                         amountEdit = TextFieldValue(
-                                text = it.text.dropLast(1),
-                                selection = TextRange(it.text.length)
+                            text = it.text.dropLast(1),
+                            selection = TextRange(it.text.length)
                         )
                     }
                     amountInSats = if (format == "sat") {
@@ -700,15 +705,11 @@ fun ComposeCahootsTransactionPreview() {
 fun SliderSegment() {
     val vm = viewModel<CahootsTransactionViewModel>()
     val feeSliderValue by vm.feeSliderValue.observeAsState(0.5f)
-    var sliderPosition by rememberSaveable { mutableStateOf(feeSliderValue ?: 0.5f) }
-    LaunchedEffect(true) {
-        sliderPosition = feeSliderValue
-    }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        Slider(value = sliderPosition,
+        Slider(value = feeSliderValue,
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .padding(horizontal = 4.dp),
@@ -720,7 +721,6 @@ fun SliderSegment() {
                 inactiveTrackColor = samouraiWindow
             ),
             onValueChange = {
-                sliderPosition = it
                 vm.setFeeRange(it)
             })
         Box(
@@ -737,16 +737,95 @@ fun SliderSegment() {
 fun SatsPerByte() {
     val vm = viewModel<CahootsTransactionViewModel>()
     val satsPerByte by vm.getFeeSatsValueLive().observeAsState("0")
+    var customFeeAlert by remember { mutableStateOf(false) }
+    var feeValue by remember { mutableStateOf(TextFieldValue()) }
+    val focusRequester = remember { FocusRequester() }
+    val scope = rememberCoroutineScope()
+
+    if (customFeeAlert) {
+        Dialog(
+            onDismissRequest = {
+                customFeeAlert = false
+            },
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.medium.copy(CornerSize(12.dp)),
+                color = samouraiSurface,
+                elevation = 8.dp,
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = "Custom Fee", style = MaterialTheme.typography.subtitle1)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(weight = 1f, fill = false)
+                            .padding(vertical = 8.dp)
+                    ) {
+                        TextField(
+                            value = feeValue,
+                            onValueChange = {
+                                feeValue = it
+                            },
+                            Modifier
+                                .focusRequester(focusRequester),
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                textColor = samouraiTextSecondary,
+                                focusedBorderColor = samouraiTextSecondary,
+                                unfocusedBorderColor = samouraiTextSecondary,
+                                focusedLabelColor = samouraiTextSecondary,
+                                unfocusedLabelColor = samouraiTextSecondary
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            trailingIcon = {
+                                Text(text = "sat/b ")
+                            },
+                            maxLines = 1,
+                            )
+                    }
+                    // BUTTONS
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = {
+                            customFeeAlert = false
+                        }) {
+                            Text(text = stringResource(id = R.string.cancel), color = samouraiTextPrimary)
+                        }
+                        TextButton(onClick = {
+                            try {
+                                vm.setCustomFee(feeValue.text.toLong())
+                            } catch (e: Exception) {
+                                LogUtil.error("tag", e);
+                            }
+                            customFeeAlert = false;
+                        }) {
+                            Text(text = stringResource(id = R.string.ok), color = samouraiTextPrimary)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Text(
         text = "$satsPerByte sat/b",
         fontSize = 13.sp,
-        fontWeight = FontWeight.Bold,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
         textAlign = TextAlign.Start,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                feeValue = TextFieldValue(
+                    text = satsPerByte,
+                    selection = TextRange(satsPerByte.length)
+                )
+                customFeeAlert = true
+                scope.launch {
+                    delay(200)
+                    focusRequester.requestFocus()
+                }
+            }
     )
-
 }
-

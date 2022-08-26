@@ -3,6 +3,7 @@ package com.samourai.wallet.send.soroban.meeting;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -49,7 +50,9 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
 
     private String pcode;
 
-    public static Intent createIntent(Context ctx, int account, CahootsType type, long amount,long fees, String address, String pcode) {
+    public static Intent createIntent(Context ctx, int account,
+                                      CahootsType type,
+                                      long amount,long fees, String address, String pcode,String destinationPcode) {
         Intent intent = new Intent(ctx, SorobanMeetingSendActivity.class);
         intent.putExtra("_account", account);
         intent.putExtra("fees", fees);
@@ -58,6 +61,9 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
         intent.putExtra("sendAddress", address);
         if (!StringUtils.isEmpty(pcode)) {
             intent.putExtra("pcode", pcode);
+        }
+        if (!StringUtils.isEmpty(destinationPcode)) {
+            intent.putExtra("destPcode", destinationPcode);
         }
         return intent;
     }
@@ -161,7 +167,8 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
                                                         cahootsType,
                                                         sendAmount,
                                                         getIntent().getLongExtra("fees", FeeUtil.getInstance().getSuggestedFeeDefaultPerB()),
-                                                        sendAddress, pcode);
+                                                        sendAddress, pcode,
+                                                        getIntent().getStringExtra("destPcode"));
                                                 startActivity(intent);
                                             } else {
                                                 Toast.makeText(getApplicationContext(), "Cahoots request refused!", Toast.LENGTH_LONG).show();

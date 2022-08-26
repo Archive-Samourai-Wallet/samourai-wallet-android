@@ -50,11 +50,14 @@ public class ManualCahootsActivity extends SamouraiActivity {
                                             int account,
                                             CahootsType type,
                                             long fees,
-                                            long amount, String address) {
+                                            long amount, String address,String destinationPcode) {
         Intent intent = ManualCahootsUi.createIntent(ctx, ManualCahootsActivity.class, account, type, CahootsTypeUser.SENDER);
         intent.putExtra("sendAmount", amount);
         intent.putExtra("fees", fees);
         intent.putExtra("sendAddress", address);
+        if(destinationPcode != null){
+            intent.putExtra("destPcode", destinationPcode);
+        }
         return intent;
     }
 
@@ -116,7 +119,11 @@ public class ManualCahootsActivity extends SamouraiActivity {
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
         ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
-        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress);
+        String paynymDestination = null; // TODO Sarath set destination pCode
+        if(getIntent().hasExtra("destPcode")){
+            paynymDestination = getIntent().getStringExtra("destPcode");
+        }
+        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
         cahootsUi.setCahootsMessage(manualCahootsService.initiate(cahootsContext));
     }
 
