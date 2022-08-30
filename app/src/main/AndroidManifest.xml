@@ -65,7 +65,12 @@
         <activity
             android:name=".collaborate.CollaborateActivity"
             android:exported="true"
-             android:theme="@style/Theme.Samourai.Material" >
+            android:theme="@style/Theme.Samourai.Material" >
+        </activity>
+        <activity
+            android:name=".calculator.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Samourai.Material" >
         </activity>
         <activity
             android:name=".explorer.ExplorerActivity"
