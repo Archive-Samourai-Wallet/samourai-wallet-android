@@ -214,11 +214,8 @@ public class SendFactory extends SendFactoryGeneric	{
         }
 
         int countP2TR = 0;
-        if(FormatsUtilGeneric.getInstance().isValidBech32(address))    {
-            org.apache.commons.lang3.tuple.Pair<Byte, byte[]> pair = Bech32Segwit.decode(address.substring(0, 2), address);
-            if(pair.getLeft() == (byte)0x01)    {
-                countP2TR = 1;
-            }
+        if(FormatsUtilGeneric.getInstance().isValidP2TR(address))    {
+            countP2TR = 1;
         }
 
         int changeType = 84;
