@@ -29,7 +29,7 @@ import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
@@ -96,11 +96,7 @@ class WhirlpoolHome : SamouraiActivity() {
            whirlPoolHomeViewModel.viewModelScope.launch {
               withContext(Dispatchers.Default){
                   delay(800)
-                  val intent =   Intent(this@WhirlpoolHome, JobRefreshService::class.java)
-                  intent.putExtra("notifTx", false)
-                  intent.putExtra("dragged", false)
-                  intent.putExtra("launch", false)
-                  JobRefreshService.enqueueWork(applicationContext, intent);
+                  WalletRefreshWorker.enqueue(applicationContext, notifTx = false, launched = false);
               }
            }
         }
@@ -243,11 +239,7 @@ class WhirlpoolHome : SamouraiActivity() {
             if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
                 initPager()
                 checkOnboardStatus()
-                val intent = Intent(this, JobRefreshService::class.java)
-                intent.putExtra("notifTx", false)
-                intent.putExtra("dragged", true)
-                intent.putExtra("launch", false)
-                JobRefreshService.enqueueWork(applicationContext, intent)
+                WalletRefreshWorker.enqueue(applicationContext, launched = false, notifTx = false)
             }
         }
     }

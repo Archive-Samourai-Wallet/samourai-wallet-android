@@ -1,7 +1,6 @@
 package com.samourai.wallet.tools.viewmodels
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -21,7 +20,7 @@ import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.PushTx
 import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.send.beans.SweepPreview
-import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.util.*
 import kotlinx.coroutines.*
 import org.bitcoinj.core.Transaction
@@ -353,11 +352,7 @@ class SweepViewModel : ViewModel() {
                     if (transaction != null) {
                         val hexTx = TxUtil.getInstance().getTxHex(transaction)
                         PushTx.getInstance(context).pushTx(hexTx)
-                        val intent = Intent(context, JobRefreshService::class.java)
-                        intent.putExtra("notifTx", false)
-                        intent.putExtra("dragged", false)
-                        intent.putExtra("launch", false)
-                        JobRefreshService.enqueueWork(context, intent)
+                        WalletRefreshWorker.enqueue(context, notifTx = false, launched = false)
                     }
                 } catch (e: Exception) {
                     throw  CancellationException("pushTx : ${e.message}")

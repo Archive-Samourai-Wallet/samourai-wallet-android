@@ -46,7 +46,6 @@ import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
-import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.BatchSendUtil;
