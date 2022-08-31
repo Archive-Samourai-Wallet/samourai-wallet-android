@@ -43,6 +43,7 @@ import com.samourai.wallet.collaborate.CollaborateActivity
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.databinding.ActivityBalanceBinding
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.home.adapters.TxAdapter
@@ -891,8 +892,12 @@ open class BalanceActivity : SamouraiActivity() {
     }
 
     private fun doSupport() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://samouraiwallet.com/support"))
-        startActivity(intent)
+        var url = "https://samouraiwallet.com/support"
+        if (isConnected())
+            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
+        val explorerIntent = Intent(this, ExplorerActivity::class.java)
+        explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
+        startActivity(explorerIntent)
     }
 
     private fun doUTXO() {
