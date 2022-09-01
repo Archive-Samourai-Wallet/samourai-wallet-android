@@ -1,4 +1,4 @@
-package com.samourai.wallet.calculator
+package com.samourai.wallet.stealth.calculator
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

@@ -1,4 +1,4 @@
-package com.samourai.wallet.calculator
+package com.samourai.wallet.stealth.calculator
 
 
 sealed class CalculatorAction {
