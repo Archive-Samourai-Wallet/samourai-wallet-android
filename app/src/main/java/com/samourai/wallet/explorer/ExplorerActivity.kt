@@ -28,6 +28,7 @@ import com.samourai.wallet.databinding.ActivityExplorerBinding
 class ExplorerActivity : AppCompatActivity() {
 
     var txId: String = "";
+    var supportURL: String = "";
    private lateinit var  binding : ActivityExplorerBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,12 +39,17 @@ class ExplorerActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         if (intent.hasExtra(TX_URI)) {
             txId = intent.extras?.getString(TX_URI, "")!!
+        } else if (intent.hasExtra(SUPPORT)) {
+            supportURL = intent.extras?.getString(SUPPORT, "")!!
         } else {
             finish()
             return
         }
 
         supportActionBar?.title = "Explorer"
+        if (supportURL != "")
+            supportActionBar?.title = "Support"
+
         binding.webView.setBackgroundColor(0)
 
         binding.swipeRefreshLayout.setOnRefreshListener {
@@ -138,8 +144,12 @@ class ExplorerActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webView.settings.safeBrowsingEnabled  = true
         }
+
         val blockExplorer = BlockExplorerUtil.getInstance().getUri(true)
-        val url = "$blockExplorer${txId}"
+        var url = "$blockExplorer${txId}"
+        if (supportURL != "") {
+            url = supportURL
+        }
         webView.loadUrl(url)
     }
 
@@ -239,6 +249,7 @@ class ExplorerActivity : AppCompatActivity() {
 
     companion object {
         const val TX_URI = "tx_uri";
+        const val SUPPORT = "support_extra";
         private const val TAG = "ExplorerActivity"
     }
 }
