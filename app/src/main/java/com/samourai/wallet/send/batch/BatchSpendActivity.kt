@@ -44,6 +44,7 @@ import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.segwit.bech32.Bech32Util
+import com.samourai.wallet.segwit.bech32.Bech32Segwit
 import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
@@ -63,7 +64,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.ParseException
 import java.util.*
-
+import org.apache.commons.lang3.tuple.Pair
 
 class BatchSpendActivity : SamouraiActivity() {
 
@@ -689,16 +690,24 @@ class BatchSpendActivity : SamouraiActivity() {
     fun prepareSpend() {
         //Resets current receivers,outpoints etc..
         this.reset()
+
+        var countP2TR = 0
         for (_data in viewModel.getBatchList()) {
             LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
             LogUtil.debug("BatchSendActivity", "output:" + _data.addr)
             LogUtil.debug("BatchSendActivity", "output:" + _data.pcode)
+
             amount += _data.amount
             if (receivers.containsKey(_data.addr)) {
                 val _amount = receivers[_data.addr]
                 receivers[_data.addr] = _amount!!.add(BigInteger.valueOf(_data.amount))
             } else {
                 receivers[_data.addr] = BigInteger.valueOf(_data.amount)
+
+                if(FormatsUtilGeneric.getInstance().isValidP2TR(_data.addr))    {
+                    countP2TR++
+                }
+
             }
         }
 
@@ -727,7 +736,7 @@ class BatchSpendActivity : SamouraiActivity() {
             p2pkh += outpointTypes.left
             p2sh_p2wpkh += outpointTypes.middle
             p2wpkh += outpointTypes.right
-            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, receivers.size + 1).toLong()) {
+            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, (receivers.size - countP2TR) + 1, countP2TR).toLong()) {
                 break
             }
         }
@@ -744,7 +753,7 @@ class BatchSpendActivity : SamouraiActivity() {
             }
         }
         val outpointTypes = FeeUtil.getInstance().getOutpointCount(Vector(outpoints))
-        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, receivers.size + 1)
+        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, (receivers.size - countP2TR) + 1, countP2TR)
         val walletBalance = viewModel.totalWalletBalance() ?: 0L
         if (amount + fee.toLong() > walletBalance) {
             reviewFragment.setTotalMinerFees(BigInteger.ZERO)

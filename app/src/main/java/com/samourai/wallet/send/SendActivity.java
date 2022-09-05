@@ -77,6 +77,7 @@ import com.samourai.wallet.ricochet.RicochetMeta;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
+import com.samourai.wallet.segwit.bech32.Bech32Segwit;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.batch.BatchSpendActivity;
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity;
@@ -88,6 +89,7 @@ import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.DecimalDigitsInputFilter;
 import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.FormatsUtilGeneric;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.SendAddressUtil;
 import com.samourai.wallet.util.WebUtil;
@@ -1130,6 +1132,11 @@ public class SendActivity extends SamouraiActivity {
             receivers = new HashMap<String, BigInteger>();
             receivers.put(address, BigInteger.valueOf(amount));
 
+            int countP2TR = 0;
+            if(FormatsUtilGeneric.getInstance().isValidP2TR(address))    {
+                countP2TR = 1;
+            }
+
             if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
                 change_index = idxBIP84PostMixInternal;
             } else if (changeType == 84) {
@@ -1143,13 +1150,13 @@ public class SendActivity extends SamouraiActivity {
             // if possible, get UTXO by input 'type': p2pkh, p2sh-p2wpkh or p2wpkh, else get all UTXO
             long neededAmount = 0L;
             if (FormatsUtil.getInstance().isValidBech32(address) || account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, 0, UTXOFactory.getInstance().getCountP2WPKH(), 4).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, 0, UTXOFactory.getInstance().getCountP2WPKH(), 4 - countP2TR, countP2TR).longValue();
 //                    Log.d("SendActivity", "segwit:" + neededAmount);
             } else if (Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, UTXOFactory.getInstance().getCountP2SH_P2WPKH(), 0, 4).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, UTXOFactory.getInstance().getCountP2SH_P2WPKH(), 0, 4 - countP2TR, countP2TR).longValue();
 //                    Log.d("SendActivity", "segwit:" + neededAmount);
             } else {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(UTXOFactory.getInstance().getCountP2PKH(), 0, 0, 4).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(UTXOFactory.getInstance().getCountP2PKH(), 0, 0, 4 - countP2TR, countP2TR).longValue();
 //                    Log.d("SendActivity", "p2pkh:" + neededAmount);
             }
             neededAmount += amount;
@@ -1444,7 +1451,7 @@ public class SendActivity extends SamouraiActivity {
                         p2pkh += outpointTypes.getLeft();
                         p2sh_p2wpkh += outpointTypes.getMiddle();
                         p2wpkh += outpointTypes.getRight();
-                        if (totalValueSelected >= (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, 2).longValue())) {
+                        if (totalValueSelected >= (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, 2 - countP2TR, countP2TR).longValue())) {
                             Log.d("SendActivity", "spend type:" + SPEND_TYPE);
                             Log.d("SendActivity", "multiple outputs");
                             Log.d("SendActivity", "amount:" + amount);
@@ -1499,13 +1506,14 @@ public class SendActivity extends SamouraiActivity {
 
                 // estimate fee for simple spend, already done if boltzmann
                 if (SPEND_TYPE == SPEND_SIMPLE) {
+
                     List<MyTransactionOutPoint> outpoints = new ArrayList<MyTransactionOutPoint>();
                     for (UTXO utxo : selectedUTXO) {
                         outpoints.addAll(utxo.getOutpoints());
                     }
                     Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(outpoints));
                     if (amount == balance) {
-                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 1);
+                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 1 - countP2TR, countP2TR);
                         amount -= fee.longValue();
                         receivers.clear();
                         receivers.put(address, BigInteger.valueOf(amount));
@@ -1529,7 +1537,7 @@ public class SendActivity extends SamouraiActivity {
                         //
 
                     } else {
-                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2);
+                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2 - countP2TR, countP2TR);
                     }
                 }
 
