@@ -639,12 +639,11 @@ open class BalanceActivity : SamouraiActivity() {
         if (account == WhirlpoolMeta.getInstance(applicationContext).whirlpoolPostmix) {
             menu.findItem(R.id.action_backup).isVisible = false
             menu.findItem(R.id.action_network_dashboard).isVisible = false
+            menu.findItem(R.id.action_postmix_balance).isVisible = false
             val item = menu.findItem(R.id.action_menu_account)
             item.actionView = createTag(" POST-MIX ")
             item.isVisible = true
             item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-        } else {
-            menu.findItem(R.id.action_soroban_collab).isVisible = false
         }
         this.menu = menu
         return super.onCreateOptionsMenu(menu)
@@ -709,10 +708,6 @@ open class BalanceActivity : SamouraiActivity() {
             }
         } else if (id == R.id.action_scan_qr) {
             doScan()
-        } else if (id == R.id.action_soroban_collab) {
-            val intent = Intent(this, SorobanMeetingListenActivity::class.java)
-            intent.putExtra("_account", WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix)
-            startActivity(intent)
         } else {
         }
         return super.onOptionsItemSelected(item)
