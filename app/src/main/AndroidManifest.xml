@@ -18,6 +18,7 @@
     <uses-permission
         android:name="android.permission.WAKE_LOCK"
         tools:node="replace" />
+
     <uses-feature
         android:name="android.hardware.camera.autofocus"
         android:required="false"
@@ -34,30 +35,64 @@
     <application
         android:name=".SamouraiApplication"
         android:allowBackup="false"
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:roundIcon="@drawable/ic_launcher_round"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
         android:theme="@style/SamouraiAppTheme"
         android:usesCleartextTraffic="true"
         tools:replace="android:allowBackup"
         tools:targetApi="s">
-        <activity
-            android:name=".MainActivity2"
-            android:configChanges="keyboardHidden|orientation|screenSize"
+
+        <activity-alias
+            android:name=".stealth.calculator.CalculatorActivity"
+            android:enabled="false"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:theme="@style/AppTheme.Launcher">
+            android:icon="@mipmap/ic_calculator"
+            android:roundIcon="@mipmap/ic_calculator_round"
+            android:label="Calculator"
+            android:targetActivity=".stealth.calculator.CalculatorActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".MainActivity2"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:targetActivity="com.samourai.wallet.MainActivity2"
+            android:theme="@style/SamouraiAppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".stealth.calculator.CalculatorActivity"
+            android:label="@string/calculator"
+            android:theme="@style/Theme.Samourai.Material" />
+        <activity
+            android:name=".stealth.StealthModeSettings"
+            android:exported="true"
+            android:theme="@style/Theme.Samourai.Material" />
+        <activity
+            android:name=".MainActivity2"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/SamouraiAppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="bitcoin" />
                 <data android:scheme="auth47" />
             </intent-filter>
@@ -65,13 +100,19 @@
         <activity
             android:name=".collaborate.CollaborateActivity"
             android:exported="true"
-            android:theme="@style/Theme.Samourai.Material" >
-        </activity>
-        <activity
-            android:name=".calculator.MainActivity"
+            android:theme="@style/Theme.Samourai.Material" />
+
+        <service
+            android:name=".stealth.StealthTileService"
             android:exported="true"
-            android:theme="@style/Theme.Samourai.Material" >
-        </activity>
+            android:icon="@drawable/ic_stealth_bomber"
+            android:label="Enable Stealth"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".explorer.ExplorerActivity"
             android:exported="false"
@@ -82,9 +123,7 @@
             android:exported="false"
             android:label=""
             android:parentActivityName=".home.BalanceActivity"
-            android:theme="@style/Theme.Samourai.Whirlpool.Material" >
-
-        </activity>
+            android:theme="@style/Theme.Samourai.Whirlpool.Material" />
         <activity
             android:name=".onboard.RestoreOptionActivity"
             android:theme="@style/Theme.Samourai.Material" />
@@ -238,6 +277,8 @@
             android:name=".whirlpool.service.WhirlpoolNotificationService"
             android:enabled="true"
             android:stopWithTask="true" />
+
     </application>
+
 
 </manifest>

@@ -1,7 +1,6 @@
 package com.samourai.wallet.stealth.calculator
 
 import android.app.Activity
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -294,10 +293,6 @@ fun CalculatorComposeView() {
                             .aspectRatio(1f)
                             .weight(1f)
                     ) {
-//                        checkStealthState(
-//                            activity.applicationContext,
-//                            state.number1 + (state.operator?.symbol ?: "") + state.number2
-//                        )
                         if (StealthModeController.isPinMatched(
                                 activity.applicationContext, state.number1 + (state.operator?.symbol ?: "") + state.number2
                             )

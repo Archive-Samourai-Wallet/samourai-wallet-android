@@ -159,6 +159,7 @@
         android:layout_height="@dimen/pin_entry_key_height"
         android:background="?android:attr/selectableItemBackground"
         android:elevation="0dp"
+        android:tint="@color/white"
         android:src="@drawable/ic_backspace_white_24dp"
         android:stateListAnimator="@null"
         app:layout_constraintBottom_toBottomOf="@+id/tj"

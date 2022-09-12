@@ -39,6 +39,7 @@ import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.send.PushTx
 import com.samourai.wallet.send.RBFUtil
+import com.samourai.wallet.stealth.StealthModeSettings
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
@@ -100,6 +101,12 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         val mnemonicPref = findPreference("mnemonic") as Preference?
         mnemonicPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             getHDSeed(true)
+            true
+        }
+
+        val stealthPref = findPreference("stealth") as Preference?
+        stealthPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+             startActivity(Intent(this.activity,StealthModeSettings::class.java))
             true
         }
 

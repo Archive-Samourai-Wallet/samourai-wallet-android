@@ -42,6 +42,15 @@
         />
 
     <Preference
+        android:title="@string/stealth_mode"
+        android:summary="@string/enable_stealth_mode_to_protect"
+        android:key="stealth"
+        app:iconSpaceReserved="false"
+        app:allowDividerBelow="true"
+        app:allowDividerAbove="true"
+        />
+
+    <Preference
         android:title="@string/options_xpub"
         android:summary="@string/options_xpub2"
         android:key="xpub"
