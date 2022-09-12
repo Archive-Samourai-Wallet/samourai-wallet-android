@@ -118,7 +118,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                                 if (AccessFactory.getInstance(stealthModeSettings.applicationContext).pin == value) {
                                     Toast.makeText(stealthModeSettings.applicationContext, R.string.stealth_pin_warning, Toast.LENGTH_SHORT).show()
                                 } else {
-                                    StealthModeController.setStealthPin(context,value)
+                                    StealthModeController.setStealthPin(context, value)
                                     isStealthEnabled = true
                                 }
                             }
@@ -137,7 +137,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
         topBar = {
             TopAppBar(
                 backgroundColor = samouraiSlateGreyAccent,
-                title = { Text(stringResource(id = R.string.stealth_mode),color= Color.White) },
+                title = { Text(stringResource(id = R.string.stealth_mode), color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = {
                         stealthModeSettings.onBackPressed()
@@ -240,13 +240,45 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         modifier = Modifier
                             .fillMaxSize()
                     ) {
-                        Box(
-                            Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
+                        if (selectedApp == StealthModeController.StealthApp.CALCULATOR) {
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .padding(vertical = 16.dp, horizontal = 12.dp),
+                                ) {
+                                    Text("Instructions", style = MaterialTheme.typography.h6)
+                                    ListItem(
+                                        modifier = Modifier.padding(vertical = 4.dp).padding(top = 8.dp),
+                                        text = {
+                                            Text("Enable stealth mode")
+                                        },
+                                        secondaryText = {
+                                            Text("Enter stealth PIN in samourai pin entry screen or use QUICK tiles option to trigger stealth mode")
+                                        }
+                                    )
+                                    Divider(
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                    ListItem(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        text = {
+                                            Text("Disable stealth mode")
+                                        },
+                                        secondaryText = {
+                                            Text("Enter stealth PIN in calculator app and press = symbol")
+                                        }
+                                    )
+                                }
+                            }
+                            Box(Modifier.weight(1f))
                         }
-                        Box(Modifier.weight(1f))
                     }
                 }
             }
