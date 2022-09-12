@@ -33,8 +33,10 @@ import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.util.LogUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class StealthModeSettings : SamouraiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -152,10 +154,24 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            showAlert = true
-                            scope.launch {
-                                delay(220)
-                                focusRequester.requestFocus()
+                            if (!isStealthEnabled) {
+                                showAlert = true
+                                value = ""
+                                scope.launch {
+                                    if (showAlert) {
+                                        delay(220)
+                                        focusRequester.requestFocus()
+                                    }
+                                }
+                            } else {
+                                isStealthEnabled = false
+                                scope.launch {
+                                    withContext(Dispatchers.IO){
+                                        StealthModeController.disableStealthSettings(context)
+                                    }
+                                    delay(100)
+                                    showAlert = false
+                                }
                             }
                         }
                         .padding(vertical = 8.dp),
@@ -166,6 +182,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         Switch(checked = isStealthEnabled, onCheckedChange = {
                             if (it) {
                                 showAlert = true
+                                value = ""
                                 scope.launch {
                                     if (showAlert) {
                                         delay(220)
@@ -174,8 +191,10 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                                 }
                             } else {
                                 isStealthEnabled = false
-                                StealthModeController.disableStealthSettings(context)
                                 scope.launch {
+                                    withContext(Dispatchers.IO){
+                                        StealthModeController.disableStealthSettings(context)
+                                    }
                                     delay(100)
                                     showAlert = false
                                 }
