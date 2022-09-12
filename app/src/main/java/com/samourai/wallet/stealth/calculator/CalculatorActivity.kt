@@ -1,6 +1,7 @@
 package com.samourai.wallet.stealth.calculator
 
 import android.app.Activity
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,7 +13,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,10 +35,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.R
+import com.samourai.wallet.stealth.StealthModeController
 
-@ExperimentalComposeUiApi
-class MainActivity : ComponentActivity() {
+
+class CalculatorActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -69,229 +73,248 @@ fun CalculatorComposeView() {
                 verticalArrangement = Arrangement.spacedBy(buttonSpacing),
             ) {
                 val calcPreview = state.number1 + (state.operator?.symbol ?: "") + state.number2
-                    Box(modifier = Modifier.weight(1f),
-                        contentAlignment= Alignment.BottomStart) {
-                        Text(
-                            text = calcPreview,
-                            textAlign = TextAlign.End,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 1.dp),
-                            fontWeight = FontWeight.Light,
-                            fontSize =  74.sp,
-                            color = Color.White,
-                            maxLines = 2
-                        )
-                    }
-                    Row(
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Text(
+                        text = calcPreview,
+                        textAlign = TextAlign.End,
                         modifier = Modifier
                             .fillMaxWidth()
-                        ,
-                        horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
-                    ) {
-                        CalculatorButton(
-                            symbol = "AC",
-                            color = MaterialTheme.colorScheme.inverseOnSurface,
-                            modifier = Modifier
-                                .aspectRatio(2f)
-                                .weight(2f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Clear)
-                        }
-                        CalculatorButton(
-                            symbol = "",
-                            icon = ImageVector.vectorResource(id = R.drawable.ic_backspace_white_24dp),
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Delete)
-                        }
-                        CalculatorButton(
-                            symbol = "/",
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Divide))
-                        }
-                    }
-                    Row(
+                            .padding(vertical = 1.dp),
+                        fontWeight = FontWeight.Light,
+                        fontSize = 74.sp,
+                        color = Color.White,
+                        maxLines = 2
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                ) {
+                    CalculatorButton(
+                        symbol = "AC",
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                            .aspectRatio(2f)
+                            .weight(2f)
                     ) {
-                        CalculatorButton(
-                            symbol = "7",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(7))
-                        }
-                        CalculatorButton(
-                            symbol = "8",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(8))
-                        }
-                        CalculatorButton(
-                            symbol = "9",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(9))
-                        }
-                        CalculatorButton(
-                            symbol = "",
-                            icon = Icons.Default.Clear,
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Multiply))
-                        }
+                        viewModel.onAction(CalculatorAction.Clear)
                     }
-                    Row(
+                    CalculatorButton(
+                        symbol = "",
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_backspace_white_24dp),
+                        color = MaterialTheme.colorScheme.onSecondary,
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                            .aspectRatio(1f)
+                            .weight(1f)
                     ) {
-                        CalculatorButton(
-                            symbol = "4",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(4))
-                        }
-                        CalculatorButton(
-                            symbol = "5",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(5))
-                        }
-                        CalculatorButton(
-                            symbol = "6",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(6))
-                        }
-                        CalculatorButton(
-                            symbol = "",
-                            icon = ImageVector.vectorResource(id = R.drawable.ic_baseline_remove_24),
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Subtract))
-                        }
+                        viewModel.onAction(CalculatorAction.Delete)
                     }
-                    Row(
+                    CalculatorButton(
+                        symbol = "/",
+                        color = MaterialTheme.colorScheme.onSecondary,
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                            .aspectRatio(1f)
+                            .weight(1f)
                     ) {
-                        CalculatorButton(
-                            symbol = "1",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(1))
-                        }
-                        CalculatorButton(
-                            symbol = "2",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(2))
-                        }
-                        CalculatorButton(
-                            symbol = "3",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(3))
-                        }
-                        CalculatorButton(
-                            symbol = "",
-                            icon = Icons.Default.Add,
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Add))
-                        }
+                        viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Divide))
                     }
-                    Row(
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                ) {
+                    CalculatorButton(
+                        symbol = "7",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                            .aspectRatio(1f)
+                            .weight(1f)
                     ) {
-                        CalculatorButton(
-                            symbol = "0",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(2f)
-                                .weight(2f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Number(0))
-                        }
-                        CalculatorButton(
-                            symbol = ".",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            textColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Decimal)
-                        }
-                        CalculatorButton(
-                            symbol = "=",
-                            color = MaterialTheme.colorScheme.inversePrimary,
-                            textColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .weight(1f)
-                        ) {
-                            viewModel.onAction(CalculatorAction.Calculate)
-                        }
+                        viewModel.onAction(CalculatorAction.Number(7))
                     }
+                    CalculatorButton(
+                        symbol = "8",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(8))
+                    }
+                    CalculatorButton(
+                        symbol = "9",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(9))
+                    }
+                    CalculatorButton(
+                        symbol = "",
+                        icon = Icons.Default.Clear,
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Multiply))
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                ) {
+                    CalculatorButton(
+                        symbol = "4",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(4))
+                    }
+                    CalculatorButton(
+                        symbol = "5",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(5))
+                    }
+                    CalculatorButton(
+                        symbol = "6",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(6))
+                    }
+                    CalculatorButton(
+                        symbol = "",
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_baseline_remove_24),
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Subtract))
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                ) {
+                    CalculatorButton(
+                        symbol = "1",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(1))
+                    }
+                    CalculatorButton(
+                        symbol = "2",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(2))
+                    }
+                    CalculatorButton(
+                        symbol = "3",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(3))
+                    }
+                    CalculatorButton(
+                        symbol = "",
+                        icon = Icons.Default.Add,
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Operation(CalculatorOperation.Add))
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                ) {
+                    CalculatorButton(
+                        symbol = "0",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(2f)
+                            .weight(2f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Number(0))
+                    }
+                    CalculatorButton(
+                        symbol = ".",
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+                        viewModel.onAction(CalculatorAction.Decimal)
+                    }
+                    CalculatorButton(
+                        symbol = "=",
+                        color = MaterialTheme.colorScheme.inversePrimary,
+                        textColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                    ) {
+//                        checkStealthState(
+//                            activity.applicationContext,
+//                            state.number1 + (state.operator?.symbol ?: "") + state.number2
+//                        )
+                        if (StealthModeController.isPinMatched(
+                                activity.applicationContext, state.number1 + (state.operator?.symbol ?: "") + state.number2
+                            )
+                        ) {
+                            MaterialAlertDialogBuilder(activity)
+                                .setTitle(R.string.app_name)
+                                .setMessage(R.string.do_you_want_to_disable_stealth_mode)
+                                .setPositiveButton(R.string.ok) { dialog, _ ->
+                                    dialog.dismiss()
+                                    StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, activity)
+                                }.setNegativeButton(R.string.cancel) { dialog, _ ->
+                                    dialog.dismiss()
+                                }.show()
+                        }
+                        viewModel.onAction(CalculatorAction.Calculate)
+                    }
+                }
             }
         }
     }
