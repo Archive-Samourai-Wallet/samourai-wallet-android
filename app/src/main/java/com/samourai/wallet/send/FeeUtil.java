@@ -125,6 +125,11 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
         return calculateFee(size, getSuggestedFee().getDefaultPerKB());
     }
 
+    public BigInteger estimatedFeeSegwit(int inputsP2PKH, int inputsP2SHP2WPKH, int inputsP2WPKH, int outputsNonTaproot, int outputsTaproot)   {
+        int size = estimatedSizeSegwit(inputsP2PKH, inputsP2SHP2WPKH, inputsP2WPKH, outputsNonTaproot, outputsTaproot, 0);
+        return calculateFee(size, getSuggestedFee().getDefaultPerKB());
+    }
+
     public int estimatedSize(int inputs, int outputs)   {
         return estimatedSizeSegwit(inputs, 0, 0, outputs, 0);
     }
