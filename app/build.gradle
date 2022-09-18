@@ -11,7 +11,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 32
         versionCode 191
-        versionName "0.99.98e"
+        versionName "0.99.98f"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -44,14 +44,14 @@ android {
         production {
             applicationId 'com.samourai.wallet'
             versionCode 191
-            versionName "0.99.98e"
+            versionName "0.99.98f"
             resValue "string", "app_name", "Samourai"
             resValue "string", "version_name", "0.99.98e"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
             versionCode 191
-            versionName "202207-qa"
+            versionName "0.99.98f"
             resValue "string", "app_name", "Samourai Staging"
             resValue "string", "version_name", "202207-qa"
         }
@@ -151,7 +151,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:0.0.33.10') {
+    implementation ('io.samourai.code.wallet:extlibj:0.0.33.13') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
@@ -160,7 +160,7 @@ dependencies {
         exclude group:'org.apache.commons', module:'commons-lang3'
         exclude group:'org.json', module:'json'
     }
-    implementation ('io.samourai.code.wallet:soroban-client-java:0.0.9') {
+    implementation ('io.samourai.code.wallet:soroban-client-java:0.0.9.1') {
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
     implementation ('io.samourai.code.wallet:boltzmann-java:1.0.4') {

@@ -176,7 +176,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     }
                 }
             }
-            true
+            false
         }
     }
 
