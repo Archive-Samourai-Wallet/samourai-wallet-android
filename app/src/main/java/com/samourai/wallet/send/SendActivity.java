@@ -64,6 +64,7 @@ import com.samourai.wallet.cahoots.Cahoots;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.psbt.PSBTUtil;
+import com.samourai.wallet.explorer.ExplorerActivity;
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
 import com.samourai.wallet.hd.HD_Address;
@@ -2388,7 +2389,11 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void doSupport() {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/wallet/usage#send-1"));
+        String url = "https://samouraiwallet.com/support";
+        if (TorManager.INSTANCE.isConnected())
+            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support";
+        Intent intent = new Intent(this, ExplorerActivity.class);
+        intent.putExtra(ExplorerActivity.SUPPORT, url);
         startActivity(intent);
     }
 
