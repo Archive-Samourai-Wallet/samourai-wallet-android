@@ -28,6 +28,7 @@ import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.crypto.DecryptionException
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.addPaynym.AddPaynymActivity
@@ -35,6 +36,7 @@ import com.samourai.wallet.paynym.fragments.PayNymOnBoardBottomSheet
 import com.samourai.wallet.paynym.fragments.PaynymListFragment
 import com.samourai.wallet.paynym.fragments.ShowPayNymQRBottomSheet
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
+import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.util.*
 import com.samourai.wallet.widgets.ViewPager
 import com.squareup.picasso.Picasso
@@ -238,8 +240,13 @@ class PayNymHome : SamouraiActivity() {
     }
 
     private fun doSupport() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/wallet/usage#paynym-1"))
-        startActivity(intent)
+        var url = "https://samouraiwallet.com/support"
+        if (isConnected())
+            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
+        val explorerIntent = Intent(this, ExplorerActivity::class.java)
+        explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
+        startActivity(explorerIntent)
+
     }
 
     private fun doUnArchive() {

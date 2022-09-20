@@ -37,10 +37,12 @@ import com.google.zxing.client.android.Contents;
 import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.collaborate.CollaborateActivity;
+import com.samourai.wallet.explorer.ExplorerActivity;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity;
+import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.DecimalDigitsInputFilter;
@@ -653,7 +655,11 @@ public class ReceiveActivity extends SamouraiActivity {
     }
 
     private void doSupport() {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/wallet/usage#receive-1"));
+        String url = "https://samouraiwallet.com/support";
+        if (TorManager.INSTANCE.isConnected())
+            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support";
+        Intent intent = new Intent(this, ExplorerActivity.class);
+        intent.putExtra(ExplorerActivity.SUPPORT, url);
         startActivity(intent);
     }
 
