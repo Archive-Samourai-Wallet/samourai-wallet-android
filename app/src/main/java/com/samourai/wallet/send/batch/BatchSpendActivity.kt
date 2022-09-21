@@ -36,6 +36,7 @@ import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import com.samourai.wallet.databinding.ActivityBatchSpendBinding
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.fragments.PaynymSelectModalFragment
 import com.samourai.wallet.fragments.PaynymSelectModalFragment.Companion.newInstance
@@ -49,6 +50,7 @@ import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
+import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.WhirlpoolConst
@@ -415,7 +417,12 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     private fun doSupport() {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/en/wallet/features/batch-spend")))
+        var url = "https://samouraiwallet.com/support"
+        if (TorManager.isConnected())
+            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
+        val explorerIntent = Intent(this, ExplorerActivity::class.java)
+        explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
+        startActivity(explorerIntent)
     }
 
 
