@@ -125,7 +125,7 @@ public class DojoUtil {
         }
 
         // version 1.11.x
-        String[] s = dojoVersion.split(".");
+        String[] s = dojoVersion.split("\\.");
         try {
             if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
                 return true;
