@@ -11,8 +11,10 @@ import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.stealth.calculator.CalculatorActivity
+import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.TimeOutUtil
+import io.matthewnelson.topl_service.TorServiceController
 
 
 object StealthModeController {
@@ -69,6 +71,9 @@ object StealthModeController {
     }
 
     fun enableStealthFromPrefs(context: Context) {
+        if (TorManager.isConnected())
+            TorServiceController.stopTor()
+
         val prefs = getStealthPreferences(context)
         val key = prefs?.getString(PREF_APP, StealthApp.CALCULATOR.getAppKey()) ?: StealthApp.CALCULATOR.getAppKey()
         StealthApp.values().forEach {
