@@ -30,10 +30,8 @@ class MainSettingsFragment : PreferenceFragmentCompat(), Preference.OnPreference
         super.onViewCreated(view, savedInstanceState)
     }
 
-    override fun onPreferenceClick(preference: Preference?): Boolean {
-
-        val fragment = SettingsDetailsFragment(preference?.key)
-
+    override fun onPreferenceClick(preference: Preference): Boolean {
+        val fragment = SettingsDetailsFragment(preference.key)
         (activity as SettingsActivity).setFragment(fragment, true);
         return true
     }

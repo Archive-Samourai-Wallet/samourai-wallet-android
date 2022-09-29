@@ -7,13 +7,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatDialog;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.samourai.soroban.cahoots.CahootsContext;
@@ -28,6 +27,7 @@ import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.psbt.PSBT;
+import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.QRBottomSheetDialog;
 
@@ -35,8 +35,7 @@ public class ManualCahootsActivity extends SamouraiActivity {
     private static final String TAG = "ManualCahootsActivity";
 
     private ManualCahootsUi cahootsUi;
-
-    private AppCompatDialog dialog;
+    private CahootsContext cahootsContext;
 
     public static Intent createIntentResume(Context ctx, int account, String payload) throws Exception {
         ManualCahootsService manualCahootsService = AndroidSorobanCahootsService.getInstance(ctx).getManualCahootsService();
@@ -47,10 +46,18 @@ public class ManualCahootsActivity extends SamouraiActivity {
         return intent;
     }
 
-    public static Intent createIntentSender(Context ctx, int account, CahootsType type, long amount, String address) {
+    public static Intent createIntentSender(Context ctx,
+                                            int account,
+                                            CahootsType type,
+                                            long fees,
+                                            long amount, String address,String destinationPcode) {
         Intent intent = ManualCahootsUi.createIntent(ctx, ManualCahootsActivity.class, account, type, CahootsTypeUser.SENDER);
         intent.putExtra("sendAmount", amount);
+        intent.putExtra("fees", fees);
         intent.putExtra("sendAddress", address);
+        if(destinationPcode != null){
+            intent.putExtra("destPcode", destinationPcode);
+        }
         return intent;
     }
 
@@ -81,7 +88,6 @@ public class ManualCahootsActivity extends SamouraiActivity {
             };
             cahootsUi = new ManualCahootsUi(
                     findViewById(R.id.step_view),
-                    findViewById(R.id.step_numbers),
                     findViewById(R.id.view_flipper),
                     getIntent(),
                     getSupportFragmentManager(),
@@ -106,16 +112,19 @@ public class ManualCahootsActivity extends SamouraiActivity {
     }
 
     private void startSender() throws Exception {
-        // send cahoots
+        long feePerB =   getIntent().getLongExtra("fees", FeeUtil.getInstance().getSuggestedFeeDefaultPerB()) ;
         long sendAmount = getIntent().getLongExtra("sendAmount", 0);
         if (sendAmount <= 0) {
             throw new Exception("Invalid sendAmount");
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
-
         ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
-        CahootsContext cahootsContext = cahootsUi.computeCahootsContextInitiator(sendAmount, sendAddress);
-        cahootsUi.setCahootsMessage(manualCahootsService.initiate(account, cahootsContext));
+        String paynymDestination = null; // TODO Sarath set destination pCode
+        if(getIntent().hasExtra("destPcode")){
+            paynymDestination = getIntent().getStringExtra("destPcode");
+        }
+        cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
+        cahootsUi.setCahootsMessage(manualCahootsService.initiate(cahootsContext));
     }
 
     @Override
@@ -162,7 +171,13 @@ public class ManualCahootsActivity extends SamouraiActivity {
             // continue cahoots
             ManualCahootsService manualCahootsService = cahootsUi.getManualCahootsService();
             ManualCahootsMessage cahootsMessage = manualCahootsService.parse(qrData);
-            SorobanReply reply = manualCahootsService.reply(account, cahootsMessage);
+
+            if (cahootsContext == null) {
+                // start as counterparty
+                cahootsContext = CahootsContext.newCounterparty(cahootsMessage.getType(), account);
+            }
+
+            SorobanReply reply = manualCahootsService.reply(cahootsContext, cahootsMessage);
             if (reply instanceof ManualCahootsMessage) {
                 cahootsUi.setCahootsMessage((ManualCahootsMessage) reply);
             } else if (reply instanceof TxBroadcastInteraction) {

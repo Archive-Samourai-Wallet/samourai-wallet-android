@@ -93,8 +93,8 @@
         android:paddingRight="4dp"
         android:paddingBottom="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/utxo_item_notes_layout"
-        app:layout_constraintStart_toStartOf="@+id/utxo_item_notes_layout"
+        app:layout_constraintEnd_toEndOf="@+id/utxo_item_address"
+        app:layout_constraintStart_toStartOf="@+id/utxo_item_address"
         app:layout_constraintTop_toBottomOf="@+id/utxo_item_notes_layout" />
 
     <View

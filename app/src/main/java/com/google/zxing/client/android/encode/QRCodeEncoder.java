@@ -20,6 +20,7 @@ import android.provider.ContactsContract;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
+import android.util.Log;
 
 import java.util.Collection;
 import java.util.EnumMap;
@@ -44,6 +45,7 @@ public final class QRCodeEncoder {
     private String title = null;
     private BarcodeFormat format = null;
     private boolean encoded = false;
+    private Integer margin;
 
     public QRCodeEncoder(String data, Bundle bundle, String type, String format, int dimension) {
         this.dimension = dimension;
@@ -60,6 +62,10 @@ public final class QRCodeEncoder {
 
     public String getTitle() {
         return title;
+    }
+
+    public void setMargin(int margin){
+        this.margin = margin;
     }
 
     private boolean encodeContents(String data, Bundle bundle, String type, String formatString) {
@@ -196,11 +202,14 @@ public final class QRCodeEncoder {
     public Bitmap encodeAsBitmap() throws WriterException {
         if (!encoded) return null;
 
-        Map<EncodeHintType, Object> hints = null;
+        Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);;
         String encoding = guessAppropriateEncoding(contents);
         if (encoding != null) {
             hints = new EnumMap<EncodeHintType, Object>(EncodeHintType.class);
             hints.put(EncodeHintType.CHARACTER_SET, encoding);
+        }
+        if(margin != null){
+            hints.put(EncodeHintType.MARGIN, margin);
         }
         MultiFormatWriter writer = new MultiFormatWriter();
         BitMatrix result = writer.encode(contents, format, dimension, dimension, hints);

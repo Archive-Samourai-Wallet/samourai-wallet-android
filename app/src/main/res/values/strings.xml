@@ -186,6 +186,7 @@
     <string name="receive_address_to_share">Share this receive address? If shared, it may be read to other applications.</string>
     <string name="sure_to_erase">Are you sure you want to erase this wallet?</string>
     <string name="wallet_erased">Wallet erased from device.</string>
+    <string name="copy_warning_generic">Do you want to copy ? If copied, content might be visible to other applications.</string>
 
     <string name="send_privacy_warning">Privacy warning: be aware that you have already sent funds to this address.</string>
 
@@ -264,7 +265,7 @@
     <string name="bip47_status_incoming">Ready to receive</string>
     <string name="bip47_cannot_scan_own_pcode">Cannot scan your own payment code</string>
     <string name="bip47_spend_to_pcode">Send through this payment channel?</string>
-    <string name="bip47_sign">Sign message</string>
+    <string name="sign_message">Sign message</string>
     <string name="bip47_sign_text1">Sign message using BIP47 notification address private key?</string>
     <string name="bip47_sign_text2">Signed using my BIP47 notification address.</string>
     <string name="bip47_wait_for_confirmation_or_retry">This payment channel is waiting for 1 confirmation before sending is activated. Would you like to discard the previous attempt and resend a notification?</string>
@@ -542,7 +543,7 @@
 
     <string name="chain_id">Address chain</string>
 
-    <string name="receive_chain">Receive address</string>
+    <string name="receive_address">Receive address</string>
 
     <string name="change_chain">Change address</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
@@ -843,7 +844,7 @@
     <string name="passphrase_is_required_for_samourai">Passphrase is required for Samourai import</string>
     <string name="send_cahoots">Send Cahoots</string>
     <string name="dojo_config_detected">Dojo configuration detected</string>
-    <string name="dojo_config_override">Dojo configuration detected in backup file. Override current Dojo configuration in backup file?</string>
+    <string name="dojo_config_override">A previous Dojo configuration was detected in the backup file. Do you want to ignore this backed-up configuration? (Selecting No will load the Dojo configuration from the backup file)</string>
     <string name="api_key_blank_error">This field cannot be left blank!</string>
     <string name="choose">Choose</string>
     <string name="permission_dialog_scoped">Your wallet needs access to file storage so it can automatically save an encrypted backup of your wallet to your device. Please choose a directory.</string>
@@ -890,7 +891,38 @@
     <string name="open_in_browser">Open in browser</string>
     <string name="copy_tx_id">Copy TxID</string>
     <string name="copy_url">Copy URL</string>
+    <string name="title_activity_tools_main_acitivty">ToolsMainAcitivty</string>
+    <string name="preview_sweep">Preview sweep</string>
+    <string name="cost_of_sweep">Cost of sweep transaction</string>
+    <string name="balance_of_unspent">Balance of unspent output</string>
+    <string name="sweep">Sweep</string>
+    <string name="samourai_wallet_controlled_servers_will_act">Samourai Wallet controlled servers will act as a participant to create this CoinJoin. This is the easiest and quickest option.</string>
+    <string name="manually_compose_this_transaction">Manually compose this transaction with another participant who is using Samourai Wallet. Perfect for face-to-face interaction.</string>
+    <string name="compose_this_transaction_online_with">Compose this transaction online with another participant who is using Samourai Wallet over Tor.</string>
     <string name="pin_length_error">Pin must be between 5 and 8 digits long</string>
     <string name="pins_not_match">Pins do not match, try again.</string>
+    <string name="auth_challenge">Auth Challenge</string>
+    <string name="auth_with_paynym">Authenticate with paynym</string>
+    <string name="enter_challenge">Enter Challenge</string>
+    <string name="auth_success">Authentication success</string>
+    <string name="is_requesting_your_auth">is requesting your authentication.</string>
+    <string name="auth_using_paynym">Authenticate using paynym</string>
+    <string name="authenticate">Authenticate</string>
+    <string name="estimated_wait_time">Estimated wait time</string>
+    <string name="enter_a_private_key_and">Enter a private key and sweep any funds to\nyour next bitcoin address</string>
+    <string name="sign_messages_using_your">Sign messages using your wallet private key</string>
+    <string name="wallet_address_calc">Wallet address calculator</string>
+    <string name="calculate_any_address_derived">Calculate any address derived from your\nwallet seed. Sign messages using your private key</string>
+    <string name="simple_and_secure_auth_with">Simple and secure authentication with a Bitcoin Payment Code (see BIP47)</string>
+    <string name="address_details">Address Details</string>
+    <string name="address_index">Address Index</string>
+    <string name="receive_address_external">Receive address (external)</string>
+    <string name="change_address_internal">Change address (internal)</string>
+    <string name="private_key">Private key</string>
+    <string name="redeem_script">Redeem Script</string>
+    <string name="select_collaborator">Select Collaborator</string>
+    <string name="select_paynym">Select Paynym</string>
+    <string name="sweep_dust_warning">Unable to compose transaction, output value will be dust</string>
+    <string name="sweep_invalid_fee_warning">Unable to compose transaction invalid fees.</string>
 
 </resources>

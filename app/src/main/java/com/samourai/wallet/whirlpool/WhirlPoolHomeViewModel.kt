@@ -15,6 +15,7 @@ import com.samourai.wallet.home.BalanceViewModel
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.LogUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
@@ -103,7 +104,30 @@ class WhirlPoolHomeViewModel : ViewModel() {
         }
     }
 
+
+     fun  loadTransactions(context: Context){
+         viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val postMixList = APIFactory.getInstance(context).allPostMixTxs
+                val premixList = APIFactory.getInstance(context).allPremixTx
+                val list =  arrayListOf<Tx>()
+                list.addAll(postMixList)
+                // Filter duplicates
+                val filteredPremix  = premixList.filter { tx->
+                    postMixList.find { it.hash==tx.hash } ==null
+                }
+                list.addAll(premixList)
+                if (postMixList != null) {
+                    withContext(Dispatchers.Main) {
+                         setTx(postMixList,filteredPremix)
+                    }
+                }
+            }
+        }
+    }
+
     private fun loadBalances() {
+
         if (wallet.whirlpoolWallet.isPresent) {
             val postMix =
                 wallet.whirlpoolWallet.get().utxoSupplier.findUtxos(WhirlpoolAccount.POSTMIX)

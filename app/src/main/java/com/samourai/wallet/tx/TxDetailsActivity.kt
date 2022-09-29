@@ -483,4 +483,5 @@ class TxDetailsActivity : SamouraiActivity() {
     companion object {
         private const val TAG = "TxDetailsActivity"
     }
+
 }

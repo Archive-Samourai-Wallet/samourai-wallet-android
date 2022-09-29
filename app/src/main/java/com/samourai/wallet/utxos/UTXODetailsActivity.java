@@ -1,14 +1,17 @@
 package com.samourai.wallet.utxos;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -46,6 +49,7 @@ import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.MessageSignUtil;
+import com.samourai.wallet.util.QRBottomSheetDialog;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
@@ -566,34 +570,13 @@ public class UTXODetailsActivity extends SamouraiActivity {
     private void viewPrivateKey() {
         ECKey ecKey = SendFactory.getPrivKey(addr, account);
         String strPrivKey = ecKey.getPrivateKeyAsWiF(SamouraiWallet.getInstance().getCurrentNetworkParams());
-
-        ImageView showQR = new ImageView(this);
-        Bitmap bitmap = null;
-        QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(strPrivKey, null, Contents.Type.TEXT, BarcodeFormat.QR_CODE.toString(), 500);
-        try {
-            bitmap = qrCodeEncoder.encodeAsBitmap();
-        } catch (WriterException e) {
-            e.printStackTrace();
-        }
-        showQR.setImageBitmap(bitmap);
-
-        TextView showText = new TextView(this);
-        showText.setText(strPrivKey);
-        showText.setTextIsSelectable(true);
-        showText.setPadding(40, 10, 40, 10);
-        showText.setTextSize(18.0f);
-
-        LinearLayout privkeyLayout = new LinearLayout(this);
-        privkeyLayout.setOrientation(LinearLayout.VERTICAL);
-        privkeyLayout.addView(showQR);
-        privkeyLayout.addView(showText);
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.app_name)
-                .setView(privkeyLayout)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok, (dialog, whichButton) -> {
-                }).show();
+        QRBottomSheetDialog dialog = new QRBottomSheetDialog(
+                strPrivKey,
+                getString(R.string.app_name),
+                "Key"
+        );
+        dialog.setSecure(true);
+        dialog.show(getSupportFragmentManager(), dialog.getTag());
     }
 
     private void redeem() {

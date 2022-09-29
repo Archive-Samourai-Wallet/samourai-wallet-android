@@ -163,7 +163,7 @@ class SorobanMeetingListenActivity : SamouraiActivity() {
     }
 
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.soroban_meeting_listen_activity_menu, menu)
         this.menu = menu
         return super.onCreateOptionsMenu(menu)

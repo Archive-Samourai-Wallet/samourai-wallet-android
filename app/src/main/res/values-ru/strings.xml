@@ -271,7 +271,7 @@
     <string name="bip47_status_incoming">Готов к получению</string>
     <string name="bip47_cannot_scan_own_pcode">Не получается отсканировать собственный платёжный код</string>
     <string name="bip47_spend_to_pcode">Отправить через этот платёжный канал?</string>
-    <string name="bip47_sign">Подписать сообщение</string>
+    <string name="sign_message">Подписать сообщение</string>
     <string name="bip47_sign_text1">Подписать сообщение, используя приватный ключ от BIP47 notification-адреса?</string>
     <string name="bip47_sign_text2">Подписано моим BIP47 notification-адресом.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Этот платёжный канал ожидает одного подтверждения прежде чем разрешить отправку средств. Хотите отказаться от предыдущей попытки и попробовать отправить извещение заново?></string>
@@ -592,7 +592,7 @@
 
     <string name="chain_id">Цепь адресов:</string>
 
-    <string name="receive_chain">Адрес получения</string>
+    <string name="receive_address">Адрес получения</string>
 
     <string name="change_chain">Адрес для сдачи</string>
     <string name="whirlpool_postmix">Whirlpool Segwit пост-миксовый</string>

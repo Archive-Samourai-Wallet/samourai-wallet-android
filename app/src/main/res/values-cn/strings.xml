@@ -262,7 +262,7 @@
     <string name="bip47_status_incoming">准备接收</string>
     <string name="bip47_cannot_scan_own_pcode">无法扫描自己的付款码</string>
     <string name="bip47_spend_to_pcode">通过此付款渠道发送？</string>
-    <string name="bip47_sign">签署信息</string>
+    <string name="sign_message">签署信息</string>
     <string name="bip47_sign_text1">是否使用BIP47通知地址私钥签署？</string>
     <string name="bip47_sign_text2">已由我的BIP47通知地址私钥签署</string>
     <string name="bip47_wait_for_confirmation_or_retry">此支付渠道还在等一个确认才可以启动发送款项，是否放弃之前尝试并重新发送请求？</string>
@@ -594,7 +594,7 @@
     </string-array>
     ###################
     <string name="chain_id">地址链</string>
-    <string name="receive_chain">接收地址</string>
+    <string name="receive_address">接收地址</string>
     <string name="change_chain">找零地址</string>
     <string name="whirlpool_postmix">Whirlpool Segwit（混合后）</string>
     <string name="encrypted_backup_detected">已检查到加密备份</string>

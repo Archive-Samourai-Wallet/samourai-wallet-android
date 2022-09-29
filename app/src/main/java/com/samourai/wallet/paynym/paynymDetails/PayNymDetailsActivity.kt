@@ -35,6 +35,7 @@ import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.bip47.rpc.SecretPoint
 import com.samourai.wallet.crypto.DecryptionException
+import com.samourai.wallet.databinding.ActivityPaynymDetailsBinding
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.PayNymViewModel
@@ -57,7 +58,6 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_paynym_details.*
 import kotlinx.coroutines.*
 import org.bitcoinj.core.AddressFormatException
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
@@ -85,14 +85,16 @@ class PayNymDetailsActivity : SamouraiActivity() {
     private val payNymViewModel: PayNymViewModel by viewModels()
     private var following = false
     private val job = Job()
+    private lateinit var binding: ActivityPaynymDetailsBinding
     private val scope = CoroutineScope(Dispatchers.Main + job)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_paynym_details)
-        setSupportActionBar(findViewById(R.id.toolbar_paynym))
+        binding = ActivityPaynymDetailsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbarPaynym)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        historyRecyclerView.isNestedScrollingEnabled = true
+        binding.historyRecyclerView.isNestedScrollingEnabled = true
         if (intent.hasExtra("pcode")) {
             pcode = intent.getStringExtra("pcode")
         } else {
@@ -102,27 +104,27 @@ class PayNymDetailsActivity : SamouraiActivity() {
             label = intent.getStringExtra("label")
         }
         paynymTxListAdapter = PaynymTxListAdapter(txesList, this)
-        historyRecyclerView.layoutManager = LinearLayoutManager(this)
-        historyRecyclerView.adapter = paynymTxListAdapter
+        binding.historyRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.historyRecyclerView.adapter = paynymTxListAdapter
         val drawable = ContextCompat.getDrawable(this, R.drawable.divider_grey)
-        historyRecyclerView.addItemDecoration(ItemDividerDecorator(drawable))
+        binding.historyRecyclerView.addItemDecoration(ItemDividerDecorator(drawable))
         setPayNym()
         loadTxes()
-        payNymViewModel.followers.observe(this, {
+        payNymViewModel.followers.observe(this) {
             setPayNym()
-        })
-        payNymViewModel.errorsLiveData.observe(this, {
-            Snackbar.make(paynymCode, "$it", Snackbar.LENGTH_LONG).show()
-        })
-        payNymViewModel.loaderLiveData.observe(this, {
-            progressBar.visibility = if (it) View.VISIBLE else View.INVISIBLE
-        })
-        followBtn.setOnClickListener { followPaynym() }
+        }
+        payNymViewModel.errorsLiveData.observe(this) {
+            Snackbar.make( binding.paynymCode, "$it", Snackbar.LENGTH_LONG).show()
+        }
+        payNymViewModel.loaderLiveData.observe(this) {
+            binding.progressBar.visibility = if (it) View.VISIBLE else View.INVISIBLE
+        }
+        binding.followBtn.setOnClickListener { followPaynym() }
 
     }
 
     private fun setPayNym() {
-        followMessage.text = resources.getString(R.string.follow) + " " + getLabel() + " " + resources.getText(R.string.paynym_follow_message_2).toString()
+        binding.followMessage.text = resources.getString(R.string.follow) + " " + getLabel() + " " + resources.getText(R.string.paynym_follow_message_2).toString()
         if (BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_NOT_SENT) {
             showFollow()
         } else {
@@ -132,32 +134,32 @@ class PayNymDetailsActivity : SamouraiActivity() {
             showWaitingForConfirm()
         }
         if (BIP47Meta.getInstance().getIncomingIdx(pcode) >= 0) {
-            historyLayout!!.visibility = View.VISIBLE
+            binding.historyLayout!!.visibility = View.VISIBLE
         }
         if (BIP47Meta.getInstance().isFollowing(pcode)) {
-            followBtn.text = getString(R.string.connect)
-            feeMessage.text = getString(R.string.connect_paynym_fee)
-            followMessage.text = "${getString(R.string.blockchain_connect_with)} ${getLabel()} ${resources.getText(R.string.paynym_connect_message)}"
+            binding.followBtn.text = getString(R.string.connect)
+            binding.feeMessage.text = getString(R.string.connect_paynym_fee)
+            binding.followMessage.text = "${getString(R.string.blockchain_connect_with)} ${getLabel()} ${resources.getText(R.string.paynym_connect_message)}"
             if (!following)
                 addChip(getString(R.string.following))
             following = true
         } else {
             if (!BIP47Meta.getInstance().exists(pcode, true)) {
-                feeMessage.text = getString(R.string.follow_paynym_fee_free)
+                binding.feeMessage.text = getString(R.string.follow_paynym_fee_free)
             }
         }
-        paynymCode.text = BIP47Meta.getInstance().getAbbreviatedPcode(pcode)
+        binding.paynymCode.text = BIP47Meta.getInstance().getAbbreviatedPcode(pcode)
         title = getLabel()
-        paynymAvatarProgress.visibility = View.VISIBLE
+        binding.paynymAvatarProgress.visibility = View.VISIBLE
         Picasso.get()
                 .load(WebUtil.PAYNYM_API + pcode + "/avatar")
-                .into(userAvatar, object : Callback {
+                .into( binding.userAvatar, object : Callback {
                     override fun onSuccess() {
-                        paynymAvatarProgress.visibility = View.GONE
+                        binding.paynymAvatarProgress.visibility = View.GONE
                     }
 
                     override fun onError(e: Exception) {
-                        paynymAvatarProgress.visibility = View.GONE
+                        binding.paynymAvatarProgress.visibility = View.GONE
                         Toast.makeText(this@PayNymDetailsActivity, "Unable to load avatar", Toast.LENGTH_SHORT).show()
                     }
                 })
@@ -170,10 +172,10 @@ class PayNymDetailsActivity : SamouraiActivity() {
     private fun addChip(chipText: String) {
         val scale = resources.displayMetrics.density
 
-        if (paynymChipLayout.childCount == 2) {
+        if ( binding.paynymChipLayout.childCount == 2) {
             return
         }
-        paynymChipLayout.addView(Chip(this).apply {
+        binding.paynymChipLayout.addView(Chip(this).apply {
             text = chipText
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                     .apply {
@@ -185,27 +187,27 @@ class PayNymDetailsActivity : SamouraiActivity() {
     }
 
     private fun showWaitingForConfirm() {
-        historyLayout!!.visibility = View.VISIBLE
-        feeMessage!!.visibility = View.GONE
-        followLayout!!.visibility = View.VISIBLE
-        confirmMessage!!.visibility = View.VISIBLE
-        followBtn!!.visibility = View.GONE
-        followMessage!!.visibility = View.GONE
+        binding.historyLayout.visibility = View.VISIBLE
+        binding.feeMessage.visibility = View.GONE
+        binding.followLayout.visibility = View.VISIBLE
+        binding.confirmMessage.visibility = View.VISIBLE
+        binding.followBtn.visibility = View.GONE
+        binding.followMessage.visibility = View.GONE
     }
 
     private fun showHistory() {
         addChip("Connected")
-        historyLayout!!.visibility = View.VISIBLE
-        followLayout!!.visibility = View.GONE
-        confirmMessage!!.visibility = View.GONE
+        binding.historyLayout.visibility = View.VISIBLE
+        binding.followLayout.visibility = View.GONE
+        binding.confirmMessage.visibility = View.GONE
     }
 
     private fun showFollow() {
-        historyLayout!!.visibility = View.GONE
-        followBtn!!.visibility = View.VISIBLE
-        followLayout!!.visibility = View.VISIBLE
-        confirmMessage!!.visibility = View.GONE
-        followMessage!!.visibility = View.VISIBLE
+        binding.historyLayout.visibility = View.GONE
+        binding.followBtn.visibility = View.VISIBLE
+        binding.followLayout.visibility = View.VISIBLE
+        binding.confirmMessage.visibility = View.GONE
+        binding.followMessage.visibility = View.VISIBLE
     }
 
     private fun showFollowAlert(strAmount: String, onClickListener: View.OnClickListener?) {
@@ -328,7 +330,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                     if (BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_NOT_SENT) {
                         followPaynym()
                     } else {
-                        Snackbar.make(historyLayout!!.rootView, "Follow transaction is still pending", Snackbar.LENGTH_SHORT).show()
+                        Snackbar.make(binding.historyLayout.rootView, "Follow transaction is still pending", Snackbar.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -386,10 +388,10 @@ class PayNymDetailsActivity : SamouraiActivity() {
     }
 
     private fun updatePaynym(label: String?, pcode: String?) {
-        if (pcode == null || pcode.length < 1 || !FormatsUtil.getInstance().isValidPaymentCode(pcode)) {
-            Snackbar.make(userAvatar!!.rootView, R.string.invalid_payment_code, Snackbar.LENGTH_SHORT).show()
-        } else if (label == null || label.length < 1) {
-            Snackbar.make(userAvatar!!.rootView, R.string.bip47_no_label_error, Snackbar.LENGTH_SHORT).show()
+        if (pcode == null || pcode.isEmpty() || !FormatsUtil.getInstance().isValidPaymentCode(pcode)) {
+            Snackbar.make(binding.userAvatar.rootView, R.string.invalid_payment_code, Snackbar.LENGTH_SHORT).show()
+        } else if (label == null || label.isEmpty()) {
+            Snackbar.make(binding.userAvatar.rootView, R.string.bip47_no_label_error, Snackbar.LENGTH_SHORT).show()
         } else {
             BIP47Meta.getInstance().setLabel(pcode, label)
             Thread {
@@ -441,7 +443,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
 
     private fun doNotifTx() {
-        progressBar.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.VISIBLE
         scope.launch(Dispatchers.IO) {
             val torManager = TorManager
             val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.WebUtil.getInstance(applicationContext), torManager)
@@ -552,7 +554,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
             //
             if (amount + fee.toLong() >= balance) {
                 scope.launch(Dispatchers.Main) {
-                    progressBar.visibility = View.INVISIBLE
+                    binding.progressBar.visibility = View.INVISIBLE
                     var message: String? = getText(R.string.bip47_notif_tx_insufficient_funds_1).toString() + " "
                     val biAmount = SendNotifTxFactory._bSWFee.add(SendNotifTxFactory._bNotifTxValue.add(FeeUtil.getInstance().estimatedFee(1, 4, FeeUtil.getInstance().lowFee.defaultPerKB)))
                     val strAmount = FormatsUtil.formatBTC(biAmount.toLong());
@@ -691,10 +693,10 @@ class PayNymDetailsActivity : SamouraiActivity() {
             strNotifTxMsg += strAmount + getText(R.string.bip47_setup4_text2)
 
             scope.launch(Dispatchers.Main) {
-                progressBar.visibility = View.INVISIBLE
+                binding.progressBar.visibility = View.INVISIBLE
 
                 showFollowAlert(strAmount) { view: View? ->
-                    progressBar.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.VISIBLE
 
                     val job = scope.launch(Dispatchers.IO) {
                         var tx = SendFactory.getInstance(this@PayNymDetailsActivity).makeTransaction(outpoints, receivers)
@@ -722,7 +724,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                     throw  Exception(getString(R.string.pushtx_returns_null))
                                 }
                                 scope.launch(Dispatchers.Main) {
-                                    progressBar.visibility = View.INVISIBLE
+                                    binding.progressBar.visibility = View.INVISIBLE
 
                                     if (isOK) {
 
@@ -767,7 +769,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
                     job.invokeOnCompletion {
                         if (it != null) {
-                            progressBar.visibility = View.INVISIBLE
+                            binding.progressBar.visibility = View.INVISIBLE
                             scope.launch(Dispatchers.Main) {
                                 Toast.makeText(this@PayNymDetailsActivity, it.message, Toast.LENGTH_SHORT).show()
                             }
@@ -777,7 +779,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
             }.invokeOnCompletion {
                 if (it != null) {
                     scope.launch(Dispatchers.Main) {
-                        progressBar.visibility = View.INVISIBLE
+                        binding.progressBar.visibility = View.INVISIBLE
                         Toast.makeText(this@PayNymDetailsActivity, it.message, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -785,7 +787,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         }.invokeOnCompletion {
             if (it != null) {
                 scope.launch(Dispatchers.Main) {
-                    progressBar.visibility = View.INVISIBLE
+                    binding.progressBar.visibility = View.INVISIBLE
                     Toast.makeText(this@PayNymDetailsActivity, it.message, Toast.LENGTH_SHORT).show()
                 }
             }
@@ -830,7 +832,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
     }
 
     private fun doSync() {
-        progressBar!!.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.VISIBLE
         val disposable = Observable.fromCallable {
             val payment_code = PaymentCode(pcode)
             var idx = 0
@@ -879,12 +881,12 @@ class PayNymDetailsActivity : SamouraiActivity() {
             true
         }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ aBoolean: Boolean? ->
-                    progressBar!!.visibility = View.INVISIBLE
+                .subscribe({ _: Boolean? ->
+                    binding.progressBar.visibility = View.INVISIBLE
                     setPayNym()
                 }) { error: Throwable ->
                     error.printStackTrace()
-                    progressBar!!.visibility = View.INVISIBLE
+                    binding.progressBar.visibility = View.INVISIBLE
                 }
         disposables.add(disposable)
     }

@@ -256,7 +256,7 @@
     <string name="bip47_status_incoming">Pronto a ricevere</string>
     <string name="bip47_cannot_scan_own_pcode">Impossibile scansionare il tuo stesso codice di pagamento</string>
     <string name="bip47_spend_to_pcode">Invia attraverso questo canale di pagamento?</string>
-    <string name="bip47_sign">Firma messaggio</string>
+    <string name="sign_message">Firma messaggio</string>
     <string name="bip47_sign_text1">Firma questo messaggio usando la chiave privata dell\'indirizzo BIP47?</string>
     <string name="bip47_sign_text2">Firmato usando il mio indirizzo BIP47.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Questo canale di pagamento sta aspettando 1 conferma prima di attivare gli invii. Vuoi annullare il tentativo precedente e reinviare una notifica?</string>
@@ -588,7 +588,7 @@
     </string-array>
 
     <string name="chain_id">Catena di indirizzi</string>
-    <string name="receive_chain">Indirizzo di ricezione</string>
+    <string name="receive_address">Indirizzo di ricezione</string>
     <string name="change_chain">Indirizzo di resto</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
     <string name="encrypted_backup_detected">Trovato backup criptato</string>

@@ -226,7 +226,7 @@ class CPFPTask(private val context: Context, private val hash: String) {
             Log.d("CPFPTask", strTxHash)
             var isOK = false
             try {
-                isOK = PushTx.getInstance(context).pushTx(hexTx).first
+                isOK = PushTx.getInstance(context).pushTx(hexTx).left
                 if (isOK) {
                     return true
                 } else {

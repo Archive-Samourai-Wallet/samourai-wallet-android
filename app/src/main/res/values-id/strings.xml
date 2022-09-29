@@ -247,7 +247,7 @@
     <string name="bip47_status_incoming">Siap untuk diterima</string>
     <string name="bip47_cannot_scan_own_pcode">Tidak dapat memindai kode pembayaran anda</string>
     <string name="bip47_spend_to_pcode">Kirim melalui channel pembayaran ini?</string>
-    <string name="bip47_sign">Tanda tangani pesan</string>
+    <string name="sign_message">Tanda tangani pesan</string>
     <string name="bip47_sign_text1">Tanda tangani pesan menggunakan notifikasi private key address BIP47?</string>
     <string name="bip47_sign_text2">Tanda tangani menggunakan notifikasi address BIP47 saya.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Channel pembayaran ini masih menunggu 1 konfirmasi sebelum pengiriman diaktifkan. Apakah anda ingin mengabaikan yang sebelumnya dan mengirim notifikasi kembali?></string>

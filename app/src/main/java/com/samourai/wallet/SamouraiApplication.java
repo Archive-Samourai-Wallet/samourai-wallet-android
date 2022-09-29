@@ -1,18 +1,23 @@
 package com.samourai.wallet;
 
+
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.os.Build;
-import android.os.Environment;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.multidex.MultiDex;
 
 import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.ConnectionChangeReceiver;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.squareup.picasso.Picasso;
@@ -35,6 +40,7 @@ public class SamouraiApplication extends Application {
         super.onCreate();
         setUpTorService();
         setUpChannels();
+        registerNetworkCallBack();
         RxJavaPlugins.setErrorHandler(throwable -> {});
         ExternalBackupManager.attach(this);
 
@@ -44,6 +50,20 @@ public class SamouraiApplication extends Application {
             Picasso.get().setIndicatorsEnabled(true);
             LogUtil.setLoggersDebug();
         }
+    }
+
+    private void registerNetworkCallBack() {
+        ConnectionChangeReceiver changeReceiver = new ConnectionChangeReceiver(getApplicationContext());
+        NetworkRequest networkRequest = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                .build();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(ConnectivityManager.class);
+            connectivityManager.requestNetwork(networkRequest, changeReceiver.getNetworkCallback());
+        }
+        AppUtil.getInstance(getApplicationContext()).checkOfflineState();
     }
 
     public void startService() {

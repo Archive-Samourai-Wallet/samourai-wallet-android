@@ -130,7 +130,7 @@ public class MessageSignUtil {
         return key.signMessage(strMessage);
     }
 
-    private String signMessageArmored(ECKey key, String strMessage) {
+    public String signMessageArmored(ECKey key, String strMessage) {
 
         String sig = signMessage(key, strMessage);
         String ret = null;

@@ -17,6 +17,7 @@ import android.os.Looper;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -206,6 +207,9 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }
 
+            if ( scheme !=null && scheme.equals("auth47") && getIntent().getData()!=null) {
+                strUri = getIntent().getData().toString();
+            }
             doAppInit0(isDial, strUri, strPCode);
 
         }
@@ -240,8 +244,27 @@ public class MainActivity2 extends AppCompatActivity {
 
         IntentFilter filter_restart = new IntentFilter(ACTION_RESTART);
         LocalBroadcastManager.getInstance(MainActivity2.this).registerReceiver(receiver_restart, filter_restart);
+        String strUri = null;
+        try {
+            String action = getIntent().getAction();
+            String scheme = getIntent().getScheme();
+            if (action != null && Intent.ACTION_VIEW.equals(action) && scheme.equals("bitcoin")) {
+                strUri = getIntent().getData().toString();
+            } else {
+                Bundle extras = getIntent().getExtras();
 
-        doAppInit0(false, null, null);
+                if (extras != null && extras.containsKey("uri")) {
+                    strUri = extras.getString("uri");
+                }
+            }
+
+            if ( scheme !=null && scheme.equals("auth47") && getIntent().getData()!=null) {
+                strUri = getIntent().getData().toString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        doAppInit0(false, strUri, null);
 
     }
 
@@ -389,8 +412,8 @@ public class MainActivity2 extends AppCompatActivity {
 
     @Override
     protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
         setIntent(intent);
+        super.onNewIntent(intent);
     }
 
     private Bundle getBundleExtras() {
@@ -405,7 +428,9 @@ public class MainActivity2 extends AppCompatActivity {
                 bundle.putString("uri", bundle.getString("uri"));
             }
         }
-
+        if (Intent.ACTION_VIEW.equals(getIntent().getAction()) && getIntent().getScheme() != null && getIntent().getScheme().equals("auth47")) {
+            bundle.putString("auth47", getIntent().getData().toString());
+        }
         return bundle;
 
     }
@@ -431,6 +456,9 @@ public class MainActivity2 extends AppCompatActivity {
             Intent intent = new Intent(MainActivity2.this, BalanceActivity.class);
             intent.putExtra("notifTx", true);
             intent.putExtra("fetch", true);
+            if(strUri != null){
+                intent.putExtra("uri", strUri);
+            }
             if (getBundleExtras() != null) {
                 intent.putExtras(getBundleExtras());
             }

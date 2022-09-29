@@ -248,7 +248,7 @@
     <string name="bip47_status_incoming">В готовност за получаване</string>
     <string name="bip47_cannot_scan_own_pcode">Не можете да сканирате собствения си код за разплащания</string>
     <string name="bip47_spend_to_pcode">Изпращане през този канал за разплащания?</string>
-    <string name="bip47_sign">Подписване на съобщение</string>
+    <string name="sign_message">Подписване на съобщение</string>
     <string name="bip47_sign_text1">Sign message using BIP47 notification address private key?</string>
     <string name="bip47_sign_text2">Signed using my BIP47 notification address.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Този канал за разплащания очаква 1 потвърждение преди изпращането да бъде активирано. Искате ли да се откажете от предишния опит и да изпратите нова известяваща транзакция?></string>
@@ -571,7 +571,7 @@
     </string-array>
 
     <string name="chain_id">Верига на адресите</string>
-    <string name="receive_chain">Адрес за получаване</string>
+    <string name="receive_address">Адрес за получаване</string>
     <string name="change_chain">Адрес за ресто</string>
      <string name="whirlpool_postmix">Whirlpool SegWit след-микс</string>
     <string name="encrypted_backup_detected">Криптираното резервно копие изтрито</string>

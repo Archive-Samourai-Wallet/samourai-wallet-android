@@ -31,7 +31,7 @@ public class SamouraiActivity extends AppCompatActivity {
 
     protected int account = 0;
     private boolean switchThemes = false;
-    private CompositeDisposable compositeDisposable = new CompositeDisposable();
+    protected CompositeDisposable compositeDisposable = new CompositeDisposable();
     private static final String TAG = "SamouraiActivity";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

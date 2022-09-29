@@ -253,7 +253,7 @@
   <string name="bip47_status_incoming">Almaya hazır</string>
   <string name="bip47_cannot_scan_own_pcode">Kendi ödeme kodunuz taranamıyor.</string>
   <string name="bip47_spend_to_pcode">Bu ödeme kanalından gönder?</string>
-  <string name="bip47_sign">Mesajı imzala</string>
+  <string name="sign_message">Mesajı imzala</string>
   <string name="bip47_sign_text1">Mesaj BIP47 bildirim adresi özel anahtarı kullanarak imzalansın mı?</string>
   <string name="bip47_sign_text2">BIP47 bildirim adresim kullanarak imzalandı.</string>
   <string name="bip47_wait_for_confirmation_or_retry">Bu ödeme kanalı gönderme etkinleştirilmeden önce 1 onay için bekliyor. Önceki denemeyi yok sayıp yeniden bir bildirim göndermek ister misiniz?</string>
@@ -582,7 +582,7 @@
     </string-array>
 
     <string name="chain_id">Adres zinciri</string>
-    <string name="receive_chain">Alınacak Adres</string>
+    <string name="receive_address">Alınacak Adres</string>
     <string name="change_chain">Para üstü adresi</string>
   <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
   <string name="encrypted_backup_detected">Şifrelenmiş yedek bulundu</string>

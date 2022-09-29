@@ -11,20 +11,22 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.samourai.wallet.R
-import kotlinx.android.synthetic.main.activity_on_board_slides.*
-import kotlinx.android.synthetic.main.item_onboard_slide.*
+import com.samourai.wallet.databinding.ActivityOnBoardSlidesBinding
+import com.samourai.wallet.databinding.ItemOnboardSlideBinding
 
 
 class OnBoardSlidesActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityOnBoardSlidesBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_on_board_slides)
-        onBoardViewPager.adapter = ScreenSlidePagerAdapter(this)
+        binding = ActivityOnBoardSlidesBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.onBoardViewPager.adapter = ScreenSlidePagerAdapter(this)
         window.statusBarColor = ContextCompat.getColor(this, R.color.window);
-        sliderIndicator.setViewPager2(onBoardViewPager)
-        getStarted.setOnClickListener {
+        binding.sliderIndicator.setViewPager2(binding.onBoardViewPager)
+        binding.getStarted.setOnClickListener {
             startActivity(Intent(this, SetUpWalletActivity::class.java))
         }
     }
@@ -34,6 +36,7 @@ class OnBoardSlidesActivity : AppCompatActivity() {
     }
 
     class OnBoardSliderItem() : Fragment() {
+        private lateinit var binding: ItemOnboardSlideBinding
 
         private val images = arrayListOf(
                 R.drawable.ic_break_free,
@@ -49,14 +52,15 @@ class OnBoardSlidesActivity : AppCompatActivity() {
         )
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-            return inflater.inflate(R.layout.item_onboard_slide, container)
+            binding = ItemOnboardSlideBinding.inflate(inflater,container,false);
+            return binding.root
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
             arguments?.takeIf { it.containsKey(POSITION) }?.apply {
-                sliderImage.setImageDrawable(ContextCompat.getDrawable(requireContext(), images[this.getInt(POSITION)]))
-                sliderMessage.text = getText(messages[this.getInt(POSITION)])
+                binding.sliderImage.setImageDrawable(ContextCompat.getDrawable(requireContext(), images[this.getInt(POSITION)]))
+                binding.sliderMessage.text = getText(messages[this.getInt(POSITION)])
             }
         }
 
