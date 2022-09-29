@@ -929,9 +929,9 @@
     <string name="calculator">Calculator</string>
     <string name="stealth_mode">Stealth Mode</string>
     <string name="enable_stealth_mode_to_protect">Enable stealth mode to protect against physical searches of your device</string>
-    <string name="set_stealth_pin">Set stealth pin</string>
-    <string name="enable_stealth_mode">Enable Stealth Mode</string>
+    <string name="set_stealth_pin">Set stealth code</string>
+    <string name="enable_stealth_mode">Off / On</string>
     <string name="choose_stealth_app">Choose Stealth App</string>
-    <string name="stealth_pin_warning">Cannot use wallet pin for stealth mode. please choose a different pin</string>
+    <string name="stealth_pin_warning">Cannot use wallet pin for stealth mode. please choose a different code</string>
 
 </resources>
