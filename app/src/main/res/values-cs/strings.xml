@@ -262,7 +262,7 @@
     <string name="bip47_status_incoming">Připraveno k přijímaní</string>
     <string name="bip47_cannot_scan_own_pcode">Není možné skenovať svůj vlastní platební kód</string>
     <string name="bip47_spend_to_pcode">Poslat přes tento platební kanál?</string>
-    <string name="bip47_sign">Podepsat zprávu</string>
+    <string name="sign_message">Podepsat zprávu</string>
     <string name="bip47_sign_text1">Podepsat zprávu použitím BIP47 notifikační adresy privátního klíče?</string>
     <string name="bip47_sign_text2">Podepsáno s použitím mé BIP47 notifikační adresy.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Tento platební kanál čeká na 1 potvrzení před tím než se aktivuje posílání. Přejete si zrušit předcházející požadavky a znovu přeposlat notifikaci?</string>
@@ -594,7 +594,7 @@
     </string-array>
 
     <string name="chain_id">Řetězec adresy</string>
-    <string name="receive_chain">Přijímající adresa</string>
+    <string name="receive_address">Přijímající adresa</string>
     <string name="change_chain">Adresa na vrácení</string>
     <string name="whirlpool_postmix">Whirlpool Segwit post-mix</string>
     <string name="encrypted_backup_detected">Šifrovaná záloha detekována</string>

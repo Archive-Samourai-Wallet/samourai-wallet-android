@@ -13,6 +13,7 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission
         android:name="android.permission.WAKE_LOCK"
@@ -35,20 +36,50 @@
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:roundIcon="@drawable/ic_launcher_round"
         android:theme="@style/SamouraiAppTheme"
         android:usesCleartextTraffic="true"
-        tools:replace="android:allowBackup">
+        tools:replace="android:allowBackup"
+        tools:targetApi="s">
+        <activity
+            android:name=".MainActivity2"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme.Launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="bitcoin" />
+                <data android:scheme="auth47" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".collaborate.CollaborateActivity"
+            android:exported="true"
+             android:theme="@style/Theme.Samourai.Material" >
+        </activity>
         <activity
             android:name=".explorer.ExplorerActivity"
+            android:exported="false"
             android:label=""
-            android:theme="@style/Theme.Samourai.Material"
-            android:exported="false" />
+            android:theme="@style/Theme.Samourai.Material" />
         <activity
             android:name=".whirlpool.WhirlpoolHome"
             android:exported="false"
             android:label=""
-            android:theme="@style/Theme.Samourai.Whirlpool.Material" />
+            android:parentActivityName=".home.BalanceActivity"
+            android:theme="@style/Theme.Samourai.Whirlpool.Material" >
+
+        </activity>
         <activity
             android:name=".onboard.RestoreOptionActivity"
             android:theme="@style/Theme.Samourai.Material" />
@@ -92,26 +123,6 @@
             android:name=".paynym.PayNymHome"
             android:label="@string/paynyms"
             android:theme="@style/Theme.Samourai.Material" />
-        <activity
-            android:name=".MainActivity2"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:label="@string/app_name"
-            android:launchMode="singleTask"
-            android:theme="@style/AppTheme.Launcher">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="bitcoin" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".home.BalanceActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -204,6 +215,7 @@
         <receiver android:name=".whirlpool.service.WhirlpoolBroadCastReceiver" />
         <receiver
             android:name=".util.ConnectionChangeReceiver"
+            android:exported="true"
             android:label="NetworkChangeReceiver">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />

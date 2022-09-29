@@ -38,11 +38,6 @@
         android:title="@string/options_batch"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_sweep"
-        android:orderInCategory="100"
-        android:title="@string/action_sweep"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/action_backup"
         android:orderInCategory="100"
         android:title="@string/options_export"
@@ -72,31 +67,15 @@
         android:orderInCategory="100"
         android:title="@string/options_sign"
         app:showAsAction="never" />
-    <item
-        android:id="@+id/action_postmix"
+  <item
+        android:id="@+id/action_postmix_balance"
         android:orderInCategory="100"
-        android:title="@string/options_postmix"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_copy_cahoots"
-        android:orderInCategory="100"
-        android:title="Paste cahoots payload"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_soroban_collab"
-        android:orderInCategory="100"
-        android:title="@string/options_soroban_collab"
+        android:title="Postmix transactions"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_support"
         android:orderInCategory="100"
         android:title="@string/action_support"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
         app:showAsAction="never" />
 
     <!--For Testing -->

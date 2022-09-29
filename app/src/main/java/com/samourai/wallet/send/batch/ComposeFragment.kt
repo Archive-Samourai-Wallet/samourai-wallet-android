@@ -16,9 +16,9 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Meta
+import com.samourai.wallet.databinding.BatchSpendComposeBinding
 import com.samourai.wallet.util.BatchSendUtil
 import com.samourai.wallet.util.FormatsUtil
-import kotlinx.android.synthetic.main.batch_spend_compose.*
 
 class ComposeFragment : Fragment() {
 
@@ -27,23 +27,23 @@ class ComposeFragment : Fragment() {
         private lateinit var batchRecyclerView: RecyclerView;
         private var reviewButton: MaterialButton? = null
         private var onListItemClick: ((item: BatchSendUtil.BatchSend) -> Unit)? = null;
-        private var onReviewClick: View.OnClickListener? = null;
+        private var onReviewClick: View.OnClickListener? = null
+        private lateinit var binding: BatchSpendComposeBinding
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
-
-            batchRecyclerView = composeView.findViewById(R.id.batchListRecyclerView)
-            reviewButton = composeView.findViewById(R.id.reviewButtonBatch)
+            batchRecyclerView = binding.composeView.findViewById(R.id.batchListRecyclerView)
+            reviewButton = binding.composeView.findViewById(R.id.reviewButtonBatch)
             batchRecyclerView.layoutManager = LinearLayoutManager(requireContext())
             batchRecyclerView.adapter = batchListAdapter
             reviewButton?.setOnClickListener {
                 this.onReviewClick?.onClick(it)
             }
             enableReview(false)
-            viewModel.getBatchListLive().observe(viewLifecycleOwner, {
+            viewModel.getBatchListLive().observe(viewLifecycleOwner) {
                 batchListAdapter.submitList(it)
                 enableReview(it.size != 0)
-            })
+            }
             batchListAdapter.setOnDeleteClick {
                 viewModel.remove(it)
             }
@@ -75,7 +75,8 @@ class ComposeFragment : Fragment() {
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                                   savedInstanceState: Bundle?): View? {
-            return inflater.inflate(R.layout.batch_spend_compose, container, false)
+            binding = BatchSpendComposeBinding.inflate(layoutInflater,container, false)
+            return binding.root
         }
 
 

@@ -1,7 +1,6 @@
 package com.samourai.wallet.paynym.api
 
 import android.content.Context
-import android.util.Log
 import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
@@ -17,6 +16,7 @@ import com.samourai.wallet.tor.TorManager.getProxy
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.MessageSignUtil
 import okhttp3.*
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.bitcoinj.crypto.MnemonicException
 import org.json.JSONException
@@ -26,7 +26,6 @@ import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
 import java.security.NoSuchProviderException
 import java.security.spec.InvalidKeySpecException
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -47,14 +46,14 @@ class PayNymApiService(private val paynymCode: String, private val context: Cont
         }
 
         builder.connectTimeout(45, TimeUnit.SECONDS)
-                .readTimeout(45, TimeUnit.SECONDS)
-                .callTimeout(45, TimeUnit.SECONDS)
+            .readTimeout(45, TimeUnit.SECONDS)
+            .callTimeout(45, TimeUnit.SECONDS)
 
         if (TorManager.isRequired()) {
             builder.proxy(getProxy())
             builder.connectTimeout(120, TimeUnit.SECONDS)
-                    .readTimeout(120, TimeUnit.SECONDS)
-                    .callTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .callTimeout(120, TimeUnit.SECONDS)
         }
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
@@ -65,8 +64,8 @@ class PayNymApiService(private val paynymCode: String, private val context: Cont
             val newBuilder = original.newBuilder()
             if (!payNymToken.isNullOrEmpty()) {
                 newBuilder
-                        .header("auth-token", payNymToken!!)
-                        .header("client", "samourai-wallet")
+                    .header("auth-token", payNymToken!!)
+                    .header("client", "samourai-wallet")
             }
             newBuilder.method(original.method, original.body)
             chain.proceed(newBuilder.build())
@@ -174,11 +173,18 @@ class PayNymApiService(private val paynymCode: String, private val context: Cont
         }
         val builder = Request.Builder();
         val body: RequestBody = RequestBody
-                .create(JSON, payload.toString())
+            .create(JSON, payload.toString())
         builder.url("$URL/nym")
         return executeRequest(builder.post(body).build())
     }
 
+
+    suspend fun auth47(url: String, payload: JSONObject): Response {
+        val builder = Request.Builder();
+        val body: RequestBody = payload.toString().toRequestBody(JSON)
+        builder.url(url)
+        return executeRequest(builder.post(body).build())
+    }
 
     public suspend fun follow(pcode: String): Response {
 
@@ -192,7 +198,7 @@ class PayNymApiService(private val paynymCode: String, private val context: Cont
         obj.put("signature", getSig())
 
         val body: RequestBody = RequestBody
-                .create(JSON, obj.toString())
+            .create(JSON, obj.toString())
 
         builder.url("$URL/follow")
         return executeRequest(builder.post(body).build())
@@ -210,7 +216,7 @@ class PayNymApiService(private val paynymCode: String, private val context: Cont
         obj.put("signature", getSig())
 
         val body: RequestBody = RequestBody
-                .create(JSON, obj.toString())
+            .create(JSON, obj.toString())
 
         builder.url("$URL/unfollow")
         return executeRequest(builder.post(body).build())

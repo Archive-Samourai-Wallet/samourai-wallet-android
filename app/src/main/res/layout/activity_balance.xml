@@ -32,10 +32,18 @@
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:elevation="0dp"
                 android:backgroundTint="?attr/statusBarBackground"
                 android:layout_height="?attr/actionBarSize"
-                app:layout_collapseMode="pin" />
+                app:titleMarginStart="12dp"
+                app:layout_collapseMode="pin" >
+
+                <com.samourai.wallet.widgets.CircleImageView
+                    android:layout_width="34dp"
+                    android:src="@drawable/samourai_logo_splash"
+                    android:id="@+id/toolbarIcon"
+                    android:background="?selectableItemBackground"
+                    android:layout_height="34dp"/>
+            </androidx.appcompat.widget.Toolbar>
 
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -72,7 +80,6 @@
 
 
     <com.github.clans.fab.FloatingActionMenu
-        xmlns:fab="http://schemas.android.com/apk/res-auto"
         android:id="@+id/fab_menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -81,7 +88,7 @@
         fab:layout_anchor="@+id/rv_txes"
         fab:layout_anchorGravity="right|bottom"
         fab:menu_animationDelayPerItem="32"
-        fab:menu_shadowColor="#444"
+        fab:menu_shadowColor="#323232"
         fab:menu_colorNormal="@color/accent"
         fab:menu_colorPressed="#0AA1E9"
         fab:menu_colorRipple="#A8A8A8"

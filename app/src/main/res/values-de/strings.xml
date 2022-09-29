@@ -254,7 +254,7 @@
     <string name="bip47_status_incoming">Empfangen möglich</string>
     <string name="bip47_cannot_scan_own_pcode">Der eigene Payment-Code kann nicht eingescannt werden</string>
     <string name="bip47_spend_to_pcode">Über diesen Payment-Channel senden?</string>
-    <string name="bip47_sign">Nachricht signieren</string>
+    <string name="sign_message">Nachricht signieren</string>
     <string name="bip47_sign_text1">Nachricht mit dem Private Key der BIP47 Benachrichtigungsadresse signieren?</string>
     <string name="bip47_sign_text2">Mit meiner BIP47 Benachrichtigungsadresse signiert.</string>
     <string name="bip47_wait_for_confirmation_or_retry">Dieser Payment-Channel wartet auf eine Bestätigung, bevor das Senden aktiviert wird. Möchtest du den vorherigen Versuch verwerfen und erneut eine Benachrichtigung schicken?</string>
@@ -583,7 +583,7 @@
     </string-array>
 
     <string name="chain_id">Addresszweig</string>
-    <string name="receive_chain">Empfangsadresse</string>
+    <string name="receive_address">Empfangsadresse</string>
     <string name="change_chain">Wechseladresse</string>
 	<string name="whirlpool_postmix">Whirlpool SegWit post-mix</string>
     <string name="encrypted_backup_detected">Verschlüsseltes Backup gefunden</string>

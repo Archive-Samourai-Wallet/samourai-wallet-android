@@ -186,6 +186,8 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
             }
+            BIP47Util.getInstance(getApplication()).fetchBotImage()
+                .subscribe()
             jobs.awaitAll()
         }
     }

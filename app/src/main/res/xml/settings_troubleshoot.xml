@@ -39,15 +39,6 @@
         />
 
     <Preference
-        android:title="@string/options_address_calc"
-        android:summary="@string/options_address_calc2"
-        android:key="acalc"
-        app:iconSpaceReserved="false"
-        app:allowDividerBelow="true"
-        app:allowDividerAbove="true"
-        />
-
-    <Preference
         android:title="@string/options_paynym_calc"
         android:summary="@string/options_paynym_calc2"
         android:key="pcalc"

@@ -1,10 +1,16 @@
 package com.samourai.wallet.bip47;
 
 import android.content.Context;
-import android.util.Log;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.bip47.paynym.WebUtil;
 import com.samourai.wallet.bip47.rpc.AndroidSecretPointFactory;
 import com.samourai.wallet.bip47.rpc.BIP47Wallet;
 import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception;
@@ -12,16 +18,28 @@ import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.tor.TorManager;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.MnemonicException;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
+
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class BIP47Util extends BIP47UtilGeneric {
 
@@ -29,21 +47,20 @@ public class BIP47Util extends BIP47UtilGeneric {
 
     private static Context context = null;
     private static BIP47Util instance = null;
+    private MutableLiveData<Bitmap> paynymLogo = new MutableLiveData();
 
     public static BIP47Util getInstance(Context ctx) {
 
         context = ctx;
 
-        if(instance == null || wallet == null) {
+        if (instance == null || wallet == null) {
 
             try {
                 wallet = HD_WalletFactory.getInstance(context).getBIP47();
-            }
-            catch (IOException ioe) {
+            } catch (IOException ioe) {
                 ioe.printStackTrace();
                 Toast.makeText(context, "HD wallet error", Toast.LENGTH_SHORT).show();
-            }
-            catch (MnemonicException.MnemonicLengthException mle) {
+            } catch (MnemonicException.MnemonicLengthException mle) {
                 mle.printStackTrace();
                 Toast.makeText(context, "HD wallet error", Toast.LENGTH_SHORT).show();
             }
@@ -57,12 +74,21 @@ public class BIP47Util extends BIP47UtilGeneric {
     private BIP47Util() {
         super(AndroidSecretPointFactory.getInstance(), true);
     }
-    
+
     private NetworkParameters getNetworkParams() {
         return SamouraiWallet.getInstance().getCurrentNetworkParams();
     }
 
-    public void reset()  {
+    public LiveData<Bitmap> getPayNymLogoLive() {
+        return paynymLogo;
+    }
+
+    public File avatarImage() {
+        File directory = ContextCompat.getDataDir(context);
+        return new File(directory.getPath().concat(File.separator).concat("paynym.png"));
+    }
+
+    public void reset() {
         instance = new BIP47Util();
         wallet = null;
     }
@@ -79,19 +105,19 @@ public class BIP47Util extends BIP47UtilGeneric {
         return super.getNotificationAddress(wallet, account);
     }
 
-    public PaymentCode getPaymentCode() throws AddressFormatException   {
+    public PaymentCode getPaymentCode() throws AddressFormatException {
         return super.getPaymentCode(wallet);
     }
 
-    public PaymentCode getPaymentCode(int account) throws AddressFormatException   {
+    public PaymentCode getPaymentCode(int account) throws AddressFormatException {
         return super.getPaymentCode(wallet, account);
     }
 
-    public PaymentCode getFeaturePaymentCode() throws AddressFormatException   {
+    public PaymentCode getFeaturePaymentCode() throws AddressFormatException {
         return super.getFeaturePaymentCode(wallet);
     }
 
-    public PaymentCode getFeaturePaymentCode(int account) throws AddressFormatException   {
+    public PaymentCode getFeaturePaymentCode(int account) throws AddressFormatException {
         return super.getFeaturePaymentCode(wallet, account);
     }
 
@@ -127,15 +153,47 @@ public class BIP47Util extends BIP47UtilGeneric {
         return super.getSendPubKey(wallet, account, pcode, idx, getNetworkParams());
     }
 
-    public byte[] getIncomingMask(byte[] pubkey, byte[] outPoint) throws AddressFormatException, Exception    {
+    public byte[] getIncomingMask(byte[] pubkey, byte[] outPoint) throws AddressFormatException, Exception {
         return super.getIncomingMask(wallet, pubkey, outPoint, getNetworkParams());
     }
 
-    public byte[] getIncomingMask(byte[] pubkey, int account, byte[] outPoint) throws AddressFormatException, Exception    {
+    public byte[] getIncomingMask(byte[] pubkey, int account, byte[] outPoint) throws AddressFormatException, Exception {
         return super.getIncomingMask(wallet, account, pubkey, outPoint, getNetworkParams());
     }
 
     public PaymentAddress getPaymentAddress(PaymentCode pcode, int idx, HD_Address address) throws AddressFormatException, NotSecp256k1Exception {
         return super.getPaymentAddress(pcode, idx, address, getNetworkParams());
+    }
+
+    public void setAvatar(@Nullable Bitmap bitmap) {
+        if (bitmap != null) {
+            paynymLogo.postValue(bitmap);
+        }
+    }
+
+    public Completable fetchBotImage() {
+        String url = WebUtil.PAYNYM_API + "preview/" + getPaymentCode().toString();
+        return Completable.fromCallable(() -> {
+                    Request.Builder rb = new Request.Builder().url(url);
+                    OkHttpClient.Builder builder = new OkHttpClient.Builder();
+                    if (TorManager.INSTANCE.isRequired()) {
+                        builder.proxy(TorManager.INSTANCE.getProxy());
+                    }
+                    OkHttpClient client = builder.build();
+                    Response response = client.newCall(rb.build()).execute();
+                    if (response.isSuccessful()) {
+                        File file = avatarImage();
+                        if (!file.exists()) {
+                            file.createNewFile();
+                        }
+                        byte[] stream = response.body().bytes();
+                        OutputStream outStream = new FileOutputStream(file);
+                        outStream.write(stream);
+                        Bitmap bitmap = BitmapFactory.decodeFile(file.getPath());
+                        setAvatar(bitmap);
+                    }
+                    return true;
+                }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 }

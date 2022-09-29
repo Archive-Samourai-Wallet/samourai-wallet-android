@@ -38,7 +38,6 @@ import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.ConnectionChangeReceiver;
 import com.samourai.wallet.util.ConnectivityStatus;
-import com.samourai.wallet.util.NetworkManager;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.WebUtil;
 
@@ -161,16 +160,7 @@ public class NetworkDashboard extends SamouraiActivity {
         setDataState();
         setTorConnectionState(TorManager.INSTANCE.getTorState());
 
-        Disposable onlineSubscription = NetworkManager.getInstance().onlineSignal()
-                .debounce(100, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(state -> {
-                    new Handler().postDelayed(this::setDataState, 300);
-                }, error -> {
-                    Log.i(TAG, "onCreate: ".concat(error.getMessage()));
-                });
-        disposables.add(onlineSubscription);
+        AppUtil.getInstance(getApplicationContext()).offlineStateLive().observe(this,aBoolean -> setDataState());
 
         dojoLayout = findViewById(R.id.network_dojo_layout);
         dojoLayout.setVisibility(View.GONE);
@@ -249,7 +239,7 @@ public class NetworkDashboard extends SamouraiActivity {
             if (TorManager.INSTANCE.isConnected()) {
                 stopTor();
             }
-            if (!ConnectionChangeReceiver.isConnected(getApplicationContext())) {
+            if (!AppUtil.getInstance(getApplicationContext()).isOfflineMode()) {
                 Snackbar.make(torButton.getRootView(), "No data connection", Snackbar.LENGTH_SHORT).show();
             }
         }

@@ -442,12 +442,6 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             true
         }
 
-        val addressCalcPref = findPreference("acalc") as Preference?
-        addressCalcPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            doAddressCalc()
-            true
-        }
-
         val paynymCalcPref = findPreference("pcalc") as Preference?
         paynymCalcPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             doPayNymCalc()
@@ -492,14 +486,19 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         showText.setTextIsSelectable(true)
         showText.setPadding(40, 10, 40, 10)
         showText.textSize = 18.0f
-        if(!BuildConfig.FLAVOR.contains("staging")){
-            activity?.getWindow()?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        }
-        MaterialAlertDialogBuilder(requireContext())
+         MaterialAlertDialogBuilder(requireContext())
+            .apply {
+            }
                 .setTitle(R.string.app_name)
                 .setView(showText)
                 .setCancelable(false)
-                .setPositiveButton(R.string.ok) { dialog, whichButton -> }.show()
+                .setPositiveButton(R.string.ok) { dialog, _ ->
+                    run {
+                        activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                }.show().apply {
+                    this.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+            }
     }
 
     private fun getXPUB(purpose: Int, account: Int) {

@@ -4,33 +4,35 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.app.TaskStackBuilder;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.cahoots.ManualCahootsMessage;
 import com.samourai.soroban.cahoots.ManualCahootsService;
+import com.samourai.soroban.cahoots.Stonewallx2Context;
+import com.samourai.soroban.cahoots.StowawayContext;
 import com.samourai.soroban.cahoots.TxBroadcastInteraction;
 import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
+import com.samourai.wallet.cahoots.multi.MultiCahootsContext;
 import com.samourai.wallet.home.BalanceActivity;
-import com.samourai.wallet.widgets.HorizontalStepsViewIndicator;
+import com.samourai.wallet.widgets.CahootsCircleProgress;
 import com.samourai.wallet.widgets.ViewPager;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import java.util.ArrayList;
-
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import java.util.function.Function;
 
 public class ManualCahootsUi {
     private Activity activity;
-    private HorizontalStepsViewIndicator stepsViewGroup;
-    private TextView stepCounts;
+    private CahootsCircleProgress stepsViewGroup;
     private ViewPager viewPager;
 
     protected CahootReviewFragment cahootReviewFragment;
@@ -53,16 +55,15 @@ public class ManualCahootsUi {
         return intent;
     }
 
-    ManualCahootsUi(HorizontalStepsViewIndicator stepsViewGroup, TextView stepCounts, ViewPager viewPager,
+    ManualCahootsUi(CahootsCircleProgress stepsViewGroup, ViewPager viewPager,
                     Intent intent, FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider,
                     Activity activity) throws Exception {
         this.activity = activity;
         this.stepsViewGroup = stepsViewGroup;
-        this.stepCounts = stepCounts;
         this.viewPager = viewPager;
 
         viewPager.enableSwipe(false);
-        cahootReviewFragment = CahootReviewFragment.newInstance();
+        cahootReviewFragment = CahootReviewFragment.newInstance(intent);
 
         // sender+receiver
         if (intent.hasExtra("_account")) {
@@ -92,14 +93,15 @@ public class ManualCahootsUi {
     }
 
     private void createSteps(FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider) {
-        for (int i = 0; i < (ManualCahootsMessage.NB_STEPS-1); i++) {
+        int lastStep = ManualCahootsMessage.getLastStep(this.cahootsType);
+        for (int i = 0; i < lastStep; i++) {
             Fragment stepView = fragmentProvider.apply(i);
             steps.add(stepView);
         }
         if (CahootsTypeUser.SENDER.equals(typeUser)) {
             steps.add(cahootReviewFragment);
         } else {
-            Fragment stepView = fragmentProvider.apply(ManualCahootsMessage.NB_STEPS-1);
+            Fragment stepView = fragmentProvider.apply(lastStep);
             steps.add(stepView);
         }
         stepsViewGroup.setTotalSteps(steps.size());
@@ -113,7 +115,7 @@ public class ManualCahootsUi {
 
         // check cahootsType
         if (cahootsType != null) {
-            if(!msg.getType().equals(cahootsType)) {
+            if (!msg.getType().equals(cahootsType)) {
                 // possible attack?
                 throw new Exception("Unexpected Cahoots cahootsType");
             }
@@ -136,7 +138,7 @@ public class ManualCahootsUi {
         if (cahootsMessage.isDone()) {
             notifyWalletAndFinish();
         } else {
-            activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());
+//            activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());
         }
     }
 
@@ -154,7 +156,6 @@ public class ManualCahootsUi {
     private void setStep(final int step) {
         stepsViewGroup.post(() -> stepsViewGroup.setStep(step + 1));
         viewPager.post(() -> viewPager.setCurrentItem(step, true));
-        stepCounts.setText("Step " + (step + 1) + "/5");
     }
 
     private class StepAdapter extends FragmentPagerAdapter {
@@ -173,31 +174,59 @@ public class ManualCahootsUi {
         }
     }
 
+    /**
+     * Following a transaction broadcast after user have collaborated, wallet will be navigated to the following screens:
+     * <p>
+     * 1:Initiate Stonewall X2 or Stowaway: always returned to the account which user selected
+     * 2:Participate —> Stonewall X2: always returned to the account which user selected .
+     * 3:Participate —> Stowaway: always returned to the Deposit screen
+     */
     private void notifyWalletAndFinish() {
         activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots success", Toast.LENGTH_LONG).show());
+        if (typeUser == CahootsTypeUser.COUNTERPARTY) {
+            if (cahootsType == CahootsType.STOWAWAY) {
+                Intent _intent = new Intent(activity, BalanceActivity.class);
+                _intent.putExtra("refresh", true);
+                _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                activity.startActivity(_intent);
+                return;
+            }
+        }
+        navigateToAccountBalanceScreen();
+    }
 
-        // refresh txs
-        Intent intent = new Intent("com.samourai.wallet.BalanceFragment.REFRESH");
-        intent.putExtra("notifTx", false);
-        intent.putExtra("fetch", true);
-        LocalBroadcastManager.getInstance(activity.getApplicationContext()).sendBroadcast(intent);
-
-        // finish
-        Intent i = new Intent(activity, BalanceActivity.class);
-        activity.finish();
-        activity.startActivity(i);
+    public void navigateToAccountBalanceScreen() {
+        if (account == SamouraiAccountIndex.POSTMIX) {
+            Intent balanceHome = new Intent(activity, BalanceActivity.class);
+            balanceHome.putExtra("_account", SamouraiAccountIndex.POSTMIX);
+            balanceHome.putExtra("refresh", true);
+            Intent parentIntent = new Intent(activity, BalanceActivity.class);
+            parentIntent.putExtra("_account", 0);
+            balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            TaskStackBuilder.create(activity.getApplicationContext())
+                    .addNextIntent(parentIntent)
+                    .addNextIntent(balanceHome)
+                    .startActivities();
+        } else {
+            Intent _intent = new Intent(activity, BalanceActivity.class);
+            _intent.putExtra("refresh", true);
+            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            activity.startActivity(_intent);
+        }
     }
 
     public String getTitle(CahootsMode cahootsMode) {
         return (CahootsTypeUser.SENDER.equals(typeUser) ? "Sending" : "Receiving") + " " + cahootsMode.getLabel().toLowerCase() + " " + cahootsType.getLabel();
     }
 
-    public CahootsContext computeCahootsContextInitiator(long sendAmount, String sendAddress) throws Exception {
+    public CahootsContext computeCahootsContextInitiator(int account, long feePerB, long sendAmount, String sendAddress, String paynymDestination) throws Exception {
         switch (cahootsType) {
             case STONEWALLX2:
-                return CahootsContext.newInitiatorStonewallx2(sendAmount, sendAddress);
+                return Stonewallx2Context.newInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
             case STOWAWAY:
-                return CahootsContext.newInitiatorStowaway(sendAmount);
+                return StowawayContext.newInitiator(account, feePerB, sendAmount);
+            case MULTI:
+                return MultiCahootsContext.newInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
             default:
                 throw new Exception("Unknown #Cahoots");
         }

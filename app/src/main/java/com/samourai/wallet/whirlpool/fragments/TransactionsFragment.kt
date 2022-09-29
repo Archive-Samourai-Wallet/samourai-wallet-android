@@ -129,24 +129,7 @@ class TransactionsFragment : Fragment() {
     }
 
     private fun loadFromRepo() {
-        whirlPoolHomeViewModel.viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val postMixList = APIFactory.getInstance(requireContext()).allPostMixTxs
-                val premixList = APIFactory.getInstance(requireContext()).allPremixTx
-                val list =  arrayListOf<Tx>()
-                list.addAll(postMixList)
-                // Filter duplicates
-                val filteredPremix  = premixList.filter { tx->
-                    postMixList.find { it.hash==tx.hash } ==null
-                }
-                list.addAll(premixList)
-                if (postMixList != null) {
-                    withContext(Dispatchers.Main) {
-                        whirlPoolHomeViewModel.setTx(postMixList,filteredPremix)
-                    }
-                }
-            }
-        }
+        whirlPoolHomeViewModel.loadTransactions(requireContext())
     }
 
     override fun onCreateView(

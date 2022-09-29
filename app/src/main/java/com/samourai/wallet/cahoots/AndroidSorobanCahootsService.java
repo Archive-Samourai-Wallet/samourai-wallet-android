@@ -15,6 +15,8 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.BIP47Wallet;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
+import com.samourai.xmanager.client.AndroidXManagerClient;
+import com.samourai.xmanager.client.XManagerClient;
 
 import org.bitcoinj.core.NetworkParameters;
 
@@ -41,11 +43,12 @@ public class AndroidSorobanCahootsService extends SorobanCahootsService {
             IHttpClient httpClient = AndroidHttpClient.getInstance(ctx);
             boolean onion = TorManager.INSTANCE.isRequired();
             RpcClient rpcClient = new RpcClient(httpClient, onion, params);
+            XManagerClient xManagerClient = AndroidXManagerClient.getInstance(ctx);
             instance = new AndroidSorobanCahootsService(
-                    new OnlineCahootsService(cahootsWallet),
+                    new OnlineCahootsService(cahootsWallet, xManagerClient),
                     new SorobanService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
                     new SorobanMeetingService(bip47Util, params, PROVIDER, bip47Wallet, 0, rpcClient),
-                    new ManualCahootsService(cahootsWallet),
+                    new ManualCahootsService(cahootsWallet, xManagerClient),
                     ctx
             );
         }

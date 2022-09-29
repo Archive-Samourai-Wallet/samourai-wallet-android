@@ -3,9 +3,11 @@ package com.samourai.wallet.bip47;
 import android.content.Context;
 import android.util.Log;
 
+import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,9 +27,9 @@ import static com.samourai.wallet.util.LogUtil.info;
 
 public class BIP47Meta {
 
-    public static final String strSamouraiDonationPCode = "PM8TJVzLGqWR3dtxZYaTWn3xJUop3QP3itR4eYzX7XvV5uAfctEEuHhKNo3zCcqfAbneMhyfKkCthGv5werVbwLruhZyYNTxqbCrZkNNd2pPJA2e2iAh";
-//    public static final String strSamouraiDonationMeta = "?title=Samourai Donations&desc=Donate to help fund development of Samourai Bitcoin Wallet&user=K6tS2X8";
-
+    public static final String strSamouraiDonationPCode = SamouraiWallet.samouraiDonationPCode;//    public static final String strSamouraiDonationMeta = "?title=Samourai Donations&desc=Donate to help fund development of Samourai Bitcoin Wallet&user=K6tS2X8";
+    public static final  String getStrSamouraiMixingPcodeMainnet = SamouraiWallet.SAAS_PCODE_MAINNET;
+    public static final  String getStrSamouraiMixingPcodeTestnet = SamouraiWallet.SAAS_PCODE_TESTNET;
     public static final int INCOMING_LOOKAHEAD = 3;
 //    public static final int OUTGOING_LOOKAHEAD = 3;
 
@@ -95,6 +97,12 @@ public class BIP47Meta {
     }
 
     public String getLabel(String pcode)   {
+        if(pcode == null){
+            return  "";
+        }
+        if(pcode.equals(getMixingPartnerCode())){
+            return "Samourai as mixing partner";
+        }
         if(!pcodeLabels.containsKey(pcode))    {
             return "";
         }
@@ -724,4 +732,11 @@ public class BIP47Meta {
 
     }
 
+    public static String getMixingPartnerCode() {
+        if(SamouraiWallet.getInstance().isTestNet()){
+            return getStrSamouraiMixingPcodeTestnet;
+        }else{
+            return getStrSamouraiMixingPcodeMainnet;
+        }
+    }
 }

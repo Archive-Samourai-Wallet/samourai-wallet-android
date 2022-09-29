@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import androidx.core.app.NotificationCompat;
 import android.util.Log;
@@ -59,7 +60,6 @@ public class WhirlpoolNotificationService extends Service {
                 .setGroupSummary(false)
                 .setSmallIcon(R.drawable.ic_whirlpool)
                 .build();
-
         startForeground(WHIRLPOOL_SERVICE_NOTIFICATION_ID, notification);
         listenService();
     }
@@ -225,8 +225,15 @@ public class WhirlpoolNotificationService extends Service {
         Intent broadcastIntent = new Intent(this, WhirlpoolBroadCastReceiver.class);
         broadcastIntent.setAction(WhirlpoolNotificationService.ACTION_STOP);
 
-        PendingIntent actionIntent = PendingIntent.getBroadcast(this,
-                0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent actionIntent = null;
+        if (Build.VERSION.SDK_INT>= Build.VERSION_CODES.S){
+            actionIntent = PendingIntent.getBroadcast(this,
+                    0, broadcastIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        }else {
+              actionIntent = PendingIntent.getBroadcast(this,
+                    0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
 
         return new NotificationCompat.Action(R.drawable.ic_close_white_24dp, "STOP", actionIntent);
     }

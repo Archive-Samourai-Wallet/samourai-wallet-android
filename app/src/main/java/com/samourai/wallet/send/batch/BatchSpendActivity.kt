@@ -10,16 +10,16 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.InputFilter
 import android.text.TextWatcher
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.lifecycle.viewModelScope
-import androidx.recyclerview.widget.*
 import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
@@ -35,30 +35,27 @@ import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
+import com.samourai.wallet.databinding.ActivityBatchSpendBinding
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.fragments.PaynymSelectModalFragment
 import com.samourai.wallet.fragments.PaynymSelectModalFragment.Companion.newInstance
-import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.segwit.bech32.Bech32Util
+import com.samourai.wallet.segwit.bech32.Bech32Segwit
 import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
+import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.WhirlpoolConst
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_batch_spend.*
-import kotlinx.android.synthetic.main.batch_spend_compose.*
-import kotlinx.android.synthetic.main.batch_spend_review.*
-import kotlinx.android.synthetic.main.fee_selector.*
-import kotlinx.android.synthetic.main.item_send_review_details.*
 import kotlinx.coroutines.*
 import org.bitcoinj.core.Transaction
 import org.bouncycastle.util.encoders.Hex
@@ -69,7 +66,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.ParseException
 import java.util.*
-
+import org.apache.commons.lang3.tuple.Pair
 
 class BatchSpendActivity : SamouraiActivity() {
 
@@ -94,16 +91,16 @@ class BatchSpendActivity : SamouraiActivity() {
     private var fee: BigInteger = BigInteger.ZERO
     private var change_idx: Int = 0
     private var change_address: String? = null
-    private var composeJob:Job? = null
+    private var composeJob: Job? = null
     private var outpoints: MutableList<MyTransactionOutPoint> = mutableListOf()
     private var receivers: HashMap<String, BigInteger> = hashMapOf()
-    private val compositeDisposable = CompositeDisposable()
+    private lateinit var binding: ActivityBatchSpendBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_batch_spend)
-        setSupportActionBar(findViewById(R.id.toolbar_batch_send))
+        binding = ActivityBatchSpendBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbarBatchSend)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         toAddressEditText = findViewById(R.id.edt_send_to)
@@ -120,7 +117,7 @@ class BatchSpendActivity : SamouraiActivity() {
 
         listenBalance()
 
-        viewModel.setBalance(applicationContext,account)
+        viewModel.setBalance(applicationContext, account)
 
         showCompose()
 
@@ -141,7 +138,7 @@ class BatchSpendActivity : SamouraiActivity() {
             }
         }
 
-        addToBatch.setOnClickListener {
+        binding.addToBatch.setOnClickListener {
             this.hidekeyboard()
             if (validate()) {
                 val batchItem = BatchSendUtil.BatchSend().apply {
@@ -162,18 +159,18 @@ class BatchSpendActivity : SamouraiActivity() {
             }
         }
 
-        viewModel.getBatchListLive().observe(this, {
-            to_address_review.text = "${it.size} ${getString(R.string.recipients)}"
-            send_review_amount.text = "${FormatsUtil.getBTCDecimalFormat(viewModel.getBatchAmount())} BTC"
-        })
+        viewModel.getBatchListLive().observe(this) {
+            findViewById<TextView>(R.id.to_address_review).text = "${it.size} ${getString(R.string.recipients)}"
+            findViewById<TextView>(R.id.send_review_amount).text = "${FormatsUtil.getBTCDecimalFormat(viewModel.getBatchAmount())} BTC"
+        }
 
         val disposable = APIFactory.getInstance(applicationContext)
-                .walletBalanceObserver
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    viewModel.setBalance(applicationContext,account)
-                }) { obj: Throwable -> obj.printStackTrace() }
+            .walletBalanceObserver
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                viewModel.setBalance(applicationContext, account)
+            }) { obj: Throwable -> obj.printStackTrace() }
         compositeDisposable.add(disposable)
     }
 
@@ -210,7 +207,7 @@ class BatchSpendActivity : SamouraiActivity() {
         }
         val dAmount: Double = btcAmount
         val amountRounded = (dAmount * 1e8)
-        val walletBalance =  viewModel.totalWalletBalance() ?: 0
+        val walletBalance = viewModel.totalWalletBalance() ?: 0
         if (amountRounded > walletBalance) {
             insufficientFunds = true
         }
@@ -223,35 +220,35 @@ class BatchSpendActivity : SamouraiActivity() {
             amount = amountRounded.toLong()
         }
 
-        addToBatch.isEnabled = isValid && !insufficientFunds
+        binding.addToBatch.isEnabled = isValid && !insufficientFunds
 
-        addToBatch.text = if (this.selectedId == null) getString(R.string.add_to_batch) else getString(R.string.update_to_batch)
+        binding.addToBatch.text = if (this.selectedId == null) getString(R.string.add_to_batch) else getString(R.string.update_to_batch)
         return isValid && !insufficientFunds;
 
     }
 
     @SuppressLint("SetTextI18n")
     private fun listenBalance() {
-        viewModel.getBalance().observe(this, {
-            it?.let{
+        viewModel.getBalance().observe(this) {
+            it?.let {
                 balance = it
                 totalBTC.text = "${FormatsUtil.getBTCDecimalFormat(it)} BTC"
-                batchCurrentAmount.text = getString(R.string.current_batch) + " (${FormatsUtil.getBTCDecimalFormat(viewModel.getBatchAmount())} BTC)"
+                findViewById<TextView>(R.id.batchCurrentAmount).text = getString(R.string.current_batch) + " (${FormatsUtil.getBTCDecimalFormat(viewModel.getBatchAmount())} BTC)"
             }
-        })
+        }
     }
 
     override fun onDestroy() {
-        if(!compositeDisposable.isDisposed){
+        if (!compositeDisposable.isDisposed) {
             compositeDisposable.dispose()
         }
         try {
             PayloadUtil.getInstance(applicationContext)
-                    .saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(applicationContext).guid + AccessFactory.getInstance(applicationContext).pin))
+                .saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(applicationContext).guid + AccessFactory.getInstance(applicationContext).pin))
         } catch (e: Exception) {
         }
         composeJob?.let {
-            if(it.isActive)
+            if (it.isActive)
                 it.cancel()
         }
         super.onDestroy()
@@ -375,11 +372,11 @@ class BatchSpendActivity : SamouraiActivity() {
             return true
         }
         if (item.itemId == R.id.action_clear_batch) {
-         MaterialAlertDialogBuilder(this)
-                  .setMessage(getString(R.string.confirm_batch_list_clear))
-                  .setPositiveButton(R.string.ok) { _, _ ->
-                          viewModel.clearBatch()
-                  }.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }.show()
+            MaterialAlertDialogBuilder(this)
+                .setMessage(getString(R.string.confirm_batch_list_clear))
+                .setPositiveButton(R.string.ok) { _, _ ->
+                    viewModel.clearBatch()
+                }.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }.show()
             return true
         }
         if (item.itemId == R.id.select_paynym) {
@@ -420,7 +417,12 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     private fun doSupport() {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/en/wallet/features/batch-spend")))
+        var url = "https://samouraiwallet.com/support"
+        if (TorManager.isConnected())
+            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
+        val explorerIntent = Intent(this, ExplorerActivity::class.java)
+        explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
+        startActivity(explorerIntent)
     }
 
 
@@ -436,10 +438,10 @@ class BatchSpendActivity : SamouraiActivity() {
         message += "\n"
         message += getText(R.string.current_lo_fee_value).toString() + " " + lowFee.defaultPerKB.toLong() / 1000L + " " + getText(R.string.slash_sat)
         val dlg = MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.app_name)
-                .setMessage(message)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
+            .setTitle(R.string.app_name)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
         if (!isFinishing) {
             dlg.show()
         }
@@ -460,13 +462,13 @@ class BatchSpendActivity : SamouraiActivity() {
         var data = code;
         if (data.contains("https://bitpay.com")) {
             val dlg = MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.app_name)
-                    .setMessage(R.string.no_bitpay)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.learn_more) { dialog, whichButton ->
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://blog.samouraiwallet.com/post/169222582782/bitpay-qr-codes-are-no-longer-valid-important"))
-                        startActivity(intent)
-                    }.setNegativeButton(R.string.close) { dialog, whichButton -> dialog.dismiss() }
+                .setTitle(R.string.app_name)
+                .setMessage(R.string.no_bitpay)
+                .setCancelable(false)
+                .setPositiveButton(R.string.learn_more) { dialog, whichButton ->
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://blog.samouraiwallet.com/post/169222582782/bitpay-qr-codes-are-no-longer-valid-important"))
+                    startActivity(intent)
+                }.setNegativeButton(R.string.close) { dialog, whichButton -> dialog.dismiss() }
             if (!isFinishing) {
                 dlg.show()
             }
@@ -518,14 +520,13 @@ class BatchSpendActivity : SamouraiActivity() {
             nf.minimumIntegerDigits = 1
             nf.minimumFractionDigits = 1
             nf.maximumFractionDigits = 8
-            try {
-                if (amount != null && amount.toDouble() != 0.0) {
-                    //                    selectPaynymBtn.setEnabled(false);
-//                    selectPaynymBtn.setAlpha(0.5f);
-                    //                    Toast.makeText(this, R.string.no_edit_BIP21_scan, Toast.LENGTH_SHORT).show();
-                }
-            } catch (nfe: NumberFormatException) {
-//                enableAmount(true)
+            if (amount != null) {
+                try {
+                    val btcFormat = NumberFormat.getInstance(Locale.US)
+                    btcFormat.maximumFractionDigits = 8
+                    btcFormat.minimumFractionDigits = 1
+                    btcEditText.setText(btcFormat.format(amount.toDouble() / 1e8))
+                } catch (nfe: java.lang.NumberFormatException) {}
             }
         } else if (FormatsUtil.getInstance().isValidBitcoinAddress(data)) {
             if (FormatsUtil.getInstance().isValidBech32(data)) {
@@ -620,18 +621,18 @@ class BatchSpendActivity : SamouraiActivity() {
 
     private fun showReview() {
         val sharedAxis = MaterialSharedAxis(MaterialSharedAxis.Y, true)
-        TransitionManager.beginDelayedTransition(batchDetailContainer, sharedAxis)
+        TransitionManager.beginDelayedTransition(binding.batchDetailContainer, sharedAxis)
         reviewFragment.enterTransition = sharedAxis
         supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.batchDetailContainer, reviewFragment)
-                .commit()
+            .beginTransaction()
+            .replace(R.id.batchDetailContainer, reviewFragment)
+            .commit()
         isInReviewMode = true
 
         reviewFragment.setOnFeeChangeListener {
-            composeJob =  viewModel.viewModelScope.launch(Dispatchers.Default) {
+            composeJob = viewModel.viewModelScope.launch(Dispatchers.Default) {
                 delay(300)
-                withContext(Dispatchers.Main){
+                withContext(Dispatchers.Main) {
                     prepareSpend()
                 }
             }
@@ -641,27 +642,27 @@ class BatchSpendActivity : SamouraiActivity() {
         }
 
         val sharedAxis2 = MaterialSharedAxis(MaterialSharedAxis.Y, true)
-                .apply {
-                    addTarget(reviewForm)
-                }
-        TransitionManager.beginDelayedTransition(appBarLayoutBatch, sharedAxis2)
-        sendForm.visibility = View.GONE
-        reviewForm.visibility = View.VISIBLE
-        addToBatch.visibility = View.INVISIBLE
+            .apply {
+                addTarget(binding.reviewForm)
+            }
+        TransitionManager.beginDelayedTransition(binding.appBarLayoutBatch, sharedAxis2)
+        binding.sendForm.visibility = View.GONE
+        binding.reviewForm.visibility = View.VISIBLE
+        binding.addToBatch.visibility = View.INVISIBLE
         this.menu?.findItem(R.id.select_paynym)?.isVisible = false
         this.menu?.findItem(R.id.action_scan_qr)?.isVisible = false
     }
 
     private fun showCompose() {
         val sharedAxis = MaterialSharedAxis(MaterialSharedAxis.Y, false).apply {
-            addTarget(sendForm)
+            addTarget(binding.sendForm)
         }
-        TransitionManager.beginDelayedTransition(batchDetailContainer, sharedAxis)
+        TransitionManager.beginDelayedTransition(binding.batchDetailContainer, sharedAxis)
         composeFragment.enterTransition = sharedAxis
         supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.batchDetailContainer, composeFragment)
-                .commit()
+            .beginTransaction()
+            .replace(R.id.batchDetailContainer, composeFragment)
+            .commit()
         isInReviewMode = false
 
         composeFragment.setOnReviewClickListener {
@@ -679,13 +680,13 @@ class BatchSpendActivity : SamouraiActivity() {
             validate()
         }
         val sharedAxis2 = MaterialSharedAxis(MaterialSharedAxis.Y, false)
-                .apply {
-                    addTarget(sendForm)
-                }
-        TransitionManager.beginDelayedTransition(appBarLayoutBatch, sharedAxis2)
-        sendForm.visibility = View.VISIBLE
-        addToBatch.visibility = View.VISIBLE
-        reviewForm.visibility = View.INVISIBLE
+            .apply {
+                addTarget(binding.sendForm)
+            }
+        TransitionManager.beginDelayedTransition(binding.appBarLayoutBatch, sharedAxis2)
+        binding.sendForm.visibility = View.VISIBLE
+        binding.addToBatch.visibility = View.VISIBLE
+        binding.reviewForm.visibility = View.INVISIBLE
 
         this.menu?.findItem(R.id.select_paynym)?.isVisible = true
         this.menu?.findItem(R.id.action_scan_qr)?.isVisible = true
@@ -696,16 +697,24 @@ class BatchSpendActivity : SamouraiActivity() {
     fun prepareSpend() {
         //Resets current receivers,outpoints etc..
         this.reset()
+
+        var countP2TR = 0
         for (_data in viewModel.getBatchList()) {
-              LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
-              LogUtil.debug("BatchSendActivity", "output:" + _data.addr)
-              LogUtil.debug("BatchSendActivity", "output:" + _data.pcode)
+            LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
+            LogUtil.debug("BatchSendActivity", "output:" + _data.addr)
+            LogUtil.debug("BatchSendActivity", "output:" + _data.pcode)
+
             amount += _data.amount
             if (receivers.containsKey(_data.addr)) {
                 val _amount = receivers[_data.addr]
                 receivers[_data.addr] = _amount!!.add(BigInteger.valueOf(_data.amount))
             } else {
                 receivers[_data.addr] = BigInteger.valueOf(_data.amount)
+
+                if(FormatsUtilGeneric.getInstance().isValidP2TR(_data.addr))    {
+                    countP2TR++
+                }
+
             }
         }
 
@@ -734,31 +743,31 @@ class BatchSpendActivity : SamouraiActivity() {
             p2pkh += outpointTypes.left
             p2sh_p2wpkh += outpointTypes.middle
             p2wpkh += outpointTypes.right
-            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, receivers.size + 1).toLong()) {
+            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, (receivers.size - countP2TR) + 1, countP2TR).toLong()) {
                 break
             }
         }
 
-          LogUtil.debug("BatchSendActivity", "totalSelected:$totalSelected")
-          LogUtil.debug("BatchSendActivity", "totalValueSelected:$totalValueSelected")
+        LogUtil.debug("BatchSendActivity", "totalSelected:$totalSelected")
+        LogUtil.debug("BatchSendActivity", "totalValueSelected:$totalValueSelected")
 
         for (utxo in selectedUTXO) {
             outpoints.addAll(utxo.outpoints)
             for (out in utxo.outpoints) {
-                  LogUtil.debug("BatchSendActivity", "outpoint hash:" + out.txHash.toString())
-                  LogUtil.debug("BatchSendActivity", "outpoint idx:" + out.txOutputN)
-                  LogUtil.debug("BatchSendActivity", "outpoint address:" + out.address)
+                LogUtil.debug("BatchSendActivity", "outpoint hash:" + out.txHash.toString())
+                LogUtil.debug("BatchSendActivity", "outpoint idx:" + out.txOutputN)
+                LogUtil.debug("BatchSendActivity", "outpoint address:" + out.address)
             }
         }
         val outpointTypes = FeeUtil.getInstance().getOutpointCount(Vector(outpoints))
-        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, receivers.size + 1)
-        val walletBalance =  viewModel.totalWalletBalance() ?: 0L
+        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, (receivers.size - countP2TR) + 1, countP2TR)
+        val walletBalance = viewModel.totalWalletBalance() ?: 0L
         if (amount + fee.toLong() > walletBalance) {
             reviewFragment.setTotalMinerFees(BigInteger.ZERO)
             Snackbar
-                    .make(appBarLayoutBatch.rootView,R.string.insufficient_funds, Snackbar.LENGTH_SHORT)
-                    .setAnchorView(reviewFragment.getSendButton())
-                    .show()
+                .make(binding.root, R.string.insufficient_funds, Snackbar.LENGTH_SHORT)
+                .setAnchorView(reviewFragment.getSendButton())
+                .show()
             reviewFragment.enableSendButton(false)
             return
         }
@@ -770,10 +779,9 @@ class BatchSpendActivity : SamouraiActivity() {
             change_idx = BIP84Util.getInstance(applicationContext).wallet.getAccount(0).change.addrIdx
             change_address = BIP84Util.getInstance(applicationContext).getAddressAt(AddressFactory.CHANGE_CHAIN, change_idx).bech32AsString
             receivers[change_address!!] = BigInteger.valueOf(changeAmount!!)
-              LogUtil.debug("BatchSendActivity", "change output:$changeAmount")
-              LogUtil.debug("BatchSendActivity", "change output:$change_address")
-        }
-        else    {
+            LogUtil.debug("BatchSendActivity", "change output:$changeAmount")
+            LogUtil.debug("BatchSendActivity", "change output:$change_address")
+        } else {
             reviewFragment.setTotalMinerFees(BigInteger.ZERO)
             Toast.makeText(applicationContext, R.string.error_change_output, Toast.LENGTH_SHORT).show()
             return
@@ -844,37 +852,38 @@ class BatchSpendActivity : SamouraiActivity() {
         val hexTx = String(Hex.encode(SignedTx.bitcoinSerialize()))
 
         val dlg = MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.app_name)
-                .setMessage(strMessage)
-                .setCancelable(false)
-                .setPositiveButton(R.string.yes, DialogInterface.OnClickListener { dialog, whichButton ->
-                    dialog.dismiss()
-                    if (!PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.BROADCAST_TX, true)) {
+            .setTitle(R.string.app_name)
+            .setMessage(strMessage)
+            .setCancelable(false)
+            .setPositiveButton(R.string.yes, DialogInterface.OnClickListener { dialog, whichButton ->
+                dialog.dismiss()
+                if (!PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.BROADCAST_TX, true)) {
 //                        doShowTx(hexTx, strTxHash)
-                        val dialog = QRBottomSheetDialog(
-                                qrData = hexTx,
-                                title = "",
-                                clipboardLabel = "dialogTitle"
-                        );
-                        dialog.show(supportFragmentManager, dialog.tag)
-                        return@OnClickListener
-                    }
-                    SendParams.getInstance().setParams(outpoints,
-                            receivers,
-                            viewModel.getBatchList(),
-                            SendActivity.SPEND_SIMPLE,
-                            changeAmount,
-                            84,
-                            0,
-                            "",
-                            false,
-                            false,
-                            _amount.toLong(),
-                            _change_idx
-                    )
-                    val intent = Intent(this, TxAnimUIActivity::class.java)
-                    startActivity(intent)
-                }).setNegativeButton(R.string.no) { dialog, _ -> dialog.dismiss() }
+                    val dialog = QRBottomSheetDialog(
+                        qrData = hexTx,
+                        title = "",
+                        clipboardLabel = "dialogTitle"
+                    );
+                    dialog.show(supportFragmentManager, dialog.tag)
+                    return@OnClickListener
+                }
+                SendParams.getInstance().setParams(
+                    outpoints,
+                    receivers,
+                    viewModel.getBatchList(),
+                    SendActivity.SPEND_SIMPLE,
+                    changeAmount,
+                    84,
+                    0,
+                    "",
+                    false,
+                    false,
+                    _amount.toLong(),
+                    _change_idx
+                )
+                val intent = Intent(this, TxAnimUIActivity::class.java)
+                startActivity(intent)
+            }).setNegativeButton(R.string.no) { dialog, _ -> dialog.dismiss() }
         if (!isFinishing) {
             dlg.show()
         }

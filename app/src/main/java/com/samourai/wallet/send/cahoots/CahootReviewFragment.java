@@ -1,14 +1,21 @@
 package com.samourai.wallet.send.cahoots;
 
+import static com.samourai.wallet.send.SendActivity.stubAddress;
+
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.Group;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
@@ -17,13 +24,17 @@ import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
 import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
+import com.samourai.wallet.api.backend.IPushTx;
+import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.Cahoots;
+import com.samourai.wallet.cahoots.CahootsTypeUser;
+import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.widgets.EntropyBar;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.TransactionOutput;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -32,10 +43,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.Group;
-import androidx.fragment.app.Fragment;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -43,30 +50,28 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-import static com.samourai.wallet.send.SendActivity.stubAddress;
-
 public class CahootReviewFragment extends Fragment {
 
 
     private static final String TAG = "CahootReviewFragment";
-    TextView toAddress, amountInBtc, amountInSats, feeInBtc, feeInSats, entropyBits;
+    TextView toAddress, amountInBtc, amountInSats, feeInBtc, feeInSats, entropyBits, step, samouraiFeeBtc, samouraiFeeSats, samouraiFeeLabel;
     EntropyBar entropyBar;
     MaterialButton sendBtn;
-    Group cahootsEntropyGroup, cahootsProgressGroup;
+    ViewGroup cahootsEntropyGroup, cahootsSamouraiFeeGroup;
+    Group cahootsProgressGroup;
+    View cahootsSamouraiFeeGroupDivider, cahootsSamouraiEntropyGroupDivider;
     private Cahoots payload;
     private Callable onBroadcast;
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    public static CahootReviewFragment newInstance() {
-        Bundle args = new Bundle();
+    public static CahootReviewFragment newInstance(Intent intent) {
         CahootReviewFragment fragment = new CahootReviewFragment();
-        fragment.setArguments(args);
+        fragment.setArguments(intent.getExtras());
         return fragment;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-
 
 
         sendBtn.setOnClickListener(view1 -> {
@@ -84,29 +89,13 @@ public class CahootReviewFragment extends Fragment {
                     new Thread(() -> {
                         Looper.prepare();
 
-                        boolean success = false;
                         try {
-                            success = PushTx.getInstance(getActivity()).pushTx(Hex.toHexString(payload.getTransaction().bitcoinSerialize())).first;
-                            if (success) {
-                                getActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
-                                });
-                                // notify
-                                if (onBroadcast != null) {
-                                    try {
-                                        onBroadcast.call();
-                                    } catch (Exception e) {}
-                                }
-                            } else {
-                                Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
-                                getActivity().runOnUiThread(() -> {
-                                    cahootsProgressGroup.setVisibility(View.GONE);
-                                });
-                                sendBtn.setEnabled(true);
-                            }
+                            IPushTx pushTx = PushTx.getInstance(getActivity());
+                            payload.pushTx(pushTx);
+                            onSuccessfulBroadcast();
                         } catch (Exception e) {
+                            showError();
                             e.printStackTrace();
-                            Toast.makeText(this.getActivity(), "Error broadcasting tx ".concat(e.getMessage()), Toast.LENGTH_SHORT).show();
                         }
 
                         Looper.loop();
@@ -124,6 +113,45 @@ public class CahootReviewFragment extends Fragment {
         showPayloadInfo();
     }
 
+    private void onSuccessfulBroadcast() {
+        // increment paynym index if destination
+        if (getArguments() != null) {
+            if (getArguments().containsKey("typeUser")) {
+                int typeUserInt = getArguments().getInt("typeUser", -1);
+                CahootsTypeUser typeUser = CahootsTypeUser.find(typeUserInt).get();
+                if (typeUser == CahootsTypeUser.SENDER) {
+                    String paynymDestination = payload.getPaynymDestination();
+                    if (getArguments().containsKey("destPcode")) {
+                        paynymDestination = getArguments().getString("destPcode");
+                    }
+                    if (!StringUtils.isEmpty(paynymDestination)) {
+                        BIP47Meta.getInstance().incOutgoingIdx(paynymDestination);
+                    }
+                }
+            }
+        }
+
+
+        getActivity().runOnUiThread(() -> {
+            Toast.makeText(getActivity(), R.string.tx_sent, Toast.LENGTH_SHORT).show();
+        });
+//        // notify
+        if (onBroadcast != null) {
+            try {
+                onBroadcast.call();
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    private void showError() {
+        Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
+        getActivity().runOnUiThread(() -> {
+            cahootsProgressGroup.setVisibility(View.GONE);
+            sendBtn.setEnabled(true);
+        });
+    }
+
     private void calculateEntropy() {
 
         CalculateEntropy(payload)
@@ -136,6 +164,8 @@ public class CahootReviewFragment extends Fragment {
 
                     @Override
                     public void onNext(TxProcessorResult entropyResult) {
+                        cahootsEntropyGroup.setVisibility(View.VISIBLE);
+                        cahootsSamouraiEntropyGroupDivider.setVisibility(View.VISIBLE);
                         entropyBar.setRange(entropyResult);
                         DecimalFormat decimalFormat = new DecimalFormat("##.00");
                         entropyBits.setText(decimalFormat.format(entropyResult.getEntropy()).concat(" bits"));
@@ -154,10 +184,10 @@ public class CahootReviewFragment extends Fragment {
                 });
     }
 
-    private void showPayloadInfo(){
+    private void showPayloadInfo() {
         if (payload != null) {
             toAddress.setText(payload.getDestination());
-            sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount()+payload.getFeeAmount())));
+            sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
             amountInBtc.setText(formatForBtc(payload.getSpendAmount()));
             amountInSats.setText(String.valueOf(payload.getSpendAmount()).concat(" sat"));
             if ((payload.getFeeAmount() == 0)) {
@@ -166,17 +196,29 @@ public class CahootReviewFragment extends Fragment {
             } else {
                 feeInBtc.setText(formatForBtc(payload.getFeeAmount()));
                 feeInSats.setText(String.valueOf(payload.getFeeAmount()).concat(" sat"));
+                if (payload instanceof MultiCahoots) {
+                    cahootsSamouraiFeeGroup.setVisibility(View.VISIBLE);
+                    cahootsSamouraiFeeGroupDivider.setVisibility(View.VISIBLE);
+                    MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
+                    samouraiFeeBtc.setText(formatForBtc(multiCahootsPayload.getStowaway().getSpendAmount()));
+                    samouraiFeeSats.setText(String.valueOf(multiCahootsPayload.getStowaway().getSpendAmount()).concat(" sat"));
+                } else {
+                    cahootsSamouraiFeeGroup.setVisibility(View.GONE);
+                    cahootsSamouraiFeeGroupDivider.setVisibility(View.GONE);
 
+                }
             }
             if (payload instanceof Stowaway) {
                 cahootsEntropyGroup.setVisibility(View.GONE);
+                cahootsSamouraiEntropyGroupDivider.setVisibility(View.GONE);
             } else {
                 calculateEntropy();
             }
-
+            step.setText("Step " + (payload.getStep() + 1));
         }
 
     }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -190,13 +232,19 @@ public class CahootReviewFragment extends Fragment {
         entropyBar = view.findViewById(R.id.cahoots_entropy_bar);
         feeInSats = view.findViewById(R.id.cahoots_review_fee_sats);
         cahootsEntropyGroup = view.findViewById(R.id.cahoots_entropy_group);
+        cahootsSamouraiFeeGroupDivider = view.findViewById(R.id.cahoots_samourai_fee_group_divider);
+        cahootsSamouraiEntropyGroupDivider = view.findViewById(R.id.cahoots_entropy_group_divider);
+        cahootsSamouraiFeeGroup = view.findViewById(R.id.cahoots_samourai_fee_group);
         cahootsProgressGroup = view.findViewById(R.id.cahoots_progress_group);
+        step = view.findViewById(R.id.textView56);
+        samouraiFeeBtc = view.findViewById(R.id.cahoots_review_fee_samourai);
+        samouraiFeeSats = view.findViewById(R.id.cahoots_review_fee_samourai_sats);
         return view;
     }
 
     public void setCahoots(Cahoots payload) {
         this.payload = payload;
-        if(isAdded()){
+        if (isAdded()) {
             showPayloadInfo();
         }
     }

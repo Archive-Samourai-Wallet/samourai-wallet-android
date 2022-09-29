@@ -46,6 +46,7 @@ import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
+import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.BatchSendUtil;
@@ -54,6 +55,7 @@ import com.samourai.wallet.util.MonetaryUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.SendAddressUtil;
 import com.samourai.wallet.util.SentToFromBIP47Util;
+import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.widgets.TransactionProgressView;
 
 import org.bitcoinj.core.Address;
@@ -484,26 +486,25 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     SendAddressUtil.getInstance().add(SendParams.getInstance().getDestAddress(), true);
                 }
 
-                if (SendParams.getInstance().getChangeAmount() == 0L) {
-                    Intent intent = new Intent("com.samourai.wallet.BalanceFragment.REFRESH");
-                    intent.putExtra("notifTx", false);
-                    intent.putExtra("fetch", true);
-                    LocalBroadcastManager.getInstance(TxAnimUIActivity.this).sendBroadcast(intent);
-                }
 
                 new Handler().postDelayed(() -> {
-                    Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
-                    _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     if (SendParams.getInstance().getAccount() != 0) {
-                        _intent.putExtra("_account", SendParams.getInstance().getAccount());
+                        Intent balanceHome = new Intent(this, BalanceActivity.class);
+                        balanceHome.putExtra("_account", SendParams.getInstance().getAccount());
+                        balanceHome.putExtra("refresh", true);
+                        Intent parentIntent = new Intent(this, BalanceActivity.class);
+                        parentIntent.putExtra("_account", 0);
+                        balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         TaskStackBuilder.create(getApplicationContext())
-                                .addParentStack(BalanceActivity.class)
-                                .addNextIntent(_intent)
+                                .addNextIntent(parentIntent)
+                                .addNextIntent(balanceHome)
                                 .startActivities();
                     }else{
+                        Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
+                        _intent.putExtra("refresh", true);
+                        _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         startActivity(_intent);
                     }
-
                 }, 1000L);
 
             } else {

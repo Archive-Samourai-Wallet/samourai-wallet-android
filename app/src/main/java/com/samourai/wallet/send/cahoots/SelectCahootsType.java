@@ -11,11 +11,12 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiWalletConst;
+import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
@@ -25,13 +26,13 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 public class SelectCahootsType extends BottomSheetDialogFragment {
 
-
     public enum type {
         STONEWALLX2_MANUAL(CahootsType.STONEWALLX2, CahootsMode.MANUAL),
         STONEWALLX2_SAMOURAI(CahootsType.STONEWALLX2, CahootsMode.SAMOURAI),
         STONEWALLX2_SOROBAN(CahootsType.STONEWALLX2, CahootsMode.SOROBAN),
         STOWAWAY_MANUAL(CahootsType.STOWAWAY, CahootsMode.MANUAL),
         STOWAWAY_SOROBAN(CahootsType.STOWAWAY, CahootsMode.SOROBAN),
+        MULTI_SOROBAN(CahootsType.MULTI, CahootsMode.SOROBAN),
         NONE(null, null);
         private CahootsType cahootsType;
         private CahootsMode cahootsMode;
@@ -136,7 +137,11 @@ public class SelectCahootsType extends BottomSheetDialogFragment {
             }
         });
         samouraiAsParticipant.setOnClickListener(view1 -> {
-            Toast.makeText(getContext(),"Coming soon",Toast.LENGTH_SHORT).show();
+            if (onSelectListener != null) {
+                SelectCahootsType.type typeSoroban = type.MULTI_SOROBAN;
+                onSelectListener.onSelect(typeSoroban, BIP47Meta.getMixingPartnerCode());
+            }
+            this.dismiss();
         });
     }
 

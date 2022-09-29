@@ -4,7 +4,6 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -19,14 +18,13 @@ import com.samourai.wallet.R
 import com.samourai.wallet.RestoreSeedWalletActivity
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.crypto.AESUtil
-import com.samourai.wallet.hd.HD_WalletFactory
-import com.samourai.wallet.payload.ExternalBackupManager
+import com.samourai.wallet.databinding.ActivityRestoreOptionBinding
 import com.samourai.wallet.network.dojo.DojoUtil
+import com.samourai.wallet.payload.ExternalBackupManager
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.PrefsUtil
-import kotlinx.android.synthetic.main.activity_restore_option.*
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.io.*
@@ -35,49 +33,50 @@ import java.io.*
 class RestoreOptionActivity : AppCompatActivity() {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
+    private lateinit var binding: ActivityRestoreOptionBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_restore_option)
+        binding = ActivityRestoreOptionBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         window.statusBarColor = ContextCompat.getColor(this, R.color.window)
-        setSupportActionBar(restoreOptionToolBar)
+        setSupportActionBar(binding.restoreOptionToolBar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = ""
 
-        samouraiMnemonicRestore.setOnClickListener {
+        binding.samouraiMnemonicRestore.setOnClickListener {
             val intent = Intent(this@RestoreOptionActivity, RestoreSeedWalletActivity::class.java)
             intent.putExtra("mode", "mnemonic")
             intent.putExtra("type", "samourai")
             startActivity(intent)
         }
-        samouraiBackupFileRestore.setOnClickListener {
+        binding.samouraiBackupFileRestore.setOnClickListener {
             val intent = Intent(this@RestoreOptionActivity, RestoreSeedWalletActivity::class.java)
             intent.putExtra("mode", "backup")
             startActivity(intent)
         }
-        externalWalletRestore.setOnClickListener {
+        binding.externalWalletRestore.setOnClickListener {
             val intent = Intent(this@RestoreOptionActivity, RestoreSeedWalletActivity::class.java)
             intent.putExtra("mode", "mnemonic")
             startActivity(intent)
         }
 
-        restoreBtn.setOnClickListener { restoreWalletFromBackup() }
+        binding.restoreBtn.setOnClickListener { restoreWalletFromBackup() }
 
         ExternalBackupManager.getPermissionStateLiveData().observe(this, Observer {
             if (ExternalBackupManager.backupAvailable()) {
-                restoreFromBackupSnackbar.visibility = View.VISIBLE
+                binding.restoreFromBackupSnackbar.visibility = View.VISIBLE
             } else {
-                restoreFromBackupSnackbar.visibility = View.GONE
+                binding.restoreFromBackupSnackbar.visibility = View.GONE
             }
         })
 
         if (ExternalBackupManager.backupAvailable()) {
-            restoreFromBackupSnackbar.visibility = View.VISIBLE
+            binding.restoreFromBackupSnackbar.visibility = View.VISIBLE
         } else {
-            restoreFromBackupSnackbar.visibility = View.GONE
+            binding.restoreFromBackupSnackbar.visibility = View.GONE
         }
 
-        restoreOptionToolBar.setNavigationOnClickListener {
+        binding.restoreOptionToolBar.setNavigationOnClickListener {
             this.onBackPressed()
         }
 
@@ -89,6 +88,8 @@ class RestoreOptionActivity : AppCompatActivity() {
     }
 
     private fun showLoading(show: Boolean) {
+        val  loaderRestore = binding.loaderRestore
+        val  restoreBtn = binding.restoreBtn
         if (show) {
             loaderRestore.visibility = View.VISIBLE
             restoreBtn.visibility = View.GONE
@@ -100,7 +101,7 @@ class RestoreOptionActivity : AppCompatActivity() {
 
     private fun restoreWalletFromBackup() {
 
-        fun initializeRestore(decrypted: String,skipDojo:Boolean){
+        fun initializeRestore(decrypted: String, skipDojo: Boolean) {
             showLoading(true)
             scope.launch(Dispatchers.IO) {
                 val json = JSONObject(decrypted)
@@ -138,7 +139,7 @@ class RestoreOptionActivity : AppCompatActivity() {
                     existDojo = true
                 }
             }
-            if (existDojo &&  DojoUtil.getInstance(application).dojoParams != null) {
+            if (existDojo && DojoUtil.getInstance(application).dojoParams != null) {
                 MaterialAlertDialogBuilder(this@RestoreOptionActivity)
                     .setTitle(getString(R.string.dojo_config_detected))
                     .setMessage(getString(R.string.dojo_config_override))
@@ -162,7 +163,7 @@ class RestoreOptionActivity : AppCompatActivity() {
                 if (backupData != null) {
                     val decrypted = PayloadUtil.getInstance(applicationContext).getDecryptedBackupPayload(backupData, CharSequenceX(password))
                     if (decrypted != null && decrypted.isNotEmpty()) {
-                        withContext(Dispatchers.Main){
+                        withContext(Dispatchers.Main) {
                             checkRestoreOptions(decrypted)
                         }
                     }
@@ -222,7 +223,8 @@ class RestoreOptionActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/wallet/restore-recovery"))
         startActivity(intent)
     }
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.landing_activity_menu, menu)
         return true
     }

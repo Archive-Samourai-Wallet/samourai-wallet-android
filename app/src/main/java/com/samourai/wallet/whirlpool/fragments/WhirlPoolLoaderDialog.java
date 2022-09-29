@@ -131,8 +131,9 @@ public class WhirlPoolLoaderDialog extends BottomSheetDialogFragment {
                             statusText.setText(R.string.disconnected);
                             statusProgress.setProgressCompat(0, true);
                             new Handler().postDelayed(() -> {
-                                // exit on Whirlpool start failure
-                                getActivity().onBackPressed();
+                                if (getActivity() != null) {
+                                    getActivity().onBackPressed();
+                                }
                             }, 1200);
                             break;
                         default:

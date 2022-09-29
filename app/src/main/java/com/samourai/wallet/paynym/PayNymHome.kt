@@ -8,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -29,6 +28,7 @@ import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.crypto.DecryptionException
+import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.addPaynym.AddPaynymActivity
@@ -36,6 +36,7 @@ import com.samourai.wallet.paynym.fragments.PayNymOnBoardBottomSheet
 import com.samourai.wallet.paynym.fragments.PaynymListFragment
 import com.samourai.wallet.paynym.fragments.ShowPayNymQRBottomSheet
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
+import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.util.*
 import com.samourai.wallet.widgets.ViewPager
 import com.squareup.picasso.Picasso
@@ -98,7 +99,10 @@ class PayNymHome : SamouraiActivity() {
         paynymFab?.setOnClickListener {
             startActivity(Intent(this, AddPaynymActivity::class.java))
         }
-        payNymViewModel.pcode.observe(this, { paymentCode: String? -> paynym?.text = paymentCode })
+        payNymViewModel.pcode.observe(this) { paymentCode: String? ->
+            paynym?.text = paymentCode
+            PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.PAYNYM_BOT_NAME,paymentCode)
+        }
         payNymViewModel.loaderLiveData.observe(this, {
             swipeToRefreshPaynym?.isRefreshing = it
         })
@@ -111,10 +115,9 @@ class PayNymHome : SamouraiActivity() {
                 return@observe
             }
             val filtered = filterArchived(followersList)
+            followersFragment?.addPcodes(filtered)
             tabTitle[1] = "Followers " + " (" + filtered.size.toString() + ")"
-            followersFragment?.addPcodes(followersList)
             adapter.notifyDataSetChanged()
-            followers = followersList
         })
         payNymViewModel.following.observe(this, { followingList: ArrayList<String>? ->
             if (followingList == null ) {
@@ -230,15 +233,20 @@ class PayNymHome : SamouraiActivity() {
     }
 
     private fun doSign() {
-        MessageSignUtil.getInstance(this).doSign(this.getString(R.string.bip47_sign),
+        MessageSignUtil.getInstance(this).doSign(this.getString(R.string.sign_message),
                 this.getString(R.string.bip47_sign_text1),
                 this.getString(R.string.bip47_sign_text2),
                 BIP47Util.getInstance(this).notificationAddress.ecKey)
     }
 
     private fun doSupport() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/wallet/usage#paynym-1"))
-        startActivity(intent)
+        var url = "https://samouraiwallet.com/support"
+        if (isConnected())
+            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
+        val explorerIntent = Intent(this, ExplorerActivity::class.java)
+        explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
+        startActivity(explorerIntent)
+
     }
 
     private fun doUnArchive() {
