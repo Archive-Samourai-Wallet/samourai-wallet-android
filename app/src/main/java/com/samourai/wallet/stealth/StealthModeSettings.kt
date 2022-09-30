@@ -279,7 +279,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                                             Text("Enable stealth mode")
                                         },
                                         secondaryText = {
-                                            Text("Enter stealth PIN in samourai pin entry screen or use QUICK tiles option to trigger stealth mode")
+                                            Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode")
                                         }
                                     )
                                     Divider(
@@ -291,7 +291,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                                             Text("Disable stealth mode")
                                         },
                                         secondaryText = {
-                                            Text("Enter stealth PIN in calculator app and press = symbol")
+                                            Text("Enter stealth CODE in calculator app and press = symbol")
                                         }
                                     )
                                 }
