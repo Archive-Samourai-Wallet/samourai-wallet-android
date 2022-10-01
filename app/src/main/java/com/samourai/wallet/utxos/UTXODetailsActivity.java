@@ -75,6 +75,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import androidx.core.app.ActivityOptionsCompat;
+
+import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -625,6 +627,8 @@ public class UTXODetailsActivity extends SamouraiActivity {
     }
 
     private void viewInExplorer() {
+        if (TorManager.INSTANCE.isConnected())
+            TorServiceController.newIdentity();
         Intent explorerIntent = new Intent(this,ExplorerActivity.class);
         explorerIntent.putExtra(ExplorerActivity.TX_URI,hash);
         explorerIntent.putExtra("_account",account);
