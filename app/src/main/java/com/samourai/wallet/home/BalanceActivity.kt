@@ -10,7 +10,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.text.InputType
 import android.util.Log
 import android.util.TypedValue
 import android.view.Menu
@@ -58,10 +57,11 @@ import com.samourai.wallet.paynym.fragments.PayNymOnBoardBottomSheet
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
+import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity
-import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity
 import com.samourai.wallet.tools.ToolsBottomSheet
@@ -149,7 +149,16 @@ open class BalanceActivity : SamouraiActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             if (DISPLAY_INTENT == intent.action) {
                 updateDisplay(true)
+                checkDust()
+            }
+        }
+    }
+
+    private fun checkDust() {
+        balanceViewModel.viewModelScope.launch {
+            withContext(Dispatchers.Default) {
                 val utxos = APIFactory.getInstance(this@BalanceActivity).getUtxos(false)
+                val utxoWarnings = arrayListOf<MyTransactionOutPoint>()
                 for (utxo in utxos) {
                     val outpoints = utxo.outpoints
                     for (out in outpoints) {
@@ -173,46 +182,46 @@ open class BalanceActivity : SamouraiActivity() {
                         val contains = BlockedUTXO.getInstance().contains(hash, idx) || BlockedUTXO.getInstance().containsNotDusted(hash, idx)
                         val containsInPostMix = BlockedUTXO.getInstance().containsPostMix(hash, idx) || BlockedUTXO.getInstance().containsNotDustedPostMix(hash, idx)
                         if (amount < BlockedUTXO.BLOCKED_UTXO_THRESHOLD && !contains && !containsInPostMix) {
-
+                            utxoWarnings.add(out);
 //                            BalanceActivity.this.runOnUiThread(new Runnable() {
 //                            @Override
-                            val handler = Handler()
-                            handler.post {
-                                var message: String? = this@BalanceActivity.getString(R.string.dusting_attempt)
-                                message += "\n\n"
-                                message += this@BalanceActivity.getString(R.string.dusting_attempt_amount)
-                                message += " "
-                                message += FormatsUtil.formatBTC(amount)
-                                message += this@BalanceActivity.getString(R.string.dusting_attempt_id)
-                                message += " "
-                                message += "$hash-$idx"
-                                val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-                                    .setTitle(R.string.dusting_tx)
-                                    .setMessage(message)
-                                    .setCancelable(false)
-                                    .setPositiveButton(R.string.dusting_attempt_mark_unspendable, object : DialogInterface.OnClickListener {
-                                        override fun onClick(dialog: DialogInterface, whichButton: Int) {
-                                            if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
-                                                BlockedUTXO.getInstance().addPostMix(hash, idx, amount)
-                                            } else {
-                                                BlockedUTXO.getInstance().add(hash, idx, amount)
-                                            }
-                                            saveState()
-                                        }
-                                    }).setNegativeButton(R.string.dusting_attempt_ignore, object : DialogInterface.OnClickListener {
-                                        override fun onClick(dialog: DialogInterface, whichButton: Int) {
-                                            if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
-                                                BlockedUTXO.getInstance().addNotDustedPostMix(hash, idx)
-                                            } else {
-                                                BlockedUTXO.getInstance().addNotDusted(hash, idx)
-                                            }
-                                            saveState()
-                                        }
-                                    })
-                                if (!isFinishing) {
-                                    dlg.show()
+                        }
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    utxoWarnings.forEach {
+                        val hash = it.hash.toString()
+                        val idx = it.txOutputN
+                        val amount = it.value.longValue()
+                        var message: String? = this@BalanceActivity.getString(R.string.dusting_attempt)
+                        message += "\n\n"
+                        message += this@BalanceActivity.getString(R.string.dusting_attempt_amount)
+                        message += " "
+                        message += FormatsUtil.formatBTC(amount)
+                        message += this@BalanceActivity.getString(R.string.dusting_attempt_id)
+                        message += " "
+                        message += "$hash-$idx"
+                        val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
+                            .setTitle(R.string.dusting_tx)
+                            .setMessage(message)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.dusting_attempt_mark_unspendable) { dialog, whichButton ->
+                                if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
+                                    BlockedUTXO.getInstance().addPostMix(hash, idx, amount)
+                                } else {
+                                    BlockedUTXO.getInstance().add(hash, idx, amount)
                                 }
+                                saveState()
+                            }.setNegativeButton(R.string.dusting_attempt_ignore) { dialog, whichButton ->
+                                if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
+                                    BlockedUTXO.getInstance().addNotDustedPostMix(hash, idx)
+                                } else {
+                                    BlockedUTXO.getInstance().addNotDusted(hash, idx)
+                                }
+                                saveState()
                             }
+                        if (!isFinishing) {
+                            dlg.show()
                         }
                     }
                 }
@@ -333,7 +342,7 @@ open class BalanceActivity : SamouraiActivity() {
             }, 100L)
         } else {
             binding.toolbarIcon.visibility = View.GONE
-            binding.toolbar.setTitleMargin(0,0,0,0)
+            binding.toolbar.setTitleMargin(0, 0, 0, 0)
             binding.toolbar.titleMarginEnd = -50
             binding.toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
             binding.toolbar.setNavigationOnClickListener {
@@ -350,21 +359,17 @@ open class BalanceActivity : SamouraiActivity() {
         checkDeepLinks()
         doExternalBackUp()
         AppUtil.getInstance(applicationContext).walletLoading.observe(this) {
-            if(it){
+            if (it) {
                 showProgress()
-            }else{
+            } else {
                 hideProgress()
             }
         }
-        if(intent.getBooleanExtra("refresh",false)){
+        if (intent.getBooleanExtra("refresh", false)) {
             balanceViewModel.viewModelScope.launch {
-                withContext(Dispatchers.Default){
+                withContext(Dispatchers.Default) {
                     delay(800)
-                    val intent =   Intent(this@BalanceActivity, JobRefreshService::class.java)
-                    intent.putExtra("notifTx", false)
-                    intent.putExtra("dragged", false)
-                    intent.putExtra("launch", false)
-                    JobRefreshService.enqueueWork(applicationContext, intent);
+                    WalletRefreshWorker.enqueue(applicationContext, notifTx = false, launched = false)
                 }
             }
         }
@@ -455,8 +460,8 @@ open class BalanceActivity : SamouraiActivity() {
     private fun checkDeepLinks() {
         val bundle = intent.extras ?: return
         if (bundle.containsKey("pcode") || bundle.containsKey("uri") || bundle.containsKey("amount")) {
-            if(bundle.containsKey("uri")){
-                if(bundle.getString("uri")?.startsWith("auth47") == true){
+            if (bundle.containsKey("uri")) {
+                if (bundle.getString("uri")?.startsWith("auth47") == true) {
                     ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
                         bundle = Bundle().apply {
                             putString("KEY", bundle.getString("uri"))
@@ -586,7 +591,7 @@ open class BalanceActivity : SamouraiActivity() {
             } else {
                 try {
                     balanceViewModel.viewModelScope.launch {
-                        withContext(Dispatchers.Default){
+                        withContext(Dispatchers.Default) {
                             val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
                             BIP47Util.getInstance(applicationContext)
                                 .setAvatar(bitmap)
@@ -602,6 +607,7 @@ open class BalanceActivity : SamouraiActivity() {
                         override fun onSuccess() {
                             /*NO OP*/
                         }
+
                         override fun onError(e: Exception) {
                             /*NO OP*/
                         }
@@ -666,9 +672,9 @@ open class BalanceActivity : SamouraiActivity() {
             return super.onOptionsItemSelected(item)
         }
         if (id == R.id.action_postmix_balance) {
-             startActivity(Intent(this,BalanceActivity::class.java).apply {
-                 putExtra("_account",SamouraiAccountIndex.POSTMIX)
-             })
+            startActivity(Intent(this, BalanceActivity::class.java).apply {
+                putExtra("_account", SamouraiAccountIndex.POSTMIX)
+            })
             return super.onOptionsItemSelected(item)
         }
 
@@ -678,8 +684,7 @@ open class BalanceActivity : SamouraiActivity() {
         } // noinspection SimplifiableIfStatement
         if (id == R.id.action_support) {
             doSupport()
-        }
-        else if (id == R.id.action_utxo) {
+        } else if (id == R.id.action_utxo) {
             doUTXO()
         } else if (id == R.id.action_backup) {
             if (SamouraiWallet.getInstance().hasPassphrase(this@BalanceActivity)) {
@@ -1081,12 +1086,7 @@ open class BalanceActivity : SamouraiActivity() {
             snackbar.show();
             */
         }
-        val intent = Intent(this, JobRefreshService::class.java)
-        intent.putExtra("notifTx", notifTx)
-        intent.putExtra("dragged", dragged)
-        intent.putExtra("launch", launch)
-        JobRefreshService.enqueueWork(applicationContext, intent)
-        //
+        WalletRefreshWorker.enqueue(applicationContext, launched = launch, notifTx = notifTx)
 //
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //            startForegroundService(intent);
