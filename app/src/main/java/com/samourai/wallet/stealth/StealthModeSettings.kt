@@ -119,6 +119,9 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                             if (value.length > 4) {
                                 if (AccessFactory.getInstance(stealthModeSettings.applicationContext).pin == value) {
                                     Toast.makeText(stealthModeSettings.applicationContext, R.string.stealth_pin_warning, Toast.LENGTH_SHORT).show()
+                                }
+                                else if (value.toIntOrNull() == null) {
+                                    Toast.makeText(stealthModeSettings.applicationContext, R.string.stealth_pin_numeric, Toast.LENGTH_SHORT).show()
                                 } else {
                                     StealthModeController.setStealthPin(context, value)
                                     isStealthEnabled = true
