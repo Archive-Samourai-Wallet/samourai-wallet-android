@@ -19,9 +19,6 @@ import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
-import com.samourai.wallet.segwit.bech32.Bech32Util
-import com.samourai.wallet.send.BlockedUTXO
-import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.LogUtil
@@ -32,8 +29,6 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.AddressFormatException
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
-import org.bitcoinj.script.Script
-import org.bouncycastle.util.encoders.Hex
 import org.json.JSONException
 import java.io.IOException
 

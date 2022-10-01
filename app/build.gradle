@@ -10,7 +10,7 @@ android {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
         targetSdkVersion 32
-        versionCode 191
+        versionCode 193
         versionName "0.99.98f"
         // Enabling multidex support.
         multiDexEnabled true
@@ -23,7 +23,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = '1.8'
     }
     buildTypes {
         release {
@@ -43,17 +43,17 @@ android {
     productFlavors {
         production {
             applicationId 'com.samourai.wallet'
-            versionCode 191
+            versionCode 193
             versionName "0.99.98f"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98e"
+            resValue "string", "version_name", "0.99.98f"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
-            versionCode 191
-            versionName "0.99.98f"
+            versionCode 193
+            versionName "0.99.98g"
             resValue "string", "app_name", "Samourai Staging"
-            resValue "string", "version_name", "202207-qa"
+            resValue "string", "version_name", "0.99.98g"
         }
     }
 
@@ -122,7 +122,8 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation "androidx.webkit:webkit:1.5.0"
-    implementation 'androidx.work:work-runtime-ktx:2.7.1'
+    implementation 'androidx.compose.material3:material3:1.0.0-alpha02'
+    implementation 'androidx.work:work-runtime-ktx:2.5.0'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
@@ -151,7 +152,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:0.0.33.13') {
+    implementation ('io.samourai.code.wallet:extlibj:0.0.33.14') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
