@@ -433,37 +433,23 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
                                 if (__tx != null) {
 
-                                    boolean isOK = false;
                                     try {
+                                        PushTx.getInstance(activity).pushTx(hexTx);
+                                        handler.post(() -> {
+                                            Toast.makeText(activity, R.string.rbf_spent, Toast.LENGTH_SHORT).show();
 
-                                        try {
-                                            isOK = PushTx.getInstance(activity).pushTx(hexTx).getLeft();
-                                            if (isOK) {
-                                                handler.post(() -> {
-                                                    Toast.makeText(activity, R.string.rbf_spent, Toast.LENGTH_SHORT).show();
+                                            RBFSpend _rbf = rbf;    // includes updated 'keyBag'
+                                            _rbf.setSerializedTx(hexTx);
+                                            _rbf.setHash(strTxHash);
+                                            _rbf.setPrevHash(params[0]);
+                                            RBFUtil.getInstance().add(_rbf);
 
-                                                    RBFSpend _rbf = rbf;    // includes updated 'keyBag'
-                                                    _rbf.setSerializedTx(hexTx);
-                                                    _rbf.setHash(strTxHash);
-                                                    _rbf.setPrevHash(params[0]);
-                                                    RBFUtil.getInstance().add(_rbf);
-
-                                                    Intent _intent = new Intent(activity, MainActivity2.class);
-                                                    _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                                                    activity.startActivity(_intent);
-                                                });
-                                            } else {
-                                                handler.post(() -> Toast.makeText(activity, R.string.tx_failed, Toast.LENGTH_SHORT).show());
-                                            }
-                                        } catch (Exception e) {
-                                            handler.post(() -> Toast.makeText(activity, R.string.tx_failed, Toast.LENGTH_SHORT).show());
-                                        }
-
-
+                                            Intent _intent = new Intent(activity, MainActivity2.class);
+                                            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                                            activity.startActivity(_intent);
+                                        });
                                     } catch (final Exception de) {
                                         handler.post(() -> Toast.makeText(activity, "pushTx:" + de.getMessage(), Toast.LENGTH_SHORT).show());
-                                    } finally {
-                                        ;
                                     }
 
                                 }
