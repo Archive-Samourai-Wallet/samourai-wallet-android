@@ -1133,9 +1133,9 @@ public class SendActivity extends SamouraiActivity {
             receivers = new HashMap<String, BigInteger>();
             receivers.put(address, BigInteger.valueOf(amount));
 
-            int countP2TR = 0;
-            if(FormatsUtilGeneric.getInstance().isValidP2TR(address))    {
-                countP2TR = 1;
+            int countP2WSH_P2TR = 0;
+            if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(address))    {
+                countP2WSH_P2TR = 1;
             }
 
             if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
@@ -1151,13 +1151,13 @@ public class SendActivity extends SamouraiActivity {
             // if possible, get UTXO by input 'type': p2pkh, p2sh-p2wpkh or p2wpkh, else get all UTXO
             long neededAmount = 0L;
             if (FormatsUtil.getInstance().isValidBech32(address) || account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, 0, UTXOFactory.getInstance().getCountP2WPKH(), 4 - countP2TR, countP2TR).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, 0, UTXOFactory.getInstance().getCountP2WPKH(), 4 - countP2WSH_P2TR, countP2WSH_P2TR).longValue();
 //                    Log.d("SendActivity", "segwit:" + neededAmount);
             } else if (Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, UTXOFactory.getInstance().getCountP2SH_P2WPKH(), 0, 4 - countP2TR, countP2TR).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, UTXOFactory.getInstance().getCountP2SH_P2WPKH(), 0, 4 - countP2WSH_P2TR, countP2WSH_P2TR).longValue();
 //                    Log.d("SendActivity", "segwit:" + neededAmount);
             } else {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(UTXOFactory.getInstance().getCountP2PKH(), 0, 0, 4 - countP2TR, countP2TR).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(UTXOFactory.getInstance().getCountP2PKH(), 0, 0, 4 - countP2WSH_P2TR, countP2WSH_P2TR).longValue();
 //                    Log.d("SendActivity", "p2pkh:" + neededAmount);
             }
             neededAmount += amount;
@@ -1452,7 +1452,7 @@ public class SendActivity extends SamouraiActivity {
                         p2pkh += outpointTypes.getLeft();
                         p2sh_p2wpkh += outpointTypes.getMiddle();
                         p2wpkh += outpointTypes.getRight();
-                        if (totalValueSelected >= (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, 2 - countP2TR, countP2TR).longValue())) {
+                        if (totalValueSelected >= (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, 2 - countP2WSH_P2TR, countP2WSH_P2TR).longValue())) {
                             Log.d("SendActivity", "spend type:" + SPEND_TYPE);
                             Log.d("SendActivity", "multiple outputs");
                             Log.d("SendActivity", "amount:" + amount);
@@ -1514,7 +1514,7 @@ public class SendActivity extends SamouraiActivity {
                     }
                     Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(outpoints));
                     if (amount == balance) {
-                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 1 - countP2TR, countP2TR);
+                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 1 - countP2WSH_P2TR, countP2WSH_P2TR);
                         amount -= fee.longValue();
                         receivers.clear();
                         receivers.put(address, BigInteger.valueOf(amount));
@@ -1538,7 +1538,7 @@ public class SendActivity extends SamouraiActivity {
                         //
 
                     } else {
-                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2 - countP2TR, countP2TR);
+                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2 - countP2WSH_P2TR, countP2WSH_P2TR);
                     }
                 }
 
