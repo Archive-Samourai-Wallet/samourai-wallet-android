@@ -11,6 +11,7 @@ import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.stealth.calculator.CalculatorActivity
+import com.samourai.wallet.stealth.vpn.VPNActivity
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.TimeOutUtil
@@ -26,7 +27,8 @@ object StealthModeController {
 
         //DEFAULT
         SAMOURAI(MainActivity2::class.qualifiedName.toString(), R.mipmap.ic_launcher, R.string.app_name),
-        CALCULATOR(CalculatorActivity::class.qualifiedName.toString(), R.drawable.ic_calculator, R.string.calculator);
+        CALCULATOR(CalculatorActivity::class.qualifiedName.toString(), R.drawable.ic_stealth_calculator, R.string.calculator),
+        VPN(VPNActivity::class.qualifiedName.toString(), R.drawable.stealth_vpn_icon, R.string.stealth_vpn_name);
 
         private var appKey: String = packageId
         private var appIcon: Int = icon
