@@ -31,7 +31,11 @@ import androidx.compose.ui.window.Dialog
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.access.AccessFactory
+import com.samourai.wallet.stealth.calculator.CalculatorStealthAppSettings
+import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppSettings
+import com.samourai.wallet.stealth.vpn.VPNStealthAPPSettings
 import com.samourai.wallet.theme.*
+import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.LogUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -107,7 +111,6 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         maxLines = 1,
                     )
                 }
-                // BUTTONS
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = {
                         showAlert = false
@@ -119,8 +122,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                             if (value.length > 4) {
                                 if (AccessFactory.getInstance(stealthModeSettings.applicationContext).pin == value) {
                                     Toast.makeText(stealthModeSettings.applicationContext, R.string.stealth_pin_warning, Toast.LENGTH_SHORT).show()
-                                }
-                                else if (value.toIntOrNull() == null) {
+                                } else if (value.toIntOrNull() == null) {
                                     Toast.makeText(stealthModeSettings.applicationContext, R.string.stealth_pin_numeric, Toast.LENGTH_SHORT).show()
                                 } else {
                                     StealthModeController.setStealthPin(context, value)
@@ -169,7 +171,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                             } else {
                                 isStealthEnabled = false
                                 scope.launch {
-                                    withContext(Dispatchers.IO){
+                                    withContext(Dispatchers.IO) {
                                         StealthModeController.disableStealthSettings(context)
                                     }
                                     delay(100)
@@ -195,7 +197,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                             } else {
                                 isStealthEnabled = false
                                 scope.launch {
-                                    withContext(Dispatchers.IO){
+                                    withContext(Dispatchers.IO) {
                                         StealthModeController.disableStealthSettings(context)
                                     }
                                     delay(100)
@@ -222,7 +224,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                             StealthModeController.StealthApp.values().forEach {
                                 if (it != StealthModeController.StealthApp.SAMOURAI) {
                                     item {
-                                        Box(modifier = Modifier.padding(horizontal = 10.dp)) {
+                                        Box(modifier = Modifier.padding(horizontal = 6.dp)) {
                                             Box(
                                                 modifier = Modifier
                                                     .padding(horizontal = 4.dp)
@@ -262,49 +264,21 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         modifier = Modifier
                             .fillMaxSize()
                     ) {
-                        if (selectedApp == StealthModeController.StealthApp.CALCULATOR) {
-                            Box(
-                                Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center,
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .padding(vertical = 16.dp, horizontal = 12.dp),
-                                ) {
-                                    Text("Instructions", style = MaterialTheme.typography.h6)
-                                    ListItem(
-                                        modifier = Modifier.padding(vertical = 4.dp).padding(top = 8.dp),
-                                        text = {
-                                            Text("Enable stealth mode")
-                                        },
-                                        secondaryText = {
-                                            Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode")
-                                        }
-                                    )
-                                    Divider(
-                                        modifier = Modifier.padding(vertical = 8.dp)
-                                    )
-                                    ListItem(
-                                        modifier = Modifier.padding(vertical = 8.dp),
-                                        text = {
-                                            Text("Disable stealth mode")
-                                        },
-                                        secondaryText = {
-                                            Text("Enter stealth CODE in calculator app and press = symbol")
-                                        }
-                                    )
-                                }
-                            }
-                            Box(Modifier.weight(1f))
+                        WrapToolsPageAnimation(selectedApp == StealthModeController.StealthApp.CALCULATOR) {
+                            CalculatorStealthAppSettings()
                         }
+                        WrapToolsPageAnimation(selectedApp == StealthModeController.StealthApp.VPN) {
+                            VPNStealthAPPSettings {}
+                        }
+                        WrapToolsPageAnimation(selectedApp == StealthModeController.StealthApp.QRAPP) {
+                            QRStealthAppSettings {}
+                        }
+                        Box(Modifier.weight(1f))
                     }
                 }
             }
         }
+
     )
 }
 

@@ -46,20 +46,6 @@
         tools:targetApi="s">
 
         <activity-alias
-            android:name=".stealth.calculator.CalculatorActivity"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/ic_calculator"
-            android:roundIcon="@mipmap/ic_calculator_round"
-            android:label="Calculator"
-            android:targetActivity=".stealth.calculator.CalculatorActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-        <activity-alias
             android:name=".MainActivity2"
             android:enabled="true"
             android:exported="true"
@@ -77,6 +63,62 @@
             android:name=".stealth.calculator.CalculatorActivity"
             android:label="@string/calculator"
             android:theme="@style/Theme.Samourai.Material" />
+
+        <activity-alias
+            android:name=".stealth.calculator.CalculatorActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_calculator"
+            android:label="Calculator"
+            android:roundIcon="@mipmap/ic_calculator_round"
+            android:targetActivity=".stealth.calculator.CalculatorActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".stealth.vpn.VPNActivity"
+            android:exported="true"
+            android:label="@string/stealth_vpn_name"
+            android:theme="@style/Theme.Samourai.Material" />
+
+        <activity
+            android:name=".stealth.qrscannerapp.QRStealthAppActivity"
+            android:exported="true"
+            android:label="@string/stealth_vpn_name"
+            android:theme="@style/Theme.Samourai.Material" />
+
+        <activity-alias
+            android:name=".stealth.vpn.VPNActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_stl_vpn_launcher"
+            android:label="@string/stealth_vpn_name"
+            android:roundIcon="@mipmap/ic_stl_vpn_round"
+            android:targetActivity=".stealth.vpn.VPNActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".stealth.qrscannerapp.QRStealthAppActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_qrscanner_launcher"
+            android:label="@string/stealth_qr_scannerapp_title"
+            android:roundIcon="@mipmap/ic_qrscanner_launcher_round"
+            android:targetActivity=".stealth.qrscannerapp.QRStealthAppActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <activity
             android:name=".stealth.StealthModeSettings"
             android:exported="true"
@@ -277,8 +319,6 @@
             android:name=".whirlpool.service.WhirlpoolNotificationService"
             android:enabled="true"
             android:stopWithTask="true" />
-
     </application>
-
 
 </manifest>

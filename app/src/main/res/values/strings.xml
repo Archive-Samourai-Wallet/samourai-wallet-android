@@ -927,6 +927,7 @@
     <string name="do_you_want_to_enable_stealth_mode">Do you want to enable stealth mode ?</string>
     <string name="do_you_want_to_disable_stealth_mode">Do you want to disable stealth mode ?</string>
     <string name="calculator">Calculator</string>
+    <string name="stealth_vpn_name">Edge VPN</string>
     <string name="stealth_mode">Stealth Mode</string>
     <string name="enable_stealth_mode_to_protect">Enable stealth mode to protect against physical searches of your device</string>
     <string name="set_stealth_pin">Set stealth code</string>
@@ -934,4 +935,5 @@
     <string name="choose_stealth_app">Choose Stealth App</string>
     <string name="stealth_pin_warning">Cannot use wallet pin for stealth mode. please choose a different code</string>
     <string name="stealth_pin_numeric">Stealth code must only conrtain numbers</string>
+    <string name="stealth_qr_scannerapp_title">QR Scanner</string>
 </resources>

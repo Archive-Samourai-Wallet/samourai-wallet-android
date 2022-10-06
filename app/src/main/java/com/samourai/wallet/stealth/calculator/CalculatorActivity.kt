@@ -10,6 +10,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -48,6 +51,52 @@ class CalculatorActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun CalculatorStealthAppSettings() {
+    val secondaryColor = Color(0xffbab9b9)
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 16.dp, horizontal = 12.dp),
+        ) {
+            Text("Instructions", style = androidx.compose.material.MaterialTheme.typography.h6)
+            ListItem(
+                modifier = Modifier.padding(vertical = 4.dp).padding(top = 8.dp),
+                text = {
+                    Text("Enable stealth mode", style = MaterialTheme.typography.titleSmall, color = Color.White)
+                },
+                secondaryText = {
+                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = secondaryColor)
+                }
+            )
+            Divider(
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            ListItem(
+                modifier = Modifier.padding(vertical = 8.dp),
+                text = {
+                    Text("Disable stealth mode",style = MaterialTheme.typography.titleSmall, color = Color.White)
+                },
+                secondaryText = {
+                    Text("Enter stealth CODE in calculator app and press = symbol",
+                        color = secondaryColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
