@@ -32,6 +32,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.stealth.calculator.CalculatorStealthAppSettings
+import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppSettings
 import com.samourai.wallet.stealth.vpn.VPNStealthAPPSettings
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
@@ -268,6 +269,9 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         }
                         WrapToolsPageAnimation(selectedApp == StealthModeController.StealthApp.VPN) {
                             VPNStealthAPPSettings {}
+                        }
+                        WrapToolsPageAnimation(selectedApp == StealthModeController.StealthApp.QRAPP) {
+                            QRStealthAppSettings {}
                         }
                         Box(Modifier.weight(1f))
                     }

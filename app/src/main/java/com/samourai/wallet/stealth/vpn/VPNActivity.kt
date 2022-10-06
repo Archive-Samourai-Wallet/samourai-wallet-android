@@ -21,13 +21,11 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
-import androidx.compose.material.TextField
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +55,10 @@ import com.samourai.wallet.stealth.calculator.Purple80
 import com.samourai.wallet.stealth.calculator.PurpleGrey80
 import com.samourai.wallet.stealth.calculator.Typography
 import com.samourai.wallet.util.PrefsUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 val countries = arrayListOf(
     Triple("United States", "\uD83C\uDDFA\uD83C\uDDF8", arrayListOf("Chicago", "San Francisco", "Phoenix", "New York", "Wyoming")),
@@ -501,7 +502,7 @@ fun samouraiVPNTheme(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun VPNStealthAPPSettings(callback: () -> Unit) {
-
+    val secondaryColor = Color(0xffbab9b9)
     val scope = rememberCoroutineScope()
     var expanded by remember { mutableStateOf(false) }
     var serverLocations by remember { mutableStateOf<List<String>>(arrayListOf()) }
@@ -537,10 +538,10 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
                     .padding(vertical = 4.dp)
                     .padding(top = 8.dp),
                 text = {
-                    Text("Enable stealth mode", color = Color.White)
+                    Text("Enable stealth mode", color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode", color = Color.White)
+                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode", color = secondaryColor)
                 }
             )
             Divider(
@@ -549,11 +550,11 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text("Disable stealth mode", color = Color.White)
+                    Text("Disable stealth mode", color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("To exit stealth mode choose the specified location in the vpn app and enter stealth code ", color = Color.White)
+                        Text("To exit stealth mode choose the specified location in the vpn app and enter stealth code ", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
                         Divider(modifier = Modifier.padding(top = 8.dp, bottom = 6.dp))
                         OutlinedButton(onClick = { expanded = true }) {
                             Text(text = "Location:  $selectedItem", color = Color.White)

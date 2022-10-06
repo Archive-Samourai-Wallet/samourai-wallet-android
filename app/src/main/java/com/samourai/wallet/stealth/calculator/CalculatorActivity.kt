@@ -54,6 +54,8 @@ class CalculatorActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CalculatorStealthAppSettings() {
+    val secondaryColor = Color(0xffbab9b9)
+
     Box(
         Modifier
             .fillMaxWidth()
@@ -69,10 +71,12 @@ fun CalculatorStealthAppSettings() {
             ListItem(
                 modifier = Modifier.padding(vertical = 4.dp).padding(top = 8.dp),
                 text = {
-                    Text("Enable stealth mode")
+                    Text("Enable stealth mode", style = MaterialTheme.typography.titleSmall, color = Color.White)
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode")
+                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = secondaryColor)
                 }
             )
             Divider(
@@ -81,10 +85,13 @@ fun CalculatorStealthAppSettings() {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text("Disable stealth mode")
+                    Text("Disable stealth mode",style = MaterialTheme.typography.titleSmall, color = Color.White)
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in calculator app and press = symbol")
+                    Text("Enter stealth CODE in calculator app and press = symbol",
+                        color = secondaryColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
             )
         }
