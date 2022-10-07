@@ -698,7 +698,7 @@ class BatchSpendActivity : SamouraiActivity() {
         //Resets current receivers,outpoints etc..
         this.reset()
 
-        var countP2TR = 0
+        var countP2WSH_P2TR = 0
         for (_data in viewModel.getBatchList()) {
             LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
             LogUtil.debug("BatchSendActivity", "output:" + _data.addr)
@@ -711,8 +711,8 @@ class BatchSpendActivity : SamouraiActivity() {
             } else {
                 receivers[_data.addr] = BigInteger.valueOf(_data.amount)
 
-                if(FormatsUtilGeneric.getInstance().isValidP2TR(_data.addr))    {
-                    countP2TR++
+                if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(_data.addr))    {
+                    countP2WSH_P2TR++
                 }
 
             }
@@ -743,7 +743,7 @@ class BatchSpendActivity : SamouraiActivity() {
             p2pkh += outpointTypes.left
             p2sh_p2wpkh += outpointTypes.middle
             p2wpkh += outpointTypes.right
-            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, (receivers.size - countP2TR) + 1, countP2TR).toLong()) {
+            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, (receivers.size - countP2WSH_P2TR) + 1, countP2WSH_P2TR).toLong()) {
                 break
             }
         }
@@ -760,7 +760,7 @@ class BatchSpendActivity : SamouraiActivity() {
             }
         }
         val outpointTypes = FeeUtil.getInstance().getOutpointCount(Vector(outpoints))
-        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, (receivers.size - countP2TR) + 1, countP2TR)
+        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, (receivers.size - countP2WSH_P2TR) + 1, countP2WSH_P2TR)
         val walletBalance = viewModel.totalWalletBalance() ?: 0L
         if (amount + fee.toLong() > walletBalance) {
             reviewFragment.setTotalMinerFees(BigInteger.ZERO)
