@@ -1,21 +1,23 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.util.LogUtil.debug;
+
 import android.content.Context;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.IPushTx;
+import com.samourai.wallet.api.backend.beans.HttpException;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.WebUtil;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.List;
-
-import static com.samourai.wallet.util.LogUtil.debug;
 
 public class PushTx implements IPushTx {
 
@@ -37,7 +39,7 @@ public class PushTx implements IPushTx {
         return instance;
     }
 
-    public String samourai(String hexString, List<Integer> strictModeVouts) {
+    public String samourai(String hexString, List<Integer> strictModeVouts) throws Exception {
 
         String _url = "pushtx/";
 
@@ -69,10 +71,22 @@ public class PushTx implements IPushTx {
                 }
                 response = WebUtil.getInstance(context).tor_postURL(_base + _url + "?at=" + APIFactory.getInstance(context).getAccessToken(), args);
             }
-
             return response;
         }
-        catch(Exception e) {
+        catch(HttpException e) {
+            try{
+                JSONObject object = new JSONObject(e.getResponseBody());
+                if(object.has("error")){
+                    throw new Exception(object.getString("error"),e);
+                }
+            } catch (JSONException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            return null;
+        } catch(Exception e) {
+
+            e.printStackTrace();
             return null;
         }
 
