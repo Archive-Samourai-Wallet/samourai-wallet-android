@@ -87,7 +87,7 @@
     <string name="options_send_backup_to_support2">Отослать резервную копию кошелька в техподдержку. Не содержит информации о приватном ключе.</string>
     <string name="options_fee_provider">Калькулятор комиссий</string>
     <string name="options_fee_provider2">Укажите источник, из которого будут браться данные о комиссиях за транзакцию.</string>
-    <string name="options_broadcast_on">Отправлять транзакции</string>
+    <string name="broadcast_transactions">Отправлять транзакции</string>
     <string name="options_broadcast_on2">Снимите галку для отключения автоотправки. Подписанная транзакция в текстовом виде будет копироваться в буфер обмена.</string>
     <string name="options_strictoutputs">Строгий режим</string>
     <string name="options_strictoutputs2">Строгий контроль выходных транзакций и повторного использования адресов.</string>

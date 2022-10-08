@@ -82,7 +82,7 @@
     <string name="options_send_backup_to_support2">把钱包备份发送给技术支持团队。不包含私钥信息</string>
     <string name="options_fee_provider">手续费估算资源</string>
     <string name="options_fee_provider2">选择交易费估算供应商</string>
-    <string name="options_broadcast_on">交易广播</string>
+    <string name="broadcast_transactions">交易广播</string>
     <string name="options_broadcast_on2">清除打勾（关闭广播模式）并把已签署交易源码复制到粘贴板</string>
     <string name="options_segwit">收到隔离见证地址</string>
     <string name="options_segwit_2">为收款生产隔离见证地址</string>

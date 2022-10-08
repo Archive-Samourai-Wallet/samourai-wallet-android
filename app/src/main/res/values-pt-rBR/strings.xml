@@ -87,7 +87,7 @@
     <string name="options_send_backup_to_support2">Envie o backup para o suporte técnico. Não contém informações da chave privada.</string>
     <string name="options_fee_provider">Fonte da Estimativa de Taxa</string>
     <string name="options_fee_provider2">Selecione seu provedor de estimativas de taxas preferido.</string>
-    <string name="options_broadcast_on">Transmitir transações</string>
+    <string name="broadcast_transactions">Transmitir transações</string>
     <string name="options_broadcast_on2">Desmarque (transmissão DESLIGADA) para copiar a transação assinada não tratada para a área de transferência.</string>
     <string name="options_strictoutputs">Modo estrito</string>
     <string name="options_strictoutputs2">Controle estrito de resultados de transações e reutilização de endereços.</string>

@@ -34,7 +34,7 @@
         />
 
     <CheckBoxPreference
-        android:title="@string/options_broadcast_on"
+        android:title="@string/broadcast_transactions"
         android:summary="@string/options_broadcast_on2"
         android:defaultValue="true"
         android:key="broadcastTx"

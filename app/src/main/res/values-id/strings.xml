@@ -82,7 +82,7 @@
     <string name="options_send_backup_to_support2">Kirim cadangan wallet pada dukungan teknis pelanggan. Tidak akan menyertakan info private key.</string>
     <string name="options_fee_provider">Sumber estimasi biaya</string>
     <string name="options_fee_provider2">Pilih provider estimasi biaya transaksi yang anda kehendaki.</string>
-    <string name="options_broadcast_on">Siarkan transaksi</string>
+    <string name="broadcast_transactions">Siarkan transaksi</string>
     <string name="options_broadcast_on2">Hapus centang (broadcasting OFF) untuk manyalin transaksi raw tertandatangani pada clipboard.</string>
     <string name="options_segwit">Terima ke address segwit</string>
     <string name="options_segwit_2">Generate address segwit untuk transaksi masuk.</string>
