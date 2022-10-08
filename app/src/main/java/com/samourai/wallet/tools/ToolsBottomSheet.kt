@@ -35,6 +35,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.theme.SamouraiWalletTheme
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
+import com.samourai.wallet.tools.viewmodels.BroadcastHexViewModel
 import com.samourai.wallet.tools.viewmodels.SweepViewModel
 import kotlinx.coroutines.launch
 
@@ -151,12 +152,14 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     val vm = viewModel<AddressCalculatorViewModel>()
     val sweepViewModel = viewModel<SweepViewModel>()
     val auth47ViewModel = viewModel<Auth47ViewModel>()
+    val broadcastHexViewModel = viewModel<BroadcastHexViewModel>()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
     val addressCalcBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val signMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val auth47BottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val broadcastBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 
     //Handle BackPress
     LaunchedEffect(true) {
@@ -169,6 +172,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         signMessageBottomSheetState.hide()
                     } else if (auth47BottomSheet.isVisible) {
                         auth47BottomSheet.hide()
+                    } else if (broadcastBottomSheet.isVisible) {
+                        broadcastBottomSheet.hide()
                     } else if (sweepPrivateKeyBottomSheet.isVisible) {
                         sweepPrivateKeyBottomSheet.hide()
                     } else {
@@ -184,12 +189,14 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
         addressCalcBottomSheetState.isVisible,
         signMessageBottomSheetState.isVisible,
         auth47BottomSheet.isVisible,
+        broadcastBottomSheet.isVisible,
         sweepPrivateKeyBottomSheet.isVisible,
     ) {
         val anyToolWindowIsVisible = (
                 addressCalcBottomSheetState.isVisible ||
                         signMessageBottomSheetState.isVisible ||
                         auth47BottomSheet.isVisible ||
+                        broadcastBottomSheet.isVisible ||
                         sweepPrivateKeyBottomSheet.isVisible)
         toolsBottomSheet?.dialog?.setCancelable(!anyToolWindowIsVisible)
     }
@@ -233,7 +240,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             ToolsItem(
                 title = stringResource(R.string.wallet_address_calc),
                 subTitle = stringResource(R.string.calculate_any_address_derived),
-                icon = R.drawable.ic_calculator,
+                icon = R.drawable.ic_baseline_calculate,
                 onClick = {
                     scope.launch {
                         toolsBottomSheet?.disableDragging()
@@ -253,6 +260,18 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         toolsBottomSheet?.disableDragging()
                         auth47BottomSheet.show()
+                    }
+                }
+            )
+            ToolsItem(
+                title = stringResource(id = R.string.broadcast_transactions),
+                subTitle = stringResource(R.string.options_broadcast_hex2),
+                icon = R.drawable.ic_broadcast_tx,
+                onClick = {
+                    scope.launch {
+                        broadcastHexViewModel.clear()
+                        toolsBottomSheet?.disableDragging()
+                        broadcastBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
                     }
                 }
             )
@@ -297,12 +316,37 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             }
         }
 
+        if (broadcastBottomSheet.currentValue != ModalBottomSheetValue.Hidden) {
+            DisposableEffect(Unit) {
+                onDispose {
+                    broadcastHexViewModel.clear()
+                    toolsBottomSheet?.disableDragging(disable = false)
+                }
+            }
+        }
+
         ModalBottomSheetLayout(
             sheetState = addressCalcBottomSheetState,
             scrimColor = Color.Black.copy(alpha = 0.7f),
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
                 AddressCalculator(window)
+            },
+            sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+        ) {}
+
+        ModalBottomSheetLayout(
+            sheetState = broadcastBottomSheet,
+            scrimColor = Color.Black.copy(alpha = 0.7f),
+            sheetBackgroundColor = samouraiBottomSheetBackground,
+            sheetContent = {
+                BroadcastTransactionTool(
+                    onCloseClick = {
+                        scope.launch {
+                            broadcastBottomSheet.hide()
+                        }
+                    }
+                )
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {}
