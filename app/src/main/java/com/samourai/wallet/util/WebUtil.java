@@ -1,5 +1,7 @@
 package com.samourai.wallet.util;
 
+import static com.samourai.wallet.util.LogUtil.info;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -18,7 +20,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -34,8 +35,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
-
-import static com.samourai.wallet.util.LogUtil.info;
 
 //import android.util.Log;
 
@@ -164,7 +163,7 @@ public class WebUtil {
             }
         }
 
-        throw new HttpException("Invalid Response " + responseBody, responseBody);
+        throw new HttpException("Invalid Response " , responseBody);
     }
 
     public String deleteURL(String request, String urlParameters) throws Exception {

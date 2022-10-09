@@ -82,7 +82,7 @@
   <string name="options_send_backup_to_support2">Cüzdan yedeğini teknik desteğe gönderin. Özel anahtar bilgisi içermez.</string>
   <string name="options_fee_provider">Masraf tahmin kaynağı</string>
   <string name="options_fee_provider2">Yeğlediğiniz işlem masrafı tahmin servisini seçin.</string>
-  <string name="options_broadcast_on">Harcamaları yayınla</string>
+  <string name="broadcast_transactions">Harcamaları yayınla</string>
   <string name="options_broadcast_on2">Ham imzalanmış işlemleri panoya kopyalamak için kutunun imini kaldırın (yayınlama KAPALI).</string>
   <string name="options_segwit">Segwit adreslerine al</string>
   <string name="options_segwit_2">Gelen işlemler için segwit adresleri oluşturur.</string>

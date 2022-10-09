@@ -83,7 +83,7 @@
     <string name="options_send_backup_to_support2">Wallet Backup an den Tech-Support senden. Enthält keine Private Key Informationen.</string>
     <string name="options_fee_provider">Gebühren-Schätzungs-Service</string>
     <string name="options_fee_provider2">Wähle deinen bevorzugten Gebühren-Schätzungs-Service.</string>
-    <string name="options_broadcast_on">Transaktionen veröffentlichen</string>
+    <string name="broadcast_transactions">Transaktionen veröffentlichen</string>
     <string name="options_broadcast_on2">Ausschalten (veröffentlichen AUS) um signierte RAW-Transaktionen in die Zwischenablage zu kopieren.</string>
     <string name="options_segwit">Auf SegWit-Adressen empfangen</string>
     <string name="options_segwit_2">Generiert SegWit-Adressen für eingehende Transaktionen.</string>

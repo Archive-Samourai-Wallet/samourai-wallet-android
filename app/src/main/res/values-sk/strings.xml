@@ -87,7 +87,7 @@
     <string name="options_send_backup_to_support2">Pošli zálohu peňaženky technickej podpore. Neobsahuje informácie o privátnom klúči</string>
     <string name="options_fee_provider">Zdroj pre výpočet približného poplatku</string>
     <string name="options_fee_provider2">Zvoľ si poskytovateľa pre výpočet približného poplatku.</string>
-    <string name="options_broadcast_on">Vysielanie transakcii</string>
+    <string name="broadcast_transactions">Vysielanie transakcii</string>
     <string name="options_broadcast_on2">Odznač (vysielanie VYPNUTÉ) pre kopírovanie surovej podpísanej transakcie do schránky.</string>
     <string name="options_segwit">Prijímať do segwit adresy</string>
     <string name="options_segwit_2">Generuj segwit adresy pre prichádzajúce transakcie.</string>

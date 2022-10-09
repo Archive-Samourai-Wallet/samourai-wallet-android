@@ -84,7 +84,7 @@
     <string name="options_send_backup_to_support2">Enviar copia de seguridad al soporte técnico. No contendrá información de tus claves privadas.</string>
     <string name="options_fee_provider">Estimación de la comisión de red (fee)</string>
     <string name="options_fee_provider2">Elije tu fuente preferida para estimar la comisión de la red (fee).</string>
-    <string name="options_broadcast_on">Envío de transacciones</string>
+    <string name="broadcast_transactions">Envío de transacciones</string>
     <string name="options_broadcast_on2">Desmarcar (envío desactivado) para copiar las transacciones firmadas al portapapeles.</string>
     <string name="options_segwit">Recibir en direcciones SegWit</string>
     <string name="options_segwit_2">Generar direcciones SegWit diferentes para cada transacción entrante.</string>

@@ -82,7 +82,7 @@
     <string name="options_send_backup_to_support2">Изпращане на резервното копие до отдел техническа поддръжка. Не съдържа частни ключове.</string>
     <string name="options_fee_provider">Източник за преценка на такси</string>
     <string name="options_fee_provider2">Изберете предпочитаният Ви източник за преценка на таксите.</string>
-    <string name="options_broadcast_on">Изпращане на транзакции</string>
+    <string name="broadcast_transactions">Изпращане на транзакции</string>
     <string name="options_broadcast_on2">Махнете тикчето (изпращането ИЗКЛЮЧЕНО), за да копирате подписана транзакция в клипборда.</string>
     <string name="options_segwit">Получаване чрез SegWit адреси</string>
     <string name="options_segwit_2">Генериране на SegWit адреси за входящи транзакции.</string>
