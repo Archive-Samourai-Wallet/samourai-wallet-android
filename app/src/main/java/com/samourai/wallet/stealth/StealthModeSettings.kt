@@ -92,7 +92,9 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         value = value,
                         onValueChange = {
                             if (it.length <= 8) {
-                                value = it
+                                if (!it.contains("*") && !it.contains("-") && !it.contains(",") && !it.contains(".") && !it.contains(" ")) {
+                                    value = it
+                                }
                             }
                         },
                         Modifier

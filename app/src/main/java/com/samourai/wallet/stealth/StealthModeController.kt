@@ -16,7 +16,6 @@ import com.samourai.wallet.stealth.vpn.VPNActivity
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.TimeOutUtil
-import io.matthewnelson.topl_service.TorServiceController
 
 
 object StealthModeController {
@@ -28,6 +27,7 @@ object StealthModeController {
 
         //DEFAULT
         SAMOURAI(MainActivity2::class.qualifiedName.toString(), R.mipmap.ic_launcher, R.string.app_name),
+
         CALCULATOR(CalculatorActivity::class.qualifiedName.toString(), R.drawable.ic_stealth_calculator, R.string.calculator),
         VPN(VPNActivity::class.qualifiedName.toString(), R.drawable.stealth_vpn_icon, R.string.stealth_vpn_name),
         QRAPP(QRStealthAppActivity::class.qualifiedName.toString(), R.drawable.stealth_qr_app_icon, R.string.stealth_qr_scannerapp_title);
@@ -75,9 +75,9 @@ object StealthModeController {
     }
 
     fun enableStealthFromPrefs(context: Context) {
-        if (TorManager.isConnected())
-            TorServiceController.stopTor()
-
+        if(TorManager.isConnected() || TorManager.torState == TorManager.TorState.WAITING){
+            TorManager.stopTor()
+        }
         val prefs = getStealthPreferences(context)
         val key = prefs?.getString(PREF_APP, StealthApp.CALCULATOR.getAppKey()) ?: StealthApp.CALCULATOR.getAppKey()
         StealthApp.values().forEach {
