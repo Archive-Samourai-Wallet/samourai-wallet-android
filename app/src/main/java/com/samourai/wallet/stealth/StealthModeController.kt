@@ -22,6 +22,7 @@ object StealthModeController {
 
     private const val PREF_PIN = "stl_pin"
     private const val PREF_APP = "stl_app"
+    private const val PREF_ENABLED = "stl_enabled"
 
     enum class StealthApp(packageId: String, @DrawableRes icon: Int, @StringRes name: Int) {
 
@@ -94,7 +95,7 @@ object StealthModeController {
 
     fun disableStealthSettings(context: Context) {
         val prefs = getStealthPreferences(context)
-        prefs?.edit()?.clear()?.apply()
+        prefs?.edit()?.putBoolean(PREF_ENABLED, false)?.apply()
     }
 
     private fun isAppEnabled(stealthApp: StealthApp, context: Context): Boolean {
@@ -123,14 +124,15 @@ object StealthModeController {
 
     fun isStealthEnabled(context: Context): Boolean {
         val prefs = getStealthPreferences(context)
-        val pin = prefs?.getString(PREF_PIN, null)
-        return pin != null
+        val enabled = prefs?.getBoolean(PREF_ENABLED, true)
+        return enabled == true
     }
 
     fun setStealthPin(context: Context, pin: String) {
         val prefs = getStealthPreferences(context)
         val encPin = AESUtil.encryptSHA256(pin, CharSequenceX(pin))
         prefs?.edit()?.putString(PREF_PIN, encPin)?.apply()
+        prefs?.edit()?.putBoolean(PREF_ENABLED, true)?.apply()
     }
 
     fun getSelectedApp(context: Context): String {

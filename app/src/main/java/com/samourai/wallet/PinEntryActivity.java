@@ -211,7 +211,7 @@ public class PinEntryActivity extends AppCompatActivity {
 
             } else {
                 if (userInput.toString().length() >= AccessFactory.MIN_PIN_LENGTH && userInput.toString().length() <= AccessFactory.MAX_PIN_LENGTH) {
-                    if (StealthModeController.INSTANCE.isPinMatched(getApplicationContext(), userInput.toString())) {
+                    if (StealthModeController.INSTANCE.isPinMatched(getApplicationContext(), userInput.toString()) && StealthModeController.INSTANCE.isStealthEnabled(getApplicationContext())) {
                         new MaterialAlertDialogBuilder(PinEntryActivity.this)
                                 .setTitle(R.string.app_name)
                                 .setMessage(R.string.do_you_want_to_enable_stealth_mode)

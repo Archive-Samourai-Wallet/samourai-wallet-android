@@ -518,7 +518,7 @@ fun QRStealthAppSettings(callback: () -> Unit) {
                  },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("To exit stealth mode double tap on app name \"QR scanner\" and enter stealth code ",
+                        Text("To exit stealth mode double tap on app name \"QR scanner\" and enter stealth CODE ",
                             style = MaterialTheme.typography.bodyMedium, color =    secondaryColor  )
                     }
 

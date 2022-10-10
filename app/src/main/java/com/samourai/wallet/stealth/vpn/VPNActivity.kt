@@ -211,7 +211,7 @@ fun VpnMainScreen(activity: ComponentActivity?) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp)
+                            .height(150.dp)
                             .padding(bottom = 12.dp)
                     ) {
                         Row(modifier = Modifier.fillMaxSize(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -554,7 +554,7 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
                 },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("To exit stealth mode choose the specified location in the vpn app and enter stealth code ", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
+                        Text("To exit stealth mode choose the specified location in the vpn app and enter stealth CODE ", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
                         Divider(modifier = Modifier.padding(top = 8.dp, bottom = 6.dp))
                         OutlinedButton(onClick = { expanded = true }) {
                             Text(text = "Location:  $selectedItem", color = Color.White)
