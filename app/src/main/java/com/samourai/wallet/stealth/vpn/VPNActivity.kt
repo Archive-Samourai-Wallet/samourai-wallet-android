@@ -211,7 +211,7 @@ fun VpnMainScreen(activity: ComponentActivity?) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp)
+                            .height(150.dp)
                             .padding(bottom = 12.dp)
                     ) {
                         Row(modifier = Modifier.fillMaxSize(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
