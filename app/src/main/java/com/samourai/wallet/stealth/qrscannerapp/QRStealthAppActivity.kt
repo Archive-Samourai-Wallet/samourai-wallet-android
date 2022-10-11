@@ -503,7 +503,7 @@ fun QRStealthAppSettings(callback: () -> Unit) {
 
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode",
+                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles",
                         style = MaterialTheme.typography.bodyMedium, color =    secondaryColor )
                 }
             )
@@ -518,7 +518,7 @@ fun QRStealthAppSettings(callback: () -> Unit) {
                  },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("To exit stealth mode double tap on app name \"QR scanner\" and enter stealth CODE ",
+                        Text("Double tap “QR scanner” at bottom of screen then enter stealth CODE",
                             style = MaterialTheme.typography.bodyMedium, color =    secondaryColor  )
                     }
 

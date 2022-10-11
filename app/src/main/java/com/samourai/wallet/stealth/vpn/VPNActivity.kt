@@ -541,7 +541,7 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
                     Text("Enable stealth mode", color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode", color = secondaryColor)
+                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles", color = secondaryColor)
                 }
             )
             Divider(
@@ -554,7 +554,7 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
                 },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("To exit stealth mode choose the specified location in the vpn app and enter stealth CODE ", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
+                        Text("Select the specified VPN location then enter stealth CODE", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
                         Divider(modifier = Modifier.padding(top = 8.dp, bottom = 6.dp))
                         OutlinedButton(onClick = { expanded = true }) {
                             Text(text = "Location:  $selectedItem", color = Color.White)
