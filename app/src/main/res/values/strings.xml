@@ -936,5 +936,5 @@
     <string name="stealth_pin_warning">Cannot use wallet pin for stealth mode. please choose a different code</string>
     <string name="stealth_pin_numeric">Stealth CODE must only contain numbers</string>
     <string name="stealth_qr_scannerapp_title">QR Scanner</string>
-    <string name="confirm_testnet_message">You are about to create a TESTNET wallet. TESTNET is used for experimenting and development in testing.\n\nAll wallet tools are available, but will only function with TESTNET bitcoin.\n\nDo you wish to proceed?</string>
+    <string name="confirm_testnet_message">You are about to create a TESTNET wallet. TESTNET is used for experimenting and development testing.\n\nAll wallet tools are available, but will only function with TESTNET bitcoin.\n\nDo you wish to proceed?</string>
 </resources>

@@ -9,17 +9,20 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,7 +69,9 @@ public class MainActivity2 extends AppCompatActivity {
     private TextView loaderTxView;
     private LinearProgressIndicator progressIndicator;
     private CompositeDisposable compositeDisposables = new CompositeDisposable();
-    private Switch netSwitch;
+    private SwitchCompat netSwitch;
+    private TextView mainnetText;
+    private TextView testnetText;
 
     protected BroadcastReceiver receiver_restart = new BroadcastReceiver() {
         @Override
@@ -497,6 +502,19 @@ public class MainActivity2 extends AppCompatActivity {
             LayoutInflater inflater = this.getLayoutInflater();
             View view = inflater.inflate(R.layout.net_selection,null);
             netSwitch = view.findViewById(R.id.switch1);
+            mainnetText = view.findViewById(R.id.text_mainnet);
+            mainnetText.setTextColor(Color.parseColor("#0CA9F4"));
+            testnetText = view.findViewById(R.id.text_testnet);
+            netSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+                if (b) {
+                    mainnetText.setTextColor(Color.parseColor("#03A9F4"));
+                    testnetText.setTextColor(getResources().getColor(R.color.white));
+                }
+                else {
+                    testnetText.setTextColor(Color.parseColor("#00BFA5"));
+                    mainnetText.setTextColor(getResources().getColor(R.color.white));
+                }
+            });
             dlg.setView(view);
             dlg.show();
         }
