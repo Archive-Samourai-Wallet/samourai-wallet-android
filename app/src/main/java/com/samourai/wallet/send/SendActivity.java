@@ -138,6 +138,8 @@ import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class SendActivity extends SamouraiActivity {
@@ -160,6 +162,7 @@ public class SendActivity extends SamouraiActivity {
     private long selectableBalance = 0L;
     private String strDestinationBTCAddress = null;
     private ProgressBar progressBar;
+    private Disposable entropyDisposable = null;
 
     private final static int FEE_LOW = 0;
     private final static int FEE_NORMAL = 1;
@@ -1654,30 +1657,26 @@ public class SendActivity extends SamouraiActivity {
                             break;
                         }
 
-                        CalculateEntropy(selectedUTXO, receivers)
-                                .subscribeOn(Schedulers.computation())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(new Observer<TxProcessorResult>() {
-                                    @Override
-                                    public void onSubscribe(Disposable d) {
-                                    }
+                        if(entropyDisposable != null) {
+                            Log.d("SendActivity", "Disposing of observable...");
+                            entropyDisposable.dispose();
+                        }
 
-                                    @Override
-                                    public void onNext(TxProcessorResult entropyResult) {
-                                        sendTransactionDetailsView.setEntropyBarStoneWallX1(entropyResult);
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable e) {
+                        if(entropyDisposable == null || entropyDisposable.isDisposed()) {
+                            Log.d("SendActivity", "Creating new observable...");
+                            entropyDisposable = CalculateEntropy(selectedUTXO, receivers)
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.computation())
+                                    .doOnSuccess(txProcessorResult -> {
+                                        sendTransactionDetailsView.setEntropyBarStoneWallX1(txProcessorResult);
+                                    })
+                                    .doOnError(throwable -> {
                                         sendTransactionDetailsView.setEntropyBarStoneWallX1(null);
-                                        e.printStackTrace();
-                                    }
-
-                                    @Override
-                                    public void onComplete() {
-                                    }
-                                });
-
+                                        throwable.printStackTrace();
+                                    })
+                                    .doOnDispose(() -> entropyDisposable = null)
+                                    .subscribe();
+                        }
 
                         break;
                     }
@@ -2453,8 +2452,8 @@ public class SendActivity extends SamouraiActivity {
 
     }
 
-    private Observable<TxProcessorResult> CalculateEntropy(ArrayList<UTXO> selectedUTXO, HashMap<String, BigInteger> receivers) {
-        return Observable.create(emitter -> {
+    private Single<TxProcessorResult> CalculateEntropy(ArrayList<UTXO> selectedUTXO, HashMap<String, BigInteger> receivers) {
+        return Single.create(emitter -> {
 
             Map<String, Long> inputs = new HashMap<>();
             Map<String, Long> outputs = new HashMap<>();
@@ -2472,7 +2471,7 @@ public class SendActivity extends SamouraiActivity {
             TxProcessor txProcessor = new TxProcessor(BoltzmannSettings.MAX_DURATION_DEFAULT, BoltzmannSettings.MAX_TXOS_DEFAULT);
             Txos txos = new Txos(inputs, outputs);
             TxProcessorResult result = txProcessor.processTx(txos, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY, TxosLinkerOptionEnum.MERGE_INPUTS);
-            emitter.onNext(result);
+            emitter.onSuccess(result);
         });
 
     }
