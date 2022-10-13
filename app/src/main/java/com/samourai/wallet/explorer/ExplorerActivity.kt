@@ -29,6 +29,7 @@ class ExplorerActivity : AppCompatActivity() {
 
     var txId: String = "";
     var supportURL: String = "";
+    var defaultBackTor: Boolean = false
    private lateinit var  binding : ActivityExplorerBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +75,7 @@ class ExplorerActivity : AppCompatActivity() {
                     .setMessage("Tor is not enabled, built in web browser supports tor proxy")
                     .setPositiveButton("Enable tor") { dialog, _ ->
                         dialog.dismiss()
+                        defaultBackTor = true
                         TorManager.startTor()
                     }
                     .setNegativeButton("Load") { dialog, _ ->
@@ -170,6 +172,8 @@ class ExplorerActivity : AppCompatActivity() {
         if(webView.canGoBack()){
             webView.goBack()
         }else{
+            if (defaultBackTor)
+                TorManager.stopTor()
             super.onBackPressed()
         }
     }
@@ -244,6 +248,8 @@ class ExplorerActivity : AppCompatActivity() {
         webView.clearHistory()
         webView.clearCache(false)
         webView.destroy()
+        if (defaultBackTor)
+            TorManager.stopTor()
         super.onDestroy()
     }
 
