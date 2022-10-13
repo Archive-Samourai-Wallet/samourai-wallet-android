@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    >
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="138dp"
+        android:checked="true" />
+
+
+    <TextView
+        android:id="@+id/text_mainnet"
+        android:layout_width="77dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="-130dp"
+        android:layout_toStartOf="@+id/switch1"
+        android:text="MAINNET"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/text_testnet"
+        android:layout_width="77dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="171dp"
+        android:text="TESTNET"
+        android:textStyle="bold" />
+</RelativeLayout>

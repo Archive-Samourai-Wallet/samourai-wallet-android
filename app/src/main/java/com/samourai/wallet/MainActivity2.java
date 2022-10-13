@@ -9,16 +9,21 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,6 +69,9 @@ public class MainActivity2 extends AppCompatActivity {
     private TextView loaderTxView;
     private LinearProgressIndicator progressIndicator;
     private CompositeDisposable compositeDisposables = new CompositeDisposable();
+    private SwitchCompat netSwitch;
+    private TextView mainnetText;
+    private TextView testnetText;
 
     protected BroadcastReceiver receiver_restart = new BroadcastReceiver() {
         @Override
@@ -478,30 +486,55 @@ public class MainActivity2 extends AppCompatActivity {
                 .setTitle(R.string.app_name)
                 .setMessage(R.string.select_network)
                 .setCancelable(false)
-                .setPositiveButton(R.string.MainNet, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-
+                .setPositiveButton(R.string.ok, (dialog, whichButton) -> {
+                    if(netSwitch.isChecked()) { //MAINNET SELECTION
                         dialog.dismiss();
                         PrefsUtil.getInstance(MainActivity2.this).removeValue(PrefsUtil.TESTNET);
                         SamouraiWallet.getInstance().setCurrentNetworkParams(MainNetParams.get());
                         initDialog();
-
                     }
-                })
-                .setNegativeButton(R.string.TestNet, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-
+                    else { // TESTNET SELECTION
                         dialog.dismiss();
-                        PrefsUtil.getInstance(MainActivity2.this).setValue(PrefsUtil.TESTNET, true);
-                        SamouraiWallet.getInstance().setCurrentNetworkParams(TestNet3Params.get());
-                        initDialog();
-
+                        doCheckTestnet();
                     }
                 });
         if (!isFinishing()) {
+            LayoutInflater inflater = this.getLayoutInflater();
+            View view = inflater.inflate(R.layout.net_selection,null);
+            netSwitch = view.findViewById(R.id.switch1);
+            mainnetText = view.findViewById(R.id.text_mainnet);
+            mainnetText.setTextColor(Color.parseColor("#0CA9F4"));
+            testnetText = view.findViewById(R.id.text_testnet);
+            netSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+                if (b) {
+                    mainnetText.setTextColor(Color.parseColor("#03A9F4"));
+                    testnetText.setTextColor(getResources().getColor(R.color.white));
+                }
+                else {
+                    testnetText.setTextColor(Color.parseColor("#00BFA5"));
+                    mainnetText.setTextColor(getResources().getColor(R.color.white));
+                }
+            });
+            dlg.setView(view);
             dlg.show();
         }
 
     }
 
+    private void doCheckTestnet() {
+        AlertDialog testnetDlg = new AlertDialog.Builder(this)
+                .setTitle("Samourai")
+                .setMessage(R.string.confirm_testnet_message)
+                .setCancelable(false)
+                .setNegativeButton("BACK", (dialog12, whichButton12) -> {
+                    dialog12.dismiss();
+                    dlg = null;
+                    doSelectNet();
+                })
+                .setPositiveButton("YES", (dialog1, whichButton1) -> {
+                    PrefsUtil.getInstance(MainActivity2.this).setValue(PrefsUtil.TESTNET, true);
+                    SamouraiWallet.getInstance().setCurrentNetworkParams(TestNet3Params.get());
+                    initDialog();
+                }).show();
+    }
 }
