@@ -74,7 +74,7 @@ fun CalculatorStealthAppSettings() {
                     Text("Enable stealth mode", style = MaterialTheme.typography.titleSmall, color = Color.White)
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in samourai pin entry screen or use QUICK tiles option to trigger stealth mode",
+                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles",
                         style = MaterialTheme.typography.bodyMedium,
                         color = secondaryColor)
                 }
