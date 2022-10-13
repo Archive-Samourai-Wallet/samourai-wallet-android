@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,10 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.ViewModel
+import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.stealth.qrscannerapp.Pink40
 import com.samourai.wallet.stealth.qrscannerapp.Purple40
 import com.samourai.wallet.stealth.qrscannerapp.PurpleGrey40
 import com.samourai.wallet.tools.WrapToolsPageAnimation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class NotepadActivity : ComponentActivity() {
     override fun onBackPressed() {
@@ -65,6 +71,7 @@ class NotepadActivity : ComponentActivity() {
 
 @Composable
 fun NotesScreen() {
+    val scope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
     var titles by remember { mutableStateOf(arrayOf("Test Note")) }
     var contents by remember { mutableStateOf(arrayOf("This is a test note")) }
@@ -72,6 +79,10 @@ fun NotesScreen() {
     var hasBeenEdited by remember { mutableStateOf(false) }
     var titleText by remember { mutableStateOf("") }
     var contentText by remember { mutableStateOf("") }
+    var pinEntryDialog by remember { mutableStateOf(false) }
+    var pinEntryValue by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val context = LocalContext.current
 
 
 
@@ -164,6 +175,18 @@ fun NotesScreen() {
             ) {
                 androidx.compose.material.Text(
                     text = "Notepad",
+                    modifier = Modifier.pointerInput(Unit){
+                        detectTapGestures(
+                            onDoubleTap = {
+                                StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
+                                pinEntryValue = ""
+                                pinEntryDialog = true
+                                scope.launch {
+                                    delay(250)
+                                    focusRequester.requestFocus()
+                                }
+                            },
+                        )},
                     style = androidx.compose.material.MaterialTheme.typography.h4
                 )
             }
@@ -340,7 +363,7 @@ fun NotepadAppStealthSettings(callback: () -> Unit) {
                 },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("Idk yet",
+                        Text("Double tap “Notepad” at the top of screen then enter stealth CODE",
                             style = MaterialTheme.typography.bodyMedium, color =    secondaryColor  )
                     }
 
