@@ -32,6 +32,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.stealth.calculator.CalculatorStealthAppSettings
+import com.samourai.wallet.stealth.notepad.NotepadAppStealthSettings
 import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppSettings
 import com.samourai.wallet.stealth.vpn.VPNStealthAPPSettings
 import com.samourai.wallet.theme.*
@@ -230,7 +231,10 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                                                     .padding(horizontal = 4.dp)
                                                     .clickable {
                                                         selectedApp = it
-                                                        StealthModeController.setSelectedApp(it.getAppKey(), stealthModeSettings.applicationContext);
+                                                        StealthModeController.setSelectedApp(
+                                                            it.getAppKey(),
+                                                            stealthModeSettings.applicationContext
+                                                        );
                                                     }
                                             ) {
                                                 Card(
@@ -272,6 +276,9 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         }
                         WrapToolsPageAnimation(selectedApp == StealthModeController.StealthApp.QRAPP) {
                             QRStealthAppSettings {}
+                        }
+                        WrapToolsPageAnimation(selectedApp == StealthModeController.StealthApp.NOTEPAD) {
+                            NotepadAppStealthSettings {}
                         }
                         Box(Modifier.weight(1f))
                     }
