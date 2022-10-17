@@ -3,7 +3,6 @@ package com.samourai.wallet.send.soroban.meeting;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -11,12 +10,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
-import com.samourai.soroban.client.meeting.SorobanMeetingService;
+import com.samourai.soroban.client.wallet.sender.SorobanWalletInitiator;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
+import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
 import com.samourai.wallet.send.FeeUtil;
@@ -33,8 +32,6 @@ import io.reactivex.schedulers.Schedulers;
 public class SorobanMeetingSendActivity extends SamouraiActivity {
 
     private static final String TAG = "SorobanMeetingSend";
-    private SorobanMeetingService sorobanMeetingService;
-    private static final int TIMEOUT_MS = 120000;
 
     private int accountIndex;
     private CahootsType cahootsType;
@@ -88,7 +85,8 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
         paynymSelect.setOnClickListener(v -> selectPCode());
         sendButton.setOnClickListener(v -> send());
         parsePayloadIntent();
-        startListen();
+
+        send();
     }
 
     private void parsePayloadIntent() {
@@ -128,10 +126,6 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
         paynymSelectModalFragment.show(getSupportFragmentManager(), "paynym_select");
     }
 
-    private void startListen(){
-        sorobanMeetingService = AndroidSorobanCahootsService.getInstance(getApplicationContext()).getSorobanMeetingService();
-        send();
-    }
     private void setPCode(String pcode) {
         this.pcode = pcode;
 
@@ -148,37 +142,31 @@ public class SorobanMeetingSendActivity extends SamouraiActivity {
         textViewConnecting.setText("Sending Cahoots request...");
 
         try {
+            AndroidSorobanWalletService androidSorobanWalletService = AndroidSorobanWalletService.getInstance(getApplicationContext());
+            SorobanWalletInitiator sorobanWalletInitiator = androidSorobanWalletService.getSorobanWalletInitiator();
+
             PaymentCode paymentCode = new PaymentCode(pcode);
-            // send meeting request
-            sorobanDisposable = sorobanMeetingService.sendMeetingRequest(paymentCode, cahootsType)
+            // send meeting request and wait for response
+            textViewConnecting.setText("Have your mixing partner receive online Cahoots.");
+            sorobanDisposable = sorobanWalletInitiator.meet(cahootsType, paymentCode)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(meetingRequest -> {
-                                textViewConnecting.setText("Have your mixing partner receive online Cahoots.");
-                                // meeting request sent, receive response
-                                sorobanDisposable = sorobanMeetingService.receiveMeetingResponse(paymentCode, meetingRequest, TIMEOUT_MS)
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe(sorobanResponse -> {
-                                            if (sorobanResponse.isAccept()) {
-                                                Toast.makeText(getApplicationContext(), "Cahoots request accepted!", Toast.LENGTH_LONG).show();
-                                                Intent intent = SorobanCahootsActivity.createIntentSender(this,
-                                                        accountIndex,
-                                                        cahootsType,
-                                                        sendAmount,
-                                                        getIntent().getLongExtra("fees", FeeUtil.getInstance().getSuggestedFeeDefaultPerB()),
-                                                        sendAddress, pcode,
-                                                        getIntent().getStringExtra("destPcode"));
-                                                startActivity(intent);
-                                            } else {
-                                                Toast.makeText(getApplicationContext(), "Cahoots request refused!", Toast.LENGTH_LONG).show();
-                                            }
-                                            setSending(false);
-                                        }, error -> {
-                                            setSending(false);
-                                            Toast.makeText(getApplicationContext(), "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                                            error.printStackTrace();
-                                        });
+                    .subscribe(sorobanResponse -> {
+                                // response received
+                                if (sorobanResponse.isAccept()) {
+                                    Toast.makeText(getApplicationContext(), "Cahoots request accepted!", Toast.LENGTH_LONG).show();
+                                    Intent intent = SorobanCahootsActivity.createIntentSender(this,
+                                            accountIndex,
+                                            cahootsType,
+                                            sendAmount,
+                                            getIntent().getLongExtra("fees", FeeUtil.getInstance().getSuggestedFeeDefaultPerB()),
+                                            sendAddress, pcode,
+                                            getIntent().getStringExtra("destPcode"));
+                                    startActivity(intent);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Cahoots request refused!", Toast.LENGTH_LONG).show();
+                                }
+                                setSending(false);
                             }, error -> {
                                 setSending(false);
                                 Toast.makeText(getApplicationContext(), "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();

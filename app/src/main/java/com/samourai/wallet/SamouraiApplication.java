@@ -47,7 +47,7 @@ public class SamouraiApplication extends Application {
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG || BuildConfig.FLAVOR.equals("staging")) {
             Picasso.get().setIndicatorsEnabled(true);
             LogUtil.setLoggersDebug();
         }

@@ -10,7 +10,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.text.InputType
 import android.util.Log
 import android.util.TypedValue
 import android.view.Menu
@@ -60,7 +59,6 @@ import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity
 import com.samourai.wallet.service.JobRefreshService
 import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity

@@ -3,33 +3,30 @@ package com.samourai.wallet.send.cahoots;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.samourai.soroban.client.cahoots.OnlineCahootsMessage;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
+import com.samourai.wallet.cahoots.Cahoots;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
-import com.samourai.soroban.cahoots.CahootsContext;
-import com.samourai.soroban.client.SorobanMessage;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.AppUtil;
 
 import org.spongycastle.util.encoders.Hex;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class SorobanCahootsActivity extends SamouraiActivity {
     private static final String TAG = "SorobanCahootsActivity";
-    private static final int TIMEOUT_MS = 60000;
 
     private SorobanCahootsUi cahootsUi;
 
@@ -96,8 +93,7 @@ public class SorobanCahootsActivity extends SamouraiActivity {
                     throw new Exception("Unknown typeUser");
             }
         } catch (Exception e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-            finish();
+            onCahootsError(e);
             return;
         }
     }
@@ -114,43 +110,41 @@ public class SorobanCahootsActivity extends SamouraiActivity {
             paynymDestination = getIntent().getStringExtra("destPcode");
         }
         // send cahoots
-        AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
-        CahootsContext cahootsContext = cahootsUi.setCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
-        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.initiator(cahootsContext, paymentCode, TIMEOUT_MS);
-
-        // listen for cahoots progress
-        subscribeOnMessage(sorobanListener);
+        subscribeCahoots(cahootsUi.startInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination, paymentCode, getOnCahootsProgress()));
     }
 
     private void startReceiver() throws Exception {
-        AndroidSorobanCahootsService sorobanCahootsService = cahootsUi.getSorobanCahootsService();
-        CahootsContext cahootsContext = cahootsUi.setCahootsContextCounterparty(account);
-        Observable<SorobanMessage> sorobanListener = sorobanCahootsService.contributor(cahootsContext, paymentCode, TIMEOUT_MS);
-        subscribeOnMessage(sorobanListener);
+        subscribeCahoots(cahootsUi.startCounterparty(account, paymentCode, getOnCahootsProgress()));
         Toast.makeText(this, "Waiting for online Cahoots", Toast.LENGTH_SHORT).show();
     }
 
-    private void subscribeOnMessage(Observable<SorobanMessage> onMessage) {
-        sorobanDisposable = onMessage.subscribeOn(Schedulers.io())
+    private void subscribeCahoots(Single<Cahoots> onCahoots) {
+        sorobanDisposable = onCahoots.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(sorobanMessage -> {
-                    OnlineCahootsMessage cahootsMessage = (OnlineCahootsMessage)sorobanMessage;
-                    if (cahootsMessage != null) {
-                        if(cahootsMessage.isDone()) {
-                            if(cahootsMessage.getCahoots() instanceof MultiCahoots) {
-                                MultiCahoots multiCahoots = (MultiCahoots) cahootsMessage.getCahoots();
+                .subscribe(cahoots -> {
+                            if(cahoots instanceof MultiCahoots) {
+                                MultiCahoots multiCahoots = (MultiCahoots) cahoots;
                                 System.out.println(Hex.toHexString(multiCahoots.getStowawayTransaction().bitcoinSerialize()));
                                 System.out.println(Hex.toHexString(multiCahoots.getStonewallTransaction().bitcoinSerialize()));
                             }
-                        }
-                        cahootsUi.setCahootsMessage(cahootsMessage);
-                    }
-                },
-                sorobanError -> {
-                    Toast.makeText(getApplicationContext(), "Cahoots error: " + sorobanError.getMessage(), Toast.LENGTH_SHORT).show();
-                    sorobanError.printStackTrace();
-                    finish();
-                });
+                        },
+                        sorobanError -> onCahootsError(sorobanError));
+    }
+
+    private Consumer<OnlineCahootsMessage> getOnCahootsProgress() throws Exception {
+        return cahootsMessage -> {
+            try {
+                cahootsUi.setCahootsMessage(cahootsMessage);
+            } catch (Exception e) {
+                onCahootsError(e);
+            }
+        };
+    }
+
+    private void onCahootsError(Throwable e) {
+        Toast.makeText(getApplicationContext(), "Cahoots error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        e.printStackTrace();
+        finish();
     }
 
     @Override
