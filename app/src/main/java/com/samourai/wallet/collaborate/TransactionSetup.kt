@@ -383,9 +383,14 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
             amountEdit = it
             if (amountEdit.text.isNotBlank()) {
                 try {
-                    var value = amountEdit.text
-                        .replace(" ", "")
-                        .toDouble()
+                    var value = 0.0;
+                    try {
+                        value = amountEdit.text
+                            .replace(" ", "")
+                            .toDouble();
+                    } catch (e: NumberFormatException){
+                        // ignore
+                    }
 
                     if (format == "BTC" && amountEdit.text[0] == '0'
                         && amountEdit.text.replace(".", "").isDigitsOnly()
