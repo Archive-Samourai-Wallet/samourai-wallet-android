@@ -15,6 +15,7 @@ import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.TimeOutUtil
 import io.matthewnelson.topl_service.TorServiceController
+import org.apache.commons.lang3.StringUtils
 
 
 object StealthModeController {
@@ -137,13 +138,15 @@ object StealthModeController {
     fun isPinMatched(context: Context, pin: String): Boolean {
         val prefs = getStealthPreferences(context)
         val pinPrefs = prefs?.getString(PREF_PIN, "")
-        return try {
-            val decPin = AESUtil.decryptSHA256(pinPrefs, CharSequenceX(pin))
-            decPin == pin
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
+        if (!StringUtils.isEmpty(pinPrefs)) {
+            try {
+                val decPin = AESUtil.decryptSHA256(pinPrefs, CharSequenceX(pin))
+                return decPin == pin
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
+        return false
     }
 
     fun setSelectedApp(appKey: String, context: Context) {
