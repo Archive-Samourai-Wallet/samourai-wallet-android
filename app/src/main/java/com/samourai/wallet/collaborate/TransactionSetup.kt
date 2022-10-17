@@ -398,12 +398,15 @@ fun AmountInputField(amount: Long, onChange: (Long) -> Unit) {
                         )
                     }
 
-                    if (format == "BTC" && amountEdit.text.split(".")[1].length > 8) {
-                        value = it.text.dropLast(1).toDouble()
-                        amountEdit = TextFieldValue(
-                            text = it.text.dropLast(amountEdit.text.split(".")[1].length - 8),
-                            selection = TextRange(it.text.length)
-                        )
+                    if (format == "BTC") {
+                        val spl = amountEdit.text.split(".");
+                        if (spl.size > 1 && spl[1].length > 8) {
+                            value = it.text.dropLast(1).toDouble()
+                            amountEdit = TextFieldValue(
+                                text = it.text.dropLast(spl[1].length - 8),
+                                selection = TextRange(it.text.length)
+                            )
+                        }
                     }
 
                     if (format == "sat" && amountEdit.text.replace(" ", "").toDouble() > 2.1E15) {
