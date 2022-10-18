@@ -138,7 +138,7 @@ public class ManualCahootsUi {
         }
     }
 
-    void setInteraction(TxBroadcastInteraction interaction) throws Exception {
+    void setInteraction(TxBroadcastInteraction interaction) {
         // review last step
         cahootReviewFragment.setCahoots(interaction.getSignedCahoots());
         cahootReviewFragment.setOnBroadcast(() -> {
@@ -217,6 +217,10 @@ public class ManualCahootsUi {
 
     public CahootsContext computeCahootsContextInitiator(int account, long feePerB, long sendAmount, String sendAddress, String paynymDestination) throws Exception {
         return CahootsContext.newInitiator(getCahootsWallet(), cahootsType, account, feePerB, sendAmount, sendAddress, paynymDestination);
+    }
+
+    public Activity getActivity() {
+        return activity;
     }
 
     public int getAccount() {
