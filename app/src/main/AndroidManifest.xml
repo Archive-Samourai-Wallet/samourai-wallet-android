@@ -46,11 +46,11 @@
         tools:targetApi="s">
 
         <activity-alias
-            android:name=".NotepadActivity"
+            android:name=".MainActivity2"
             android:enabled="true"
             android:exported="true"
             android:label="@string/app_name"
-            android:targetActivity="com.samourai.wallet.stealth.notepad.NotepadActivity"
+            android:targetActivity="com.samourai.wallet.MainActivity2"
             android:theme="@style/SamouraiAppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -91,13 +91,11 @@
             android:label="@string/stealth_qr_scannerapp_title"
             android:theme="@style/Theme.Samourai.Material" />
 
-        <!--Your comment
         <activity
             android:name=".stealth.notepad.NotepadActivity"
             android:exported="true"
             android:label="@string/stealth_notepad_title"
             android:theme="@style/Theme.Samourai.Material" />
-         -->
 
         <activity-alias
             android:name=".stealth.vpn.VPNActivity"
@@ -127,7 +125,6 @@
             </intent-filter>
         </activity-alias>
 
-        <!--
         <activity-alias
             android:name=".stealth.notepad.NotepadActivity"
             android:enabled="false"
@@ -141,14 +138,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        -->
 
         <activity
             android:name=".stealth.StealthModeSettings"
             android:exported="true"
             android:theme="@style/Theme.Samourai.Material" />
         <activity
-            android:name=".stealth.notepad.NotepadActivity"
+            android:name=".MainActivity2"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:launchMode="singleTask"

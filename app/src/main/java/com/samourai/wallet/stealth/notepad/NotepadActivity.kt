@@ -8,6 +8,7 @@ import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -19,12 +20,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +33,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.toArgb
@@ -76,8 +76,6 @@ class NotepadActivity : ComponentActivity() {
 fun NotesScreen() {
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
-    var titles by remember { mutableStateOf(arrayOf("Test Note")) }
-    var contents by remember { mutableStateOf(arrayOf("This is a test note")) }
     var isEditing by remember { mutableStateOf(false) }
     var hasBeenEdited by remember { mutableStateOf(false) }
     var titleText by remember { mutableStateOf("") }
@@ -87,6 +85,8 @@ fun NotesScreen() {
     val focusRequester = remember { FocusRequester() }
     val context = LocalContext.current
     val prefs by remember { mutableStateOf(context.getSharedPreferences("${context.packageName}_stealth_prefs", Context.MODE_MULTI_PROCESS)) }
+    var titleEdit = ""
+    var contentEdit = ""
 
 
     androidx.compose.material.Scaffold(
@@ -94,13 +94,15 @@ fun NotesScreen() {
             FloatingActionButton(
                 onClick = {
                     if (isEditing) {
-                        val titleID = "title" + (prefs.all.size+1).toString()
-                        val contentID = "content" + (prefs.all.size+1).toString()
+                        val titleID = if (titleEdit == "") "title" + (prefs.all.size-2).toString() else titleEdit
+                        val contentID = if (contentEdit == "") "content" + (prefs.all.size-2).toString() else contentEdit
                         prefs?.edit()?.putString(titleID, titleText)?.apply()
                         prefs?.edit()?.putString(contentID, contentText)?.apply()
                         isEditing = false
                         titleText = ""
                         contentText = ""
+                        titleEdit = ""
+                        contentEdit = ""
                     }
                     else
                         isEditing = true
@@ -113,7 +115,29 @@ fun NotesScreen() {
                 )
             }
         },
-        scaffoldState = scaffoldState
+        scaffoldState = scaffoldState,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(text = "Notepad",
+                        modifier = Modifier.pointerInput(Unit){
+                            detectTapGestures(
+                                onDoubleTap = {
+                                    StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
+                                    pinEntryValue = ""
+                                    pinEntryDialog = true
+                                    scope.launch {
+                                        delay(250)
+                                        focusRequester.requestFocus()
+                                    }
+                                },
+                            )},
+                    style = androidx.compose.material.MaterialTheme.typography.h4, color = Black) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = White
+                )
+            )
+        }
     ) {
         Column(
             modifier = Modifier
@@ -170,55 +194,18 @@ fun NotesScreen() {
                     }
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                androidx.compose.material.Text(
-                    text = "Notepad",
-                    modifier = Modifier.pointerInput(Unit){
-                        detectTapGestures(
-                            onDoubleTap = {
-                                StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-                                pinEntryValue = ""
-                                pinEntryDialog = true
-                                scope.launch {
-                                    delay(250)
-                                    focusRequester.requestFocus()
-                                }
-                            },
-                        )},
-                    style = androidx.compose.material.MaterialTheme.typography.h4
-                )
-                androidx.compose.material.IconButton(
-                    onClick = {
-                              prefs.all.forEach { entry ->
-                                  if (entry.key != "stl_enabled" && entry.key != "stl_app" && entry.key != "stl_pin") {
-                                      prefs.edit().remove(entry.key).apply()
-                                  }
-                              }
-                    },
-                ) {
-                    androidx.compose.material.Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear notes",
-                        tint = androidx.compose.material.MaterialTheme.colors.onSurface
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
             LazyColumn(modifier = Modifier.fillMaxSize()) {
+                var counter = prefs.all.size
                 prefs.all.forEach { entry ->
-                    if(entry.key.contains("title") && !titles.contains(entry.key))
-                        titles = titles.plus(entry.value.toString())
-                    if (entry.key.contains("content") && !contents.contains(entry.key))
-                        contents = contents.plus(entry.value.toString())
+                    if(entry.key.contains("title")) {
+                        val number = entry.key.toString().removePrefix("title")
+                        if (counter < number.toInt())
+                            counter = number.toInt()
+                    }
                 }
-                items(prefs.all.size) { index ->
-                    val titleID = "title" + index.toString()
-                    val contentID = "content" + index.toString()
+                items(counter) { index ->
+                    val titleID = "title" + (index+1).toString()
+                    val contentID = "content" + (index+1).toString()
                     if (prefs.getString(titleID, null) != null) {
                         NoteItem(
                             title = prefs.getString(titleID, null)!!,
@@ -229,10 +216,14 @@ fun NotesScreen() {
                                     isEditing = true
                                     titleText = prefs.getString(titleID, null)!!
                                     contentText = prefs.getString(contentID, null)!!
+                                    titleEdit = titleID
+                                    contentEdit = contentID
                                 },
                             onDeleteClick = {
                                 prefs.edit().remove(titleID).apply()
                                 prefs.edit().remove(contentID).apply()
+                                isEditing = true
+                                isEditing = false
                             }
                         )
                         Spacer(modifier = Modifier.height(16.dp))
