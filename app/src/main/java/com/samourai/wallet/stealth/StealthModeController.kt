@@ -33,7 +33,7 @@ object StealthModeController {
         CALCULATOR(CalculatorActivity::class.qualifiedName.toString(), R.drawable.ic_stealth_calculator, R.string.calculator),
         VPN(VPNActivity::class.qualifiedName.toString(), R.drawable.stealth_vpn_icon, R.string.stealth_vpn_name),
         QRAPP(QRStealthAppActivity::class.qualifiedName.toString(), R.drawable.stealth_qr_app_icon, R.string.stealth_qr_scannerapp_title),
-        NOTEPAD(NotepadActivity::class.qualifiedName.toString(), R.drawable.stealth_qr_app_icon, R.string.stealth_notepad_title);
+        NOTEPAD(NotepadActivity::class.qualifiedName.toString(), R.drawable.stealth_notepad_icon, R.string.stealth_notepad_title);
 
         private var appKey: String = packageId
         private var appIcon: Int = icon

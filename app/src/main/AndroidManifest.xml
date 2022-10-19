@@ -129,9 +129,9 @@
             android:name=".stealth.notepad.NotepadActivity"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/ic_qrscanner_launcher"
+            android:icon="@mipmap/ic_notepad_launcher"
             android:label="@string/stealth_notepad_title"
-            android:roundIcon="@mipmap/ic_qrscanner_launcher_round"
+            android:roundIcon="@mipmap/ic_notepad_launcher_round"
             android:targetActivity=".stealth.notepad.NotepadActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
