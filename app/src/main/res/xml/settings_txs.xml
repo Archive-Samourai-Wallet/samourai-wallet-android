@@ -43,14 +43,7 @@
         app:allowDividerAbove="true"
         />
 
-    <Preference
-        android:title="@string/options_broadcast_hex"
-        android:summary="@string/options_broadcast_hex2"
-        android:key="broadcastHex"
-        app:iconSpaceReserved="false"
-        app:allowDividerBelow="true"
-        app:allowDividerAbove="true"
-        />
+
 
     <CheckBoxPreference
         android:title="@string/options_strictoutputs"
