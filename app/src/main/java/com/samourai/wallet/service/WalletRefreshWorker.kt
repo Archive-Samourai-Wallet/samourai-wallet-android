@@ -144,6 +144,7 @@ class WalletRefreshWorker(private val context: Context, private val parameters: 
                     RicochetMeta.getInstance(context).index = prevIdx
                 }
             } catch (je: JSONException) {
+            } catch (e: Exception) {
             }
         }
         withContext(Dispatchers.IO){
