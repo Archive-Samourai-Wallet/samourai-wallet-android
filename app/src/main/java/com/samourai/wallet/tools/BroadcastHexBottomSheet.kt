@@ -290,7 +290,7 @@ fun SweepHexInputForm() {
                 )
             }
             Column(
-                verticalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -346,9 +346,9 @@ fun SweepHexInputForm() {
                     enabled = validTransaction != null,
                     contentPadding = PaddingValues(vertical = 12.dp),
                     colors = ButtonDefaults.textButtonColors(
-                        backgroundColor = samouraiSuccess,
+                        backgroundColor = samouraiAccent,
                         contentColor = Color.White
-                    ),
+                    )
                 ) {
                     Text(stringResource(R.string.broadcast))
                 }

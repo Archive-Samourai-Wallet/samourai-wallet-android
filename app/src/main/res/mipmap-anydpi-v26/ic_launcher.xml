@@ -2,4 +2,7 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome  >
+        <inset android:drawable="@drawable/ic_samourai_mono_launcher_icon"  android:inset="22.92%" />
+    </monochrome>
 </adaptive-icon>
