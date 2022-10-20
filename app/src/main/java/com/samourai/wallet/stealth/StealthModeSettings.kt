@@ -160,13 +160,11 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                     modifier = Modifier
                         .clickable {
                             if (!isStealthEnabled) {
-                                showAlert = true
                                 value = ""
                                 scope.launch {
-                                    if (showAlert) {
-                                        delay(220)
-                                        focusRequester.requestFocus()
-                                    }
+                                    showAlert = true
+                                    delay(220)
+                                    focusRequester.requestFocus()
                                 }
                             } else {
                                 isStealthEnabled = false
