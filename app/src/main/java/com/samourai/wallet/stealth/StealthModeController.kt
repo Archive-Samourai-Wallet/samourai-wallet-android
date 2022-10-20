@@ -124,7 +124,7 @@ object StealthModeController {
 
     fun isStealthEnabled(context: Context): Boolean {
         val prefs = getStealthPreferences(context)
-        val enabled = prefs?.getBoolean(PREF_ENABLED, true)
+        val enabled = prefs?.getBoolean(PREF_ENABLED, false)
         return enabled == true
     }
 
