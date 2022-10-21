@@ -109,7 +109,7 @@ public class EntropyBar extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 
-        if (w != oldw || h != oldh) {
+        if ((w != oldw || h != oldh) && w > 0 && h > 0) {
             mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             mBitmap.eraseColor(Color.TRANSPARENT);
             mCanvas = new Canvas(mBitmap);
