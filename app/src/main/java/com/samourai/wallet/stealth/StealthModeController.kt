@@ -17,6 +17,7 @@ import com.samourai.wallet.stealth.vpn.VPNActivity
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.TimeOutUtil
+import org.apache.commons.lang3.StringUtils
 
 
 object StealthModeController {
@@ -145,6 +146,9 @@ object StealthModeController {
     fun isPinMatched(context: Context, pin: String): Boolean {
         val prefs = getStealthPreferences(context)
         val pinPrefs = prefs?.getString(PREF_PIN, "")
+        if (StringUtils.isEmpty(pinPrefs)) {
+            return false;
+        }
         return try {
             val decPin = AESUtil.decryptSHA256(pinPrefs, CharSequenceX(pin))
             decPin == pin
