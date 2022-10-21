@@ -59,12 +59,8 @@ public class AndroidDataSource implements DataSource {
     }
 
     @Override
-    public String pushTx(String txHex) throws Exception {
-        Pair<Boolean,String> result = pushTx.pushTx(txHex);
-        if (!result.getLeft()) {
-            throw new NotifiableException("pushTx failed");
-        }
-        return result.getRight(); // txid
+    public PushTx getPushTx() {
+        return pushTx;
     }
 
     @Override
