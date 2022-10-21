@@ -3,7 +3,7 @@ package com.samourai.whirlpool.client.wallet;
 import com.samourai.http.client.AndroidHttpClientService;
 import com.samourai.http.client.HttpUsage;
 import com.samourai.http.client.IHttpClient;
-import com.samourai.http.client.IHttpClientService;
+import com.samourai.http.client.IWhirlpoolHttpClientService;
 import com.samourai.wallet.api.backend.BackendApi;
 import com.samourai.wallet.api.backend.BackendServer;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
@@ -56,7 +56,7 @@ public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
         String scode = null;
 
         // backendApi with mocked pushTx
-        IHttpClientService httpClientService = AndroidHttpClientService.getInstance(getContext());
+        IWhirlpoolHttpClientService httpClientService = AndroidHttpClientService.getInstance(getContext());
         IHttpClient httpClient = httpClientService.getHttpClient(HttpUsage.BACKEND);
         BackendApi backendApi = new BackendApi(httpClient, BackendServer.TESTNET.getBackendUrl(onion), null) {
             @Override
