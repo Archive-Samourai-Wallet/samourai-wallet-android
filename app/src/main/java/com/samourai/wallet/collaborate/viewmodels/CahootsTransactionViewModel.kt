@@ -1,7 +1,6 @@
 package com.samourai.wallet.collaborate.viewmodels
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,7 +16,7 @@ import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.send.soroban.meeting.SorobanMeetingSendActivity
+import com.samourai.wallet.send.cahoots.SorobanCahootsActivity
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
@@ -308,8 +307,8 @@ class CahootsTransactionViewModel : ViewModel() {
             if (FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value)) {
                 destinationPcode = destinationAddress.value
             }
-            // choose Cahoots counterparty
-            val intent = SorobanMeetingSendActivity.createIntent(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, collaboratorPcode.value,destinationPcode)
+            // Cahoots online
+            val intent = SorobanCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, collaboratorPcode.value,destinationPcode)
             context.startActivity(intent)
             return
         }

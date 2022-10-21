@@ -7,16 +7,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.samourai.soroban.client.meeting.SorobanMeetingService
 import com.samourai.soroban.client.meeting.SorobanRequestMessage
+import com.samourai.soroban.client.wallet.counterparty.SorobanWalletCounterparty
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
-import com.samourai.wallet.bip47.rpc.PaymentCode
-import com.samourai.wallet.cahoots.AndroidSorobanCahootsService
+import com.samourai.wallet.cahoots.AndroidSorobanWalletService
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.paynym.models.NymResponse
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -40,7 +38,7 @@ class CollaborateViewModel : ViewModel() {
     private var cahootsListenState = MutableLiveData(CahootListenState.STOPPED)
     private var sorobanTimeout = MutableLiveData<Long?>()
     private var meetingAccount = MutableLiveData(-1)
-    private var androidSorobanCahootsService: SorobanMeetingService? = null;
+    private var sorobanWalletCounterparty: SorobanWalletCounterparty? = null;
     private var sorobanRequest = MutableLiveData<SorobanRequestMessage?>()
 
     private var sorobanListenJob: Job? = null;
@@ -69,7 +67,8 @@ class CollaborateViewModel : ViewModel() {
     fun initWithContext(context: Context) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                androidSorobanCahootsService = AndroidSorobanCahootsService.getInstance(context).sorobanMeetingService;
+                var androidSorobanWalletService = AndroidSorobanWalletService.getInstance(context);
+                sorobanWalletCounterparty = androidSorobanWalletService.sorobanWalletCounterparty;
                 withContext(Dispatchers.Main) {
                     this@CollaborateViewModel.loading.postValue(true)
                 }
@@ -153,7 +152,7 @@ class CollaborateViewModel : ViewModel() {
         runTimer()
         sorobanListenJob = viewModelScope.launch {
             withContext(Dispatchers.Default) {
-                androidSorobanCahootsService!!.receiveMeetingRequest(TIMEOUT_MS)
+                sorobanWalletCounterparty!!.receiveMeetingRequest()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ cahootsRequest: SorobanRequestMessage ->
@@ -187,8 +186,7 @@ class CollaborateViewModel : ViewModel() {
 
     fun cancelSorobanRequest() {
         val request = sorobanRequest.value ?: return
-        val paymentCode = PaymentCode(request.sender)
-        androidSorobanCahootsService?.sendMeetingResponse(paymentCode, request, false)
+        sorobanWalletCounterparty?.sendMeetingResponse(request, false)
             ?.subscribe ({
                 sorobanRequest.postValue(null)
                 cahootsListenState.postValue(CahootListenState.STOPPED)
@@ -202,8 +200,7 @@ class CollaborateViewModel : ViewModel() {
 
     fun acceptRequest(context: Context) {
         val request = sorobanRequest.value ?: return
-        val paymentCode = PaymentCode(request.sender)
-        androidSorobanCahootsService?.sendMeetingResponse(paymentCode, request, true)
+        sorobanWalletCounterparty?.sendMeetingResponse(request, true)
             ?.subscribe({
                 sorobanRequest.postValue(null)
                 timer?.cancel()

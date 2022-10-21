@@ -299,10 +299,6 @@
             android:name=".send.cahoots.SorobanCahootsActivity"
             android:label="Online Cahoots"
             android:theme="@style/Theme.Samourai.Material" />
-        <activity
-            android:name=".send.soroban.meeting.SorobanMeetingSendActivity"
-            android:label="Send online Cahoots"
-            android:theme="@style/Theme.Samourai.Material" />
 
         <provider
             android:name=".util.GenericFileProvider"

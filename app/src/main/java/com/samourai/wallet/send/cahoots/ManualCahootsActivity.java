@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,10 +21,11 @@ import com.samourai.soroban.cahoots.TxBroadcastInteraction;
 import com.samourai.soroban.client.SorobanReply;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
-import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
+import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
+import com.samourai.wallet.cahoots.CahootsWallet;
 import com.samourai.wallet.cahoots.psbt.PSBT;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.AppUtil;
@@ -38,7 +38,7 @@ public class ManualCahootsActivity extends SamouraiActivity {
     private CahootsContext cahootsContext;
 
     public static Intent createIntentResume(Context ctx, int account, String payload) throws Exception {
-        ManualCahootsService manualCahootsService = AndroidSorobanCahootsService.getInstance(ctx).getManualCahootsService();
+        ManualCahootsService manualCahootsService = AndroidSorobanWalletService.getInstance(ctx).getManualCahootsService();
         ManualCahootsMessage msg = manualCahootsService.parse(payload);
         CahootsTypeUser typeUser = msg.getTypeUser().getPartner();
         Intent intent = ManualCahootsUi.createIntent(ctx, ManualCahootsActivity.class, account, msg.getType(), typeUser);
@@ -174,7 +174,8 @@ public class ManualCahootsActivity extends SamouraiActivity {
 
             if (cahootsContext == null) {
                 // start as counterparty
-                cahootsContext = CahootsContext.newCounterparty(cahootsMessage.getType(), account);
+                CahootsWallet cahootsWallet = cahootsUi.getCahootsWallet();
+                cahootsContext = CahootsContext.newCounterparty(cahootsWallet, cahootsMessage.getType(), account);
             }
 
             SorobanReply reply = manualCahootsService.reply(cahootsContext, cahootsMessage);

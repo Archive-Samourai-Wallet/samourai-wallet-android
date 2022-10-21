@@ -9,7 +9,6 @@ import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.bipFormat.BipFormatSupplier;
 import com.samourai.wallet.bipWallet.BipWallet;
 import com.samourai.wallet.bipWallet.WalletSupplier;
-import com.samourai.wallet.bipWallet.WalletSupplierImpl;
 import com.samourai.wallet.hd.BIP_WALLET;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.send.UTXOFactory;
@@ -20,8 +19,6 @@ import com.samourai.whirlpool.client.wallet.data.utxo.BasicUtxoSupplier;
 import com.samourai.whirlpool.client.wallet.data.utxo.UtxoData;
 import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
 
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +91,7 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     private Collection<UnspentOutput> toUnspentOutputs(Collection<UTXO> utxos, BIP_WALLET bip_wallet) {
         List<UnspentOutput> unspentOutputs = new LinkedList<>();
 
-        BipWallet bipWallet = ((WalletSupplierImpl)getWalletSupplier()).getWallet(bip_wallet);
+        BipWallet bipWallet = getWalletSupplier().getWallet(bip_wallet);
         if (bipWallet == null) {
             log.error("Wallet not found for "+bip_wallet.name());
             return unspentOutputs;

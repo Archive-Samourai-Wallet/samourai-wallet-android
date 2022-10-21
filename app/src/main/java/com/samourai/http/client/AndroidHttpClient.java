@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -82,8 +82,8 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     @Override
-    protected <T> Observable<Optional<T>> httpObservable(final Callable<T> supplier) {
-        Observable<Optional<T>> observable = super.httpObservable(supplier);
+    protected <T> Single<Optional<T>> httpObservable(final Callable<T> supplier) {
+        Single<Optional<T>> observable = super.httpObservable(supplier);
         return observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }

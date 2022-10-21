@@ -93,7 +93,7 @@
             app:layout_constraintTop_toBottomOf="@+id/stonewall_fee_splitup_container" />
 
         <TextView
-            android:id="@+id/textViewConnected"
+            android:id="@+id/cahoots_info_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

@@ -1351,8 +1351,7 @@ public class APIFactory {
                 long amount = 0L;
                 for(String key : utxos.keySet())   {
                     for(MyTransactionOutPoint out : utxos.get(key).getOutpoints())    {
-                        debug("APIFactory", "utxo:" + out.getAddress() + "," + out.getValue());
-                        debug("APIFactory", "utxo:" + utxos.get(key).getPath());
+                        debug("APIFactory", "utxo:" + out.getAddress() + "," + out.getValue() + "," + utxos.get(key).getPath());
                         amount += out.getValue().longValue();
                     }
                 }

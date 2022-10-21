@@ -6,22 +6,15 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.core.app.TaskStackBuilder;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.cahoots.ManualCahootsMessage;
 import com.samourai.soroban.cahoots.ManualCahootsService;
-import com.samourai.soroban.cahoots.Stonewallx2Context;
-import com.samourai.soroban.cahoots.StowawayContext;
 import com.samourai.soroban.cahoots.TxBroadcastInteraction;
-import com.samourai.wallet.cahoots.AndroidSorobanCahootsService;
+import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
-import com.samourai.wallet.cahoots.multi.MultiCahootsContext;
+import com.samourai.wallet.cahoots.CahootsWallet;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.widgets.CahootsCircleProgress;
 import com.samourai.wallet.widgets.ViewPager;
@@ -29,6 +22,11 @@ import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import java.util.ArrayList;
 import java.util.function.Function;
+
+import androidx.core.app.TaskStackBuilder;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 
 public class ManualCahootsUi {
     private Activity activity;
@@ -45,7 +43,7 @@ public class ManualCahootsUi {
 
     private ManualCahootsMessage cahootsMessage;
 
-    protected AndroidSorobanCahootsService sorobanCahootsService;
+    protected AndroidSorobanWalletService sorobanWalletService;
 
     static Intent createIntent(Context ctx, Class activityClass, int account, CahootsType type, CahootsTypeUser typeUser) {
         Intent intent = new Intent(ctx, activityClass);
@@ -89,7 +87,7 @@ public class ManualCahootsUi {
         createSteps(fragmentManager, fragmentProvider);
 
         // setup cahoots
-        sorobanCahootsService = AndroidSorobanCahootsService.getInstance(activity.getApplicationContext());
+        sorobanWalletService = AndroidSorobanWalletService.getInstance(activity.getApplicationContext());
     }
 
     private void createSteps(FragmentManager fragmentManager, Function<Integer, Fragment> fragmentProvider) {
@@ -137,12 +135,10 @@ public class ManualCahootsUi {
 
         if (cahootsMessage.isDone()) {
             notifyWalletAndFinish();
-        } else {
-//            activity.runOnUiThread(() -> Toast.makeText(activity, "Cahoots progress: " + (cahootsMessage.getStep() + 1) + "/" + cahootsMessage.getNbSteps(), Toast.LENGTH_SHORT).show());
         }
     }
 
-    void setInteraction(TxBroadcastInteraction interaction) throws Exception {
+    void setInteraction(TxBroadcastInteraction interaction) {
         // review last step
         cahootReviewFragment.setCahoots(interaction.getSignedCahoots());
         cahootReviewFragment.setOnBroadcast(() -> {
@@ -220,16 +216,11 @@ public class ManualCahootsUi {
     }
 
     public CahootsContext computeCahootsContextInitiator(int account, long feePerB, long sendAmount, String sendAddress, String paynymDestination) throws Exception {
-        switch (cahootsType) {
-            case STONEWALLX2:
-                return Stonewallx2Context.newInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
-            case STOWAWAY:
-                return StowawayContext.newInitiator(account, feePerB, sendAmount);
-            case MULTI:
-                return MultiCahootsContext.newInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
-            default:
-                throw new Exception("Unknown #Cahoots");
-        }
+        return CahootsContext.newInitiator(getCahootsWallet(), cahootsType, account, feePerB, sendAmount, sendAddress, paynymDestination);
+    }
+
+    public Activity getActivity() {
+        return activity;
     }
 
     public int getAccount() {
@@ -249,6 +240,9 @@ public class ManualCahootsUi {
     }
 
     public ManualCahootsService getManualCahootsService() {
-        return sorobanCahootsService.getManualCahootsService();
+        return sorobanWalletService.getManualCahootsService();
+    }
+    public CahootsWallet getCahootsWallet() {
+        return sorobanWalletService.getCahootsWallet();
     }
 }

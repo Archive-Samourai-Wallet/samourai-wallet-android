@@ -5,7 +5,7 @@ import android.content.Context;
 /**
  * HTTP client manager for Whirlpool.
  */
-public class AndroidHttpClientService implements IHttpClientService {
+public class AndroidHttpClientService implements IWhirlpoolHttpClientService {
     private static AndroidHttpClientService instance;
 
     public static AndroidHttpClientService getInstance(Context ctx) {
