@@ -131,8 +131,6 @@ fun VpnMainScreen(activity: ComponentActivity?) {
     }
     val scope = rememberCoroutineScope()
     val viewModel = viewModel<VPNActivityViewModel>();
-    var pinEntryValue by remember { mutableStateOf("") }
-    var pinEntryDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val bottomSheet = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     var selectedLoc by remember {
@@ -235,65 +233,6 @@ fun VpnMainScreen(activity: ComponentActivity?) {
             }
         ) {
             VpnConnectScreen()
-            if (pinEntryDialog) {
-                AlertDialog(
-                    shape = RoundedCornerShape(8.dp),
-                    tonalElevation = 12.dp,
-                    onDismissRequest = {
-                        pinEntryDialog = false
-                    },
-                    title = {
-                        Text(text = "Enter Stealth Code", fontSize = 14.sp)
-                    },
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-                    text = {
-                        TextField(
-                            value = pinEntryValue,
-                            colors = TextFieldDefaults.textFieldColors(
-                                backgroundColor = Color.Transparent,
-                                textColor = Color.White, cursorColor = Color.White,
-                                focusedIndicatorColor = Color.White
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                autoCorrect = false,
-                                keyboardType = KeyboardType.Decimal,
-                            ),
-                            modifier = Modifier.focusRequester(focusRequester),
-                            onValueChange = {
-                                if (!it.contains("*") && !it.contains("-") && !it.contains(",") && !it.contains(".") && !it.contains(" ")) {
-                                    pinEntryValue = it
-                                }
-                            },
-                        )
-                    },
-                    dismissButton = {
-                        TextButton(onClick = {
-                            pinEntryDialog = false
-                        }) {
-                            Text(text = "Cancel")
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            pinEntryDialog = false
-                            if (pinEntryValue.isNotEmpty() && StealthModeController.isPinMatched(context,pinEntryValue)){
-                                MaterialAlertDialogBuilder(context)
-                                    .setTitle(R.string.app_name)
-                                    .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-                                    .setPositiveButton(R.string.ok) { dialog, _ ->
-                                        dialog.dismiss()
-                                        StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-                                    }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                                        dialog.dismiss()
-                                    }.show()
-                            }
-                        }) {
-                            Text(text = "Ok")
-                        }
-                    }
-                )
-            }
-
         }
         ModalBottomSheetLayout(
             sheetBackgroundColor = Color.Transparent,
@@ -329,11 +268,7 @@ fun VpnMainScreen(activity: ComponentActivity?) {
                                     bottomSheet.hide()
                                     viewModel.setCountry(selectedCountry, selectedCountry.third[index])
                                     if (selectedLoc.lowercase().contains(selectedCountry.third[index].lowercase())) {
-                                        pinEntryDialog = true
-                                        scope.launch {
-                                            delay(300)
-                                            focusRequester.requestFocus()
-                                        }
+                                        StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
                                     }
                                 }
                             }
