@@ -4,6 +4,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -15,6 +17,7 @@ import com.samourai.wallet.stealth.notepad.NotepadActivity
 import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppActivity
 import com.samourai.wallet.stealth.vpn.VPNActivity
 import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.TimeOutUtil
 
@@ -73,6 +76,11 @@ object StealthModeController {
                     PackageManager.DONT_KILL_APP
                 )
             }
+        }
+        if (stealthApp == StealthApp.SAMOURAI) {
+            Handler(Looper.getMainLooper()).postDelayed( {
+                AppUtil.getInstance(context).restartApp()
+            },1800)
         }
 
     }
