@@ -12,8 +12,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,12 +21,10 @@ import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -41,7 +37,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -53,8 +48,6 @@ import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.stealth.qrscannerapp.Purple40
 import com.samourai.wallet.stealth.qrscannerapp.PurpleGrey40
 import com.samourai.wallet.tools.WrapToolsPageAnimation
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class NotepadActivity : ComponentActivity() {
     override fun onBackPressed() {
@@ -82,8 +75,6 @@ fun NotesScreen() {
     var hasBeenEdited by remember { mutableStateOf(false) }
     var titleText by remember { mutableStateOf("") }
     var contentText by remember { mutableStateOf("") }
-    var pinEntryDialog by remember { mutableStateOf(false) }
-    var pinEntryValue by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val context = LocalContext.current
     val prefs by remember { mutableStateOf(context.getSharedPreferences("${context.packageName}_stealth_prefs", Context.MODE_MULTI_PROCESS)) }
@@ -125,12 +116,7 @@ fun NotesScreen() {
                         modifier = Modifier.pointerInput(Unit){
                             detectTapGestures(
                                 onDoubleTap = {
-                                    pinEntryValue = ""
-                                    pinEntryDialog = true
-                                    scope.launch {
-                                        delay(250)
-                                        focusRequester.requestFocus()
-                                    }
+                                    disableStealth(context)
                                 },
                             )},
                     style = androidx.compose.material.MaterialTheme.typography.h4, color = Black) },
@@ -233,66 +219,20 @@ fun NotesScreen() {
             }
         }
     }
-    if (pinEntryDialog) {
-        AlertDialog(
-            shape = RoundedCornerShape(8.dp),
-            tonalElevation = 12.dp,
-            onDismissRequest = {
-                pinEntryDialog = false
-            },
-            title = {
-                Text(text = "Enter Stealth Code", fontSize = 14.sp)
-            },
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-            text = {
-                TextField(
-                    value = pinEntryValue,
-                    colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = Color.Transparent,
-                        textColor = Color.White, cursorColor = Color.White,
-                        focusedIndicatorColor = Color.White
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        autoCorrect = false,
-                        keyboardType = KeyboardType.Decimal,
-                    ),
-                    modifier = Modifier.focusRequester(focusRequester),
-                    onValueChange = {
-                        if (!it.contains("*") && !it.contains("-") && !it.contains(",") && !it.contains(".") && !it.contains(" ")) {
-                            pinEntryValue = it
-                        }
-                    },
-                )
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    pinEntryDialog = false
-                }) {
-                    Text(text = "Cancel")
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    pinEntryDialog = false
-                    if (pinEntryValue.isNotEmpty() && StealthModeController.isPinMatched(context, pinEntryValue)) {
-                        MaterialAlertDialogBuilder(context)
-                            .setTitle(R.string.app_name)
-                            .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-                            .setPositiveButton(R.string.ok) { dialog, _ ->
-                                dialog.dismiss()
-                                StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-                            }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                                dialog.dismiss()
-                            }.show()
-                    }
-                }) {
-                    Text(text = "Ok")
-                }
-            }
-        )
-    }
 }
 
+
+fun disableStealth(context: Context){
+    MaterialAlertDialogBuilder(context)
+        .setTitle(R.string.app_name)
+        .setMessage(R.string.do_you_want_to_disable_stealth_mode)
+        .setPositiveButton(R.string.ok) { dialog, _ ->
+            dialog.dismiss()
+            StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
+        }.setNegativeButton(R.string.cancel) { dialog, _ ->
+            dialog.dismiss()
+        }.show()
+}
 @Composable
 fun NoteItem(
     title: String,
