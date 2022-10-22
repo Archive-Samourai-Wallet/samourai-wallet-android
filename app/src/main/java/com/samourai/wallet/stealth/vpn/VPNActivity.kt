@@ -1,6 +1,7 @@
 package com.samourai.wallet.stealth.vpn
 
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -24,21 +24,18 @@ import androidx.compose.material3.*
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -268,7 +265,7 @@ fun VpnMainScreen(activity: ComponentActivity?) {
                                     bottomSheet.hide()
                                     viewModel.setCountry(selectedCountry, selectedCountry.third[index])
                                     if (selectedLoc.lowercase().contains(selectedCountry.third[index].lowercase())) {
-                                        StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
+                                        disableStealth(context)
                                     }
                                 }
                             }
@@ -399,6 +396,19 @@ fun VpnConnectScreen() {
 
         }
     }
+}
+
+
+fun disableStealth(context: Context){
+    MaterialAlertDialogBuilder(context)
+        .setTitle(R.string.app_name)
+        .setMessage(R.string.do_you_want_to_disable_stealth_mode)
+        .setPositiveButton(R.string.ok) { dialog, _ ->
+            dialog.dismiss()
+            StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
+        }.setNegativeButton(R.string.cancel) { dialog, _ ->
+            dialog.dismiss()
+        }.show()
 }
 
 

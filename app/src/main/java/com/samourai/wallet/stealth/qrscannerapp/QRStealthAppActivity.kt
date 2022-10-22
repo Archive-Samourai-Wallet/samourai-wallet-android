@@ -4,10 +4,10 @@ import android.Manifest
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -40,17 +39,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
@@ -65,7 +61,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.R
 import com.samourai.wallet.stealth.StealthModeController
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class QRStealthAppViewModel : ViewModel() {
@@ -126,10 +121,7 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
     val scope = rememberCoroutineScope()
     val bottomSheet = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     var alertShow by remember { mutableStateOf(false) }
-    var pinEntryDialog by remember { mutableStateOf(false) }
-    var pinEntryValue by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val focusRequester = remember { FocusRequester() }
 
     Scaffold(
         floatingActionButton = {
@@ -171,15 +163,9 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
                     Icon(Icons.Filled.Menu, "")
                 }
                 Text(text = "QR Scanner", modifier = Modifier.pointerInput(Unit) {
-
                     detectTapGestures(
                         onDoubleTap = {
-                            pinEntryValue = ""
-                            pinEntryDialog = true
-                            scope.launch {
-                                delay(250)
-                                focusRequester.requestFocus()
-                            }
+                            disableStealth(context)
                         },
                     )
                 }, style = MaterialTheme.typography.titleMedium)
@@ -220,12 +206,7 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
                         , modifier = Modifier.pointerInput(Unit){
                             detectTapGestures(
                                 onDoubleTap = {
-                                    pinEntryValue = ""
-                                    pinEntryDialog = true
-                                    scope.launch {
-                                        delay(250)
-                                        focusRequester.requestFocus()
-                                    }
+                                    disableStealth(context)
                                 },
                             )
                         }
@@ -290,95 +271,32 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
                         )
                     }
                 },
-                dismissButton = {
+                confirmButton = {
                     TextButton(onClick = {
                         alertShow = false
                     }) {
-                        Text(text = "Cancel")
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        pinEntryDialog = false
-                        if (pinEntryValue.isNotEmpty() && StealthModeController.isPinMatched(context, pinEntryValue)) {
-                            MaterialAlertDialogBuilder(context)
-                                .setTitle(R.string.app_name)
-                                .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-                                .setPositiveButton(R.string.ok) { dialog, _ ->
-                                    dialog.dismiss()
-                                    StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-                                }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                                    dialog.dismiss()
-                                }.show()
-                        }
-                    }) {
                         Text(text = "Ok")
                     }
                 }
             )
         }
-        if (pinEntryDialog) {
-            AlertDialog(
-                shape = RoundedCornerShape(8.dp),
-                tonalElevation = 12.dp,
-                onDismissRequest = {
-                    pinEntryDialog = false
-                },
-                title = {
-                    Text(text = "Enter Stealth Code", fontSize = 14.sp)
-                },
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-                text = {
-                    TextField(
-                        value = pinEntryValue,
-                        colors = TextFieldDefaults.textFieldColors(
-                            backgroundColor = Color.Transparent,
-                            textColor = Color.White, cursorColor = Color.White,
-                            focusedIndicatorColor = Color.White
-                        ),
-                        keyboardOptions = KeyboardOptions(
-                            autoCorrect = false,
-                            keyboardType = KeyboardType.Decimal,
-                        ),
-                        modifier = Modifier.focusRequester(focusRequester),
-                        onValueChange = {
-                            if (!it.contains("*") && !it.contains("-") && !it.contains(",") && !it.contains(".") && !it.contains(" ")) {
-                                pinEntryValue = it
-                            }
-                        },
-                    )
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        pinEntryDialog = false
-                    }) {
-                        Text(text = "Cancel")
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        pinEntryDialog = false
-                        if (pinEntryValue.isNotEmpty() && StealthModeController.isPinMatched(context, pinEntryValue)) {
-                            MaterialAlertDialogBuilder(context)
-                                .setTitle(R.string.app_name)
-                                .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-                                .setPositiveButton(R.string.ok) { dialog, _ ->
-                                    dialog.dismiss()
-                                    StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-                                }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                                    dialog.dismiss()
-                                }.show()
-                        }
-                    }) {
-                        Text(text = "Ok")
-                    }
-                }
-            )
-        }
+
     }
 
 }
 
+
+fun disableStealth(context:Context){
+        MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.app_name)
+            .setMessage(R.string.do_you_want_to_disable_stealth_mode)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
+                dialog.dismiss()
+                StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
+            }.setNegativeButton(R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
