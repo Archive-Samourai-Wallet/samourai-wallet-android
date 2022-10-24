@@ -1,7 +1,6 @@
 package com.samourai.wallet.stealth
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,7 +29,7 @@ fun Modifier.stealthTapListener(
         }
         if (numberOfTaps == taps) {
             onTapCallBack.invoke()
-            numberOfTaps = 0;
+            numberOfTaps = 0
         }
     }
 }
