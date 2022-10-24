@@ -17,7 +17,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,10 +37,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -61,6 +58,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.R
 import com.samourai.wallet.stealth.StealthModeController
+import com.samourai.wallet.stealth.stealthTapListener
 import kotlinx.coroutines.launch
 
 class QRStealthAppViewModel : ViewModel() {
@@ -162,13 +160,10 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
                 ) {
                     Icon(Icons.Filled.Menu, "")
                 }
-                Text(text = "QR Scanner", modifier = Modifier.pointerInput(Unit) {
-                    detectTapGestures(
-                        onDoubleTap = {
-                            disableStealth(context)
-                        },
-                    )
-                }, style = MaterialTheme.typography.titleMedium)
+                Text(text = "QR Scanner", modifier = Modifier.stealthTapListener(
+                   onTapCallBack = {
+                       disableStealth(context)
+                   }), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
             }
         }
@@ -203,13 +198,11 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
                 title = {
                     Text(
                         text = "QR Scanner", style = MaterialTheme.typography.titleMedium
-                        , modifier = Modifier.pointerInput(Unit){
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    disableStealth(context)
-                                },
-                            )
-                        }
+                        , modifier = Modifier.stealthTapListener(
+                            onTapCallBack = {
+                                disableStealth(context)
+                            }
+                        )
                     )
                 },
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
