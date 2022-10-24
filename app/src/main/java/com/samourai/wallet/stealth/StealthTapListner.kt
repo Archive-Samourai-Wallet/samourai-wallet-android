@@ -13,13 +13,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 
 fun Modifier.stealthTapListener(
     onTapCallBack: () -> Unit = {},
-    click: ( () -> Unit)? = null,
+    click: (() -> Unit)? = null,
     taps: Int = 5,
 ) = composed {
     var lastTap by remember { mutableStateOf(System.currentTimeMillis()) }
     var numberOfTaps by remember { mutableStateOf(0) }
 
-    fun click(){
+    fun click() {
         click?.invoke()
         if (System.currentTimeMillis().minus(lastTap) < 2500) {
             numberOfTaps += 1
@@ -36,15 +36,16 @@ fun Modifier.stealthTapListener(
         }
     }
 
-    if(click == null){
-        this.pointerInput(Unit){
+    //If the element require click effects clickable is the suitable event listener
+    if (click != null) {
+        this.clickable {
+            click()
+        }
+    } else {
+        this.pointerInput(Unit) {
             detectTapGestures {
                 click()
             }
-        }
-    }else{
-        this.clickable {
-            click()
         }
     }
 }
