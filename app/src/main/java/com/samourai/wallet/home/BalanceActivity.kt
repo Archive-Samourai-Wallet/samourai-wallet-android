@@ -60,10 +60,10 @@ import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity
+import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.tools.ToolsBottomSheet
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
 import com.samourai.wallet.tor.TorManager
@@ -625,6 +625,9 @@ open class BalanceActivity : SamouraiActivity() {
                 stopService(Intent(this@BalanceActivity.applicationContext, WebSocketService::class.java))
             }
         }
+        if(PrefsUtil.getInstance(this.application).getValue(StealthModeController.PREF_ENABLED,false)){
+            StealthModeController.enableStealth(applicationContext)
+        }
         super.onDestroy()
         if (compositeDisposable != null && !compositeDisposable.isDisposed) {
             compositeDisposable.dispose()
@@ -796,6 +799,9 @@ open class BalanceActivity : SamouraiActivity() {
                     TorServiceController.stopTor()
                 }
                 TimeOutUtil.getInstance().reset()
+                if(StealthModeController.isStealthEnabled(applicationContext)){
+                    StealthModeController.enableStealth(applicationContext)
+                }
                 finishAffinity()
                 finish()
                 super.onBackPressed()
@@ -806,6 +812,7 @@ open class BalanceActivity : SamouraiActivity() {
             super.onBackPressed()
         }
     }
+
 
     private fun doExternalBackUp() {
         try {
