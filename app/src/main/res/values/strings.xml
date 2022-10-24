@@ -81,14 +81,14 @@
     <string name="options_send_backup_to_support2">Send wallet backup to tech support. Does not contain private key info.</string>
     <string name="options_fee_provider">Fee Estimation Source</string>
     <string name="options_fee_provider2">Select your preferred transaction fee estimation provider.</string>
-    <string name="broadcast_transactions">Broadcast transactions</string>
+    <string name="broadcast_transactions">Broadcast transaction</string>
     <string name="options_broadcast_on2">Uncheck (broadcasting OFF) to copy raw signed transaction to the clipboard.</string>
     <string name="options_strictoutputs">Strict mode</string>
     <string name="options_strictoutputs2">Strict control of transaction outputs and address reuse.</string>
     <string name="options_segwit">Receive to segwit addresses</string>
     <string name="options_segwit_2">Generate segwit addresses for incoming transactions.</string>
     <string name="options_broadcast_hex">Broadcast transaction hex</string>
-    <string name="options_broadcast_hex2">Broadcast signed transaction supplied in hex format.</string>
+    <string name="options_broadcast_hex2">Broadcast signed transaction supplied in hex format</string>
     <string name="options_like_typed_change">Receive change to like-typed outputs</string>
     <string name="options_like_typed_change2">Receive change to same type of address as spend output. Turn OFF to receive only to segwit change addresses.</string>
     <string name="options_haptic">Haptic PIN entry</string>

@@ -27,10 +27,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
+import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.viewmodels.BroadcastHexViewModel
 import com.samourai.wallet.util.AppUtil
@@ -249,6 +251,7 @@ fun SweepHexInputForm() {
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val vm = viewModel<BroadcastHexViewModel>()
     val validTransaction by vm.validTransaction.observeAsState(null)
+    val supportFragmentManager = getSupportFragmentManger()
 
     Scaffold(
         topBar = {
@@ -312,7 +315,7 @@ fun SweepHexInputForm() {
                         backgroundColor = samouraiTextFieldBg,
                         cursorColor = samouraiAccent
                     ), label = {
-                        Text("Enter Transaction Hex", color = Color.White)
+                        Text("Enter Transaction Hex", Modifier.padding(35.dp, 0.dp), color = Color.White)
                     }, textStyle = TextStyle(fontSize = 13.sp),
                     keyboardOptions = KeyboardOptions(
                         autoCorrect = false,
@@ -330,6 +333,26 @@ fun SweepHexInputForm() {
                                 if (clipboardManager.getText() != null) {
                                     addressEdit = clipboardManager.getText()!!.text;
                                     vm.setHex(addressEdit)
+                                }
+                            }
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_crop_free_white_24dp),
+                            contentDescription = "Paste hex",
+                            modifier = Modifier.clickable {
+                                if (supportFragmentManager != null) {
+                                    val cameraFragmentBottomSheet = CameraFragmentBottomSheet()
+                                    cameraFragmentBottomSheet.show(
+                                        supportFragmentManager,
+                                        cameraFragmentBottomSheet.tag
+                                    )
+                                    cameraFragmentBottomSheet.setQrCodeScanListener {
+                                        cameraFragmentBottomSheet.dismiss()
+                                        addressEdit = it
+                                        vm.setHex(addressEdit)
+                                    }
                                 }
                             }
                         )
