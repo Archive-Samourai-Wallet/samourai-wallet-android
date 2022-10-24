@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,7 +33,6 @@ import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +45,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.stealth.qrscannerapp.Purple40
 import com.samourai.wallet.stealth.qrscannerapp.PurpleGrey40
+import com.samourai.wallet.stealth.stealthTapListener
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 
 class NotepadActivity : ComponentActivity() {
@@ -113,12 +112,11 @@ fun NotesScreen() {
             CenterAlignedTopAppBar(
                 title = {
                     Text(text = "Notepad",
-                        modifier = Modifier.pointerInput(Unit){
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    disableStealth(context)
-                                },
-                            )},
+                        modifier = Modifier.stealthTapListener(
+                            onTapCallBack = {
+                                disableStealth(context)
+                            }
+                        ),
                     style = androidx.compose.material.MaterialTheme.typography.h4, color = Black) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = White
