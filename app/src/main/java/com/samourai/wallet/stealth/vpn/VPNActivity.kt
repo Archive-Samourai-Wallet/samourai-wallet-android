@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -477,16 +478,17 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
                 .fillMaxHeight()
                 .padding(vertical = 16.dp, horizontal = 12.dp),
         ) {
-            Text("Instructions", style = MaterialTheme.typography.h6, color = Color.White)
+            Text(stringResource(R.string.instructions), style = MaterialTheme.typography.h6, color = Color.White)
             ListItem(
                 modifier = Modifier
                     .padding(vertical = 4.dp)
                     .padding(top = 8.dp),
                 text = {
-                    Text("Enable stealth mode", color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
+                    Text( stringResource(R.string.enable_stealth_mode), color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles", color = secondaryColor)
+                    Text(
+                        stringResource(id = R.string.upon_exiting_samourai_wallet_stealth_mode), color = secondaryColor)
                 }
             )
             Divider(
@@ -495,11 +497,11 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text("Disable stealth mode", color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
+                    Text(stringResource(R.string.disable_stealth_mode), color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("Select the specified VPN location then enter stealth CODE", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
+                        Text("Select the specified VPN location", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
                         Divider(modifier = Modifier.padding(top = 8.dp, bottom = 6.dp))
                         OutlinedButton(onClick = { expanded = true }) {
                             Text(text = "Location:  $selectedItem", color = Color.White)

@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -409,12 +410,13 @@ fun QRStealthAppSettings(callback: () -> Unit) {
                     .padding(vertical = 4.dp)
                     .padding(top = 8.dp),
                 text = {
-                    Text("Enable stealth mode", color = Color.White, style = MaterialTheme.typography.titleSmall,
+                    Text( stringResource(R.string.enable_stealth_mode), color = Color.White, style = MaterialTheme.typography.titleSmall,
                     modifier =  Modifier.padding(bottom = 8.dp))
 
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles",
+                    Text(
+                         stringResource(R.string.upon_exiting_samourai_wallet_stealth_mode),
                         style = MaterialTheme.typography.bodyMedium, color =    secondaryColor )
                 }
             )
@@ -424,12 +426,12 @@ fun QRStealthAppSettings(callback: () -> Unit) {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text("Disable stealth mode", color = Color.White,style = MaterialTheme.typography.titleSmall,
+                    Text(stringResource(R.string.disable_stealth_mode), color = Color.White,style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(bottom = 8.dp))
                  },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("Double tap “QR scanner” at bottom of screen then enter stealth CODE",
+                        Text("Tap “QR scanner” at bottom of screen 5 times",
                             style = MaterialTheme.typography.bodyMedium, color =    secondaryColor  )
                     }
 

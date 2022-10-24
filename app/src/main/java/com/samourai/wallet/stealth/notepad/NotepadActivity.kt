@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -353,18 +354,19 @@ fun NotepadAppStealthSettings(callback: () -> Unit) {
                 .fillMaxHeight()
                 .padding(vertical = 16.dp, horizontal = 12.dp),
         ) {
-            Text("Instructions", style = androidx.compose.material.MaterialTheme.typography.h6, color = Color.White)
+            Text(stringResource(R.string.instructions), style = androidx.compose.material.MaterialTheme.typography.h6, color = Color.White)
             ListItem(
                 modifier = Modifier
                     .padding(vertical = 4.dp)
                     .padding(top = 8.dp),
                 text = {
-                    Text("Enable stealth mode", color = Color.White, style = MaterialTheme.typography.titleSmall,
+                    Text( stringResource(R.string.enable_stealth_mode), color = Color.White, style = MaterialTheme.typography.titleSmall,
                         modifier =  Modifier.padding(bottom = 8.dp))
 
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles",
+                    Text(
+                        stringResource(id = R.string.upon_exiting_samourai_wallet_stealth_mode),
                         style = MaterialTheme.typography.bodyMedium, color =    secondaryColor )
                 }
             )
@@ -374,12 +376,12 @@ fun NotepadAppStealthSettings(callback: () -> Unit) {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text("Disable stealth mode", color = Color.White,style = MaterialTheme.typography.titleSmall,
+                    Text(stringResource(R.string.disable_stealth_mode), color = Color.White,style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("Double tap “Notepad” at the top of screen then enter stealth CODE",
+                        Text("Tap “Notepad” at top of screen 5 times",
                             style = MaterialTheme.typography.bodyMedium, color =    secondaryColor  )
                     }
 

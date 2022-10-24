@@ -168,7 +168,7 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                         }
                         .padding(vertical = 8.dp),
                     text = {
-                        Text(text = stringResource(R.string.enable_stealth_mode))
+                        Text(text = stringResource(R.string.enable_stealth_mode_on_or_off))
                     },
                     trailing = {
                         Switch(checked = isStealthEnabled, onCheckedChange = {
