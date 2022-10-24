@@ -97,6 +97,9 @@ object StealthModeController {
             }
         }
         if (stealthApp == StealthApp.SAMOURAI) {
+            getStealthPreferences(context)?.apply {
+                edit().putBoolean(PREF_ENABLED,false).commit()
+            }
             Handler(Looper.getMainLooper()).postDelayed({
                 AppUtil.getInstance(context).restartApp()
             }, 1800)
