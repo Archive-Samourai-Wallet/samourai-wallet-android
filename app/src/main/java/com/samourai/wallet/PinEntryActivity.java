@@ -37,7 +37,6 @@ import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.payload.PayloadUtil;
-import com.samourai.wallet.stealth.StealthModeController;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
@@ -210,20 +209,7 @@ public class PinEntryActivity extends AppCompatActivity {
                 }
 
             } else {
-                if (userInput.toString().length() >= AccessFactory.MIN_PIN_LENGTH && userInput.toString().length() <= AccessFactory.MAX_PIN_LENGTH) {
-                    if (StealthModeController.INSTANCE.isPinMatched(getApplicationContext(), userInput.toString()) && StealthModeController.INSTANCE.isStealthEnabled(getApplicationContext())) {
-                        new MaterialAlertDialogBuilder(PinEntryActivity.this)
-                                .setTitle(R.string.app_name)
-                                .setMessage(R.string.do_you_want_to_enable_stealth_mode)
-                                .setPositiveButton(R.string.ok, (dialog, which) -> {
-                                    StealthModeController.INSTANCE.enableStealthFromPrefs(getApplicationContext());
-                                }).setNegativeButton(R.string.cancel, (dialog, which) -> {
-                                    dialog.dismiss();
-                                }).show();
-                    } else {
-                        validateThread(userInput.toString(), strUri);
-                    }
-                }
+                validateThread(userInput.toString(), strUri);
             }
         });
 
