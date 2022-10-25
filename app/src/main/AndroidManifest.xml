@@ -164,17 +164,6 @@
             android:exported="true"
             android:theme="@style/Theme.Samourai.Material" />
 
-        <service
-            android:name=".stealth.StealthTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_stealth_bomber"
-            android:label="Enable Stealth"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-        </service>
-
         <activity
             android:name=".explorer.ExplorerActivity"
             android:exported="false"

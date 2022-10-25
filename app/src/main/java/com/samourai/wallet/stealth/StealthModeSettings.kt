@@ -39,7 +39,6 @@ import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.LogUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -126,7 +125,6 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                                 if (AccessFactory.getInstance(stealthModeSettings.applicationContext).pin == value) {
                                     Toast.makeText(stealthModeSettings.applicationContext, R.string.stealth_pin_warning, Toast.LENGTH_SHORT).show()
                                 } else {
-                                    StealthModeController.setStealthPin(context, value)
                                     isStealthEnabled = true
                                 }
                             }
@@ -145,7 +143,9 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
         topBar = {
             TopAppBar(
                 backgroundColor = samouraiSlateGreyAccent,
-                title = { Text(stringResource(id = R.string.stealth_mode), color = Color.White) },
+                title = {
+                    Text(stringResource(id = R.string.stealth_mode), color = Color.White)
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         stealthModeSettings.onBackPressed()
@@ -160,50 +160,23 @@ fun StealthModeSettingsView(stealthModeSettings: StealthModeSettings) {
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            if (!isStealthEnabled) {
-                                value = ""
-                                scope.launch {
-                                    showAlert = true
-                                    delay(220)
-                                    focusRequester.requestFocus()
-                                }
-                            } else {
-                                isStealthEnabled = false
-                                scope.launch {
-                                    withContext(Dispatchers.IO) {
-                                        StealthModeController.disableStealthSettings(context)
-                                    }
-                                    delay(100)
-                                    showAlert = false
+                            scope.launch {
+                                withContext(Dispatchers.Default) {
+                                    isStealthEnabled = StealthModeController.toggleStealthState(context);
                                 }
                             }
                         }
                         .padding(vertical = 8.dp),
                     text = {
-                        Text(text = stringResource(R.string.enable_stealth_mode))
+                        Text(text = stringResource(R.string.enable_stealth_mode_on_or_off))
                     },
                     trailing = {
                         Switch(checked = isStealthEnabled, onCheckedChange = {
-                            if (it) {
-                                showAlert = true
-                                value = ""
-                                scope.launch {
-                                    if (showAlert) {
-                                        delay(220)
-                                        focusRequester.requestFocus()
-                                    }
-                                }
-                            } else {
-                                isStealthEnabled = false
-                                scope.launch {
-                                    withContext(Dispatchers.IO) {
-                                        StealthModeController.disableStealthSettings(context)
-                                    }
-                                    delay(100)
-                                    showAlert = false
+                            scope.launch {
+                                withContext(Dispatchers.Default) {
+                                    isStealthEnabled = StealthModeController.toggleStealthState(context);
                                 }
                             }
-
                         })
                     },
                 )

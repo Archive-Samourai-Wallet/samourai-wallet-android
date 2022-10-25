@@ -1,6 +1,7 @@
 package com.samourai.wallet.stealth.vpn
 
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -24,21 +24,19 @@ import androidx.compose.material3.*
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -131,8 +129,6 @@ fun VpnMainScreen(activity: ComponentActivity?) {
     }
     val scope = rememberCoroutineScope()
     val viewModel = viewModel<VPNActivityViewModel>();
-    var pinEntryValue by remember { mutableStateOf("") }
-    var pinEntryDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val bottomSheet = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     var selectedLoc by remember {
@@ -235,65 +231,6 @@ fun VpnMainScreen(activity: ComponentActivity?) {
             }
         ) {
             VpnConnectScreen()
-            if (pinEntryDialog) {
-                AlertDialog(
-                    shape = RoundedCornerShape(8.dp),
-                    tonalElevation = 12.dp,
-                    onDismissRequest = {
-                        pinEntryDialog = false
-                    },
-                    title = {
-                        Text(text = "Enter Stealth Code", fontSize = 14.sp)
-                    },
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-                    text = {
-                        TextField(
-                            value = pinEntryValue,
-                            colors = TextFieldDefaults.textFieldColors(
-                                backgroundColor = Color.Transparent,
-                                textColor = Color.White, cursorColor = Color.White,
-                                focusedIndicatorColor = Color.White
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                autoCorrect = false,
-                                keyboardType = KeyboardType.Decimal,
-                            ),
-                            modifier = Modifier.focusRequester(focusRequester),
-                            onValueChange = {
-                                if (!it.contains("*") && !it.contains("-") && !it.contains(",") && !it.contains(".") && !it.contains(" ")) {
-                                    pinEntryValue = it
-                                }
-                            },
-                        )
-                    },
-                    dismissButton = {
-                        TextButton(onClick = {
-                            pinEntryDialog = false
-                        }) {
-                            Text(text = "Cancel")
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            pinEntryDialog = false
-                            if (pinEntryValue.isNotEmpty() && StealthModeController.isPinMatched(context,pinEntryValue)){
-                                MaterialAlertDialogBuilder(context)
-                                    .setTitle(R.string.app_name)
-                                    .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-                                    .setPositiveButton(R.string.ok) { dialog, _ ->
-                                        dialog.dismiss()
-                                        StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-                                    }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                                        dialog.dismiss()
-                                    }.show()
-                            }
-                        }) {
-                            Text(text = "Ok")
-                        }
-                    }
-                )
-            }
-
         }
         ModalBottomSheetLayout(
             sheetBackgroundColor = Color.Transparent,
@@ -329,11 +266,7 @@ fun VpnMainScreen(activity: ComponentActivity?) {
                                     bottomSheet.hide()
                                     viewModel.setCountry(selectedCountry, selectedCountry.third[index])
                                     if (selectedLoc.lowercase().contains(selectedCountry.third[index].lowercase())) {
-                                        pinEntryDialog = true
-                                        scope.launch {
-                                            delay(300)
-                                            focusRequester.requestFocus()
-                                        }
+                                        disableStealth(context)
                                     }
                                 }
                             }
@@ -467,6 +400,19 @@ fun VpnConnectScreen() {
 }
 
 
+fun disableStealth(context: Context){
+    MaterialAlertDialogBuilder(context)
+        .setTitle(R.string.app_name)
+        .setMessage(R.string.do_you_want_to_disable_stealth_mode)
+        .setPositiveButton(R.string.ok) { dialog, _ ->
+            dialog.dismiss()
+            StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
+        }.setNegativeButton(R.string.cancel) { dialog, _ ->
+            dialog.dismiss()
+        }.show()
+}
+
+
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     background = Color(0xff1B1C20),
@@ -532,16 +478,17 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
                 .fillMaxHeight()
                 .padding(vertical = 16.dp, horizontal = 12.dp),
         ) {
-            Text("Instructions", style = MaterialTheme.typography.h6, color = Color.White)
+            Text(stringResource(R.string.instructions), style = MaterialTheme.typography.h6, color = Color.White)
             ListItem(
                 modifier = Modifier
                     .padding(vertical = 4.dp)
                     .padding(top = 8.dp),
                 text = {
-                    Text("Enable stealth mode", color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
+                    Text( stringResource(R.string.enable_stealth_mode), color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles", color = secondaryColor)
+                    Text(
+                        stringResource(id = R.string.upon_exiting_samourai_wallet_stealth_mode), color = secondaryColor)
                 }
             )
             Divider(
@@ -550,11 +497,11 @@ fun VPNStealthAPPSettings(callback: () -> Unit) {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text("Disable stealth mode", color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
+                    Text(stringResource(R.string.disable_stealth_mode), color = Color.White,style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
                 },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("Select the specified VPN location then enter stealth CODE", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
+                        Text("Select the specified VPN location", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,color = secondaryColor)
                         Divider(modifier = Modifier.padding(top = 8.dp, bottom = 6.dp))
                         OutlinedButton(onClick = { expanded = true }) {
                             Text(text = "Location:  $selectedItem", color = Color.White)

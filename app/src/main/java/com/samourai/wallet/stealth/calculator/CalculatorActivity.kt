@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -40,6 +41,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.R
 import com.samourai.wallet.stealth.StealthModeController
+import com.samourai.wallet.stealth.stealthTapListener
 
 
 class CalculatorActivity : ComponentActivity() {
@@ -67,14 +69,17 @@ fun CalculatorStealthAppSettings() {
                 .fillMaxHeight()
                 .padding(vertical = 16.dp, horizontal = 12.dp),
         ) {
-            Text("Instructions", style = androidx.compose.material.MaterialTheme.typography.h6)
+            Text(stringResource(R.string.instructions), style = androidx.compose.material.MaterialTheme.typography.h6)
             ListItem(
-                modifier = Modifier.padding(vertical = 4.dp).padding(top = 8.dp),
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .padding(top = 8.dp),
                 text = {
-                    Text("Enable stealth mode", style = MaterialTheme.typography.titleSmall, color = Color.White)
+                    Text( stringResource(R.string.enable_stealth_mode), style = MaterialTheme.typography.titleSmall, color = Color.White)
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in Samourai PIN entry screen or tap “Enable Stealth” in quick settings tiles",
+                    Text(
+                        stringResource(id = R.string.upon_exiting_samourai_wallet_stealth_mode),
                         style = MaterialTheme.typography.bodyMedium,
                         color = secondaryColor)
                 }
@@ -85,10 +90,10 @@ fun CalculatorStealthAppSettings() {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text("Disable stealth mode",style = MaterialTheme.typography.titleSmall, color = Color.White)
+                    Text(stringResource(R.string.disable_stealth_mode),style = MaterialTheme.typography.titleSmall, color = Color.White)
                 },
                 secondaryText = {
-                    Text("Enter stealth CODE in calculator app and press = symbol",
+                    Text("Tap = symbol 5 times",
                         color = secondaryColor,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -340,23 +345,27 @@ fun CalculatorComposeView() {
                         textColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier
                             .aspectRatio(1f)
+                            .stealthTapListener(
+                                click = {
+                                    viewModel.onAction(CalculatorAction.Calculate)
+                                },
+                                onTapCallBack = {
+                                    MaterialAlertDialogBuilder(activity)
+                                        .setTitle(R.string.app_name)
+                                        .setMessage(R.string.do_you_want_to_disable_stealth_mode)
+                                        .setPositiveButton(R.string.ok) { dialog, _ ->
+                                            dialog.dismiss()
+                                            StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, activity)
+                                        }
+                                        .setNegativeButton(R.string.cancel) { dialog, _ ->
+                                            dialog.dismiss()
+                                        }
+                                        .show()
+                                }
+                            )
                             .weight(1f)
                     ) {
-                        if (StealthModeController.isPinMatched(
-                                activity.applicationContext, state.number1 + (state.operator?.symbol ?: "") + state.number2
-                            )
-                        ) {
-                            MaterialAlertDialogBuilder(activity)
-                                .setTitle(R.string.app_name)
-                                .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-                                .setPositiveButton(R.string.ok) { dialog, _ ->
-                                    dialog.dismiss()
-                                    StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, activity)
-                                }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                                    dialog.dismiss()
-                                }.show()
-                        }
-                        viewModel.onAction(CalculatorAction.Calculate)
+
                     }
                 }
             }
