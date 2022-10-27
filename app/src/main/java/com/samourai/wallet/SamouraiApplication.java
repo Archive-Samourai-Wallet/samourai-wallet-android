@@ -23,9 +23,6 @@ import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
-import java.io.PrintWriter;
-
 import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.plugins.RxJavaPlugins;
 
@@ -39,10 +36,12 @@ public class SamouraiApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        ExceptionReportHandler.Companion.attach(this);
         setUpTorService();
         setUpChannels();
         registerNetworkCallBack();
-        RxJavaPlugins.setErrorHandler(throwable -> {});
+        RxJavaPlugins.setErrorHandler(throwable -> {
+        });
         ExternalBackupManager.attach(this);
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
