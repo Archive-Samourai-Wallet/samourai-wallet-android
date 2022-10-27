@@ -450,6 +450,16 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             true
         }
 
+        val showlogsPrefs = findPreference("showlogs") as Preference?
+        showlogsPrefs!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            showLogs()
+            true
+        }
+
+    }
+
+    private fun showLogs() {
+        startActivity(Intent(requireContext(),LogViewActivity::class.java))
     }
 
     private fun otherSettings() {
