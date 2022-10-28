@@ -291,7 +291,7 @@ class CahootsTransactionViewModel : ViewModel() {
         }
         val amountInSats = amount.value?.toLong() ?: 0.0
         //If the custom fee is not null the value will be taken as fee
-        val feePerKb = if (customFee.value != null) customFee.value!!.times(1000)
+        val feePerKb = if (customFee.value != null) customFee.value!!
         else MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value!!.toFloat()).coerceAtLeast(1000f).div(1000.0).toLong()
         if (CahootsMode.MANUAL == type.cahootsMode) {
             var destinationPcode: String? = null;
