@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.R
 import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.stealth.qrscannerapp.Purple40
@@ -222,15 +221,7 @@ fun NotesScreen() {
 
 
 fun disableStealth(context: Context){
-    MaterialAlertDialogBuilder(context)
-        .setTitle(R.string.app_name)
-        .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-        .setPositiveButton(R.string.ok) { dialog, _ ->
-            dialog.dismiss()
-            StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-        }.setNegativeButton(R.string.cancel) { dialog, _ ->
-            dialog.dismiss()
-        }.show()
+    StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
 }
 @Composable
 fun NoteItem(

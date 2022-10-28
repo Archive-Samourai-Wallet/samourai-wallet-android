@@ -99,7 +99,7 @@ object StealthModeController {
         if (stealthApp == StealthApp.SAMOURAI) {
             Handler(Looper.getMainLooper()).postDelayed({
                 AppUtil.getInstance(context).restartApp()
-            }, 1800)
+            }, 1700)
         }
 
     }
