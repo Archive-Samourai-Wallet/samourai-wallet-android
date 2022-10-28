@@ -281,15 +281,7 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
 
 
 fun disableStealth(context:Context){
-        MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.app_name)
-            .setMessage(R.string.do_you_want_to_disable_stealth_mode)
-            .setPositiveButton(R.string.ok) { dialog, _ ->
-                dialog.dismiss()
-                StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
-            }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                dialog.dismiss()
-            }.show()
+    StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
 }
 
 @OptIn(ExperimentalMaterialApi::class)
