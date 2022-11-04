@@ -378,10 +378,13 @@ open class BalanceActivity : SamouraiActivity() {
     private fun showToolOptions(it: View) {
         val bitmapImage = BIP47Util.getInstance(applicationContext).payNymLogoLive.value
         var drawable = ContextCompat.getDrawable(this, R.drawable.ic_samourai_logo)
-        val nym = PrefsUtil.getInstance(applicationContext)
+        var nym = PrefsUtil.getInstance(applicationContext)
             .getValue(PrefsUtil.PAYNYM_BOT_NAME, BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString()))
         if (bitmapImage != null) {
             drawable = BitmapDrawable(resources, bitmapImage)
+        }
+        if(nym.isNullOrEmpty()){
+            nym = BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString())
         }
         val toolWindowSize = applicationContext.resources.displayMetrics.density * 220;
         val popupMenu = popupMenu {
