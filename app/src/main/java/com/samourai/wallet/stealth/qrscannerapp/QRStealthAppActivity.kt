@@ -5,9 +5,14 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
@@ -55,12 +60,12 @@ import com.budiyev.android.codescanner.CodeScannerView
 import com.budiyev.android.codescanner.DecodeCallback
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.R
 import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.stealth.stealthTapListener
 import kotlinx.coroutines.launch
+
 
 class QRStealthAppViewModel : ViewModel() {
     fun add(text: String?) {
@@ -78,7 +83,7 @@ class QRStealthAppViewModel : ViewModel() {
         qrContent.postValue(values.filter { it != item }.toList())
     }
 
-    val permissionGranted = MutableLiveData(false)
+    val permissionGranted = MutableLiveData(0)
     val qrContent = MutableLiveData<List<String>>(arrayListOf())
 }
 
@@ -87,20 +92,20 @@ class QRStealthAppActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            vm.permissionGranted.postValue(true)
-        } else {
-            vm.permissionGranted.postValue(false)
-        }
         val requestPermissionLauncher =
             registerForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
-                vm.permissionGranted.postValue(isGranted)
+                if(isGranted){
+                    vm.permissionGranted.postValue(1)
+                }else{
+                    if (VERSION.SDK_INT > VERSION_CODES.M && !shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                        vm.permissionGranted.postValue(-1)
+                    } else {
+                        vm.permissionGranted.postValue(0)
+                    }
+                }
+
             }
         setContent {
             samouraiStealthAppScanner {
@@ -111,10 +116,27 @@ class QRStealthAppActivity : ComponentActivity() {
         }
 
     }
+
+    override fun onResume() {
+        super.onResume()
+        val permission = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.CAMERA
+        )
+        if (permission == PackageManager.PERMISSION_GRANTED) {
+            vm.permissionGranted.postValue(1)
+        } else {
+            if (VERSION.SDK_INT > VERSION_CODES.M && shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                vm.permissionGranted.postValue(-1)
+            } else {
+                vm.permissionGranted.postValue(0)
+            }
+        }
+    }
 }
 
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) {
     val scope = rememberCoroutineScope()
@@ -161,10 +183,12 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
                 ) {
                     Icon(Icons.Filled.Menu, "")
                 }
-                Text(text = "QR Scanner", modifier = Modifier.stealthTapListener(
-                   onTapCallBack = {
-                       disableStealth(context)
-                   }), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "QR Scanner", modifier = Modifier.stealthTapListener(
+                        onTapCallBack = {
+                            disableStealth(context)
+                        }), style = MaterialTheme.typography.titleMedium
+                )
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
             }
         }
@@ -198,8 +222,7 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
                 },
                 title = {
                     Text(
-                        text = "QR Scanner", style = MaterialTheme.typography.titleMedium
-                        , modifier = Modifier.stealthTapListener(
+                        text = "QR Scanner", style = MaterialTheme.typography.titleMedium, modifier = Modifier.stealthTapListener(
                             onTapCallBack = {
                                 disableStealth(context)
                             }
@@ -280,7 +303,7 @@ fun QRScannerScreen(requestPermissionLauncher: ActivityResultLauncher<String>?) 
 }
 
 
-fun disableStealth(context:Context){
+fun disableStealth(context: Context) {
     StealthModeController.enableStealth(StealthModeController.StealthApp.SAMOURAI, context)
 }
 
@@ -333,10 +356,11 @@ fun QRResultView() {
 @Composable
 fun QRCameraView(requestPermissionLauncher: ActivityResultLauncher<String>?, bottomSheet: ModalBottomSheetState) {
     val viewModel = viewModel<QRStealthAppViewModel>()
-    val permissionState by viewModel.permissionGranted.observeAsState(false)
+    val permissionState by viewModel.permissionGranted.observeAsState(0)
     var scanner by remember { mutableStateOf<CodeScanner?>(null) }
+    val context = LocalContext.current
     LaunchedEffect(permissionState) {
-        if (permissionState == true) {
+        if (permissionState == 1) {
             scanner?.startPreview()
         }
     }
@@ -351,7 +375,9 @@ fun QRCameraView(requestPermissionLauncher: ActivityResultLauncher<String>?, bot
             mCodeScanner.isAutoFocusEnabled = true
             scanner = mCodeScanner
             view.setOnClickListener {
-                mCodeScanner.startPreview()
+                if (permissionState == 1) {
+                    mCodeScanner.startPreview()
+                }
             }
             mCodeScanner.decodeCallback = DecodeCallback { result ->
                 viewModel.add(result.text)
@@ -361,13 +387,21 @@ fun QRCameraView(requestPermissionLauncher: ActivityResultLauncher<String>?, bot
             }
             permissionView.findViewById<MaterialButton>(R.id.permissionCameraDialogGrantBtn)
                 .setOnClickListener {
-                    requestPermissionLauncher?.launch(Manifest.permission.CAMERA)
+                    if (permissionState == 0) {
+                        requestPermissionLauncher?.launch(Manifest.permission.CAMERA)
+                    }
+                    if (permissionState == -1) {
+                        val intent = Intent()
+                        val uri: Uri = Uri.fromParts("package", context.packageName, null)
+                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).data = uri
+                        context.startActivity(intent)
+                    }
                 }
             return@AndroidView view;
         },
         update = {
             val permissionView = it.findViewById<MaterialCardView>(R.id.permissionCameraDialog)
-            permissionView.visibility = if (!permissionState) View.VISIBLE else View.GONE
+            permissionView.visibility = if (permissionState == -1 || permissionState == 0) View.VISIBLE else View.GONE
         },
     )
 }
@@ -402,14 +436,17 @@ fun QRStealthAppSettings(callback: () -> Unit) {
                     .padding(vertical = 4.dp)
                     .padding(top = 8.dp),
                 text = {
-                    Text( stringResource(R.string.enable_stealth_mode), color = Color.White, style = MaterialTheme.typography.titleSmall,
-                    modifier =  Modifier.padding(bottom = 8.dp))
+                    Text(
+                        stringResource(R.string.enable_stealth_mode), color = Color.White, style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
                 },
                 secondaryText = {
                     Text(
-                         stringResource(R.string.upon_exiting_samourai_wallet_stealth_mode),
-                        style = MaterialTheme.typography.bodyMedium, color =    secondaryColor )
+                        stringResource(R.string.upon_exiting_samourai_wallet_stealth_mode),
+                        style = MaterialTheme.typography.bodyMedium, color = secondaryColor
+                    )
                 }
             )
             Divider(
@@ -418,13 +455,17 @@ fun QRStealthAppSettings(callback: () -> Unit) {
             ListItem(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = {
-                    Text(stringResource(R.string.disable_stealth_mode), color = Color.White,style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(bottom = 8.dp))
-                 },
+                    Text(
+                        stringResource(R.string.disable_stealth_mode), color = Color.White, style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                },
                 secondaryText = {
                     Column(modifier = Modifier) {
-                        Text("Tap “QR scanner” at bottom of screen 5 times",
-                            style = MaterialTheme.typography.bodyMedium, color =    secondaryColor  )
+                        Text(
+                            "Tap “QR scanner” at bottom of screen 5 times",
+                            style = MaterialTheme.typography.bodyMedium, color = secondaryColor
+                        )
                     }
 
                 }
