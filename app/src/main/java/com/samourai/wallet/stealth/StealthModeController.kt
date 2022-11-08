@@ -4,27 +4,26 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
-import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.stealth.calculator.CalculatorActivity
 import com.samourai.wallet.stealth.notepad.NotepadActivity
 import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppActivity
 import com.samourai.wallet.stealth.vpn.VPNActivity
 import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.util.CharSequenceX
+import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.TimeOutUtil
-import org.apache.commons.lang3.StringUtils
 
 
 object StealthModeController {
 
-    private const val PREF_PIN = "stl_pin"
     private const val PREF_APP = "stl_app"
-    private const val PREF_ENABLED = "stl_enabled"
+    const val PREF_ENABLED = "stl_enabled"
 
     enum class StealthApp(packageId: String, @DrawableRes icon: Int, @StringRes name: Int) {
 
@@ -59,6 +58,28 @@ object StealthModeController {
         }
     }
 
+    fun toggleStealthState(context: Context): Boolean {
+        val prefs = getStealthPreferences(context)
+        val enabled = prefs?.getBoolean(PREF_ENABLED, false)
+        prefs?.edit()?.putBoolean(PREF_ENABLED, enabled != true)?.commit()
+        return enabled != true;
+    }
+
+    fun enableStealth(context: Context) {
+        if (TorManager.isConnected() || TorManager.torState == TorManager.TorState.WAITING) {
+            TorManager.stopTor()
+        }
+        val prefs = getStealthPreferences(context)
+        val key = prefs?.getString(PREF_APP, StealthApp.CALCULATOR.getAppKey()) ?: StealthApp.CALCULATOR.getAppKey()
+        StealthApp.values().forEach {
+            if (it.getAppKey() == key) {
+                enableStealth(it, context)
+                Toast.makeText(context, "Stealth mode enabled", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
     fun enableStealth(stealthApp: StealthApp, context: Context) {
         val pm = context.packageManager
         TimeOutUtil.getInstance().reset()
@@ -75,30 +96,12 @@ object StealthModeController {
                 )
             }
         }
-
-    }
-
-    fun enableStealthFromPrefs(context: Context) {
-        if(TorManager.isConnected() || TorManager.torState == TorManager.TorState.WAITING){
-            TorManager.stopTor()
+        if (stealthApp == StealthApp.SAMOURAI) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                AppUtil.getInstance(context).restartApp()
+            }, 1700)
         }
-        val prefs = getStealthPreferences(context)
-        val key = prefs?.getString(PREF_APP, StealthApp.CALCULATOR.getAppKey()) ?: StealthApp.CALCULATOR.getAppKey()
-        StealthApp.values().forEach {
-            if (it.getAppKey() == key) {
-                enableStealth(it, context)
-                Toast.makeText(context, "Stealth mode enabled", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
-    fun disableStealth(context: Context) {
-        enableStealth(StealthApp.SAMOURAI, context)
-    }
-
-    fun disableStealthSettings(context: Context) {
-        val prefs = getStealthPreferences(context)
-        prefs?.edit()?.putBoolean(PREF_ENABLED, false)?.apply()
     }
 
     private fun isAppEnabled(stealthApp: StealthApp, context: Context): Boolean {
@@ -131,31 +134,9 @@ object StealthModeController {
         return enabled == true
     }
 
-    fun setStealthPin(context: Context, pin: String) {
-        val prefs = getStealthPreferences(context)
-        val encPin = AESUtil.encryptSHA256(pin, CharSequenceX(pin))
-        prefs?.edit()?.putString(PREF_PIN, encPin)?.apply()
-        prefs?.edit()?.putBoolean(PREF_ENABLED, true)?.apply()
-    }
-
     fun getSelectedApp(context: Context): String {
         val prefs = getStealthPreferences(context)
         return prefs?.getString(PREF_APP, null) ?: StealthApp.CALCULATOR.getAppKey()
-    }
-
-    fun isPinMatched(context: Context, pin: String): Boolean {
-        val prefs = getStealthPreferences(context)
-        val pinPrefs = prefs?.getString(PREF_PIN, "")
-        if (StringUtils.isEmpty(pinPrefs)) {
-            return false;
-        }
-        return try {
-            val decPin = AESUtil.decryptSHA256(pinPrefs, CharSequenceX(pin))
-            decPin == pin
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
     }
 
     fun setSelectedApp(appKey: String, context: Context) {

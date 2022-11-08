@@ -63,6 +63,7 @@ import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity
+import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.tools.ToolsBottomSheet
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
 import com.samourai.wallet.tor.TorManager
@@ -377,10 +378,13 @@ open class BalanceActivity : SamouraiActivity() {
     private fun showToolOptions(it: View) {
         val bitmapImage = BIP47Util.getInstance(applicationContext).payNymLogoLive.value
         var drawable = ContextCompat.getDrawable(this, R.drawable.ic_samourai_logo)
-        val nym = PrefsUtil.getInstance(applicationContext)
+        var nym = PrefsUtil.getInstance(applicationContext)
             .getValue(PrefsUtil.PAYNYM_BOT_NAME, BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString()))
         if (bitmapImage != null) {
             drawable = BitmapDrawable(resources, bitmapImage)
+        }
+        if(nym.isNullOrEmpty()){
+            nym = BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString())
         }
         val toolWindowSize = applicationContext.resources.displayMetrics.density * 220;
         val popupMenu = popupMenu {
@@ -624,6 +628,9 @@ open class BalanceActivity : SamouraiActivity() {
                 stopService(Intent(this@BalanceActivity.applicationContext, WebSocketService::class.java))
             }
         }
+        if(PrefsUtil.getInstance(this.application).getValue(StealthModeController.PREF_ENABLED,false)){
+            StealthModeController.enableStealth(applicationContext)
+        }
         super.onDestroy()
         if (compositeDisposable != null && !compositeDisposable.isDisposed) {
             compositeDisposable.dispose()
@@ -795,6 +802,9 @@ open class BalanceActivity : SamouraiActivity() {
                     TorServiceController.stopTor()
                 }
                 TimeOutUtil.getInstance().reset()
+                if(StealthModeController.isStealthEnabled(applicationContext)){
+                    StealthModeController.enableStealth(applicationContext)
+                }
                 finishAffinity()
                 finish()
                 super.onBackPressed()
@@ -805,6 +815,7 @@ open class BalanceActivity : SamouraiActivity() {
             super.onBackPressed()
         }
     }
+
 
     private fun doExternalBackUp() {
         try {

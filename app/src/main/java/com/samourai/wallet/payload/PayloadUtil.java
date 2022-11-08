@@ -253,14 +253,6 @@ public class PayloadUtil	{
             whirlpool_account.put(badbankObj);
             wallet.put("whirlpool_account", whirlpool_account);
 
-            //
-            // can remove ???
-            //
-            /*
-            obj.put("receiveIdx", mAccounts.get(0).getReceive().getAddrIdx());
-            obj.put("changeIdx", mAccounts.get(0).getChange().getAddrIdx());
-            */
-
             JSONObject meta = new JSONObject();
             meta.put("version_name", context.getText(R.string.version_name));
             meta.put("android_release", Build.VERSION.RELEASE == null ? "" : Build.VERSION.RELEASE);

@@ -654,6 +654,8 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                 jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("node")
                 jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("port")
                 jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("user")
+                jsonObject.getJSONObject("meta").remove("pin")
+                jsonObject.getJSONObject("meta").remove("pin2")
             }
             val email = Intent(Intent.ACTION_SEND)
             email.putExtra(Intent.EXTRA_EMAIL, arrayOf("help@samourai.support"))

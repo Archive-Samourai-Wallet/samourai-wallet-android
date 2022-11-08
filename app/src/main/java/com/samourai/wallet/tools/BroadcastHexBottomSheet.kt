@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -243,6 +245,7 @@ fun SweepHexBroadcast(onCloseClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SweepHexInputForm() {
     val context = LocalContext.current
@@ -252,6 +255,7 @@ fun SweepHexInputForm() {
     val vm = viewModel<BroadcastHexViewModel>()
     val validTransaction by vm.validTransaction.observeAsState(null)
     val supportFragmentManager = getSupportFragmentManger()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Scaffold(
         topBar = {
@@ -302,7 +306,6 @@ fun SweepHexInputForm() {
                 TextField(value = addressEdit,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .defaultMinSize(minHeight = 130.dp)
                         .onFocusChanged {
                             vm.setHex(addressEdit)
                         },
@@ -315,7 +318,7 @@ fun SweepHexInputForm() {
                         backgroundColor = samouraiTextFieldBg,
                         cursorColor = samouraiAccent
                     ), label = {
-                        Text("Enter Transaction Hex", Modifier.padding(35.dp, 0.dp), color = Color.White)
+                        Text("Enter Transaction Hex", color = Color.White)
                     }, textStyle = TextStyle(fontSize = 13.sp),
                     keyboardOptions = KeyboardOptions(
                         autoCorrect = false,
@@ -324,20 +327,9 @@ fun SweepHexInputForm() {
                     ),
                     keyboardActions = KeyboardActions(onDone = {
                         vm.setHex(addressEdit)
+                        keyboardController?.hide()
                     }),
                     trailingIcon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_baseline_content_paste_24),
-                            contentDescription = "Paste hex",
-                            modifier = Modifier.clickable {
-                                if (clipboardManager.getText() != null) {
-                                    addressEdit = clipboardManager.getText()!!.text;
-                                    vm.setHex(addressEdit)
-                                }
-                            }
-                        )
-                    },
-                    leadingIcon = {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_crop_free_white_24dp),
                             contentDescription = "Paste hex",
@@ -373,7 +365,7 @@ fun SweepHexInputForm() {
                         contentColor = Color.White
                     )
                 ) {
-                    Text(stringResource(R.string.broadcast))
+                    Text(stringResource(R.string.broadcast), color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
