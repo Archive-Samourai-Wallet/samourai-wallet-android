@@ -599,9 +599,14 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 }
                 utxoList.post(() -> loadUTXOs(true));
                 setResult(RESULT_OK);
-
             }
         }
+
+        adapter = new UTXOListAdapter();
+        adapter.setHasStableIds(true);
+        utxoList.setLayoutManager(new LinearLayoutManagerWrapper(this));
+        utxoList.addItemDecoration(new ItemDividerDecorator(getDrawable(R.color.disabled_white)));
+        utxoList.setAdapter(adapter);
         saveWalletState();
     }
 
@@ -625,6 +630,12 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 utxoList.post(() -> loadUTXOs(true));
             }
         }
+
+        adapter = new UTXOListAdapter();
+        adapter.setHasStableIds(true);
+        utxoList.setLayoutManager(new LinearLayoutManagerWrapper(this));
+        utxoList.addItemDecoration(new ItemDividerDecorator(getDrawable(R.color.disabled_white)));
+        utxoList.setAdapter(adapter);
         saveWalletState();
     }
 
