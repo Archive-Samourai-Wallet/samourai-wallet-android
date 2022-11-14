@@ -14,11 +14,13 @@ import com.samourai.wallet.bip47.BIP47UtilGeneric;
 import com.samourai.wallet.bipFormat.BIP_FORMAT;
 import com.samourai.wallet.bipFormat.BipFormatSupplier;
 import com.samourai.wallet.bipWallet.WalletSupplier;
+import com.samourai.wallet.chain.ChainSupplier;
 import com.samourai.wallet.crypto.CryptoUtil;
 import com.samourai.wallet.send.provider.CahootsUtxoProvider;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.whirlpool.client.wallet.AndroidWalletSupplier;
+import com.samourai.whirlpool.client.wallet.data.AndroidChainSupplier;
 
 import org.bitcoinj.core.NetworkParameters;
 
@@ -68,8 +70,10 @@ public class AndroidSorobanWalletService extends SorobanWalletService {
                                         Context ctx) {
         super(bip47Util, bipFormatSupplier, params, rpcService);
         this.ctx = ctx;
+        ChainSupplier chainSupplier = AndroidChainSupplier.getInstance(ctx);
         this.cahootsWallet = new CahootsWallet(
                 walletSupplier,
+                chainSupplier,
                 BIP_FORMAT.PROVIDER,
                 params,
                 cahootsUtxoProvider);
