@@ -212,15 +212,14 @@ class TxDetailsActivity : SamouraiActivity() {
         calculateSatoshiDisplayAmount(tx!!.amount.toLong())
         amount?.text = BTCDisplayAmount
         bottomButton!!.visibility = View.GONE
-        if (tx!!.confirmations <= 3) {
+        if (tx!!.confirmations < 3) {
             txStatus!!.setTextColor(ContextCompat.getColor(this, R.color.tx_broadcast_offline_bg))
             val txConfirmation = getString(R.string.unconfirmed) +
                     " (" +
                     tx!!.confirmations +
                     "/3)"
             txStatus!!.text = txConfirmation
-        }
-        if (tx!!.confirmations > 3) {
+        } else {
             val txConfirmation = tx!!.confirmations.toString() +
                     " " +
                     getString(R.string.confirmation)
