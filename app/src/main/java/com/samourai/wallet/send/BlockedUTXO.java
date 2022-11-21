@@ -1,5 +1,7 @@
 package com.samourai.wallet.send;
 
+import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,12 +48,14 @@ public class BlockedUTXO {
 
     public void add(String hash, int idx, long value)    {
         blockedUTXO.put(hash + "-" + Integer.toString(idx), value);
+        onUtxoChange();
         debug("BlockedUTXO", "add:" + hash + "-" + Integer.toString(idx));
     }
 
     public void remove(String hash, int idx)   {
         if(blockedUTXO != null && blockedUTXO.containsKey(hash + "-" + Integer.toString(idx)))  {
             blockedUTXO.remove(hash + "-" + Integer.toString(idx));
+            onUtxoChange();
             debug("BlockedUTXO", "remove:" + hash + "-" + Integer.toString(idx));
         }
     }
@@ -59,6 +63,7 @@ public class BlockedUTXO {
     public void remove(String id)   {
         if(blockedUTXO != null && blockedUTXO.containsKey(id))  {
             blockedUTXO.remove(id);
+            onUtxoChange();
             debug("BlockedUTXO", "remove:" + id);
         }
     }
@@ -69,6 +74,7 @@ public class BlockedUTXO {
 
     public void clear()    {
         blockedUTXO.clear();
+        onUtxoChange();
         debug("BlockedUTXO", "clear");
     }
 
@@ -166,12 +172,14 @@ public class BlockedUTXO {
 
     public void addBadBank(String hash, int idx, long value)    {
         blockedUTXOBadBank.put(hash + "-" + Integer.toString(idx), value);
+        onUtxoChange();
         debug("BlockedUTXO", "add:" + hash + "-" + Integer.toString(idx));
     }
 
     public void removeBadBank(String hash, int idx)   {
         if(blockedUTXOBadBank != null && blockedUTXOBadBank.containsKey(hash + "-" + Integer.toString(idx)))  {
             blockedUTXOBadBank.remove(hash + "-" + Integer.toString(idx));
+            onUtxoChange();
             debug("BlockedUTXO", "remove:" + hash + "-" + Integer.toString(idx));
         }
     }
@@ -179,6 +187,7 @@ public class BlockedUTXO {
     public void removeBadBank(String id)   {
         if(blockedUTXOBadBank != null && blockedUTXOBadBank.containsKey(id))  {
             blockedUTXOBadBank.remove(id);
+            onUtxoChange();
             debug("BlockedUTXO", "remove:" + id);
         }
     }
@@ -189,6 +198,7 @@ public class BlockedUTXO {
 
     public void clearBadBank()    {
         blockedUTXOBadBank.clear();
+        onUtxoChange();
         debug("BlockedUTXO", "clear");
     }
 
@@ -220,12 +230,14 @@ public class BlockedUTXO {
 
     public void addPostMix(String hash, int idx, long value)    {
         blockedUTXOPostMix.put(hash + "-" + Integer.toString(idx), value);
+        onUtxoChange();
         debug("BlockedUTXO", "add:" + hash + "-" + Integer.toString(idx));
     }
 
     public void removePostMix(String hash, int idx)   {
         if(blockedUTXOPostMix != null && blockedUTXOPostMix.containsKey(hash + "-" + Integer.toString(idx)))  {
             blockedUTXOPostMix.remove(hash + "-" + Integer.toString(idx));
+            onUtxoChange();
             debug("BlockedUTXO", "remove:" + hash + "-" + Integer.toString(idx));
         }
     }
@@ -233,6 +245,7 @@ public class BlockedUTXO {
     public void removePostMix(String id)   {
         if(blockedUTXOPostMix != null && blockedUTXOPostMix.containsKey(id))  {
             blockedUTXOPostMix.remove(id);
+            onUtxoChange();
             debug("BlockedUTXO", "remove:" + id);
         }
     }
@@ -243,6 +256,7 @@ public class BlockedUTXO {
 
     public void clearPostMix()    {
         blockedUTXOPostMix.clear();
+        onUtxoChange();
         debug("BlockedUTXO", "clear");
     }
 
@@ -369,5 +383,9 @@ public class BlockedUTXO {
 
     public boolean containsAny(String hash, int idx) {
         return  this.contains(hash,idx) || this.containsPostMix(hash,idx) || this.containsBadBank(hash,idx);
+    }
+
+    private void onUtxoChange() {
+        WhirlpoolUtils.getInstance().onUtxoChange(); // notify Whirlpool
     }
 }

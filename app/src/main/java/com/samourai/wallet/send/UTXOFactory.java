@@ -4,29 +4,22 @@ import android.content.Context;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bouncycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class UTXOFactory {
 
     private static Context context = null;
-
     private static UTXOFactory instance = null;
-
-    private static HashMap<String, UTXO> p2pkh = null;
-    private static HashMap<String, UTXO> p2sh_p2wpkh = null;
-    private static HashMap<String, UTXO> p2wpkh = null;
-    private static HashMap<String, UTXO> postMix_clean = null;
-    private static HashMap<String, UTXO> postMix_toxic = null;
-    private static HashMap<String, UTXO> preMix = null;
-    private static HashMap<String, UTXO> badBank = null;
-    private static long lastUpdate = 0;
 
     private UTXOFactory() {
         ;
@@ -36,297 +29,51 @@ public class UTXOFactory {
 
         if (instance == null) {
             instance = new UTXOFactory();
-
-            p2pkh = new HashMap<String, UTXO>();
-            p2sh_p2wpkh = new HashMap<String, UTXO>();
-            p2wpkh = new HashMap<String, UTXO>();
-            postMix_clean = new HashMap<String, UTXO>();
-            postMix_toxic = new HashMap<String, UTXO>();
-            preMix = new HashMap<String, UTXO>();
-            badBank = new HashMap<String, UTXO>();
         }
-
         return instance;
     }
 
     public static UTXOFactory getInstance(Context ctx) {
-
         context = ctx;
-
         if (instance == null) {
             instance = new UTXOFactory();
-
-            p2pkh = new HashMap<String, UTXO>();
-            p2sh_p2wpkh = new HashMap<String, UTXO>();
-            p2wpkh = new HashMap<String, UTXO>();
-            postMix_clean = new HashMap<String, UTXO>();
-            postMix_toxic = new HashMap<String, UTXO>();
-            preMix = new HashMap<String, UTXO>();
-            badBank = new HashMap<String, UTXO>();
         }
-
         return instance;
     }
 
-    public void clear() {
-        p2pkh.clear();
-        p2sh_p2wpkh.clear();
-        p2wpkh.clear();
-        postMix_clean.clear();
-        postMix_toxic.clear();
-        preMix.clear();
-        badBank.clear();
-    }
-
-    public HashMap<String, UTXO> getPostMixClean() {
-        return postMix_clean;
-    }
-
-    public HashMap<String, UTXO> getPostMixToxic() {
-        return postMix_toxic;
-    }
-
-    public HashMap<String, UTXO> getPreMix() {
-        return preMix;
-    }
-
-    public HashMap<String, UTXO> getBadBankMix() {
-        return badBank;
-    }
-
-    public HashMap<String, UTXO> getP2PKH() {
-        return p2pkh;
-    }
-
-    public HashMap<String, UTXO> getP2SH_P2WPKH() {
-        return p2sh_p2wpkh;
-    }
-
-    public HashMap<String, UTXO> getP2WPKH() {
-        return p2wpkh;
-    }
-
-    public HashMap<String, UTXO> getAllPostMix() {
-        HashMap<String, UTXO> ret = new HashMap<String, UTXO>();
-        ret.putAll(postMix_clean);
-        ret.putAll(postMix_toxic);
-        return ret;
-    }
-
-    public void addP2PKH(String hash, int id, String script, UTXO utxo) {
-        if (!BlockedUTXO.getInstance().contains(hash, id)) {
-            p2pkh.put(script, utxo);
-            onChange();
-        }
-    }
-
-    public void addP2SH_P2WPKH(String hash, int id, String script, UTXO utxo) {
-        if (!BlockedUTXO.getInstance().contains(hash, id)) {
-            p2sh_p2wpkh.put(script, utxo);
-            onChange();
-        }
-    }
-
-    public void addP2WPKH(String hash, int id, String script, UTXO utxo) {
-        if (!BlockedUTXO.getInstance().contains(hash, id)) {
-            p2wpkh.put(script, utxo);
-            onChange();
-        }
-    }
-
-    public void addPostMix(String hash, int id, String script, UTXO utxo) {
-        if (!BlockedUTXO.getInstance().containsPostMix(hash, id)) {
-            if (isPostmixToxic(utxo)) {
-                postMix_toxic.put(script, utxo);
-            } else {
-                postMix_clean.put(script, utxo);
-            }
-            onChange();
-        }
-    }
-
-    public void addPreMix(String hash, int id, String script, UTXO utxo) {
-        preMix.put(script, utxo);
-        onChange();
-    }
-
-    public void addBadBank(String hash, int id, String script, UTXO utxo) {
-        badBank.put(script, utxo);
-        onChange();
-    }
-
     public long getTotalP2PKH() {
-        HashMap<String, UTXO> utxos = getP2PKH();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
+        List<UTXO> utxos = APIFactory.getInstance(context).getUtxosP2PKH(true);
+        return UTXO.sumValue(utxos);
     }
 
     public long getTotalP2SH_P2WPKH() {
-        HashMap<String, UTXO> utxos = getP2SH_P2WPKH();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
+        List<UTXO> utxos = APIFactory.getInstance(context).getUtxosP2SH_P2WPKH(true);
+        return UTXO.sumValue(utxos);
     }
 
     public long getTotalP2WPKH() {
-        HashMap<String, UTXO> utxos = getP2WPKH();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public long getTotalPostMixClean() {
-        HashMap<String, UTXO> utxos = getPostMixClean();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2PKH() {
-        HashMap<String, UTXO> utxos = getP2PKH();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2SH_P2WPKH() {
-        HashMap<String, UTXO> utxos = getP2SH_P2WPKH();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountP2WPKH() {
-        HashMap<String, UTXO> utxos = getP2WPKH();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountPostMixClean() {
-        HashMap<String, UTXO> utxos = getPostMixClean();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public long getTotalPostMixToxic() {
-        HashMap<String, UTXO> utxos = getPostMixToxic();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public long getTotalPreMix() {
-        HashMap<String, UTXO> utxos = getPreMix();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
-    }
-
-    public int getCountPostMixToxic() {
-        HashMap<String, UTXO> utxos = getPostMixToxic();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
-    }
-
-    public int getCountPreMix() {
-        HashMap<String, UTXO> utxos = getPreMix();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
+        List<UTXO> utxos = APIFactory.getInstance(context).getUtxosP2WPKH(true);
+        return UTXO.sumValue(utxos);
     }
 
     public long getTotalPostMix() {
-        HashMap<String, UTXO> utxos = getAllPostMix();
-        long ret = 0L;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getValue();
-        }
-
-        return ret;
+        List<UTXO> utxos = APIFactory.getInstance(context).getUtxosPostMix(true);
+        return UTXO.sumValue(utxos);
     }
 
-    public int getCountPostMix() {
-        HashMap<String, UTXO> utxos = getAllPostMix();
-        int ret = 0;
-
-        for (UTXO utxo : utxos.values()) {
-            ret += utxo.getOutpoints().size();
-        }
-
-        return ret;
+    public int getCountP2PKH() {
+        List<UTXO> utxos = APIFactory.getInstance(context).getUtxosP2PKH(true);
+        return UTXO.countOutpoints(utxos);
     }
 
-    private boolean isPostmixToxic(UTXO utxo) {
+    public int getCountP2SH_P2WPKH() {
+        List<UTXO> utxos = APIFactory.getInstance(context).getUtxosP2SH_P2WPKH(true);
+        return UTXO.countOutpoints(utxos);
+    }
 
-        String path = utxo.getPath();
-
-        // bip47 receive
-        if (path == null || path.length() == 0) {
-            return false;
-        }
-        // any account receive
-        else if (path.startsWith("M/0/")) {
-            return false;
-        }
-        // assume starts with "M/1/"
-        // any account change
-        else {
-            return true;
-        }
-
+    public int getCountP2WPKH() {
+        List<UTXO> utxos = APIFactory.getInstance(context).getUtxosP2WPKH(true);
+        return UTXO.countOutpoints(utxos);
     }
 
     public void markUTXOAsNonSpendable(String hexTx, int account) {
@@ -368,13 +115,41 @@ public class UTXOFactory {
         }
 
     }
-
-    private void onChange() {
-        // required for Whirlpool
-        lastUpdate = System.currentTimeMillis();
-    }
-
-    public long getLastUpdate() {
-        return lastUpdate;
+    public List<UTXO> getUTXOS(String address, long neededAmount, int account) {
+        APIFactory apiFactory = APIFactory.getInstance(context);
+        List<UTXO> utxos;
+        if (account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()) {
+            if (UTXOFactory.getInstance().getTotalPostMix() > neededAmount) {
+                List<UTXO> postmix = apiFactory.getUtxosPostMix(true);
+                utxos = new ArrayList<>();
+                //Filtering out do not spends
+                for (UTXO u : postmix) {
+                    for (MyTransactionOutPoint out : u.getOutpoints()) {
+                        if (!BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN())) {
+                            u.getOutpoints().add(out);
+                            u.setPath(u.getPath());
+                        }
+                    }
+                    if (u.getOutpoints().size() > 0) {
+                        utxos.add(u);
+                    }
+                }
+            } else {
+                return null;
+            }
+        } else if (FormatsUtil.getInstance().isValidBech32(address) && apiFactory.getUtxosP2WPKH(true).size() > 0 && UTXOFactory.getInstance().getTotalP2WPKH() > neededAmount) {
+            utxos = new ArrayList<UTXO>(apiFactory.getUtxosP2WPKH(true));
+//                    Log.d("SendActivity", "segwit utxos:" + utxos.size());
+        } else if (!FormatsUtil.getInstance().isValidBech32(address) && Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress() && apiFactory.getUtxosP2SH_P2WPKH(true).size() > 0 && getTotalP2SH_P2WPKH() > neededAmount) {
+            utxos = new ArrayList<UTXO>(apiFactory.getUtxosP2SH_P2WPKH(true));
+//                    Log.d("SendActivity", "segwit utxos:" + utxos.size());
+        } else if (!FormatsUtil.getInstance().isValidBech32(address) && !Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress() && apiFactory.getUtxosP2PKH(true).size() > 0 && getTotalP2PKH() > neededAmount) {
+            utxos = new ArrayList<UTXO>(apiFactory.getUtxosP2PKH(true));
+//                    Log.d("SendActivity", "p2pkh utxos:" + utxos.size());
+        } else {
+            utxos = apiFactory.getUtxos(true);
+//                    Log.d("SendActivity", "all filtered utxos:" + utxos.size());
+        }
+        return utxos;
     }
 }
