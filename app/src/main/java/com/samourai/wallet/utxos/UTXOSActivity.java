@@ -8,7 +8,6 @@ import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,6 +22,8 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.Toolbar;
@@ -515,6 +516,9 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
         });
     }
 
+    ActivityResultLauncher<Intent> utxosDetailsActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> loadUTXOs(true));
     /**
      * this start will start {@link UTXODetailsActivity} activity
      **/
@@ -522,7 +526,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
         Intent intent = new Intent(this, UTXODetailsActivity.class);
         intent.putExtra("hashIdx", utxoCoin.hash.concat("-").concat(String.valueOf(utxoCoin.idx)));
         intent.putExtra("_account", account);
-        startActivityForResult(intent, 0);
+        utxosDetailsActivityResultLauncher.launch(intent);
     }
 
     private boolean onListLongPress(int postion) {
