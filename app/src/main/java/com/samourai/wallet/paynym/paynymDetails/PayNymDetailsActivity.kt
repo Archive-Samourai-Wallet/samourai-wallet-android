@@ -479,7 +479,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
             var utxos: MutableList<UTXO?>? = null
             if (UTXOFactory.getInstance().totalP2SH_P2WPKH > amount + FeeUtil.getInstance().estimatedFeeSegwit(0, 1, 0, 4).toLong()) {
                 utxos = ArrayList()
-                utxos.addAll(UTXOFactory.getInstance().p2SH_P2WPKH.values)
+                utxos.addAll(APIFactory.getInstance(this@PayNymDetailsActivity).getUtxosP2SH_P2WPKH(true))
             } else {
                 utxos = APIFactory.getInstance(this@PayNymDetailsActivity).getUtxos(true)
             }

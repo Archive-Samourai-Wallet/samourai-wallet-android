@@ -1,6 +1,7 @@
 package com.samourai.whirlpool.client.wallet.data;
 
 
+import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bipFormat.BipFormatSupplier;
@@ -9,7 +10,6 @@ import com.samourai.wallet.bipWallet.WalletSupplier;
 import com.samourai.wallet.chain.ChainSupplier;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
-import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.whirlpool.client.tx0.Tx0PreviewService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWalletConfig;
@@ -32,7 +32,7 @@ public class AndroidDataSource implements DataSource {
     private UtxoSupplier utxoSupplier;
     private final BipFormatSupplier bipFormatSupplier;
 
-    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, PushTx pushTx, FeeUtil feeUtil, UTXOFactory utxoFactory, BIP47Util bip47Util, BIP47Meta bip47Meta, WalletSupplier walletSupplier, UtxoConfigSupplier utxoConfigSupplier, ChainSupplier chainSupplier) throws Exception {
+    public AndroidDataSource(WhirlpoolWallet whirlpoolWallet, PushTx pushTx, FeeUtil feeUtil, APIFactory apiFactory, BIP47Util bip47Util, BIP47Meta bip47Meta, WalletSupplier walletSupplier, UtxoConfigSupplier utxoConfigSupplier, ChainSupplier chainSupplier) throws Exception {
         this.pushTx = pushTx;
         this.walletSupplier = walletSupplier;
         this.minerFeeSupplier = new AndroidMinerFeeSupplier(feeUtil);
@@ -41,7 +41,7 @@ public class AndroidDataSource implements DataSource {
         this.tx0PreviewService = new Tx0PreviewService(minerFeeSupplier, config);
         this.poolSupplier = new ExpirablePoolSupplier(config.getRefreshPoolsDelay(), config.getServerApi(), tx0PreviewService);
         this.bipFormatSupplier = new BipFormatSupplierImpl();
-        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, utxoConfigSupplier, chainSupplier, poolSupplier, bipFormatSupplier, utxoFactory, bip47Util, bip47Meta);
+        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, utxoConfigSupplier, chainSupplier, poolSupplier, bipFormatSupplier, apiFactory, bip47Util, bip47Meta);
     }
 
     @Override

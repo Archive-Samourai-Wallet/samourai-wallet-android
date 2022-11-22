@@ -12,6 +12,7 @@ import com.samourai.stomp.client.AndroidStompClientService;
 import com.samourai.stomp.client.IStompClientService;
 import com.samourai.tor.client.TorClientService;
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.AndroidSecretPointFactory;
@@ -24,7 +25,6 @@ import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
-import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.exception.NotifiableException;
@@ -114,12 +114,12 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
     private DataSourceFactory computeDataSourceFactory(Context ctx) {
         PushTx pushTx = PushTx.getInstance(ctx);
         FeeUtil feeUtil = FeeUtil.getInstance();
-        UTXOFactory utxoFactory = UTXOFactory.getInstance(ctx);
+        APIFactory apiFactory = APIFactory.getInstance(ctx);
         BIP47Util bip47Util = BIP47Util.getInstance(ctx);
         BIP47Meta bip47Meta = BIP47Meta.getInstance();
         WalletSupplier walletSupplier = AndroidWalletSupplier.getInstance(ctx);
         ChainSupplier chainSupplier = AndroidChainSupplier.getInstance(ctx);
-        return new AndroidDataSourceFactory(pushTx, feeUtil, utxoFactory, bip47Util, bip47Meta, walletSupplier, chainSupplier);
+        return new AndroidDataSourceFactory(pushTx, feeUtil, apiFactory, bip47Util, bip47Meta, walletSupplier, chainSupplier);
     }
 
     private DataPersisterFactory computeDataPersisterFactory(Context ctx) {

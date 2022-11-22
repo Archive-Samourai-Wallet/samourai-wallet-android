@@ -1,17 +1,12 @@
 package com.samourai.wallet.utxos;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -19,13 +14,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityOptionsCompat;
+
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
-import com.google.zxing.client.android.Contents;
-import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.SamouraiWallet;
@@ -44,7 +37,6 @@ import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.tor.TorManager;
-import com.samourai.wallet.util.BlockExplorerUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
@@ -73,8 +65,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-
-import androidx.core.app.ActivityOptionsCompat;
 
 import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.Completable;
@@ -155,9 +145,6 @@ public class UTXODetailsActivity extends SamouraiActivity {
                         hash = outpoint.getTxHash().toString();
                         addr = outpoint.getAddress();
                         utxoCoin = new UTXOCoin(outpoint, utxo);
-                        if (BlockedUTXO.getInstance().contains(outpoint.getTxHash().toString(), outpoint.getTxOutputN())) {
-                            utxoCoin.doNotSpend = true;
-                        }
                         setUTXOState();
                     }
                 }
@@ -310,7 +297,6 @@ public class UTXODetailsActivity extends SamouraiActivity {
                                     BlockedUTXO.getInstance().removePostMix(hash, idx);
 
                                 }
-                                utxoCoin.doNotSpend = false;
 
                             } else {
                                 if (amount < BlockedUTXO.BLOCKED_UTXO_THRESHOLD && BlockedUTXO.getInstance().contains(hash, idx)) {
@@ -331,7 +317,6 @@ public class UTXODetailsActivity extends SamouraiActivity {
                                     } else {
                                         BlockedUTXO.getInstance().addPostMix(hash, idx, amount);
                                     }
-                                    utxoCoin.doNotSpend = true;
                                     LogUtil.debug("UTXOActivity", "added:" + hash + "-" + idx);
 
                                 }
@@ -426,7 +411,10 @@ public class UTXODetailsActivity extends SamouraiActivity {
         // get mixable WhirlpoolUtxo when available
         WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet();
         final WhirlpoolUtxo mixableUtxo = (whirlpoolWallet != null ? getWhirlpoolUtxoWhenMixable(whirlpoolWallet) : null);
-
+        if (utxoCoin.isBlocked()) {
+            Snackbar.make(notesTextView, R.string.utxo_is_blocked_please_try_again, Snackbar.LENGTH_LONG).show();
+            return;
+        }
         new MaterialAlertDialogBuilder(this)
                 .setMessage(mixableUtxo!=null ? "Mix now?" : "Send utxo to Whirlpool?")
                 .setCancelable(false)
@@ -515,15 +503,15 @@ public class UTXODetailsActivity extends SamouraiActivity {
         dialog.findViewById(R.id.utxo_details_option_spend)
                 .setOnClickListener(view -> {
                     dialog.dismiss();
+                    if (utxoCoin.isBlocked()) {
+                        Snackbar.make(paynymLayout.getRootView(), R.string.utxo_is_marked_as_blocked, Snackbar.LENGTH_LONG).show();
+                        return;
+                    }
                     ArrayList<UTXOCoin> list = new ArrayList<>();
                     list.add(utxoCoin);
                     String id = UUID.randomUUID().toString();
                     PreSelectUtil.getInstance().clear();
                     PreSelectUtil.getInstance().add(id, list);
-                    if (utxoCoin.doNotSpend) {
-                        Snackbar.make(paynymLayout.getRootView(), R.string.utxo_is_marked_as_blocked, Snackbar.LENGTH_LONG).show();
-                        return;
-                    }
                     if (id != null) {
                         Intent intent = new Intent(getApplicationContext(), SendActivity.class);
                         intent.putExtra("preselected", id);

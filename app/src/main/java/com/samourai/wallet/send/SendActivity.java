@@ -131,13 +131,10 @@ import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class SendActivity extends SamouraiActivity {
@@ -1177,15 +1174,15 @@ public class SendActivity extends SamouraiActivity {
                     utxos.add(u);
                 }
             } else {
-                utxos = SpendUtil.getUTXOS(SendActivity.this, address, neededAmount, account);
+                utxos = UTXOFactory.getInstance().getUTXOS(address, neededAmount, account);
             }
 
-            List<UTXO> utxosP2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2WPKH().values());
-            List<UTXO> utxosP2SH_P2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2SH_P2WPKH().values());
-            List<UTXO> utxosP2PKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2PKH().values());
+            List<UTXO> utxosP2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2WPKH(true));
+            List<UTXO> utxosP2SH_P2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2SH_P2WPKH(true));
+            List<UTXO> utxosP2PKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2PKH(true));
             if ((preselectedUTXOs == null || preselectedUTXOs.size() == 0) && account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                utxos = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllPostMix().values());
-                utxosP2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllPostMix().values());
+                utxos = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
+                utxosP2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
                 utxosP2PKH.clear();
                 utxosP2SH_P2WPKH.clear();
             }
