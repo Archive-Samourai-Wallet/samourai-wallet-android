@@ -253,14 +253,14 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
         for (UTXOCoin model : unFilteredUTXOS) {
             if (statusUnSpendable) {
-                if (model.doNotSpend) {
+                if (model.isBlocked()) {
                     if (!filteredStatus.contains(model)) {
                         filteredStatus.add(model);
                     }
                 }
             }
             if (statusSpendable) {
-                if (!model.doNotSpend) {
+                if (!model.isBlocked()) {
                     if (!filteredStatus.contains(model)) {
                         filteredStatus.add(model);
                     }
@@ -278,7 +278,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
         int spendables = 0;
 
         for (UTXOCoin model : filteredStatus) {
-            if (model.doNotSpend) {
+            if (model.isBlocked()) {
                 unspendables = unspendables + 1;
             } else {
                 spendables = spendables + 1;
@@ -326,7 +326,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             sectioned.add(active);
         }
         for (UTXOCoin models : filteredAddress) {
-            if (!models.doNotSpend) {
+            if (!models.isBlocked()) {
                 models.id = filteredAddress.indexOf(models) + 1;
                 sectioned.add(models);
             }
@@ -339,7 +339,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             sectioned.add(doNotSpend);
         }
         for (UTXOCoin models : filteredAddress) {
-            if (models.doNotSpend) {
+            if (models.isBlocked()) {
                 models.id = filteredAddress.indexOf(models) + 1;
                 sectioned.add(models);
             }
@@ -448,11 +448,9 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 for (MyTransactionOutPoint outpoint : utxo.getOutpoints()) {
                     UTXOCoin displayData = new UTXOCoin(outpoint, utxo);
                     if (BlockedUTXO.getInstance().contains(outpoint.getTxHash().toString(), outpoint.getTxOutputN())) {
-                        displayData.doNotSpend = true;
                         totalBlocked += displayData.amount;
 
                     } else if (BlockedUTXO.getInstance().containsPostMix(outpoint.getTxHash().toString(), outpoint.getTxOutputN())) {
-                        displayData.doNotSpend = true;
 //                    Log.d("UTXOActivity", "marked as do not spend");
                         totalBlocked += displayData.amount;
                     } else {
@@ -693,7 +691,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                     }
                     boolean blockedExist = false;
                     for (UTXOCoin coin : PreSelectUtil.getInstance().getPreSelected(id)) {
-                        if (coin.doNotSpend) {
+                        if (coin.isBlocked()) {
                             blockedExist = true;
                             break;
                         }
@@ -729,7 +727,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 }
                 boolean blockedExist = false;
                 for (UTXOCoin coin : PreSelectUtil.getInstance().getPreSelected(id)) {
-                    if (coin.doNotSpend) {
+                    if (coin.isBlocked()) {
                         blockedExist = true;
                     }
                 }
