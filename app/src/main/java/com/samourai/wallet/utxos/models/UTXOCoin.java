@@ -47,10 +47,12 @@ public class UTXOCoin {
     public boolean equals(@Nullable Object obj) {
         if (obj instanceof UTXOCoin) {
             UTXOCoin coin = ((UTXOCoin) obj);
-            return (this.id == coin.id &&
+            return (
                     this.idx == coin.idx &&
                     this.amount == coin.amount &&
+                    this.hash.equals(coin.hash) &&
                     this.address.equals(coin.address) &&
+                    this.isBlocked() == coin.isBlocked() &&
                     this.account == coin.account);
         }
         return super.equals(obj);
