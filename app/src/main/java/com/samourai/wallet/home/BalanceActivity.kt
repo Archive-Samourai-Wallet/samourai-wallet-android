@@ -16,6 +16,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -910,10 +911,20 @@ open class BalanceActivity : SamouraiActivity() {
         startActivity(explorerIntent)
     }
 
+
+    var utxoListResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        run {
+            refreshTx(false, false, false)
+            showProgress()
+        }
+    }
+
     private fun doUTXO() {
         val intent = Intent(this@BalanceActivity, UTXOSActivity::class.java)
         intent.putExtra("_account", account)
-        startActivityForResult(intent, UTXO_REQUESTCODE)
+        utxoListResult.launch(intent)
     }
 
     private fun doScan() {
