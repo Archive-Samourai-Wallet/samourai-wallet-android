@@ -3,7 +3,6 @@ package com.samourai.wallet.tools.viewmodels
 import android.content.Context
 import android.net.Uri
 import android.net.UrlQuerySanitizer
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,7 +21,10 @@ import java.net.URI
 class Auth47ViewModel : ViewModel() {
 
     companion object {
-        const val BIP47_AUTH_SCHEME = "auth47"
+        const val AUTH_SCHEME = "auth47"
+        const val AUTH_CALLBACK_HTTPS = "https://"
+        const val AUTH_CALLBACK_HTTP = "http://"
+        const val AUTH_CALLBACK_SRBN = "srbn:/"
         const val TAG = "Auth47ViewModel"
     }
 
@@ -61,7 +63,7 @@ class Auth47ViewModel : ViewModel() {
 
     private suspend fun validateChallenge(challenge: String) = withContext(Dispatchers.Default) {
         val url = URI(challenge)
-        if (url.scheme != BIP47_AUTH_SCHEME) {
+        if (url.scheme != AUTH_SCHEME) {
             throw Auth47Exception("invalid auth challenge")
         }
         val callbackValue = UrlQuerySanitizer(challenge).getValue("c")
@@ -78,15 +80,16 @@ class Auth47ViewModel : ViewModel() {
             } catch (e: Exception) {
             }
         }
-        if (callbackURI.scheme == "https" || callbackURI.scheme == "http") {
+        if (callbackURI.scheme == AUTH_CALLBACK_HTTPS || callbackURI.scheme == AUTH_CALLBACK_HTTP) {
             return@withContext true
         }
-        if (callbackURI.scheme == "srbn") {
+        if (callbackURI.scheme == AUTH_CALLBACK_SRBN) {
             throw Auth47Exception("Soroban url not supported yet")
         }
         throw Auth47Exception("invalid callback url")
     }
 
+    //start auth process by signing challenge and sending to callback url with signature
     fun initiateAuthentication(context: Context) {
         loading.postValue(true)
         authSuccess.postValue(false)
@@ -98,16 +101,9 @@ class Auth47ViewModel : ViewModel() {
                     val originalChallenge = authChallenge.value
                     val uri = Uri.parse(originalChallenge)
                     val callback = uri.getQueryParameter("c") ?: return@withContext
-                    val challenge = originalChallenge?.replace("r=$callback", "c=$callback") ?: ""
-                    val singedMessage = MessageSignUtil.getInstance().signMessage(BIP47Util.getInstance(context).notificationAddress.ecKey, challenge)
-                    val payload = JSONObject()
-                        .apply {
-                            put("auth47_response", "1.0")
-                            put("challenge", challenge)
-                            put("signature", singedMessage)
-                            put("nym", pcode)
-                        }
-                    val response = PayNymApiService.getInstance(pcode, context).auth47(callback, payload)
+                    val challengePayload = signChallenge(originalChallenge, context)
+                    //TODO: srbn support
+                    val response = PayNymApiService.getInstance(pcode, context).auth47(callback, challengePayload)
                     val body = response.body?.string() ?: "";
                     if (response.isSuccessful) {
                         authSuccess.postValue(true)
@@ -123,6 +119,31 @@ class Auth47ViewModel : ViewModel() {
         }.invokeOnCompletion {
             loading.postValue(false)
         }
+    }
+
+
+    //Checks if the challenge is valid and signs it and returns the json payload
+    private fun signChallenge(originalChallengeUri: String?, context: Context): JSONObject {
+        val pcode = BIP47Util.getInstance(context).paymentCode.toString();
+        val uri = Uri.parse(originalChallengeUri)
+        val scheme = uri.scheme
+        val nonce = uri.host
+        val callback = uri.getQueryParameter("c")
+        var redirectUrl = uri.getQueryParameter("r")
+        val expiry = uri.getQueryParameter("e")
+        if (redirectUrl.isNullOrEmpty()) {
+            redirectUrl = callback
+        }
+        val challenge = "$scheme://${nonce}?r=$redirectUrl${if (expiry == null) "" else "&e=$expiry"}"
+        val singedChallenge = MessageSignUtil.getInstance().signMessage(BIP47Util.getInstance(context).notificationAddress.ecKey, challenge)
+        val payload = JSONObject()
+            .apply {
+                put("auth47_response", "1.0")
+                put("challenge", challenge)
+                put("signature", singedChallenge)
+                put("nym", pcode)
+            }
+        return payload
     }
 
     fun clear() {
