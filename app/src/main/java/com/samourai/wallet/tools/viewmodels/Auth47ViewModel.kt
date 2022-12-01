@@ -25,6 +25,7 @@ class Auth47ViewModel : ViewModel() {
         const val AUTH_CALLBACK_HTTPS = "https://"
         const val AUTH_CALLBACK_HTTP = "http://"
         const val AUTH_CALLBACK_SRBN = "srbn:/"
+        const val AUTH_CALLBACK_SRBNS = "srbns:/"
         const val TAG = "Auth47ViewModel"
     }
 
@@ -83,10 +84,10 @@ class Auth47ViewModel : ViewModel() {
         if (callbackURI.scheme == AUTH_CALLBACK_HTTPS || callbackURI.scheme == AUTH_CALLBACK_HTTP) {
             return@withContext true
         }
-        if (callbackURI.scheme == AUTH_CALLBACK_SRBN) {
+        if (callbackURI.scheme == AUTH_CALLBACK_SRBN || callbackURI.scheme == AUTH_CALLBACK_SRBNS) {
             throw Auth47Exception("Soroban url not supported yet")
         }
-        throw Auth47Exception("invalid callback url")
+        throw Auth47Exception("invalid callback url")   
     }
 
     //start auth process by signing challenge and sending to callback url with signature
@@ -129,12 +130,12 @@ class Auth47ViewModel : ViewModel() {
         val scheme = uri.scheme
         val nonce = uri.host
         val callback = uri.getQueryParameter("c")
-        var redirectUrl = uri.getQueryParameter("r")
+        var resource = uri.getQueryParameter("r")
         val expiry = uri.getQueryParameter("e")
-        if (redirectUrl.isNullOrEmpty()) {
-            redirectUrl = callback
+        if (resource.isNullOrEmpty()) {
+            resource = callback
         }
-        val challenge = "$scheme://${nonce}?r=$redirectUrl${if (expiry == null) "" else "&e=$expiry"}"
+        val challenge = "$scheme://${nonce}?r=$resource${if (expiry == null) "" else "&e=$expiry"}"
         val singedChallenge = MessageSignUtil.getInstance().signMessage(BIP47Util.getInstance(context).notificationAddress.ecKey, challenge)
         val payload = JSONObject()
             .apply {
