@@ -759,7 +759,7 @@ open class BalanceActivity : SamouraiActivity() {
                 try {
                     if (privKeyReader.format != null) {
                         doPrivKey(strResult!!.trim { it <= ' ' })
-                    } else if (strResult?.lowercase()?.startsWith(Auth47ViewModel.BIP47_AUTH_SCHEME.lowercase()) == true) {
+                    } else if (strResult?.lowercase()?.startsWith(Auth47ViewModel.AUTH_SCHEME.lowercase()) == true) {
                         ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
                             bundle = Bundle().apply {
                                 putString("KEY", strResult)
@@ -939,7 +939,7 @@ open class BalanceActivity : SamouraiActivity() {
                     privKeyReader.format != null -> {
                         doPrivKey(code.trim { it <= ' ' })
                     }
-                    code.lowercase().startsWith(Auth47ViewModel.BIP47_AUTH_SCHEME) -> {
+                    code.lowercase().startsWith(Auth47ViewModel.AUTH_SCHEME) -> {
                         ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
                             bundle = Bundle().apply {
                                 putString("KEY", code)
