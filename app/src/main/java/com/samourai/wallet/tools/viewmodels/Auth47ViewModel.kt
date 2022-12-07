@@ -22,10 +22,10 @@ class Auth47ViewModel : ViewModel() {
 
     companion object {
         const val AUTH_SCHEME = "auth47"
-        const val AUTH_CALLBACK_HTTPS = "https://"
-        const val AUTH_CALLBACK_HTTP = "http://"
-        const val AUTH_CALLBACK_SRBN = "srbn:/"
-        const val AUTH_CALLBACK_SRBNS = "srbns:/"
+        const val AUTH_CALLBACK_HTTPS = "https"
+        const val AUTH_CALLBACK_HTTP = "http"
+        const val AUTH_CALLBACK_SRBN = "srbn"
+        const val AUTH_CALLBACK_SRBNS = "srbns"
         const val TAG = "Auth47ViewModel"
     }
 
@@ -87,7 +87,7 @@ class Auth47ViewModel : ViewModel() {
         if (callbackURI.scheme == AUTH_CALLBACK_SRBN || callbackURI.scheme == AUTH_CALLBACK_SRBNS) {
             throw Auth47Exception("Soroban url not supported yet")
         }
-        throw Auth47Exception("invalid callback url")   
+        throw Auth47Exception("invalid callback url")
     }
 
     //start auth process by signing challenge and sending to callback url with signature
