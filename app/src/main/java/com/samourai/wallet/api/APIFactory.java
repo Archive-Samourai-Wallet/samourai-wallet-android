@@ -481,7 +481,7 @@ public class APIFactory {
             else    {
                 HashMap<String,String> args = new HashMap<String,String>();
                 args.put("xpub", xpub);
-                if(PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_RESTORE, false) == true)    {
+                if(Objects.equals(PrefsUtil.getInstance(context).getValue(PrefsUtil.WALLET_ORIGIN, "restored"), "restored"))   {
                     args.put("type", "restore");
                 }
                 else    {
