@@ -1577,25 +1577,25 @@ public class APIFactory {
         String[] s = null;
 
         try {
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB44REG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB44REG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true)) {
                 registerXPUB(HD_WalletFactory.getInstance(context).get().getAccount(0).xpubstr(), 44, null);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB49REG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB49REG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP49Util.getInstance(context).getWallet().getAccount(0).xpubstr(), 49, null);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB84REG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB84REG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(0).xpubstr(), 84, null);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPREREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPREREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr(), 84, PrefsUtil.XPUBPREREG);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).xpubstr(), 84, PrefsUtil.XPUBPOSTREG);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBBADBANKREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBBADBANKREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).xpubstr(), 84, PrefsUtil.XPUBBADBANKLOCK);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBRICOCHETREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBRICOCHETREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(RicochetMeta.getInstance(context).getRicochetAccount()).zpubstr(), 84, PrefsUtil.XPUBRICOCHETREG);
             }
 
