@@ -609,7 +609,7 @@ open class BalanceActivity : SamouraiActivity() {
                                 } else
                                     throw Exception("Invalid response ")
                             }
-                        } catch (_:Exception) {
+                        } catch (_: Exception) {
 
                         }
                     }
@@ -631,9 +631,11 @@ open class BalanceActivity : SamouraiActivity() {
             }
             balanceViewModel.viewModelScope.launch {
                 withContext(Dispatchers.Default) {
-                    val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
-                    BIP47Util.getInstance(applicationContext)
-                        .setAvatar(bitmap)
+                    if (BIP47Util.getInstance(applicationContext).avatarImage().exists()) {
+                        val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                        BIP47Util.getInstance(applicationContext)
+                            .setAvatar(bitmap)
+                    }
                 }
             }
             for (code in paymentCodes) {
