@@ -29,6 +29,7 @@ import androidx.transition.TransitionManager
 import com.dm.zbar.android.scanner.ZBarConstants
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
+import com.google.gson.Gson
 import com.samourai.wallet.*
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
@@ -54,7 +55,9 @@ import com.samourai.wallet.payload.ExternalBackupManager.hasPermissions
 import com.samourai.wallet.payload.ExternalBackupManager.onActivityResult
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.PayNymHome
+import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.paynym.fragments.PayNymOnBoardBottomSheet
+import com.samourai.wallet.paynym.models.NymResponse
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
@@ -384,7 +387,7 @@ open class BalanceActivity : SamouraiActivity() {
         if (bitmapImage != null) {
             drawable = BitmapDrawable(resources, bitmapImage)
         }
-        if(nym.isNullOrEmpty()){
+        if (nym.isNullOrEmpty()) {
             nym = BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString())
         }
         val toolWindowSize = applicationContext.resources.displayMetrics.density * 220;
@@ -585,24 +588,52 @@ open class BalanceActivity : SamouraiActivity() {
 
     private fun makePaynymAvatarCache() {
         try {
+            if (!PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED, false)) {
+                return
+            }
             val paymentCodes = ArrayList(BIP47Meta.getInstance().getSortedByLabels(false, true))
+            if (PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_BOT_NAME, "").isNullOrEmpty()) {
+                val strPaymentCode = BIP47Util.getInstance(getApplication()).paymentCode.toString()
+                val apiService = PayNymApiService.getInstance(strPaymentCode, getApplication());
+                balanceViewModel.viewModelScope.launch {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val response = apiService.getNymInfo()
+                            if (response.isSuccessful) {
+                                val responseJson = response.body?.string()
+                                if (responseJson != null) {
+                                    val jsonObject = JSONObject(responseJson)
+                                    val nym = Gson().fromJson(jsonObject.toString(), NymResponse::class.java);
+                                    PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.PAYNYM_BOT_NAME, nym.nymName)
+
+                                } else
+                                    throw Exception("Invalid response ")
+                            }
+                        } catch (_:Exception) {
+
+                        }
+                    }
+                }
+            }
             if (!BIP47Util.getInstance(applicationContext).avatarImage().exists()) {
                 BIP47Util.getInstance(applicationContext).fetchBotImage()
                     .subscribe()
                     .apply {
                         compositeDisposable.add(this)
-                    }
-            } else {
-                try {
-                    balanceViewModel.viewModelScope.launch {
-                        withContext(Dispatchers.Default) {
-                            val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
-                            BIP47Util.getInstance(applicationContext)
-                                .setAvatar(bitmap)
+                        balanceViewModel.viewModelScope.launch {
+                            withContext(Dispatchers.Default) {
+                                val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                                BIP47Util.getInstance(applicationContext)
+                                    .setAvatar(bitmap)
+                            }
                         }
                     }
-                } catch (er: Exception) {
-
+            }
+            balanceViewModel.viewModelScope.launch {
+                withContext(Dispatchers.Default) {
+                    val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                    BIP47Util.getInstance(applicationContext)
+                        .setAvatar(bitmap)
                 }
             }
             for (code in paymentCodes) {
@@ -629,7 +660,7 @@ open class BalanceActivity : SamouraiActivity() {
                 stopService(Intent(this@BalanceActivity.applicationContext, WebSocketService::class.java))
             }
         }
-        if(PrefsUtil.getInstance(this.application).getValue(StealthModeController.PREF_ENABLED,false)){
+        if (PrefsUtil.getInstance(this.application).getValue(StealthModeController.PREF_ENABLED, false)) {
             StealthModeController.enableStealth(applicationContext)
         }
         super.onDestroy()
@@ -803,7 +834,7 @@ open class BalanceActivity : SamouraiActivity() {
                     TorServiceController.stopTor()
                 }
                 TimeOutUtil.getInstance().reset()
-                if(StealthModeController.isStealthEnabled(applicationContext)){
+                if (StealthModeController.isStealthEnabled(applicationContext)) {
                     StealthModeController.enableStealth(applicationContext)
                 }
                 finishAffinity()
