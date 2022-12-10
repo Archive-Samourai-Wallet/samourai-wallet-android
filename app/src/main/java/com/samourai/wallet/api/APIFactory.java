@@ -457,6 +457,7 @@ public class APIFactory {
                 args.append("&type=");
                 if(Objects.equals(PrefsUtil.getInstance(context).getValue(PrefsUtil.WALLET_ORIGIN, "restored"), "restored"))   {
                     args.append("restore");
+                    args.append("&force=true");
                 }
                 else    {
                     args.append("new");
@@ -483,6 +484,7 @@ public class APIFactory {
                 args.put("xpub", xpub);
                 if(Objects.equals(PrefsUtil.getInstance(context).getValue(PrefsUtil.WALLET_ORIGIN, "restored"), "restored"))   {
                     args.put("type", "restore");
+                    args.put("force", "true");
                 }
                 else    {
                     args.put("type", "new");
