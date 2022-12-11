@@ -588,12 +588,10 @@ open class BalanceActivity : SamouraiActivity() {
 
     private fun makePaynymAvatarCache() {
         try {
-            if (!PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED, false)) {
-                return
-            }
             val paymentCodes = ArrayList(BIP47Meta.getInstance().getSortedByLabels(false, true))
-            if (PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_BOT_NAME, "").isNullOrEmpty()) {
-                val strPaymentCode = BIP47Util.getInstance(getApplication()).paymentCode.toString()
+            if (PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_BOT_NAME, "").isNullOrEmpty()
+                && PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED,false))  {
+                val strPaymentCode = BIP47Util.getInstance(application).paymentCode.toString()
                 val apiService = PayNymApiService.getInstance(strPaymentCode, getApplication());
                 balanceViewModel.viewModelScope.launch {
                     withContext(Dispatchers.IO) {

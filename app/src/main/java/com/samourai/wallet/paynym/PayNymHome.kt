@@ -1,7 +1,7 @@
 package com.samourai.wallet.paynym
 
 import android.content.Intent
-import android.net.Uri
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -15,6 +15,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.lifecycle.viewModelScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -26,7 +27,6 @@ import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
-import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
@@ -39,16 +39,17 @@ import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.util.*
 import com.samourai.wallet.widgets.ViewPager
-import com.squareup.picasso.Picasso
 import io.reactivex.exceptions.UndeliverableException
 import io.reactivex.plugins.RxJavaPlugins
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.bitcoinj.core.AddressFormatException
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.json.JSONException
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
-import java.util.*
 
 class PayNymHome : SamouraiActivity() {
 
@@ -94,8 +95,14 @@ class PayNymHome : SamouraiActivity() {
         paynymCode?.text = BIP47Meta.getInstance().getDisplayLabel(pcode)
         followersFragment = PaynymListFragment.newInstance()
         followingFragment = PaynymListFragment.newInstance()
-        Picasso.get().load(WebUtil.PAYNYM_API + pcode + "/avatar")
-                .into(userAvatar)
+
+        BIP47Util.getInstance(this)
+            .payNymLogoLive.observe(this) { payNymLogo ->
+                if (payNymLogo != null) {
+                    userAvatar?.setImageBitmap(payNymLogo)
+                }
+            }
+
         paynymFab?.setOnClickListener {
             startActivity(Intent(this, AddPaynymActivity::class.java))
         }
@@ -103,14 +110,14 @@ class PayNymHome : SamouraiActivity() {
             paynym?.text = paymentCode
             PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.PAYNYM_BOT_NAME,paymentCode)
         }
-        payNymViewModel.loaderLiveData.observe(this, {
+        payNymViewModel.loaderLiveData.observe(this) {
             swipeToRefreshPaynym?.isRefreshing = it
-        })
+        }
 
-        payNymViewModel.errorsLiveData.observe(this, {
+        payNymViewModel.errorsLiveData.observe(this) {
             Snackbar.make(paynym!!, "Error : ${it}", Snackbar.LENGTH_LONG).show()
-        })
-        payNymViewModel.followers.observe(this, { followersList: ArrayList<String>? ->
+        }
+        payNymViewModel.followers.observe(this) { followersList: ArrayList<String>? ->
             if (followersList == null) {
                 return@observe
             }
@@ -118,16 +125,16 @@ class PayNymHome : SamouraiActivity() {
             followersFragment?.addPcodes(filtered)
             tabTitle[1] = "Followers " + " (" + filtered.size.toString() + ")"
             adapter.notifyDataSetChanged()
-        })
-        payNymViewModel.following.observe(this, { followingList: ArrayList<String>? ->
-            if (followingList == null ) {
+        }
+        payNymViewModel.following.observe(this) { followingList: ArrayList<String>? ->
+            if (followingList == null) {
                 return@observe
             }
             val filtered = filterArchived(followingList)
             followingFragment?.addPcodes(filtered)
             tabTitle[0] = "Following " + " (" + filtered.size.toString() + ")"
             adapter.notifyDataSetChanged()
-        })
+        }
         if (!PrefsUtil.getInstance(this).getValue(PrefsUtil.PAYNYM_CLAIMED, false)) {
             doClaimPayNym()
         }
@@ -137,10 +144,23 @@ class PayNymHome : SamouraiActivity() {
         }
         if (PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PAYNYM_CLAIMED, false)) {
             payNymViewModel.refreshPayNym()
+            BIP47Util.getInstance(applicationContext).fetchBotImage()
+                .subscribe()
+                .apply {
+                    compositeDisposable.add(this)
+                    payNymViewModel.viewModelScope.launch {
+                        withContext(Dispatchers.IO) {
+                            val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                            BIP47Util.getInstance(applicationContext)
+                                .setAvatar(bitmap)
+                        }
+
+                    }
+                }
         }
-        payNymViewModel.refreshTaskProgressLiveData.observe(this, {
+        payNymViewModel.refreshTaskProgressLiveData.observe(this) {
             if (it.first != 0 || it.second != 0) {
-                paynymSync?.setProgressCompat(it.first,true);
+                paynymSync?.setProgressCompat(it.first, true);
                 paynymSync?.max = it.second
                 pcodeSyncLayout?.visibility = View.VISIBLE
                 paymentCodeSyncMessage?.text = this.getString(R.string.sycing_pcodes) + " " + paynymSync!!.progress.toString() + "/" + it.second.toString()
@@ -149,7 +169,7 @@ class PayNymHome : SamouraiActivity() {
                     Snackbar.make(pcodeSyncLayout!!.rootView, this.getString(R.string.sync_complete), Snackbar.LENGTH_SHORT).show()
                 }
             }
-        })
+        }
         RxJavaPlugins.setErrorHandler { throwable: Throwable? ->
             if (throwable is UndeliverableException) {
                 Log.i(TAG, "onCreate: Thread interrupted")
