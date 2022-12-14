@@ -270,6 +270,9 @@ fun VpnMainScreen(activity: ComponentActivity?) {
                                 }
                             }
                         }
+                        item {
+                            Spacer(modifier = Modifier.padding(38.dp))
+                        }
                     }
                 }
             }
