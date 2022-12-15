@@ -304,6 +304,7 @@
 
     <string name="action_ricochet">Replay Ricochet</string>
     <string name="action_empty_ricochet">Empty Ricochet queue</string>
+    <string name="empty_ricochet_queue">Ricochet queue is empty!</string>
     <string name="ricochet">Ricochet - send with 4 extra hops</string>
     <string name="action_ricochet_script">Display Ricochet script</string>
     <string name="action_ricochet_replay">Resend Ricochet</string>
