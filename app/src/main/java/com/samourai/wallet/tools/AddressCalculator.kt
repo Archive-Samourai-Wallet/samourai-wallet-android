@@ -207,6 +207,7 @@ fun AddressCalcForm() {
                 }),
                 onValueChange = {
                     index = it
+                    applyChanges()
                 },
                 label = {
                     Text(
