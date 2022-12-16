@@ -50,6 +50,7 @@ import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import kotlinx.coroutines.launch
+import com.samourai.wallet.bip47.BIP47Meta.strSamouraiDonationPCode
 
 
 enum class PaynymChooserType {
@@ -82,6 +83,9 @@ fun PaynymChooser(
                 addAll(following)
             }
         }
+        for (paynym in paynyms)
+            if (paynym == strSamouraiDonationPCode)
+                paynyms.remove(paynym)
     }
     if (paynymChooserType == PaynymChooserType.SPEND) {
         //Show only paynym that are connected
@@ -93,7 +97,8 @@ fun PaynymChooser(
     }
     var title = ""
      if(paynymChooserType == PaynymChooserType.COLLABORATE){
-         title = stringResource(R.string.select_collaborator)
+         //title = stringResource(R.string.select_collaborator)
+         title = "sema selector"
     }
     if(paynymChooserType == PaynymChooserType.SPEND){
          title = stringResource(R.string.select_paynym)
