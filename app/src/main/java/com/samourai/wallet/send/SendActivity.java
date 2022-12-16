@@ -2332,10 +2332,18 @@ public class SendActivity extends SamouraiActivity {
         if (id == R.id.action_scan_qr) {
             doScan();
         } else if (id == R.id.action_ricochet) {
-            Intent intent = new Intent(SendActivity.this, RicochetActivity.class);
-            startActivity(intent);
+            if (RicochetMeta.getInstance(this).getQueue().isEmpty()) {
+                Toast.makeText(this, getString(R.string.empty_ricochet_queue), Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Intent intent = new Intent(SendActivity.this, RicochetActivity.class);
+                startActivity(intent);
+            }
         } else if (id == R.id.action_empty_ricochet) {
-            emptyRicochetQueue();
+            if (RicochetMeta.getInstance(this).getQueue().isEmpty())
+                Toast.makeText(this, getString(R.string.empty_ricochet_queue), Toast.LENGTH_SHORT).show();
+            else
+                emptyRicochetQueue();
         } else if (id == R.id.action_utxo) {
             doUTXO();
         } else if (id == R.id.action_fees) {
@@ -2369,6 +2377,7 @@ public class SendActivity extends SamouraiActivity {
             }
         }).start();
 
+        Toast.makeText(this, "Ricochet queue has been emptied", Toast.LENGTH_SHORT).show();
     }
 
     private void doScan() {
