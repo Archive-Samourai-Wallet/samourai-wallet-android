@@ -13,6 +13,7 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
@@ -21,6 +22,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.samourai.wallet.R;
+import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
@@ -76,6 +78,14 @@ public class WhirlPoolLoaderDialog extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
         statusProgress.setProgress(20);
         statusText.setText(R.string.loading);
+        if (AppUtil.getInstance(getContext()).isOfflineMode()) {
+            if (getActivity() != null) {
+                Toast.makeText(getContext(), R.string.in_offline_mode, Toast.LENGTH_SHORT).show();
+                getActivity().onBackPressed();
+            }
+            return;
+        }
+
         WhirlpoolNotificationService.startService(getActivity());
         AndroidWhirlpoolWalletService androidWhirlpoolWalletService = AndroidWhirlpoolWalletService.getInstance();
         Disposable disposable = androidWhirlpoolWalletService.listenConnectionStatus()

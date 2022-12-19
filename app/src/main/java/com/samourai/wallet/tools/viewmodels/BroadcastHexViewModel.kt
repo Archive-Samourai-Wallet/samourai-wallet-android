@@ -63,9 +63,7 @@ class BroadcastHexViewModel : ViewModel() {
     }
 
     fun broadcast(context: Context, hex: String) {
-        val isOffline = AppUtil.getInstance(context).isOfflineMode
-
-        if (isOffline) {
+        if (AppUtil.getInstance(context).isOfflineMode) {
             Toast.makeText(context, R.string.in_offline_mode, Toast.LENGTH_SHORT).show()
             return
         }
