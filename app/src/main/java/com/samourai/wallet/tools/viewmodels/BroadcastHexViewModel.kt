@@ -1,12 +1,15 @@
 package com.samourai.wallet.tools.viewmodels
 
 import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.send.PushTx
+import com.samourai.wallet.util.AppUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,6 +63,12 @@ class BroadcastHexViewModel : ViewModel() {
     }
 
     fun broadcast(context: Context, hex: String) {
+        val isOffline = AppUtil.getInstance(context).isOfflineMode
+
+        if (isOffline) {
+            Toast.makeText(context, R.string.in_offline_mode, Toast.LENGTH_SHORT).show()
+            return
+        }
         _page.postValue(1)
         _loading.postValue(true)
         viewModelScope.launch {
