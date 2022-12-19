@@ -3,6 +3,7 @@ package com.samourai.wallet.collaborate
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -83,9 +84,11 @@ fun PaynymChooser(
                 addAll(following)
             }
         }
-        for (paynym in paynyms)
-            if (paynym == strSamouraiDonationPCode)
-                paynyms.remove(paynym)
+        try {
+            paynyms.remove(strSamouraiDonationPCode)
+        } catch (e: Exception) {
+            Log.d("Paynym: ", "Couldn't remove +samouraiwallet from paynym list.")
+        }
     }
     if (paynymChooserType == PaynymChooserType.SPEND) {
         //Show only paynym that are connected
