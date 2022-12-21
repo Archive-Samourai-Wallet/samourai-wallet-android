@@ -3,12 +3,15 @@ package com.samourai.wallet.tools.viewmodels
 import android.content.Context
 import android.net.Uri
 import android.net.UrlQuerySanitizer
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.paynym.api.PayNymApiService
+import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.MessageSignUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -92,6 +95,11 @@ class Auth47ViewModel : ViewModel() {
 
     //start auth process by signing challenge and sending to callback url with signature
     fun initiateAuthentication(context: Context) {
+        if (AppUtil.getInstance(context).isOfflineMode) {
+            Toast.makeText(context, R.string.in_offline_mode, Toast.LENGTH_SHORT).show()
+            return
+        }
+
         loading.postValue(true)
         authSuccess.postValue(false)
         errors.postValue(null)
