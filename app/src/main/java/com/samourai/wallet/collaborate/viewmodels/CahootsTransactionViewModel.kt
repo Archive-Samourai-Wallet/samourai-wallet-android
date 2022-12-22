@@ -298,7 +298,7 @@ class CahootsTransactionViewModel : ViewModel() {
                 destinationPcode = destinationAddress.value
             }
             // Cahoots manual
-            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, destinationPcode)
+            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, feePerKb, amountInSats.toLong(), address, destinationPcode)
             context.startActivity(intent)
             return
         }
