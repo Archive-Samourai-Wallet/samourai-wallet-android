@@ -213,9 +213,9 @@ public class SendFactory extends SendFactoryGeneric	{
             }
         }
 
-        int countP2TR = 0;
-        if(FormatsUtilGeneric.getInstance().isValidP2TR(address))    {
-            countP2TR = 1;
+        int countP2WSH_P2TR = 0;
+        if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(address))    {
+            countP2WSH_P2TR = 1;
         }
 
         int changeType = 84;
@@ -339,7 +339,7 @@ public class SendFactory extends SendFactoryGeneric	{
 
             if(firstPassOutpoints != null)    {
                 Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(selectedOutpoints));
-                biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2TR, countP2TR);
+                biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2WSH_P2TR, countP2WSH_P2TR);
             }
 
             if(selectedValue.compareTo(spendAmount.add(biFee).add(bDust)) > 0)    {
@@ -360,7 +360,7 @@ public class SendFactory extends SendFactoryGeneric	{
             _value += op.getValue().longValue();
             if(firstPassOutpoints != null)    {
                 Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(_selectedOutpoints));
-                biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2TR, countP2TR);
+                biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2WSH_P2TR, countP2WSH_P2TR);
             }
             if(_value > spendAmount.add(biFee).add(bDust).longValue())    {
                 break;
@@ -380,7 +380,7 @@ public class SendFactory extends SendFactoryGeneric	{
 
         if(firstPassOutpoints != null)    {
             Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(selectedOutpoints));
-            biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2TR, countP2TR);
+            biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2WSH_P2TR, countP2WSH_P2TR);
             debug("SendFactory", "biFee:" + biFee.toString());
             if(biFee.mod(BigInteger.valueOf(2L)).compareTo(BigInteger.ZERO) != 0)    {
                 biFee = biFee.add(BigInteger.ONE);

@@ -81,14 +81,14 @@
     <string name="options_send_backup_to_support2">Send wallet backup to tech support. Does not contain private key info.</string>
     <string name="options_fee_provider">Fee Estimation Source</string>
     <string name="options_fee_provider2">Select your preferred transaction fee estimation provider.</string>
-    <string name="options_broadcast_on">Broadcast transactions</string>
+    <string name="broadcast_transactions">Broadcast transaction</string>
     <string name="options_broadcast_on2">Uncheck (broadcasting OFF) to copy raw signed transaction to the clipboard.</string>
     <string name="options_strictoutputs">Strict mode</string>
     <string name="options_strictoutputs2">Strict control of transaction outputs and address reuse.</string>
     <string name="options_segwit">Receive to segwit addresses</string>
     <string name="options_segwit_2">Generate segwit addresses for incoming transactions.</string>
     <string name="options_broadcast_hex">Broadcast transaction hex</string>
-    <string name="options_broadcast_hex2">Broadcast signed transaction supplied in hex format.</string>
+    <string name="options_broadcast_hex2">Broadcast signed transaction supplied in hex format</string>
     <string name="options_like_typed_change">Receive change to like-typed outputs</string>
     <string name="options_like_typed_change2">Receive change to same type of address as spend output. Turn OFF to receive only to segwit change addresses.</string>
     <string name="options_haptic">Haptic PIN entry</string>
@@ -274,6 +274,7 @@
 
     <string name="invalid_passphrase">Invalid passphrase</string>
     <string name="passphrase">Passphrase</string>
+    <string name="password">Password</string>
     <string name="passphrase_needed_for_backup">Your wallet is not protected by a passphrase. Wallet backups are encrypted using your wallet passphrase. If you would like to use encrypted wallet backups and other Samourai Wallet features create your wallet using Samourai Wallet and transfer your funds.</string>
     <string name="passphrase_required">A passphrase is required to use this function. Please consider creating a new wallet which will automatically include a passphrase.</string>
 
@@ -303,6 +304,7 @@
 
     <string name="action_ricochet">Replay Ricochet</string>
     <string name="action_empty_ricochet">Empty Ricochet queue</string>
+    <string name="empty_ricochet_queue">Ricochet queue is empty!</string>
     <string name="ricochet">Ricochet - send with 4 extra hops</string>
     <string name="action_ricochet_script">Display Ricochet script</string>
     <string name="action_ricochet_replay">Resend Ricochet</string>
@@ -716,6 +718,7 @@
     <string name="active">Active</string>
     <string name="change_from_postmix">Change from postmix spend</string>
     <string name="selection_contains_blocked_utxo">Your selection contains blocked UTXOs. Please remove and try again.</string>
+    <string name="utxo_is_blocked_please_try_again">UTXO is Blocked. Please remove and try again.</string>
     <string name="only_single_utxo_may_selected">Only a single UTXO may be selected for direct spend from post-mix.</string>
     <string name="only_a_single_utxo_may">Only a single UTXO may be selected for direct Whirlpooling from post-mix.</string>
     <string name="only_change_utxos_allowed">Only change UTXO\'s allowed</string>
@@ -924,5 +927,21 @@
     <string name="select_paynym">Select Paynym</string>
     <string name="sweep_dust_warning">Unable to compose transaction, output value will be dust</string>
     <string name="sweep_invalid_fee_warning">Unable to compose transaction invalid fees.</string>
-
+    <string name="do_you_want_to_enable_stealth_mode">Do you want to enable stealth mode ?</string>
+    <string name="do_you_want_to_disable_stealth_mode">Do you want to disable stealth mode ?</string>
+    <string name="calculator">Calculator</string>
+    <string name="stealth_vpn_name">Edge VPN</string>
+    <string name="stealth_mode">Stealth Mode</string>
+    <string name="enable_stealth_mode_to_protect">Enable stealth mode to protect against physical searches of your device</string>
+    <string name="set_stealth_pin">Set stealth CODE</string>
+    <string name="enable_stealth_mode_on_or_off">Off / On</string>
+    <string name="choose_stealth_app">Choose Stealth App</string>
+    <string name="stealth_pin_warning">Cannot use wallet pin for stealth mode. please choose a different code</string>
+    <string name="stealth_qr_scannerapp_title">QR Scanner</string>
+    <string name="stealth_notepad_title">Notepad</string>
+    <string name="confirm_testnet_message">You are about to create a TESTNET wallet. TESTNET is used for experimenting and development testing.\n\nAll wallet tools are available, but will only function with TESTNET bitcoin.\n\nDo you wish to proceed?</string>
+    <string name="upon_exiting_samourai_wallet_stealth_mode">Upon exiting Samourai Wallet, Stealth Mode is enabled automatically</string>
+    <string name="enable_stealth_mode">Enable stealth mode</string>
+    <string name="disable_stealth_mode">Disable stealth mode</string>
+    <string name="instructions">Instructions</string>
 </resources>

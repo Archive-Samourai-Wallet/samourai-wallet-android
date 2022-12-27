@@ -118,6 +118,7 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
     val showSpendFromPaynymChooser by cahootsTransactionViewModel.showSpendFromPaynymChooserLive.observeAsState(false)
     val walletLoading by AppUtil.getInstance(context).walletLoading.observeAsState(false);
     var expanded by remember { mutableStateOf(false) }
+    val accountType by collaborateViewModel.meetingAccountLive.observeAsState()
     val listItems = ArrayList<String>()
     listItems.add("Paste cahoots payload")
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
@@ -207,8 +208,22 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                                                         val clipItem = clipboard.primaryClip!!.getItemAt(0)
                                                         if (Cahoots.isCahoots(clipItem.text.toString().trim { it <= ' ' })) {
                                                             try {
-                                                                val cahootIntent = ManualCahootsActivity.createIntentResume(context, 0, clipItem.text.toString().trim { it <= ' ' })
-                                                                startActivity(context, cahootIntent, null)
+                                                                if (accountType == -1) {
+                                                                    Toast.makeText(context, "Select an account and try again.", Toast.LENGTH_SHORT).show()
+                                                                }
+                                                                else {
+                                                                    val cahootIntent =
+                                                                        ManualCahootsActivity.createIntentResume(
+                                                                            context,
+                                                                            accountType!!,
+                                                                            clipItem.text.toString()
+                                                                                .trim { it <= ' ' })
+                                                                    startActivity(
+                                                                        context,
+                                                                        cahootIntent,
+                                                                        null
+                                                                    )
+                                                                }
                                                             } catch (e: Exception) {
                                                                 Toast.makeText(context, R.string.cannot_process_cahoots, Toast.LENGTH_SHORT).show()
                                                                 e.printStackTrace()

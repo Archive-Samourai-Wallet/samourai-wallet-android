@@ -82,7 +82,7 @@
     <string name="options_send_backup_to_support2">Stuur een back-up naar technische ondersteuning. Bevat geen informatie over privésleutel.</string>
     <string name="options_fee_provider">Bron voor schatten transactiekosten</string>
     <string name="options_fee_provider2">Selecteer de bron voor het schatten van transactiekosten.</string>
-    <string name="options_broadcast_on">Transacties uitzenden</string>
+    <string name="broadcast_transactions">Transacties uitzenden</string>
     <string name="options_broadcast_on2">Zet uitzenden UIT om de kale ondertekende transactie naar het klembord te kopiëren.</string>
     <string name="options_segwit">Ontvangen op segwit-adressen</string>
     <string name="options_segwit_2">Genereer segwit-adressen voor inkomende transacties.</string>

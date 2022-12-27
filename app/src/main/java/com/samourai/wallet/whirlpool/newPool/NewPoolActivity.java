@@ -32,7 +32,6 @@ import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
-import com.samourai.wallet.service.JobRefreshService;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.PreSelectUtil;

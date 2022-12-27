@@ -3,6 +3,7 @@ package com.samourai.wallet.collaborate
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -50,6 +51,7 @@ import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import kotlinx.coroutines.launch
+import com.samourai.wallet.bip47.BIP47Meta.strSamouraiDonationPCode
 
 
 enum class PaynymChooserType {
@@ -82,6 +84,11 @@ fun PaynymChooser(
                 addAll(following)
             }
         }
+        try {
+            paynyms.remove(strSamouraiDonationPCode)
+        } catch (e: Exception) {
+            Log.d("Paynym: ", "Couldn't remove +samouraiwallet from paynym list.")
+        }
     }
     if (paynymChooserType == PaynymChooserType.SPEND) {
         //Show only paynym that are connected
@@ -93,7 +100,8 @@ fun PaynymChooser(
     }
     var title = ""
      if(paynymChooserType == PaynymChooserType.COLLABORATE){
-         title = stringResource(R.string.select_collaborator)
+         //title = stringResource(R.string.select_collaborator)
+         title = "sema selector"
     }
     if(paynymChooserType == PaynymChooserType.SPEND){
          title = stringResource(R.string.select_paynym)

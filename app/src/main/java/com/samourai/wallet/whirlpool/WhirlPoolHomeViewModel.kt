@@ -14,7 +14,7 @@ import com.samourai.wallet.home.BalanceActivity
 import com.samourai.wallet.home.BalanceViewModel
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.send.BlockedUTXO
-import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.LogUtil
 import com.samourai.wallet.util.PrefsUtil
@@ -225,11 +225,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     withContext(Dispatchers.Main){
-                        val intent = Intent(context, JobRefreshService::class.java)
-                        intent.putExtra("notifTx", false)
-                        intent.putExtra("dragged", true)
-                        intent.putExtra("launch", false)
-                        JobRefreshService.enqueueWork(context, intent)
+                        WalletRefreshWorker.enqueue(context, notifTx = false,launched = false)
                     }
                     wallet.refreshUtxosAsync().blockingAwait()
                     refresh()

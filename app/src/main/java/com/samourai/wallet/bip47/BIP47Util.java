@@ -19,6 +19,7 @@ import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.util.PrefsUtil;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.NetworkParameters;
@@ -173,8 +174,12 @@ public class BIP47Util extends BIP47UtilGeneric {
 
     public Completable fetchBotImage() {
         String url = WebUtil.PAYNYM_API + "preview/" + getPaymentCode().toString();
+        if(PrefsUtil.getInstance(context).getValue(PrefsUtil.PAYNYM_CLAIMED,false)){
+            url = WebUtil.PAYNYM_API +  getPaymentCode().toString() + "/avatar";
+        }
+        String finalUrl = url;
         return Completable.fromCallable(() -> {
-                    Request.Builder rb = new Request.Builder().url(url);
+                    Request.Builder rb = new Request.Builder().url(finalUrl);
                     OkHttpClient.Builder builder = new OkHttpClient.Builder();
                     if (TorManager.INSTANCE.isRequired()) {
                         builder.proxy(TorManager.INSTANCE.getProxy());

@@ -35,7 +35,6 @@ import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.RBFUtil;
 import com.samourai.wallet.send.SuggestedFee;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
@@ -46,6 +45,7 @@ import com.samourai.wallet.util.SentToFromBIP47Util;
 import com.samourai.wallet.util.WebUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Address;
@@ -68,19 +68,20 @@ import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-
+import java.util.function.Function;
+import java.util.Objects;
+import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
 
 import static com.samourai.wallet.util.LogUtil.debug;
 import static com.samourai.wallet.util.LogUtil.info;
 import static com.samourai.wallet.util.WebUtil.SAMOURAI_API2;
-
-import androidx.lifecycle.MutableLiveData;
 
 public class APIFactory {
 
@@ -105,6 +106,9 @@ public class APIFactory {
     private static HashMap<String,Integer> unspentBIP84BadBank = null;
     private static HashMap<String,String> unspentPaths = null;
     private static HashMap<String,UTXO> utxos = null;
+    private static HashMap<String, UTXO> utxosP2PKH = null;
+    private static HashMap<String, UTXO> utxosP2SH_P2WPKH = null;
+    private static HashMap<String, UTXO> utxosP2WPKH = null;
     private static HashMap<String,UTXO> utxosPreMix = null;
     private static HashMap<String,UTXO> utxosPostMix = null;
     private static HashMap<String,UTXO> utxosBadBank = null;
@@ -133,39 +137,17 @@ public class APIFactory {
     private static AlertDialog alertDialog = null;
 
     private APIFactory()	{
+        reset();
         walletBalanceObserver.onNext(System.currentTimeMillis());
         walletBalanceObserverLiveData.postValue(System.currentTimeMillis());
     }
 
     public static APIFactory getInstance(Context ctx) {
-
         context = ctx;
 
         if(instance == null) {
-            xpub_amounts = new HashMap<String, Long>();
-            xpub_txs = new HashMap<String,List<Tx>>();
-            premix_txs = new HashMap<String,List<Tx>>();
-            postmix_txs = new HashMap<String,List<Tx>>();
-            badbank_txs = new HashMap<String,List<Tx>>();
-            xpub_balance = 0L;
-            xpub_premix_balance = 0L;
-            xpub_postmix_balance = 0L;
-            xpub_badbank_balance = 0L;
-            bip47_amounts = new HashMap<String, Long>();
-            unspentPaths = new HashMap<String, String>();
-            unspentAccounts = new HashMap<String, Integer>();
-            unspentBIP49 = new HashMap<String, Integer>();
-            unspentBIP84 = new HashMap<String, Integer>();
-            unspentBIP84PostMix = new HashMap<String, Integer>();
-            unspentBIP84PreMix = new HashMap<String, Integer>();
-            unspentBIP84BadBank = new HashMap<String, Integer>();
-            utxos = new HashMap<String, UTXO>();
-            utxosPreMix = new HashMap<String, UTXO>();
-            utxosPostMix = new HashMap<String, UTXO>();
-            utxosBadBank = new HashMap<String, UTXO>();
             instance = new APIFactory();
         }
-
         return instance;
     }
 
@@ -174,12 +156,12 @@ public class APIFactory {
         xpub_premix_balance = 0L;
         xpub_postmix_balance = 0L;
         xpub_badbank_balance = 0L;
-        xpub_amounts.clear();
-        bip47_amounts.clear();
-        xpub_txs.clear();
-        premix_txs.clear();
-        postmix_txs.clear();
-        badbank_txs.clear();
+        xpub_amounts = new HashMap<>();
+        bip47_amounts = new HashMap<>();
+        xpub_txs = new HashMap<>();
+        premix_txs = new HashMap<>();
+        postmix_txs = new HashMap<>();
+        badbank_txs = new HashMap<>();
         unspentPaths = new HashMap<String, String>();
         unspentAccounts = new HashMap<String, Integer>();
         unspentBIP49 = new HashMap<String, Integer>();
@@ -188,11 +170,13 @@ public class APIFactory {
         unspentBIP84PreMix = new HashMap<String, Integer>();
         unspentBIP84BadBank = new HashMap<String, Integer>();
         utxos = new HashMap<String, UTXO>();
+        utxosP2PKH = new HashMap<String, UTXO>();
+        utxosP2SH_P2WPKH = new HashMap<String, UTXO>();
+        utxosP2WPKH = new HashMap<String, UTXO>();
         utxosPostMix = new HashMap<String, UTXO>();
         utxosPreMix = new HashMap<String, UTXO>();
         utxosBadBank = new HashMap<String, UTXO>();
-
-        UTXOFactory.getInstance().clear();
+        onUtxoChange();
     }
 
     public String getAccessTokenNotExpired() throws Exception {
@@ -471,8 +455,9 @@ public class APIFactory {
                 args.append("xpub=");
                 args.append(xpub);
                 args.append("&type=");
-                if(PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_RESTORE, false) == true)    {
+                if(Objects.equals(PrefsUtil.getInstance(context).getValue(PrefsUtil.WALLET_ORIGIN, "restored"), "restored"))   {
                     args.append("restore");
+                    args.append("&force=true");
                 }
                 else    {
                     args.append("new");
@@ -497,8 +482,9 @@ public class APIFactory {
             else    {
                 HashMap<String,String> args = new HashMap<String,String>();
                 args.put("xpub", xpub);
-                if(PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_RESTORE, false) == true)    {
+                if(Objects.equals(PrefsUtil.getInstance(context).getValue(PrefsUtil.WALLET_ORIGIN, "restored"), "restored"))   {
                     args.put("type", "restore");
+                    args.put("force", "true");
                 }
                 else    {
                     args.put("type", "new");
@@ -1332,14 +1318,15 @@ public class APIFactory {
                         }
 
                         if(Bech32Util.getInstance().isBech32Script(script))    {
-                            UTXOFactory.getInstance().addP2WPKH(txHash.toString(), txOutputN, script, utxos.get(script));
+                            utxosP2WPKH.put(script, utxos.get(script));
                         }
                         else if(Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress())    {
-                            UTXOFactory.getInstance().addP2SH_P2WPKH(txHash.toString(), txOutputN, script, utxos.get(script));
+                            utxosP2SH_P2WPKH.put(script, utxos.get(script));
                         }
                         else    {
-                            UTXOFactory.getInstance().addP2PKH(txHash.toString(), txOutputN, script, utxos.get(script));
+                            utxosP2PKH.put(script, utxos.get(script));
                         }
+                        onUtxoChange();
 
                     }
                     catch(Exception e) {
@@ -1351,8 +1338,7 @@ public class APIFactory {
                 long amount = 0L;
                 for(String key : utxos.keySet())   {
                     for(MyTransactionOutPoint out : utxos.get(key).getOutpoints())    {
-                        debug("APIFactory", "utxo:" + out.getAddress() + "," + out.getValue());
-                        debug("APIFactory", "utxo:" + utxos.get(key).getPath());
+                        debug("APIFactory", "utxo:" + out.getAddress() + "," + out.getValue() + "," + utxos.get(key).getPath());
                         amount += out.getValue().longValue();
                     }
                 }
@@ -1593,25 +1579,25 @@ public class APIFactory {
         String[] s = null;
 
         try {
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB44REG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB44REG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true)) {
                 registerXPUB(HD_WalletFactory.getInstance(context).get().getAccount(0).xpubstr(), 44, null);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB49REG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB49REG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP49Util.getInstance(context).getWallet().getAccount(0).xpubstr(), 49, null);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB84REG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB84REG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(0).xpubstr(), 84, null);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPREREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPREREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr(), 84, PrefsUtil.XPUBPREREG);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).xpubstr(), 84, PrefsUtil.XPUBPOSTREG);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBBADBANKREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBBADBANKREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).xpubstr(), 84, PrefsUtil.XPUBBADBANKLOCK);
             }
-            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBRICOCHETREG, false) == false)    {
+            if(PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBRICOCHETREG, false) == false && PrefsUtil.getInstance(context).getValue(PrefsUtil.FIRST_RUN, true))    {
                 registerXPUB(BIP84Util.getInstance(context).getWallet().getAccount(RicochetMeta.getInstance(context).getRicochetAccount()).zpubstr(), 84, PrefsUtil.XPUBRICOCHETREG);
             }
 
@@ -1980,21 +1966,18 @@ public class APIFactory {
         return unspentBIP84;
     }
 
-    synchronized public List<UTXO> getUtxos(boolean filter) {
-
-        long amount = 0L;
-
+    private static List<UTXO> getUtxosFiltered(Collection<UTXO> utxos, boolean filter, Function<MyTransactionOutPoint,Boolean> checkBlocked) {
         List<UTXO> unspents = new ArrayList<UTXO>();
 
         if(filter)    {
-            for(String key : utxos.keySet())   {
-                UTXO item = utxos.get(key);
+            for(UTXO utxo : utxos)   {
                 UTXO u = new UTXO();
-                u.setPath(item.getPath());
-                for(MyTransactionOutPoint out : item.getOutpoints())    {
-                    if(!BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN()))    {
+                u.setPath(utxo.getPath());
+                for(MyTransactionOutPoint out : utxo.getOutpoints())    {
+                    boolean blocked = checkBlocked.apply(out);
+                    if(!blocked)    {
                         u.getOutpoints().add(out);
-                        u.setPath(utxos.get(key).getPath());
+                        u.setPath(utxo.getPath());
                     }
                 }
                 if(u.getOutpoints().size() > 0)    {
@@ -2003,87 +1986,43 @@ public class APIFactory {
             }
         }
         else    {
-            unspents.addAll(utxos.values());
+            unspents.addAll(utxos);
         }
-
         return unspents;
+    }
+
+    synchronized public List<UTXO> getUtxos(boolean filter) {
+        Function<MyTransactionOutPoint,Boolean> checkBlocked = out -> BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN());
+        return getUtxosFiltered(utxos.values(), filter, checkBlocked);
+    }
+
+    synchronized public List<UTXO> getUtxosP2PKH(boolean filter) {
+        Function<MyTransactionOutPoint,Boolean> checkBlocked = out -> BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN());
+        return getUtxosFiltered(utxosP2PKH.values(), filter, checkBlocked);
+    }
+
+    synchronized public List<UTXO> getUtxosP2SH_P2WPKH(boolean filter) {
+        Function<MyTransactionOutPoint,Boolean> checkBlocked = out -> BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN());
+        return getUtxosFiltered(utxosP2SH_P2WPKH.values(), filter, checkBlocked);
+    }
+
+    synchronized public List<UTXO> getUtxosP2WPKH(boolean filter) {
+        Function<MyTransactionOutPoint,Boolean> checkBlocked = out -> BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN());
+        return getUtxosFiltered(utxosP2WPKH.values(), filter, checkBlocked);
     }
 
     public List<UTXO> getUtxosPostMix(boolean filter) {
-
-        List<UTXO> unspents = new ArrayList<UTXO>();
-
-        if(filter)    {
-            for(String key : utxosPostMix.keySet())   {
-                UTXO item = utxosPostMix.get(key);
-                UTXO u = new UTXO();
-                u.setPath(item.getPath());
-                for(MyTransactionOutPoint out : item.getOutpoints())    {
-                    if(!BlockedUTXO.getInstance().containsPostMix(out.getTxHash().toString(), out.getTxOutputN()))    {
-                        u.getOutpoints().add(out);
-                    }
-                }
-                if(u.getOutpoints().size() > 0)    {
-                    unspents.add(u);
-                }
-            }
-        }
-        else    {
-            unspents.addAll(utxosPostMix.values());
-        }
-
-        return unspents;
+        Function<MyTransactionOutPoint,Boolean> checkBlocked = out -> BlockedUTXO.getInstance().containsPostMix(out.getTxHash().toString(), out.getTxOutputN());
+        return getUtxosFiltered(utxosPostMix.values(), filter, checkBlocked);
     }
-    public List<UTXO> getUtxosPreMix(boolean filter) {
-
-        List<UTXO> unspents = new ArrayList<UTXO>();
-
-        if(filter)    {
-            for(String key : utxosPreMix.keySet())   {
-                UTXO item = utxosPreMix.get(key);
-                UTXO u = new UTXO();
-                u.setPath(item.getPath());
-                for(MyTransactionOutPoint out : item.getOutpoints())    {
-                    if(!BlockedUTXO.getInstance().containsPostMix(out.getTxHash().toString(), out.getTxOutputN()))    {
-                        u.getOutpoints().add(out);
-                    }
-                }
-                if(u.getOutpoints().size() > 0)    {
-                    unspents.add(u);
-                }
-            }
-        }
-        else    {
-             unspents.addAll(utxosPreMix.values());
-        }
-
-        return unspents;
+    public List<UTXO> getUtxosPreMix() {
+        // premixs cannot be blocked
+        return new ArrayList<>(utxosPreMix.values());
     }
 
     public List<UTXO> getUtxosBadBank(boolean filter) {
-
-        List<UTXO> unspents = new ArrayList<UTXO>();
-
-        if(filter)    {
-            for(String key : utxosBadBank.keySet())   {
-                UTXO item = utxosBadBank.get(key);
-                UTXO u = new UTXO();
-                u.setPath(item.getPath());
-                for(MyTransactionOutPoint out : item.getOutpoints())    {
-                    if(!BlockedUTXO.getInstance().containsBadBank(out.getTxHash().toString(), out.getTxOutputN()))    {
-                        u.getOutpoints().add(out);
-                    }
-                }
-                if(u.getOutpoints().size() > 0)    {
-                    unspents.add(u);
-                }
-            }
-        }
-        else    {
-            unspents.addAll(utxosBadBank.values());
-        }
-
-        return unspents;
+        Function<MyTransactionOutPoint,Boolean> checkBlocked = out -> BlockedUTXO.getInstance().containsBadBank(out.getTxHash().toString(), out.getTxOutputN());
+        return getUtxosFiltered(utxosBadBank.values(), filter, checkBlocked);
     }
 
     public synchronized List<Tx> getAllXpubTxs()  {
@@ -2495,7 +2434,6 @@ public class APIFactory {
                                 utxo.setPath(path);
                                 utxosPostMix.put(script, utxo);
                             }
-                            UTXOFactory.getInstance().addPostMix(txHash.toString(), txOutputN, script, utxosPostMix.get(script));
                         }
                         else if(account_type == XPUB_PREMIX)    {
                             if(utxosPreMix.containsKey(script))    {
@@ -2507,7 +2445,6 @@ public class APIFactory {
                                 utxo.setPath(path);
                                 utxosPreMix.put(script, utxo);
                             }
-                            UTXOFactory.getInstance().addPreMix(txHash.toString(), txOutputN, script, utxosPreMix.get(script));
                         } if(account_type == XPUB_BADBANK)    {
                             if(utxosBadBank.containsKey(script))    {
                                 utxosBadBank.get(script).getOutpoints().add(outPoint);
@@ -2518,8 +2455,8 @@ public class APIFactory {
                                 utxo.setPath(path);
                                 utxosBadBank.put(script, utxo);
                             }
-                            UTXOFactory.getInstance().addBadBank(txHash.toString(), txOutputN, script, utxosBadBank.get(script));
                         }
+                        onUtxoChange();
 
                     }
                     catch(Exception e) {
@@ -2608,6 +2545,10 @@ public class APIFactory {
             List<Tx> txes = getAllPostMixTxs();
             return new Pair<>(txes, xpub_postmix_balance);
         });
+    }
+
+    private void onUtxoChange() {
+        WhirlpoolUtils.getInstance().onUtxoChange(); // notify Whirlpool
     }
 
     public static class TxMostRecentDateComparator implements Comparator<Tx> {

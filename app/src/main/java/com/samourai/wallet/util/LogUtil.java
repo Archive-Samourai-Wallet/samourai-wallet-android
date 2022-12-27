@@ -56,8 +56,6 @@ public class LogUtil {
         ((Logger) LoggerFactory.getLogger("com.samourai.soroban")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.samourai.whirlpool")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.samourai.xmanager")).setLevel(Level.DEBUG);
-
-        // skip noisy logs
         ((Logger) LoggerFactory.getLogger("com.samourai.wallet.staging")).setLevel(Level.DEBUG);
 
         // set whirlpool log level

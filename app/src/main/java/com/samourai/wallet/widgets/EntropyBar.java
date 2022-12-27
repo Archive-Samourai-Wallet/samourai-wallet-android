@@ -1,14 +1,13 @@
 package com.samourai.wallet.widgets;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
@@ -16,8 +15,6 @@ import com.samourai.wallet.R;
 
 public class EntropyBar extends View {
 
-    private Canvas mCanvas;
-    private Bitmap mBitmap;
     private Paint mBarPaintActive, mBarPaintDisabled, mBarPaintRed;
     private int maxBars = 3;
     private int enabledBars = maxBars;
@@ -108,15 +105,8 @@ public class EntropyBar extends View {
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-
-        if (w != oldw || h != oldh) {
-            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-            mBitmap.eraseColor(Color.TRANSPARENT);
-            mCanvas = new Canvas(mBitmap);
-        }
         mBarWidth = (getWidth() / maxBars) - (mBarWidth * maxBars);
         mBarHeight = (getHeight() / maxBars);
-
         super.onSizeChanged(w, h, oldw, oldh);
     }
 

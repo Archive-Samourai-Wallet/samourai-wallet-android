@@ -1,6 +1,13 @@
 package com.samourai.wallet.widgets;
 
 import android.content.Context;
+import android.util.AttributeSet;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
@@ -8,14 +15,6 @@ import androidx.transition.Fade;
 import androidx.transition.Slide;
 import androidx.transition.TransitionManager;
 import androidx.transition.TransitionSet;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.Switch;
-import android.widget.TextView;
 
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
@@ -33,7 +32,7 @@ public class SendTransactionDetailsView extends FrameLayout {
     private View transactionView, transactionReview;
     private ViewGroup ricochetHopsReview, stoneWallReview;
     private boolean reviewActive = false;
-    private ViewGroup stowawayLayout, stoneWallX2Layout, stoneWallLayout;
+    private ViewGroup stowawayLayout, stoneWallLayout;
     private EntropyBar entropyBarStoneWallX2, entropyBarStoneWallX1;
     private SwitchCompat stoneWallx1Switch;
     private TextView stowawayMixingParticipant, entropyValueX1,entropyValueX2, stowawayMethod, stoneWallx2Fee, stoneWallx2mixingParticipant;
@@ -59,19 +58,18 @@ public class SendTransactionDetailsView extends FrameLayout {
         transactionReview = inflate(getContext(), R.layout.send_transaction_review, null);
         ricochetHopsReview = transactionReview.findViewById(R.id.ricochet_hops_layout);
         stowawayLayout = transactionReview.findViewById(R.id.stowaway_layout);
-        stoneWallX2Layout = transactionReview.findViewById(R.id.stonewallx2_review_layout);
         stoneWallLayout = transactionReview.findViewById(R.id.stonewallx1_layout);
 //        entropyBarStoneWallX2 = transactionReview.findViewById(R.id.cahoots_entropy_bar);
         entropyBarStoneWallX1 = transactionReview.findViewById(R.id.entropy_bar_stonewallx1);
         stoneWallx1Switch = transactionReview.findViewById(R.id.stonewallx1_switch);
         stowawayMixingParticipant = transactionReview.findViewById(R.id.stowaway_mixing_participant);
         stowawayMethod = transactionReview.findViewById(R.id.stowaway_method);
-        stoneWallx2Fee = transactionReview.findViewById(R.id.extra_stonewall_fee);
-        stoneWallx2mixingParticipant = transactionReview.findViewById(R.id.mixing_partner_txtview);
         entropyValueX1 = transactionReview.findViewById(R.id.entropy_value_stonewallx1);
 //        entropyValueX2 = transactionReview.findViewById(R.id.entropy_value_stonewallx2);
 
-        entropyBarStoneWallX1.setMaxBars(4);
+        entropyBarStoneWallX1.post(() -> {
+            entropyBarStoneWallX1.setMaxBars(4);
+        });
 //        entropyBarStoneWallX2.setMaxBars(3);
 
         addView(transactionView);
@@ -92,7 +90,6 @@ public class SendTransactionDetailsView extends FrameLayout {
     public void showStonewallX2Layout(CahootsMode cahootsMode, String participant,  long fee) {
 
         stoneWallLayout.getRootView().post(() -> {
-            stoneWallX2Layout.setVisibility(VISIBLE);
             stowawayLayout.setVisibility(GONE);
             stoneWallLayout.setVisibility(GONE);
         });
@@ -103,7 +100,6 @@ public class SendTransactionDetailsView extends FrameLayout {
         stoneWallLayout.getRootView().post(() -> {
             stowawayLayout.setVisibility(VISIBLE);
             stoneWallLayout.setVisibility(GONE);
-            stoneWallX2Layout.setVisibility(GONE);
         });
         stowawayMixingParticipant.setText(participant);
         stowawayMethod.setText(cahootsMode.getLabel());
@@ -113,7 +109,6 @@ public class SendTransactionDetailsView extends FrameLayout {
         stoneWallLayout.getRootView().post(() -> {
             stoneWallLayout.setVisibility(VISIBLE);
             stowawayLayout.setVisibility(GONE);
-            stoneWallX2Layout.setVisibility(GONE);
         });
 
     }

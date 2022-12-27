@@ -18,6 +18,7 @@
     <uses-permission
         android:name="android.permission.WAKE_LOCK"
         tools:node="replace" />
+
     <uses-feature
         android:name="android.hardware.camera.autofocus"
         android:required="false"
@@ -34,30 +35,126 @@
     <application
         android:name=".SamouraiApplication"
         android:allowBackup="false"
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:roundIcon="@drawable/ic_launcher_round"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
         android:theme="@style/SamouraiAppTheme"
         android:usesCleartextTraffic="true"
         tools:replace="android:allowBackup"
         tools:targetApi="s">
-        <activity
+
+        <activity-alias
             android:name=".MainActivity2"
-            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:enabled="true"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:theme="@style/AppTheme.Launcher">
+            android:label="@string/app_name"
+            android:targetActivity="com.samourai.wallet.MainActivity2"
+            android:theme="@style/SamouraiAppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".stealth.calculator.CalculatorActivity"
+            android:label="@string/calculator"
+            android:theme="@style/Theme.Samourai.Material" />
+
+        <activity-alias
+            android:name=".stealth.calculator.CalculatorActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_calculator"
+            android:label="Calculator"
+            android:roundIcon="@mipmap/ic_calculator_round"
+            android:targetActivity=".stealth.calculator.CalculatorActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".stealth.vpn.VPNActivity"
+            android:exported="true"
+            android:label="@string/stealth_vpn_name"
+            android:theme="@style/Theme.Samourai.Material" />
+
+        <activity
+            android:name=".stealth.qrscannerapp.QRStealthAppActivity"
+            android:exported="true"
+            android:label="@string/stealth_qr_scannerapp_title"
+            android:theme="@style/Theme.Samourai.Material" />
+
+        <activity
+            android:name=".stealth.notepad.NotepadActivity"
+            android:exported="true"
+            android:label="@string/stealth_notepad_title"
+            android:theme="@style/Theme.Samourai.Material" />
+
+        <activity-alias
+            android:name=".stealth.vpn.VPNActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_stl_vpn_launcher"
+            android:label="@string/stealth_vpn_name"
+            android:roundIcon="@mipmap/ic_stl_vpn_round"
+            android:targetActivity=".stealth.vpn.VPNActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".stealth.qrscannerapp.QRStealthAppActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_qrscanner_launcher"
+            android:label="@string/stealth_qr_scannerapp_title"
+            android:roundIcon="@mipmap/ic_qrscanner_launcher_round"
+            android:targetActivity=".stealth.qrscannerapp.QRStealthAppActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".stealth.notepad.NotepadActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_notepad_launcher"
+            android:label="@string/stealth_notepad_title"
+            android:roundIcon="@mipmap/ic_notepad_launcher_round"
+            android:targetActivity=".stealth.notepad.NotepadActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".stealth.StealthModeSettings"
+            android:exported="true"
+            android:theme="@style/Theme.Samourai.Material" />
+        <activity
+            android:name=".MainActivity2"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/SamouraiAppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="bitcoin" />
                 <data android:scheme="auth47" />
             </intent-filter>
@@ -65,8 +162,8 @@
         <activity
             android:name=".collaborate.CollaborateActivity"
             android:exported="true"
-             android:theme="@style/Theme.Samourai.Material" >
-        </activity>
+            android:theme="@style/Theme.Samourai.Material" />
+
         <activity
             android:name=".explorer.ExplorerActivity"
             android:exported="false"
@@ -77,9 +174,7 @@
             android:exported="false"
             android:label=""
             android:parentActivityName=".home.BalanceActivity"
-            android:theme="@style/Theme.Samourai.Whirlpool.Material" >
-
-        </activity>
+            android:theme="@style/Theme.Samourai.Whirlpool.Material" />
         <activity
             android:name=".onboard.RestoreOptionActivity"
             android:theme="@style/Theme.Samourai.Material" />
@@ -192,14 +287,6 @@
         <activity
             android:name=".send.cahoots.SorobanCahootsActivity"
             android:label="Online Cahoots"
-            android:theme="@style/Theme.Samourai.Material" />
-        <activity
-            android:name=".send.soroban.meeting.SorobanMeetingListenActivity"
-            android:label="Listen for online Cahoots"
-            android:theme="@style/Theme.Samourai.Material" />
-        <activity
-            android:name=".send.soroban.meeting.SorobanMeetingSendActivity"
-            android:label="Send online Cahoots"
             android:theme="@style/Theme.Samourai.Material" />
 
         <provider

@@ -29,12 +29,22 @@ import java.util.List;
 public class WhirlpoolUtils {
     private static final Logger LOG = LoggerFactory.getLogger(WhirlpoolUtils.class);
     private static WhirlpoolUtils instance;
+    private long utxoLastChange = 0;
 
     public static WhirlpoolUtils getInstance() {
         if (instance == null) {
             instance = new WhirlpoolUtils();
         }
         return instance;
+    }
+
+    // call this to notify Whirlpool for utxo changes
+    public void onUtxoChange() {
+        utxoLastChange = System.currentTimeMillis();
+    }
+
+    public long getUtxoLastChange() {
+        return utxoLastChange;
     }
 
     public String computeWalletIdentifier(HD_Wallet bip84w) {

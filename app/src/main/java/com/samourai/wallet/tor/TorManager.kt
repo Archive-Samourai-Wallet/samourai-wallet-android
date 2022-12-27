@@ -3,22 +3,18 @@ package com.samourai.wallet.tor
 import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.os.Build
-import android.os.Process
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.core.app.TaskStackBuilder
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.samourai.wallet.BuildConfig
-import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiApplication
 import com.samourai.wallet.util.PrefsUtil
 import io.matthewnelson.topl_core_base.TorConfigFiles
 import io.matthewnelson.topl_service.TorServiceController
-import io.matthewnelson.topl_service.TorServiceController.*
+import io.matthewnelson.topl_service.TorServiceController.Builder
 import io.matthewnelson.topl_service.lifecycle.BackgroundManager
 import io.matthewnelson.topl_service.notification.ServiceNotification
 import org.json.JSONException
@@ -58,6 +54,10 @@ object TorManager {
 
     fun startTor() {
         TorServiceController.startTor()
+    }
+
+    fun stopTor() {
+        TorServiceController.stopTor()
     }
 
     private fun generateTorServiceNotificationBuilder(

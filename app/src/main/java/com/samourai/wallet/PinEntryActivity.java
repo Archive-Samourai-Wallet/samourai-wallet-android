@@ -1,6 +1,5 @@
 package com.samourai.wallet;
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -11,7 +10,6 @@ import android.os.Looper;
 import android.text.InputType;
 import android.transition.ChangeBounds;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +26,6 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
@@ -90,7 +87,7 @@ public class PinEntryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pinentry);
         this.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-        if(!BuildConfig.FLAVOR.equals("staging")){
+        if (!BuildConfig.FLAVOR.equals("staging")) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         }
         userInput = new StringBuilder();
@@ -165,9 +162,8 @@ public class PinEntryActivity extends AppCompatActivity {
             strSeed = extras.getString("seed");
             strPassphrase = extras.getString("passphrase");
             Toast.makeText(PinEntryActivity.this, R.string.pin_5_8_confirm, Toast.LENGTH_LONG).show();
-        }
-        else {
-            if(isLocked()){
+        } else {
+            if (isLocked()) {
                 startCountDownTimer();
             }
         }
@@ -213,9 +209,7 @@ public class PinEntryActivity extends AppCompatActivity {
                 }
 
             } else {
-                if (userInput.toString().length() >= AccessFactory.MIN_PIN_LENGTH && userInput.toString().length() <= AccessFactory.MAX_PIN_LENGTH) {
-                    validateThread(userInput.toString(), strUri);
-                }
+                validateThread(userInput.toString(), strUri);
             }
         });
 
@@ -323,8 +317,8 @@ public class PinEntryActivity extends AppCompatActivity {
                             pinEntryMaskLayout.removeAllViews();
                             pinEntryView.hideCheckButton();
                             setPinMaskView();
-                            if(failures<=2){
-                                walletStatusTextView.setText( this.getText(R.string.login_error) + ": " + failures + "/3");
+                            if (failures <= 2) {
+                                walletStatusTextView.setText(this.getText(R.string.login_error) + ": " + failures + "/3");
                             }
                             if (failures == 3) {
                                 failures = 0;
@@ -354,11 +348,11 @@ public class PinEntryActivity extends AppCompatActivity {
             } else {
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.INVISIBLE);
-                     failures++;
+                    failures++;
                     userInput = new StringBuilder();
                     pinEntryMaskLayout.removeAllViews();
                     pinEntryView.hideCheckButton();
-                    if(failures<=2){
+                    if (failures <= 2) {
                         walletStatusTextView.setText(this.getText(R.string.login_error) + ": " + failures + "/3");
                     }
                     if (failures == 3) {
@@ -629,7 +623,7 @@ public class PinEntryActivity extends AppCompatActivity {
 
                     });
         } else {
-            Toast.makeText(this,"Backup file not available ",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Backup file not available ", Toast.LENGTH_SHORT).show();
             if (!ExternalBackupManager.hasPermissions()) {
                 ExternalBackupManager.askPermission(this);
             }
@@ -637,25 +631,25 @@ public class PinEntryActivity extends AppCompatActivity {
     }
 
     boolean isLocked() {
-        return PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PIN_TIMEOUT,30000L) != 0L;
+        return PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PIN_TIMEOUT, 30000L) != 0L;
     }
 
     void startCountDownTimer() {
-        TransitionManager.beginDelayedTransition((ViewGroup ) restoreLayout.getRootView() );
+        TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
         pinEntryView.disable(true);
         restoreLayout.setVisibility(View.VISIBLE);
-        long timeoutPref = PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PIN_TIMEOUT,0L);
-        new CountDownTimer(  timeoutPref == 0L ? 30000L : timeoutPref, 1000) {
+        long timeoutPref = PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PIN_TIMEOUT, 0L);
+        new CountDownTimer(timeoutPref == 0L ? 30000L : timeoutPref, 1000) {
             public void onTick(long duration) {
                 long secs = (duration / 1000) % 60;
-                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT,duration);
+                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, duration);
                 walletStatusTextView.setText(getString(R.string.please_try_again_in).concat(" ").concat(String.valueOf(secs)).concat(" ").concat(getString(R.string.seconds)));
             }
 
             public void onFinish() {
-                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT,0L);
+                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, 0L);
                 pinEntryView.disable(false);
-                TransitionManager.beginDelayedTransition((ViewGroup ) restoreLayout.getRootView() );
+                TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
                 restoreLayout.setVisibility(View.GONE);
                 walletStatusTextView.setText(R.string.wallet_locked);
             }
@@ -665,6 +659,6 @@ public class PinEntryActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        ExternalBackupManager.onActivityResult(requestCode, resultCode, data,getApplication());
+        ExternalBackupManager.onActivityResult(requestCode, resultCode, data, getApplication());
     }
 }

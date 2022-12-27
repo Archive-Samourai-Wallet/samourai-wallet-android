@@ -30,12 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
-
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.slider.Slider;
@@ -78,12 +72,11 @@ import com.samourai.wallet.ricochet.RicochetMeta;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
-import com.samourai.wallet.segwit.bech32.Bech32Segwit;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.batch.BatchSpendActivity;
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity;
 import com.samourai.wallet.send.cahoots.SelectCahootsType;
-import com.samourai.wallet.send.soroban.meeting.SorobanMeetingSendActivity;
+import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
@@ -131,9 +124,13 @@ import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -160,6 +157,7 @@ public class SendActivity extends SamouraiActivity {
     private long selectableBalance = 0L;
     private String strDestinationBTCAddress = null;
     private ProgressBar progressBar;
+    private Disposable entropyDisposable = null;
 
     private final static int FEE_LOW = 0;
     private final static int FEE_NORMAL = 1;
@@ -1133,9 +1131,9 @@ public class SendActivity extends SamouraiActivity {
             receivers = new HashMap<String, BigInteger>();
             receivers.put(address, BigInteger.valueOf(amount));
 
-            int countP2TR = 0;
-            if(FormatsUtilGeneric.getInstance().isValidP2TR(address))    {
-                countP2TR = 1;
+            int countP2WSH_P2TR = 0;
+            if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(address))    {
+                countP2WSH_P2TR = 1;
             }
 
             if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
@@ -1151,13 +1149,13 @@ public class SendActivity extends SamouraiActivity {
             // if possible, get UTXO by input 'type': p2pkh, p2sh-p2wpkh or p2wpkh, else get all UTXO
             long neededAmount = 0L;
             if (FormatsUtil.getInstance().isValidBech32(address) || account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, 0, UTXOFactory.getInstance().getCountP2WPKH(), 4 - countP2TR, countP2TR).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, 0, UTXOFactory.getInstance().getCountP2WPKH(), 4 - countP2WSH_P2TR, countP2WSH_P2TR).longValue();
 //                    Log.d("SendActivity", "segwit:" + neededAmount);
             } else if (Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, UTXOFactory.getInstance().getCountP2SH_P2WPKH(), 0, 4 - countP2TR, countP2TR).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, UTXOFactory.getInstance().getCountP2SH_P2WPKH(), 0, 4 - countP2WSH_P2TR, countP2WSH_P2TR).longValue();
 //                    Log.d("SendActivity", "segwit:" + neededAmount);
             } else {
-                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(UTXOFactory.getInstance().getCountP2PKH(), 0, 0, 4 - countP2TR, countP2TR).longValue();
+                neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(UTXOFactory.getInstance().getCountP2PKH(), 0, 0, 4 - countP2WSH_P2TR, countP2WSH_P2TR).longValue();
 //                    Log.d("SendActivity", "p2pkh:" + neededAmount);
             }
             neededAmount += amount;
@@ -1176,15 +1174,15 @@ public class SendActivity extends SamouraiActivity {
                     utxos.add(u);
                 }
             } else {
-                utxos = SpendUtil.getUTXOS(SendActivity.this, address, neededAmount, account);
+                utxos = UTXOFactory.getInstance().getUTXOS(address, neededAmount, account);
             }
 
-            List<UTXO> utxosP2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2WPKH().values());
-            List<UTXO> utxosP2SH_P2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2SH_P2WPKH().values());
-            List<UTXO> utxosP2PKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getP2PKH().values());
+            List<UTXO> utxosP2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2WPKH(true));
+            List<UTXO> utxosP2SH_P2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2SH_P2WPKH(true));
+            List<UTXO> utxosP2PKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2PKH(true));
             if ((preselectedUTXOs == null || preselectedUTXOs.size() == 0) && account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                utxos = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllPostMix().values());
-                utxosP2WPKH = new ArrayList<UTXO>(UTXOFactory.getInstance().getAllPostMix().values());
+                utxos = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
+                utxosP2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
                 utxosP2PKH.clear();
                 utxosP2SH_P2WPKH.clear();
             }
@@ -1452,7 +1450,7 @@ public class SendActivity extends SamouraiActivity {
                         p2pkh += outpointTypes.getLeft();
                         p2sh_p2wpkh += outpointTypes.getMiddle();
                         p2wpkh += outpointTypes.getRight();
-                        if (totalValueSelected >= (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, 2 - countP2TR, countP2TR).longValue())) {
+                        if (totalValueSelected >= (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, 2 - countP2WSH_P2TR, countP2WSH_P2TR).longValue())) {
                             Log.d("SendActivity", "spend type:" + SPEND_TYPE);
                             Log.d("SendActivity", "multiple outputs");
                             Log.d("SendActivity", "amount:" + amount);
@@ -1514,7 +1512,7 @@ public class SendActivity extends SamouraiActivity {
                     }
                     Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(outpoints));
                     if (amount == balance) {
-                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 1 - countP2TR, countP2TR);
+                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 1 - countP2WSH_P2TR, countP2WSH_P2TR);
                         amount -= fee.longValue();
                         receivers.clear();
                         receivers.put(address, BigInteger.valueOf(amount));
@@ -1538,7 +1536,7 @@ public class SendActivity extends SamouraiActivity {
                         //
 
                     } else {
-                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2 - countP2TR, countP2TR);
+                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2 - countP2WSH_P2TR, countP2WSH_P2TR);
                     }
                 }
 
@@ -1654,30 +1652,26 @@ public class SendActivity extends SamouraiActivity {
                             break;
                         }
 
-                        CalculateEntropy(selectedUTXO, receivers)
-                                .subscribeOn(Schedulers.computation())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(new Observer<TxProcessorResult>() {
-                                    @Override
-                                    public void onSubscribe(Disposable d) {
-                                    }
+                        if(entropyDisposable != null) {
+                            Log.d("SendActivity", "Disposing of observable...");
+                            entropyDisposable.dispose();
+                        }
 
-                                    @Override
-                                    public void onNext(TxProcessorResult entropyResult) {
-                                        sendTransactionDetailsView.setEntropyBarStoneWallX1(entropyResult);
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable e) {
+                        if(entropyDisposable == null || entropyDisposable.isDisposed()) {
+                            Log.d("SendActivity", "Creating new observable...");
+                            entropyDisposable = CalculateEntropy(selectedUTXO, receivers)
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.computation())
+                                    .doOnSuccess(txProcessorResult -> {
+                                        sendTransactionDetailsView.setEntropyBarStoneWallX1(txProcessorResult);
+                                    })
+                                    .doOnError(throwable -> {
                                         sendTransactionDetailsView.setEntropyBarStoneWallX1(null);
-                                        e.printStackTrace();
-                                    }
-
-                                    @Override
-                                    public void onComplete() {
-                                    }
-                                });
-
+                                        throwable.printStackTrace();
+                                    })
+                                    .doOnDispose(() -> entropyDisposable = null)
+                                    .subscribe();
+                        }
 
                         break;
                     }
@@ -1754,8 +1748,8 @@ public class SendActivity extends SamouraiActivity {
             return;
         }
         if (CahootsMode.SOROBAN.equals(selectedCahootsType.getCahootsMode())) {
-            // choose Cahoots counterparty
-            Intent intent = SorobanMeetingSendActivity.createIntent(getApplicationContext(), account, selectedCahootsType.getCahootsType(),
+            // Cahoots online
+            Intent intent = SorobanCahootsActivity.createIntentSender(getApplicationContext(), account, selectedCahootsType.getCahootsType(),
                     amount, FeeUtil.getInstance().getSuggestedFeeDefaultPerB(), address, strPcodeCounterParty, strPCode);
             startActivity(intent);
             return;
@@ -2338,10 +2332,18 @@ public class SendActivity extends SamouraiActivity {
         if (id == R.id.action_scan_qr) {
             doScan();
         } else if (id == R.id.action_ricochet) {
-            Intent intent = new Intent(SendActivity.this, RicochetActivity.class);
-            startActivity(intent);
+            if (RicochetMeta.getInstance(this).getQueue().isEmpty()) {
+                Toast.makeText(this, getString(R.string.empty_ricochet_queue), Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Intent intent = new Intent(SendActivity.this, RicochetActivity.class);
+                startActivity(intent);
+            }
         } else if (id == R.id.action_empty_ricochet) {
-            emptyRicochetQueue();
+            if (RicochetMeta.getInstance(this).getQueue().isEmpty())
+                Toast.makeText(this, getString(R.string.empty_ricochet_queue), Toast.LENGTH_SHORT).show();
+            else
+                emptyRicochetQueue();
         } else if (id == R.id.action_utxo) {
             doUTXO();
         } else if (id == R.id.action_fees) {
@@ -2375,6 +2377,7 @@ public class SendActivity extends SamouraiActivity {
             }
         }).start();
 
+        Toast.makeText(this, "Ricochet queue has been emptied", Toast.LENGTH_SHORT).show();
     }
 
     private void doScan() {
@@ -2453,8 +2456,8 @@ public class SendActivity extends SamouraiActivity {
 
     }
 
-    private Observable<TxProcessorResult> CalculateEntropy(ArrayList<UTXO> selectedUTXO, HashMap<String, BigInteger> receivers) {
-        return Observable.create(emitter -> {
+    private Single<TxProcessorResult> CalculateEntropy(ArrayList<UTXO> selectedUTXO, HashMap<String, BigInteger> receivers) {
+        return Single.create(emitter -> {
 
             Map<String, Long> inputs = new HashMap<>();
             Map<String, Long> outputs = new HashMap<>();
@@ -2472,7 +2475,7 @@ public class SendActivity extends SamouraiActivity {
             TxProcessor txProcessor = new TxProcessor(BoltzmannSettings.MAX_DURATION_DEFAULT, BoltzmannSettings.MAX_TXOS_DEFAULT);
             Txos txos = new Txos(inputs, outputs);
             TxProcessorResult result = txProcessor.processTx(txos, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY, TxosLinkerOptionEnum.MERGE_INPUTS);
-            emitter.onNext(result);
+            emitter.onSuccess(result);
         });
 
     }

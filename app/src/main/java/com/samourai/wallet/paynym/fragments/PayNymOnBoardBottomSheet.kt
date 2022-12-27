@@ -1,7 +1,7 @@
 package com.samourai.wallet.paynym.fragments
 
+import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +20,7 @@ import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.PrefsUtil
 import com.squareup.picasso.Picasso
+import com.squareup.picasso.Transformation
 import kotlinx.coroutines.*
 import org.json.JSONObject
 
@@ -48,7 +49,17 @@ class PayNymOnBoardBottomSheet : BottomSheetDialogFragment() {
         val strPaymentCode = BIP47Util.getInstance(activity?.application).paymentCode.toString()
         Picasso.get()
                 .load("${PayNymApiService.PAYNYM_API}/preview/${strPaymentCode}")
-                .into(binding.claimPayNymAvatarPreview)
+            .transform(object :Transformation{
+                override fun transform(source: Bitmap?): Bitmap? {
+                    BIP47Util.getInstance(context)
+                        .setAvatar(source)
+                    return  source;
+                }
+                override fun key(): String {
+                    return  "paynym_avatar";
+                }
+
+            }).into(binding.claimPayNymAvatarPreview)
 
         binding.skipClaim.setOnClickListener {
             PrefsUtil.getInstance(context?.applicationContext).setValue(PrefsUtil.PAYNYM_REFUSED, true)

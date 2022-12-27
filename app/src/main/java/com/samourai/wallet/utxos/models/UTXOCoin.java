@@ -2,6 +2,7 @@ package com.samourai.wallet.utxos.models;
 
 import androidx.annotation.Nullable;
 
+import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
 
@@ -18,7 +19,6 @@ public class UTXOCoin {
     public String hash = "";
     public String path = "";
     public int idx = 0;
-    public boolean doNotSpend = false;
     public boolean isSelected = false;
     private MyTransactionOutPoint outPoint;
 
@@ -39,14 +39,20 @@ public class UTXOCoin {
         this.idx = outPoint.getTxOutputN();
     }
 
+    public boolean isBlocked(){
+        return BlockedUTXO.getInstance().containsAny(this.hash,this.idx);
+    }
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj instanceof UTXOCoin) {
             UTXOCoin coin = ((UTXOCoin) obj);
-            return (this.id == coin.id &&
+            return (
                     this.idx == coin.idx &&
                     this.amount == coin.amount &&
+                    this.hash.equals(coin.hash) &&
                     this.address.equals(coin.address) &&
+                    this.isBlocked() == coin.isBlocked() &&
                     this.account == coin.account);
         }
         return super.equals(obj);

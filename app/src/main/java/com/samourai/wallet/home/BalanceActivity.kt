@@ -10,13 +10,13 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.text.InputType
 import android.util.Log
 import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -29,6 +29,7 @@ import androidx.transition.TransitionManager
 import com.dm.zbar.android.scanner.ZBarConstants
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
+import com.google.gson.Gson
 import com.samourai.wallet.*
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
@@ -54,16 +55,19 @@ import com.samourai.wallet.payload.ExternalBackupManager.hasPermissions
 import com.samourai.wallet.payload.ExternalBackupManager.onActivityResult
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.PayNymHome
+import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.paynym.fragments.PayNymOnBoardBottomSheet
+import com.samourai.wallet.paynym.models.NymResponse
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
+import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.send.soroban.meeting.SorobanMeetingListenActivity
-import com.samourai.wallet.service.JobRefreshService
+import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity
+import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.tools.ToolsBottomSheet
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
 import com.samourai.wallet.tor.TorManager
@@ -149,7 +153,16 @@ open class BalanceActivity : SamouraiActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             if (DISPLAY_INTENT == intent.action) {
                 updateDisplay(true)
+                checkDust()
+            }
+        }
+    }
+
+    private fun checkDust() {
+        balanceViewModel.viewModelScope.launch {
+            withContext(Dispatchers.Default) {
                 val utxos = APIFactory.getInstance(this@BalanceActivity).getUtxos(false)
+                val utxoWarnings = arrayListOf<MyTransactionOutPoint>()
                 for (utxo in utxos) {
                     val outpoints = utxo.outpoints
                     for (out in outpoints) {
@@ -173,46 +186,46 @@ open class BalanceActivity : SamouraiActivity() {
                         val contains = BlockedUTXO.getInstance().contains(hash, idx) || BlockedUTXO.getInstance().containsNotDusted(hash, idx)
                         val containsInPostMix = BlockedUTXO.getInstance().containsPostMix(hash, idx) || BlockedUTXO.getInstance().containsNotDustedPostMix(hash, idx)
                         if (amount < BlockedUTXO.BLOCKED_UTXO_THRESHOLD && !contains && !containsInPostMix) {
-
+                            utxoWarnings.add(out);
 //                            BalanceActivity.this.runOnUiThread(new Runnable() {
 //                            @Override
-                            val handler = Handler()
-                            handler.post {
-                                var message: String? = this@BalanceActivity.getString(R.string.dusting_attempt)
-                                message += "\n\n"
-                                message += this@BalanceActivity.getString(R.string.dusting_attempt_amount)
-                                message += " "
-                                message += FormatsUtil.formatBTC(amount)
-                                message += this@BalanceActivity.getString(R.string.dusting_attempt_id)
-                                message += " "
-                                message += "$hash-$idx"
-                                val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-                                    .setTitle(R.string.dusting_tx)
-                                    .setMessage(message)
-                                    .setCancelable(false)
-                                    .setPositiveButton(R.string.dusting_attempt_mark_unspendable, object : DialogInterface.OnClickListener {
-                                        override fun onClick(dialog: DialogInterface, whichButton: Int) {
-                                            if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
-                                                BlockedUTXO.getInstance().addPostMix(hash, idx, amount)
-                                            } else {
-                                                BlockedUTXO.getInstance().add(hash, idx, amount)
-                                            }
-                                            saveState()
-                                        }
-                                    }).setNegativeButton(R.string.dusting_attempt_ignore, object : DialogInterface.OnClickListener {
-                                        override fun onClick(dialog: DialogInterface, whichButton: Int) {
-                                            if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
-                                                BlockedUTXO.getInstance().addNotDustedPostMix(hash, idx)
-                                            } else {
-                                                BlockedUTXO.getInstance().addNotDusted(hash, idx)
-                                            }
-                                            saveState()
-                                        }
-                                    })
-                                if (!isFinishing) {
-                                    dlg.show()
+                        }
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    utxoWarnings.forEach {
+                        val hash = it.hash.toString()
+                        val idx = it.txOutputN
+                        val amount = it.value.longValue()
+                        var message: String? = this@BalanceActivity.getString(R.string.dusting_attempt)
+                        message += "\n\n"
+                        message += this@BalanceActivity.getString(R.string.dusting_attempt_amount)
+                        message += " "
+                        message += FormatsUtil.formatBTC(amount)
+                        message += this@BalanceActivity.getString(R.string.dusting_attempt_id)
+                        message += " "
+                        message += "$hash-$idx"
+                        val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
+                            .setTitle(R.string.dusting_tx)
+                            .setMessage(message)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.dusting_attempt_mark_unspendable) { dialog, whichButton ->
+                                if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
+                                    BlockedUTXO.getInstance().addPostMix(hash, idx, amount)
+                                } else {
+                                    BlockedUTXO.getInstance().add(hash, idx, amount)
                                 }
+                                saveState()
+                            }.setNegativeButton(R.string.dusting_attempt_ignore) { dialog, whichButton ->
+                                if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
+                                    BlockedUTXO.getInstance().addNotDustedPostMix(hash, idx)
+                                } else {
+                                    BlockedUTXO.getInstance().addNotDusted(hash, idx)
+                                }
+                                saveState()
                             }
+                        if (!isFinishing) {
+                            dlg.show()
                         }
                     }
                 }
@@ -333,7 +346,7 @@ open class BalanceActivity : SamouraiActivity() {
             }, 100L)
         } else {
             binding.toolbarIcon.visibility = View.GONE
-            binding.toolbar.setTitleMargin(0,0,0,0)
+            binding.toolbar.setTitleMargin(0, 0, 0, 0)
             binding.toolbar.titleMarginEnd = -50
             binding.toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
             binding.toolbar.setNavigationOnClickListener {
@@ -350,21 +363,17 @@ open class BalanceActivity : SamouraiActivity() {
         checkDeepLinks()
         doExternalBackUp()
         AppUtil.getInstance(applicationContext).walletLoading.observe(this) {
-            if(it){
+            if (it) {
                 showProgress()
-            }else{
+            } else {
                 hideProgress()
             }
         }
-        if(intent.getBooleanExtra("refresh",false)){
+        if (intent.getBooleanExtra("refresh", false)) {
             balanceViewModel.viewModelScope.launch {
-                withContext(Dispatchers.Default){
+                withContext(Dispatchers.Default) {
                     delay(800)
-                    val intent =   Intent(this@BalanceActivity, JobRefreshService::class.java)
-                    intent.putExtra("notifTx", false)
-                    intent.putExtra("dragged", false)
-                    intent.putExtra("launch", false)
-                    JobRefreshService.enqueueWork(applicationContext, intent);
+                    WalletRefreshWorker.enqueue(applicationContext, notifTx = false, launched = false)
                 }
             }
         }
@@ -373,10 +382,13 @@ open class BalanceActivity : SamouraiActivity() {
     private fun showToolOptions(it: View) {
         val bitmapImage = BIP47Util.getInstance(applicationContext).payNymLogoLive.value
         var drawable = ContextCompat.getDrawable(this, R.drawable.ic_samourai_logo)
-        val nym = PrefsUtil.getInstance(applicationContext)
+        var nym = PrefsUtil.getInstance(applicationContext)
             .getValue(PrefsUtil.PAYNYM_BOT_NAME, BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString()))
         if (bitmapImage != null) {
             drawable = BitmapDrawable(resources, bitmapImage)
+        }
+        if (nym.isNullOrEmpty()) {
+            nym = BIP47Meta.getInstance().getDisplayLabel(BIP47Util.getInstance(applicationContext).paymentCode.toString())
         }
         val toolWindowSize = applicationContext.resources.displayMetrics.density * 220;
         val popupMenu = popupMenu {
@@ -455,8 +467,8 @@ open class BalanceActivity : SamouraiActivity() {
     private fun checkDeepLinks() {
         val bundle = intent.extras ?: return
         if (bundle.containsKey("pcode") || bundle.containsKey("uri") || bundle.containsKey("amount")) {
-            if(bundle.containsKey("uri")){
-                if(bundle.getString("uri")?.startsWith("auth47") == true){
+            if (bundle.containsKey("uri")) {
+                if (bundle.getString("uri")?.startsWith("auth47") == true) {
                     ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
                         bundle = Bundle().apply {
                             putString("KEY", bundle.getString("uri"))
@@ -577,23 +589,51 @@ open class BalanceActivity : SamouraiActivity() {
     private fun makePaynymAvatarCache() {
         try {
             val paymentCodes = ArrayList(BIP47Meta.getInstance().getSortedByLabels(false, true))
+            if (PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_BOT_NAME, "").isNullOrEmpty()
+                && PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED,false))  {
+                val strPaymentCode = BIP47Util.getInstance(application).paymentCode.toString()
+                val apiService = PayNymApiService.getInstance(strPaymentCode, getApplication());
+                balanceViewModel.viewModelScope.launch {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val response = apiService.getNymInfo()
+                            if (response.isSuccessful) {
+                                val responseJson = response.body?.string()
+                                if (responseJson != null) {
+                                    val jsonObject = JSONObject(responseJson)
+                                    val nym = Gson().fromJson(jsonObject.toString(), NymResponse::class.java);
+                                    PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.PAYNYM_BOT_NAME, nym.nymName)
+
+                                } else
+                                    throw Exception("Invalid response ")
+                            }
+                        } catch (_: Exception) {
+
+                        }
+                    }
+                }
+            }
             if (!BIP47Util.getInstance(applicationContext).avatarImage().exists()) {
                 BIP47Util.getInstance(applicationContext).fetchBotImage()
                     .subscribe()
                     .apply {
                         compositeDisposable.add(this)
-                    }
-            } else {
-                try {
-                    balanceViewModel.viewModelScope.launch {
-                        withContext(Dispatchers.Default){
-                            val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
-                            BIP47Util.getInstance(applicationContext)
-                                .setAvatar(bitmap)
+                        balanceViewModel.viewModelScope.launch {
+                            withContext(Dispatchers.Default) {
+                                val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                                BIP47Util.getInstance(applicationContext)
+                                    .setAvatar(bitmap)
+                            }
                         }
                     }
-                } catch (er: Exception) {
-
+            }
+            balanceViewModel.viewModelScope.launch {
+                withContext(Dispatchers.Default) {
+                    if (BIP47Util.getInstance(applicationContext).avatarImage().exists()) {
+                        val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
+                        BIP47Util.getInstance(applicationContext)
+                            .setAvatar(bitmap)
+                    }
                 }
             }
             for (code in paymentCodes) {
@@ -602,6 +642,7 @@ open class BalanceActivity : SamouraiActivity() {
                         override fun onSuccess() {
                             /*NO OP*/
                         }
+
                         override fun onError(e: Exception) {
                             /*NO OP*/
                         }
@@ -618,6 +659,9 @@ open class BalanceActivity : SamouraiActivity() {
             if (AppUtil.getInstance(this@BalanceActivity.applicationContext).isServiceRunning(WebSocketService::class.java)) {
                 stopService(Intent(this@BalanceActivity.applicationContext, WebSocketService::class.java))
             }
+        }
+        if (PrefsUtil.getInstance(this.application).getValue(StealthModeController.PREF_ENABLED, false)) {
+            StealthModeController.enableStealth(applicationContext)
         }
         super.onDestroy()
         if (compositeDisposable != null && !compositeDisposable.isDisposed) {
@@ -666,9 +710,9 @@ open class BalanceActivity : SamouraiActivity() {
             return super.onOptionsItemSelected(item)
         }
         if (id == R.id.action_postmix_balance) {
-             startActivity(Intent(this,BalanceActivity::class.java).apply {
-                 putExtra("_account",SamouraiAccountIndex.POSTMIX)
-             })
+            startActivity(Intent(this, BalanceActivity::class.java).apply {
+                putExtra("_account", SamouraiAccountIndex.POSTMIX)
+            })
             return super.onOptionsItemSelected(item)
         }
 
@@ -678,8 +722,7 @@ open class BalanceActivity : SamouraiActivity() {
         } // noinspection SimplifiableIfStatement
         if (id == R.id.action_support) {
             doSupport()
-        }
-        else if (id == R.id.action_utxo) {
+        } else if (id == R.id.action_utxo) {
             doUTXO()
         } else if (id == R.id.action_backup) {
             if (SamouraiWallet.getInstance().hasPassphrase(this@BalanceActivity)) {
@@ -747,7 +790,7 @@ open class BalanceActivity : SamouraiActivity() {
                 try {
                     if (privKeyReader.format != null) {
                         doPrivKey(strResult!!.trim { it <= ' ' })
-                    } else if (strResult?.lowercase()?.startsWith(Auth47ViewModel.BIP47_AUTH_SCHEME.lowercase()) == true) {
+                    } else if (strResult?.lowercase()?.startsWith(Auth47ViewModel.AUTH_SCHEME.lowercase()) == true) {
                         ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
                             bundle = Bundle().apply {
                                 putString("KEY", strResult)
@@ -791,6 +834,9 @@ open class BalanceActivity : SamouraiActivity() {
                     TorServiceController.stopTor()
                 }
                 TimeOutUtil.getInstance().reset()
+                if (StealthModeController.isStealthEnabled(applicationContext)) {
+                    StealthModeController.enableStealth(applicationContext)
+                }
                 finishAffinity()
                 finish()
                 super.onBackPressed()
@@ -801,6 +847,7 @@ open class BalanceActivity : SamouraiActivity() {
             super.onBackPressed()
         }
     }
+
 
     private fun doExternalBackUp() {
         try {
@@ -895,10 +942,20 @@ open class BalanceActivity : SamouraiActivity() {
         startActivity(explorerIntent)
     }
 
+
+    var utxoListResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        run {
+            refreshTx(false, false, false)
+            showProgress()
+        }
+    }
+
     private fun doUTXO() {
         val intent = Intent(this@BalanceActivity, UTXOSActivity::class.java)
         intent.putExtra("_account", account)
-        startActivityForResult(intent, UTXO_REQUESTCODE)
+        utxoListResult.launch(intent)
     }
 
     private fun doScan() {
@@ -913,7 +970,7 @@ open class BalanceActivity : SamouraiActivity() {
                     privKeyReader.format != null -> {
                         doPrivKey(code.trim { it <= ' ' })
                     }
-                    code.lowercase().startsWith(Auth47ViewModel.BIP47_AUTH_SCHEME) -> {
+                    code.lowercase().startsWith(Auth47ViewModel.AUTH_SCHEME) -> {
                         ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.AUTH47,
                             bundle = Bundle().apply {
                                 putString("KEY", code)
@@ -1081,12 +1138,7 @@ open class BalanceActivity : SamouraiActivity() {
             snackbar.show();
             */
         }
-        val intent = Intent(this, JobRefreshService::class.java)
-        intent.putExtra("notifTx", notifTx)
-        intent.putExtra("dragged", dragged)
-        intent.putExtra("launch", launch)
-        JobRefreshService.enqueueWork(applicationContext, intent)
-        //
+        WalletRefreshWorker.enqueue(applicationContext, launched = launch, notifTx = notifTx)
 //
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //            startForegroundService(intent);

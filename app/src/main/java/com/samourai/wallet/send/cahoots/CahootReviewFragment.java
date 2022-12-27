@@ -166,7 +166,9 @@ public class CahootReviewFragment extends Fragment {
                     public void onNext(TxProcessorResult entropyResult) {
                         cahootsEntropyGroup.setVisibility(View.VISIBLE);
                         cahootsSamouraiEntropyGroupDivider.setVisibility(View.VISIBLE);
-                        entropyBar.setRange(entropyResult);
+                        entropyBar.post(() ->
+                                entropyBar.setRange(entropyResult)
+                        );
                         DecimalFormat decimalFormat = new DecimalFormat("##.00");
                         entropyBits.setText(decimalFormat.format(entropyResult.getEntropy()).concat(" bits"));
                     }

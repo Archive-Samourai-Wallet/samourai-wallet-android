@@ -82,7 +82,7 @@
     <string name="options_send_backup_to_support2">A pénztárca biztonsági mentésének elküldése a technikai segítőknek. Nem tartalmaz információt a privát kulcsokról.</string>
     <string name="options_fee_provider">Díj számítás</string>
     <string name="options_fee_provider2">Válaszd ki a  tranzakciós díjakat számító szolgáltatást.</string>
-    <string name="options_broadcast_on">Tranzakciók automatikus elküldése</string>
+    <string name="broadcast_transactions">Tranzakciók automatikus elküldése</string>
     <string name="options_broadcast_on2">Ha ez az opció ki van kapcsolva, akkor a tranzakció nem lesz automatikusan elküldve, hanem a vágólapra lesz másolva (aláírva, hexadecimális formátumban).</string>
     <string name="options_segwit">Segwit címek használata</string>
     <string name="options_segwit_2">Segwit címek generálása a bejövő tranzakciókhoz.</string>

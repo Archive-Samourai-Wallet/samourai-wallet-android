@@ -82,7 +82,7 @@
     <string name="options_send_backup_to_support2">Invia il backup del wallet al supporto tecnico. Non contiene info sulle tue chiavi private.</string>
     <string name="options_fee_provider">Fonti per stima delle fee</string>
     <string name="options_fee_provider2">Seleziona il tuo provider di stime per le fee preferito.</string>
-    <string name="options_broadcast_on">Broadcast delle transazioni</string>
+    <string name="broadcast_transactions">Broadcast delle transazioni</string>
     <string name="options_broadcast_on2">Deseleziona (broadcasting OFF) per non inviare transazioni ma copiare i dati della transazione firmata negli appunti.</string>
     <string name="options_segwit">Ricevi su indirizzi segwit</string>
     <string name="options_segwit_2">Genera indirizzi segwit per transazioni in ingresso.</string>

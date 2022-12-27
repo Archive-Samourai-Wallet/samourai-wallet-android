@@ -6,7 +6,8 @@ import android.util.Log;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samourai.http.client.AndroidHttpClientService;
-import com.samourai.http.client.IHttpClientService;
+import com.samourai.http.client.IWhirlpoolHttpClientService;
+import com.samourai.soroban.client.wallet.SorobanWalletService;
 import com.samourai.stomp.client.AndroidStompClientService;
 import com.samourai.stomp.client.IStompClientService;
 import com.samourai.tor.client.TorClientService;
@@ -17,16 +18,18 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.AndroidSecretPointFactory;
 import com.samourai.wallet.bip47.rpc.secretPoint.ISecretPointFactory;
 import com.samourai.wallet.bipWallet.WalletSupplier;
+import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
+import com.samourai.wallet.chain.ChainSupplier;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
-import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.exception.NotifiableException;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolServer;
+import com.samourai.whirlpool.client.wallet.data.AndroidChainSupplier;
 import com.samourai.whirlpool.client.wallet.data.AndroidDataSourceFactory;
 import com.samourai.whirlpool.client.wallet.data.AndroidWalletStateSupplier;
 import com.samourai.whirlpool.client.wallet.data.dataPersister.DataPersisterFactory;
@@ -104,7 +107,7 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
 
         String scode = WhirlpoolMeta.getInstance(ctx).getSCODE();
 
-        IHttpClientService httpClientService = AndroidHttpClientService.getInstance(ctx);
+        IWhirlpoolHttpClientService httpClientService = AndroidHttpClientService.getInstance(ctx);
         return computeWhirlpoolWalletConfig(torManager, testnet, onion, scode, httpClientService, ctx);
     }
 
@@ -112,11 +115,11 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         PushTx pushTx = PushTx.getInstance(ctx);
         FeeUtil feeUtil = FeeUtil.getInstance();
         APIFactory apiFactory = APIFactory.getInstance(ctx);
-        UTXOFactory utxoFactory = UTXOFactory.getInstance(ctx);
         BIP47Util bip47Util = BIP47Util.getInstance(ctx);
         BIP47Meta bip47Meta = BIP47Meta.getInstance();
         WalletSupplier walletSupplier = AndroidWalletSupplier.getInstance(ctx);
-        return new AndroidDataSourceFactory(pushTx, feeUtil, apiFactory, utxoFactory, bip47Util, bip47Meta, walletSupplier);
+        ChainSupplier chainSupplier = AndroidChainSupplier.getInstance(ctx);
+        return new AndroidDataSourceFactory(pushTx, feeUtil, apiFactory, bip47Util, bip47Meta, walletSupplier, chainSupplier);
     }
 
     private DataPersisterFactory computeDataPersisterFactory(Context ctx) {
@@ -138,7 +141,7 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         };
     }
 
-    protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(TorManager torManager, boolean testnet, boolean onion, String scode, IHttpClientService httpClientService, Context ctx) {
+    protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(TorManager torManager, boolean testnet, boolean onion, String scode, IWhirlpoolHttpClientService httpClientService, Context ctx) {
         IStompClientService stompClientService = new AndroidStompClientService(torManager);
         TorClientService torClientService = new AndroidWhirlpoolTorService(torManager);
 
@@ -149,10 +152,11 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
 
         DataSourceFactory dataSourceFactory = computeDataSourceFactory(ctx);
         ISecretPointFactory secretPointFactory = AndroidSecretPointFactory.getInstance();
+        SorobanWalletService sorobanWalletService = AndroidSorobanWalletService.getInstance(ctx);
         DataPersisterFactory dataPersisterFactory = computeDataPersisterFactory(ctx);
 
         WhirlpoolWalletConfig whirlpoolWalletConfig =
-                new WhirlpoolWalletConfig(dataSourceFactory, secretPointFactory,
+                new WhirlpoolWalletConfig(dataSourceFactory, secretPointFactory, sorobanWalletService,
                         httpClientService, stompClientService, torClientService, serverApi, params, true);
         whirlpoolWalletConfig.setBip47Util(BIP47Util.getInstance(ctx));
         whirlpoolWalletConfig.setDataPersisterFactory(dataPersisterFactory);

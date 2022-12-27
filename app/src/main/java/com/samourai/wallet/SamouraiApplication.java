@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.multidex.MultiDex;
 
 import com.samourai.wallet.payload.ExternalBackupManager;
+import com.samourai.wallet.stealth.StealthModeController;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.ConnectionChangeReceiver;
@@ -46,10 +47,11 @@ public class SamouraiApplication extends Application {
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG || BuildConfig.FLAVOR.equals("staging")) {
             Picasso.get().setIndicatorsEnabled(true);
             LogUtil.setLoggersDebug();
         }
+        StealthModeController.INSTANCE.fixStealthModeIfNotActive(getApplicationContext());
     }
 
     private void registerNetworkCallBack() {

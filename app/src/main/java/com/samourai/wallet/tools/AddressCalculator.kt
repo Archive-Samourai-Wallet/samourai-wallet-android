@@ -64,7 +64,7 @@ fun AddressCalculator(window: Window?) {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
     })
-    Box(modifier = Modifier.requiredHeight(420.dp)) {
+    Box(modifier = Modifier.requiredHeight(400.dp)) {
         WrapToolsPageAnimation(
             visible = 0 == page,
         ) {
@@ -207,6 +207,7 @@ fun AddressCalcForm() {
                 }),
                 onValueChange = {
                     index = it
+                    applyChanges()
                 },
                 label = {
                     Text(

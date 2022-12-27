@@ -79,7 +79,7 @@
     <string name="options_send_backup_to_support2">Enviar o backup da carteira para o suporte técnico. Não contém informação da chave privada.</string>
     <string name="options_fee_provider">Fonte da Estimativa de Taxa</string>
     <string name="options_fee_provider2">Selecione a sua fonte de estimativas de taxas preferida.</string>
-    <string name="options_broadcast_on">Transmitir transações</string>
+    <string name="broadcast_transactions">Transmitir transações</string>
     <string name="options_broadcast_on2">Desmarque (transmissão DESLIGADA) para copiar a transação assinada para a área de transferência.</string>
     <string name="options_segwit">Receber em endereços segwit</string>
     <string name="options_segwit_2">Gerar endereços segwit para as transações a receber.</string>

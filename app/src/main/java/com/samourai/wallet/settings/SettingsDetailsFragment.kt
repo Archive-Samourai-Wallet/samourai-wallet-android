@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.os.Looper
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
@@ -26,7 +25,6 @@ import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
-import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.network.dojo.DojoUtil
@@ -37,8 +35,8 @@ import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
-import com.samourai.wallet.send.PushTx
 import com.samourai.wallet.send.RBFUtil
+import com.samourai.wallet.stealth.StealthModeSettings
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
@@ -50,9 +48,7 @@ import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import io.matthewnelson.topl_service.TorServiceController
 import kotlinx.coroutines.*
 import org.apache.commons.io.FileUtils
-import org.bitcoinj.core.Transaction
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
-import org.bouncycastle.util.encoders.Hex
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -100,6 +96,12 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         val mnemonicPref = findPreference("mnemonic") as Preference?
         mnemonicPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             getHDSeed(true)
+            true
+        }
+
+        val stealthPref = findPreference("stealth") as Preference?
+        stealthPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+             startActivity(Intent(this.activity,StealthModeSettings::class.java))
             true
         }
 
@@ -371,12 +373,6 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             } else {
                 PrefsUtil.getInstance(activity).setValue(PrefsUtil.BROADCAST_TX, true)
             }
-            true
-        }
-
-        val broadcastHexPref = findPreference("broadcastHex") as Preference?
-        broadcastHexPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            doBroadcastHex()
             true
         }
 
@@ -653,6 +649,8 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             val jsonObject = PayloadUtil.getInstance(requireContext()).payload
             jsonObject.getJSONObject("wallet").remove("seed")
             jsonObject.getJSONObject("wallet").remove("passphrase")
+            jsonObject.getJSONObject("meta").remove("pin")
+            jsonObject.getJSONObject("meta").remove("pin2")
             if (jsonObject.has("meta") && jsonObject.getJSONObject("meta").has("trusted_node")) {
                 jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("password")
                 jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("node")
@@ -668,19 +666,6 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         } catch (je: JSONException) {
             je.printStackTrace()
             Toast.makeText(requireContext(), R.string.error_reading_payload, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun doScanHexTx() {
-
-        val cameraFragmentBottomSheet =  CameraFragmentBottomSheet()
-        cameraFragmentBottomSheet.show(requireActivity().supportFragmentManager, cameraFragmentBottomSheet.tag)
-
-        cameraFragmentBottomSheet.setQrCodeScanListener { code: String? ->
-            cameraFragmentBottomSheet.dismissAllowingStateLoss()
-            code?.let {
-                doBroadcastHex(it)
-            }
         }
     }
 
@@ -745,77 +730,6 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                 .show()
 
         LogUtil.debugLarge("Settings", "# WHIRLPOOL DEBUG #\n"+debugInfo);
-    }
-
-    private fun doBroadcastHex() {
-        val dlg = MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.app_name)
-                .setMessage(R.string.tx_hex)
-                .setCancelable(true)
-                .setPositiveButton(R.string.enter_tx_hex) { dialog, whichButton ->
-                    val edHexTx = EditText(requireContext())
-                    edHexTx.isSingleLine = false
-                    edHexTx.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-                    edHexTx.setLines(10)
-                    edHexTx.setHint(R.string.tx_hex)
-                    edHexTx.gravity = Gravity.START
-                    val textWatcher: TextWatcher = object : TextWatcher {
-                        override fun afterTextChanged(s: Editable) {
-                            edHexTx.setSelection(0)
-                        }
-
-                        override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-                        }
-
-                        override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                        }
-                    }
-                    edHexTx.addTextChangedListener(textWatcher)
-                    val dlg = AlertDialog.Builder(requireContext())
-                            .setTitle(R.string.app_name)
-                            .setView(edHexTx)
-                            .setMessage(R.string.enter_tx_hex)
-                            .setCancelable(false)
-                            .setPositiveButton(R.string.ok) { dialog, whichButton ->
-                                val strHexTx = edHexTx.text.toString().trim { it <= ' ' }
-                                doBroadcastHex(strHexTx)
-                            }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }
-                    if (!requireActivity().isFinishing()) {
-                        dlg.show()
-                    }
-                }.setNegativeButton(R.string.scan) { dialog, whichButton -> doScanHexTx() }
-        if (!requireActivity().isFinishing()) {
-            dlg.show()
-        }
-    }
-
-    private fun doBroadcastHex(strHexTx: String) {
-        val tx = Transaction(SamouraiWallet.getInstance().currentNetworkParams, Hex.decode(strHexTx))
-        val msg: String = requireContext().getString(R.string.broadcast).toString() + ":" + tx.hashAsString + " ?"
-        val dlg = MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.app_name)
-                .setMessage(msg)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { dialog, whichButton ->
-                    if (progress != null && progress!!.isShowing()) {
-                        progress!!.dismiss()
-                        progress = null
-                    }
-                    progress = ProgressDialog(requireContext())
-                    progress!!.setCancelable(false)
-                    progress!!.setTitle(R.string.app_name)
-                    progress!!.setMessage(getString(R.string.please_wait))
-                    progress!!.show()
-                    Thread {
-                        Looper.prepare()
-                        PushTx.getInstance(requireContext()).pushTx(strHexTx)
-                        progress!!.dismiss()
-                        Looper.loop()
-                    }.start()
-                }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }
-        if (!requireActivity().isFinishing()) {
-            dlg.show()
-        }
     }
 
     private fun doPSBT() {

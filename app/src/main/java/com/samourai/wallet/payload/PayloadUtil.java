@@ -253,14 +253,6 @@ public class PayloadUtil	{
             whirlpool_account.put(badbankObj);
             wallet.put("whirlpool_account", whirlpool_account);
 
-            //
-            // can remove ???
-            //
-            /*
-            obj.put("receiveIdx", mAccounts.get(0).getReceive().getAddrIdx());
-            obj.put("changeIdx", mAccounts.get(0).getChange().getAddrIdx());
-            */
-
             JSONObject meta = new JSONObject();
             meta.put("version_name", context.getText(R.string.version_name));
             meta.put("android_release", Build.VERSION.RELEASE == null ? "" : Build.VERSION.RELEASE);
@@ -301,12 +293,13 @@ public class PayloadUtil	{
             meta.put("check_sim", PrefsUtil.getInstance(context).getValue(PrefsUtil.CHECK_SIM, false));
             meta.put("broadcast_tx", PrefsUtil.getInstance(context).getValue(PrefsUtil.BROADCAST_TX, true));
             meta.put("strict_outputs", PrefsUtil.getInstance(context).getValue(PrefsUtil.STRICT_OUTPUTS, true));
-            meta.put("xpubreg44", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB44REG, false));
-            meta.put("xpubreg49", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB49REG, false));
-            meta.put("xpubreg84", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB84REG, false));
-            meta.put("xpubprereg", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPREREG, false));
-            meta.put("xpubpostreg", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTREG, false));
-            meta.put("xpubricochetreg", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBRICOCHETREG, false));
+            meta.put("xpubreg44", false);
+            meta.put("xpubreg49", false);
+            meta.put("xpubreg84", false);
+            meta.put("xpubprereg", false);
+            meta.put("xpubpostreg", false);
+            meta.put("xpubricochetreg", false);
+            meta.put("xpubpostxreg", false);
             meta.put("xpublock44", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB44LOCK, false));
             meta.put("xpublock49", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB49LOCK, false));
             meta.put("xpublock84", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUB84LOCK, false));
@@ -320,7 +313,6 @@ public class PayloadUtil	{
             meta.put("user_offline", AppUtil.getInstance(context).isUserOfflineMode());
             meta.put("is_sat", PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_SAT, false));
             meta.put("localIndexes", LocalReceiveIndexes.getInstance(context).toJSON());
-            meta.put("xpubpostxreg", PrefsUtil.getInstance(context).getValue(PrefsUtil.XPUBPOSTREG, false));
             meta.put("paynym_bot_name", PrefsUtil.getInstance(context).getValue(PrefsUtil.PAYNYM_BOT_NAME, ""));
 
             if(DojoUtil.getInstance(context).getDojoParams() != null)    {

@@ -1,7 +1,6 @@
 package com.samourai.wallet.collaborate.viewmodels
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,7 +16,7 @@ import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.send.soroban.meeting.SorobanMeetingSendActivity
+import com.samourai.wallet.send.cahoots.SorobanCahootsActivity
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
@@ -291,7 +290,7 @@ class CahootsTransactionViewModel : ViewModel() {
         }
         val amountInSats = amount.value?.toLong() ?: 0.0
         //If the custom fee is not null the value will be taken as fee
-        val feePerKb = if (customFee.value != null) customFee.value!!.times(1000)
+        val feePerKb = if (customFee.value != null) customFee.value!!
         else MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value!!.toFloat()).coerceAtLeast(1000f).div(1000.0).toLong()
         if (CahootsMode.MANUAL == type.cahootsMode) {
             var destinationPcode: String? = null;
@@ -299,7 +298,7 @@ class CahootsTransactionViewModel : ViewModel() {
                 destinationPcode = destinationAddress.value
             }
             // Cahoots manual
-            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, destinationPcode)
+            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, feePerKb, amountInSats.toLong(), address, destinationPcode)
             context.startActivity(intent)
             return
         }
@@ -308,8 +307,8 @@ class CahootsTransactionViewModel : ViewModel() {
             if (FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value)) {
                 destinationPcode = destinationAddress.value
             }
-            // choose Cahoots counterparty
-            val intent = SorobanMeetingSendActivity.createIntent(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, collaboratorPcode.value,destinationPcode)
+            // Cahoots online
+            val intent = SorobanCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, collaboratorPcode.value,destinationPcode)
             context.startActivity(intent)
             return
         }

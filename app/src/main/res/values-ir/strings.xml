@@ -82,7 +82,7 @@
     <string name="options_send_backup_to_support2">ارسال بکاپِ کیف پول به پشتیبانی فنی. حاوی اطلاعات کلید خصوصی نیست</string>
     <string name="options_fee_provider">مرجع تخمین کارمزد</string>
     <string name="options_fee_provider2">ارائه‌دهنده‌ی موردنظرتان را برای تخمین کارمزد تراکنش انتخاب کنید</string>
-    <string name="options_broadcast_on">انتشار تراکنش‌ها</string>
+    <string name="broadcast_transactions">انتشار تراکنش‌ها</string>
     <string name="options_broadcast_on2">تیک را بردارید (خاموش بودن انتشار) تا تراکنش‌های خامِ امضا شده را به کلیپ‌بورد کپی کنید</string>
     <string name="options_segwit">دریافت به آدرس سگویت</string>
     <string name="options_segwit_2">ایجاد آدرس سگویت برای تراکنش‌های ورودی</string>
