@@ -288,7 +288,12 @@
             android:name=".send.cahoots.SorobanCahootsActivity"
             android:label="Online Cahoots"
             android:theme="@style/Theme.Samourai.Material" />
-
+        <activity
+            android:name=".settings.LogViewActivity"
+            android:exported="false"
+            android:theme="@style/SamouraiAppTheme"
+            >
+        </activity>
         <provider
             android:name=".util.GenericFileProvider"
             android:authorities="${applicationId}.provider"
@@ -313,9 +318,6 @@
         <service
             android:name=".service.WebSocketService"
             android:enabled="true" />
-        <service
-            android:name=".service.JobRefreshService"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
             android:name=".whirlpool.service.WhirlpoolNotificationService"
             android:enabled="true"
