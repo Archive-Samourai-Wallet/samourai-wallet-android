@@ -139,21 +139,11 @@ class RestoreOptionActivity : AppCompatActivity() {
                     existDojo = true
                 }
             }
-            if (existDojo && DojoUtil.getInstance(application).dojoParams != null) {
-                MaterialAlertDialogBuilder(this@RestoreOptionActivity)
-                    .setTitle(getString(R.string.dojo_config_detected))
-                    .setMessage(getString(R.string.dojo_config_override))
-                    .setPositiveButton(R.string.yes) { dialog: DialogInterface?, which: Int ->
-                        initializeRestore(decrypted, true)
-                    }
-                    .setNegativeButton(R.string.no) { _: DialogInterface?, _: Int ->
-                        initializeRestore(decrypted, false)
-                    }
-                    .show()
 
-            } else {
+            if (existDojo && DojoUtil.getInstance(application).dojoParams != null)
+                initializeRestore(decrypted, true)
+            else
                 initializeRestore(decrypted, false)
-            }
 
         }
 

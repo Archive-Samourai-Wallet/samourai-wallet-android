@@ -206,23 +206,11 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                                     existDojo = true;
                                 }
                             }
-                            final String _decrypted = decrypted;
-                            if (existDojo && DojoUtil.getInstance(getApplication()).getDojoParams() != null) {
 
-                                new MaterialAlertDialogBuilder(RestoreSeedWalletActivity.this)
-                                        .setTitle(getString(R.string.dojo_config_detected))
-                                        .setMessage(getString(R.string.dojo_config_override))
-                                        .setPositiveButton(R.string.yes, (dialog, which) -> {
-                                            RestoreWalletFromSamouraiBackup(_decrypted,true);
-                                        })
-                                        .setNegativeButton(R.string.no, (dialog, which) -> {
-                                            RestoreWalletFromSamouraiBackup(_decrypted,false);
-                                        })
-                                        .show();
-                            }else{
+                            if (existDojo && DojoUtil.getInstance(getApplication()).getDojoParams() != null)
+                                RestoreWalletFromSamouraiBackup(decrypted,true);
+                            else
                                 RestoreWalletFromSamouraiBackup(decrypted,false);
-                            }
-
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
