@@ -22,4 +22,16 @@
         android:title="@string/refresh"
         app:showAsAction="never" />
 
+    <item
+    android:id="@+id/action_select_all_spendable"
+    android:orderInCategory="100"
+    android:title="Spendable: Select all"
+    app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_select_all_unspendable"
+        android:orderInCategory="100"
+        android:title="Do Not Spend: Select all"
+        app:showAsAction="never" />
+
 </menu>

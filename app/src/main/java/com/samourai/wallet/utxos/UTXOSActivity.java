@@ -195,10 +195,22 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             loadUTXOs(false);
         } else if (item.getItemId() == R.id.action_utxo_filter) {
             showFilterOptions();
+        } else if (item.getItemId() == R.id.action_select_all_spendable) {
+            selectAllUtxos(true);
+        } else if (item.getItemId() == R.id.action_select_all_unspendable) {
+            selectAllUtxos(false);
         } else {
             ;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void selectAllUtxos(boolean spendable) {
+        onListLongPress(0);
+        for (int i = 1; i < filteredUTXOs.size(); i++) {
+            if (filteredUTXOs.get(i).isBlocked() != spendable)
+                selectOrDeselect(i);
+        }
     }
 
     private void showFilterOptions() {
