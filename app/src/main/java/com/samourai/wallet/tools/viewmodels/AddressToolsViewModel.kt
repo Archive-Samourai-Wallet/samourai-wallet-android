@@ -141,7 +141,7 @@ class AddressCalculatorViewModel : ViewModel() {
 
                 val strPrivKey: String = ecKey?.getPrivateKeyAsWiF(SamouraiWallet.getInstance().currentNetworkParams) ?: ""
                 val redeemScript: String = try {
-                    org.spongycastle.util.encoders.Hex.toHexString(segwitAddress?.segWitRedeemScript()?.program)
+                    org.spongycastle.util.encoders.Hex.toHexString(segwitAddress?.segwitRedeemScript()?.program)
                 } catch (e: Exception) {
                     ""
                 }

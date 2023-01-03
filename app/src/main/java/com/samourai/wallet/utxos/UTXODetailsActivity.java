@@ -575,7 +575,7 @@ public class UTXODetailsActivity extends SamouraiActivity {
 
         if (ecKey != null && segwitAddress != null) {
 
-            String redeemScript = Hex.toHexString(segwitAddress.segWitRedeemScript().getProgram());
+            String redeemScript = Hex.toHexString(segwitAddress.segwitRedeemScript().getProgram());
 
             TextView showText = new TextView(this);
             showText.setText(redeemScript);

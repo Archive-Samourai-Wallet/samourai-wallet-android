@@ -175,7 +175,7 @@ public class PayNymCalcActivity extends SamouraiActivity {
                             .setPositiveButton(R.string.display_receive_redeem, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
 
-                                    String redeemScript = org.spongycastle.util.encoders.Hex.toHexString(receiveSegwit.segWitRedeemScript().getProgram());
+                                    String redeemScript = org.spongycastle.util.encoders.Hex.toHexString(receiveSegwit.segwitRedeemScript().getProgram());
 
                                     TextView showText = new TextView(PayNymCalcActivity.this);
                                     showText.setText(redeemScript);
