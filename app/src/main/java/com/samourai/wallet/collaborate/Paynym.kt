@@ -100,8 +100,7 @@ fun PaynymChooser(
     }
     var title = ""
      if(paynymChooserType == PaynymChooserType.COLLABORATE){
-         //title = stringResource(R.string.select_collaborator)
-         title = "sema selector"
+         title = stringResource(R.string.select_collaborator)
     }
     if(paynymChooserType == PaynymChooserType.SPEND){
          title = stringResource(R.string.select_paynym)
