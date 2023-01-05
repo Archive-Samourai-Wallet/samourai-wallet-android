@@ -195,10 +195,6 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             loadUTXOs(false);
         } else if (item.getItemId() == R.id.action_utxo_filter) {
             showFilterOptions();
-        } else if (item.getItemId() == R.id.action_select_all_spendable) {
-            selectAllUtxos(true);
-        } else if (item.getItemId() == R.id.action_select_all_unspendable) {
-            selectAllUtxos(false);
         } else {
             ;
         }
@@ -924,12 +920,37 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             if (mAsyncListDiffer.getCurrentList().get(position) instanceof UTXOCoinSegment) {
                 UTXOCoinSegment utxoCoinSegment = (UTXOCoinSegment) mAsyncListDiffer.getCurrentList().get(position);
                 holder.section.setText(utxoCoinSegment.isActive ? getString(R.string.active) : getString(R.string.do_not_spend));
+                if (multiSelect && utxoCoinSegment.isActive)
+                    holder.selectAll.setText("Mark Do Not Spend");
+                else if (multiSelect && !utxoCoinSegment.isActive)
+                    holder.selectAll.setText("Mark Spendable");
+                else
+                    holder.selectAll.setText("Select All");
                 if (!utxoCoinSegment.isActive) {
                     holder.section.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.red));
                     holder.section.setTypeface(Typeface.DEFAULT_BOLD);
                 } else {
                     holder.section.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
                 }
+
+                holder.selectAll.setOnClickListener(view -> {
+                    if (!multiSelect && holder.section.getText().equals(getString(R.string.do_not_spend)))
+                        selectAllUtxos(false);
+                    else if (!multiSelect && holder.section.getText().equals(getString(R.string.active)))
+                        selectAllUtxos(true);
+                    else if (holder.selectAll.getText().equals("Mark Do Not Spend")) {
+                        markAsUnSpendable();
+                        multiSelect = false;
+                        if (toolbarActionMode != null)
+                            toolbarActionMode.finish();
+                    }
+                    else {
+                        markAsSpendable();
+                        multiSelect = false;
+                        if (toolbarActionMode != null)
+                            toolbarActionMode.finish();
+                    }
+                });
                 return;
             }
             UTXOCoin item = mAsyncListDiffer.getCurrentList().get(position);
@@ -1063,7 +1084,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
 
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            TextView address, amount, section;
+            TextView address, amount, section, selectAll;
             LinearLayout notesLayout;
             LinearLayout tagsLayout;
             CheckBox checkBox;
@@ -1073,6 +1094,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 super(itemView);
                 if (viewType == SECTION) {
                     section = itemView.findViewById(R.id.section_title);
+                    selectAll = itemView.findViewById(R.id.select_all_section);
                 }else {
                 amount = itemView.findViewById(R.id.utxo_item_amount);
 //                doNotSpend = itemView.findViewById(R.id.do_not_spend_text);
