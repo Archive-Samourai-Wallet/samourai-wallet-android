@@ -28,5 +28,18 @@
         app:layout_constraintStart_toEndOf="@+id/utxo_section_indicator"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/select_all_section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:layout_marginStart="0dp"
+        android:textColor="@color/whirlpoolBlue"
+        tools:text="Today"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintTop_toTopOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
