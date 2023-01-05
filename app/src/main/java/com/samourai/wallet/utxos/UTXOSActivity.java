@@ -195,10 +195,6 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             loadUTXOs(false);
         } else if (item.getItemId() == R.id.action_utxo_filter) {
             showFilterOptions();
-        } else if (item.getItemId() == R.id.action_select_all_spendable) {
-            selectAllUtxos(true);
-        } else if (item.getItemId() == R.id.action_select_all_unspendable) {
-            selectAllUtxos(false);
         } else {
             ;
         }
