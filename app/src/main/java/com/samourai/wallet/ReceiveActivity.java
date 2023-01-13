@@ -813,7 +813,11 @@ public class ReceiveActivity extends SamouraiActivity {
                 path += "84'";
         }
 
-        path += "/0'/0'/0/";
+        if (PrefsUtil.getInstance(ReceiveActivity.this).getValue(PrefsUtil.TESTNET, false)) {
+            path += "/1'/0'/0/";
+        } else {
+            path += "/0'/0'/0/";
+        }
         path += idx;
         tvPath.setText(path);
 
