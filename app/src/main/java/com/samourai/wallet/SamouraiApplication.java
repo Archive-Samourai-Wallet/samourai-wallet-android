@@ -130,8 +130,10 @@ public class SamouraiApplication extends Application {
 
     private void setUpTorService() {
         TorManager.INSTANCE.setUp(this);
-        if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false) && !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE, false)) {
-            startService();
+        if(!StealthModeController.INSTANCE.isStealthEnabled(getApplicationContext())){
+            if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false) && !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE, false)) {
+                startService();
+            }
         }
     }
 
