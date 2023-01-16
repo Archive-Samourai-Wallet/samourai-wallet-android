@@ -133,6 +133,9 @@ object StealthModeController {
         val enabled = prefs?.getBoolean(PREF_ENABLED, false)
         return enabled == true
     }
+    fun isStealthActive(context: Context): Boolean {
+        return  !isAppEnabled(StealthApp.SAMOURAI, context);
+    }
 
     fun getSelectedApp(context: Context): String {
         val prefs = getStealthPreferences(context)
