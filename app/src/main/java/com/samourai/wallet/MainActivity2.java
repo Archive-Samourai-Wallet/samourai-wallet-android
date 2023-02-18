@@ -34,9 +34,7 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.crypto.AESUtil;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.onboard.OnBoardSlidesActivity;
-import com.samourai.wallet.onboard.SetUpWalletActivity;
 import com.samourai.wallet.payload.PayloadUtil;
-import com.samourai.wallet.prng.PRNGFixes;
 import com.samourai.wallet.service.BackgroundManager;
 import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.tor.TorManager;
@@ -151,12 +149,6 @@ public class MainActivity2 extends AppCompatActivity {
 //        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
         BackgroundManager.get(MainActivity2.this).addListener(bgListener);
 //        }
-
-        // Apply PRNG fixes for Android 4.1
-        if (!AppUtil.getInstance(MainActivity2.this).isPRNG_FIXED()) {
-            PRNGFixes.apply();
-            AppUtil.getInstance(MainActivity2.this).setPRNG_FIXED(true);
-        }
 
         startApp();
     }

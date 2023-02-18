@@ -70,7 +70,6 @@ public class HD_WalletFactory	{
 
         NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
 
-        AppUtil.getInstance(context).applyPRNGFixes();
         SecureRandom random = new SecureRandom();
         byte seed[] = new byte[len];
         random.nextBytes(seed);
