@@ -952,6 +952,10 @@ public class APIFactory {
         return latest_block_height;
     }
 
+    public synchronized void setLatestBlockHeight(long blockHeight)  {
+        latest_block_height = blockHeight;
+    }
+
     public String getLatestBlockHash() {
         return latest_block_hash;
     }

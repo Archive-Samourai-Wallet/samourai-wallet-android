@@ -190,6 +190,14 @@ public class WebSocketHandler {
                                             }
                                         }
 
+                                        if (objX.has("height")) {
+                                            long height = objX.getLong("height");
+                                            if(height > 0L) {
+                                                APIFactory.getInstance(context).setLatestBlockHeight(height);
+//                                                info("WebSocketHandler", "set latest block height to:" + height);
+                                            }
+                                        }
+
                                         updateBalance(null, hash);
 
                                         return;
