@@ -49,6 +49,7 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
+import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.xmanager.client.XManagerClient
 import com.samourai.xmanager.protocol.XManagerService
@@ -708,6 +709,16 @@ class PayNymDetailsActivity : SamouraiActivity() {
                             }
                             tx = SendFactory.getInstance(this@PayNymDetailsActivity).signTransaction(tx, 0)
                             val hexTx = String(Hex.encode(tx.bitcoinSerialize()))
+
+                            var hashTx = tx.hashAsString
+                            var changeIdx = 0
+                            for (i in 0 until tx.outputs.size) {
+                                if (tx.getOutput(i.toLong()).value.value == change) {
+                                    changeIdx = i
+                                    break
+                                }
+                            }
+
                             var isOK = false
                             var response: String? = null
                             try {
@@ -727,6 +738,8 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                     binding.progressBar.visibility = View.INVISIBLE
 
                                     if (isOK) {
+
+                                        UTXOUtil.getInstance().add(hashTx, changeIdx, "\u2623 notif tx change\u2623")
 
                                         Toast.makeText(this@PayNymDetailsActivity, R.string.payment_channel_init, Toast.LENGTH_SHORT).show()
                                         //
