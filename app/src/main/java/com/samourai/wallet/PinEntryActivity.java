@@ -90,6 +90,9 @@ public class PinEntryActivity extends AppCompatActivity {
         if (!BuildConfig.FLAVOR.equals("staging")) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         }
+        if (PrefsUtil.getInstance(PinEntryActivity.this).getValue(PrefsUtil.ATTEMPTS, 0) > 0) {
+            failures = PrefsUtil.getInstance(PinEntryActivity.this).getValue(PrefsUtil.ATTEMPTS, 0);
+        }
         userInput = new StringBuilder();
         pinEntryView = findViewById(R.id.pinentry_view);
         walletStatusTextView = findViewById(R.id.pin_entry_wallet_status);
@@ -302,6 +305,8 @@ public class PinEntryActivity extends AppCompatActivity {
 
                 AccessFactory.getInstance(PinEntryActivity.this).setPIN(pin);
 
+                PrefsUtil.getInstance(PinEntryActivity.this).setValue(PrefsUtil.ATTEMPTS, 0);
+
                 try {
                     HD_Wallet hdw = PayloadUtil.getInstance(PinEntryActivity.this).restoreWalletfromJSON(new CharSequenceX(AccessFactory.getInstance(PinEntryActivity.this).getGUID() + pin));
 
@@ -313,7 +318,7 @@ public class PinEntryActivity extends AppCompatActivity {
 
                         runOnUiThread(() -> {
                             failures++;
-                            userInput = new StringBuilder();
+                            PrefsUtil.getInstance(PinEntryActivity.this).setValue(PrefsUtil.ATTEMPTS, failures);
                             pinEntryMaskLayout.removeAllViews();
                             pinEntryView.hideCheckButton();
                             setPinMaskView();
@@ -349,6 +354,7 @@ public class PinEntryActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.INVISIBLE);
                     failures++;
+                    PrefsUtil.getInstance(PinEntryActivity.this).setValue(PrefsUtil.ATTEMPTS, failures);
                     userInput = new StringBuilder();
                     pinEntryMaskLayout.removeAllViews();
                     pinEntryView.hideCheckButton();

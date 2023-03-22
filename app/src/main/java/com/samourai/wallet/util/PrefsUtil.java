@@ -59,6 +59,7 @@ public class PrefsUtil {
 	public static final String PIN_TIMEOUT = "pinTimeout";
 	public static final String XPUBPOSTXREG = "xpubpostxreg";
 	public static final String PAYNYM_BOT_NAME= "paynymBotName";
+	public static final String ATTEMPTS= "attempts";
 
 	private static Context context = null;
 	private static PrefsUtil instance = null;

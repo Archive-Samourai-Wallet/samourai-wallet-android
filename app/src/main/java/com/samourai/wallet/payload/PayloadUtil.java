@@ -314,6 +314,7 @@ public class PayloadUtil	{
             meta.put("is_sat", PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_SAT, false));
             meta.put("localIndexes", LocalReceiveIndexes.getInstance(context).toJSON());
             meta.put("paynym_bot_name", PrefsUtil.getInstance(context).getValue(PrefsUtil.PAYNYM_BOT_NAME, ""));
+            meta.put("attempts", PrefsUtil.getInstance(context).getValue(PrefsUtil.ATTEMPTS, 0));
 
             if(DojoUtil.getInstance(context).getDojoParams() != null)    {
                 meta.put("dojo", DojoUtil.getInstance(context).toJSON());
@@ -660,6 +661,9 @@ public class PayloadUtil	{
                 }
                 if(meta.has("xpubpostxreg")) {
                     PrefsUtil.getInstance(context).setValue(PrefsUtil.XPUBPOSTXREG, meta.getBoolean("xpubpostxreg"));
+                }
+                if(meta.has("attempts")) {
+                    PrefsUtil.getInstance(context).setValue(PrefsUtil.ATTEMPTS, meta.getInt("attempts"));
                 }
 
             }
