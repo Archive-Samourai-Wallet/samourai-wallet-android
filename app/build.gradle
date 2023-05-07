@@ -182,6 +182,8 @@ dependencies {
     implementation "io.matthewnelson.topl-android:topl-service:$topl_android_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
+    implementation 'io.samourai.code.wallet:hummingbird-android:main-SNAPSHOT'
+    implementation 'com.sparrowwallet:hummingbird:1.6.4'
 
     //JetpackCompose
     // Integration with activities

@@ -46,6 +46,7 @@ import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.databinding.ActivityBalanceBinding
 import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
+import com.samourai.wallet.fragments.ScanFragment
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.home.adapters.TxAdapter
 import com.samourai.wallet.network.NetworkDashboard
@@ -959,9 +960,9 @@ open class BalanceActivity : SamouraiActivity() {
     }
 
     private fun doScan() {
-        val cameraFragmentBottomSheet = CameraFragmentBottomSheet()
+        val cameraFragmentBottomSheet = ScanFragment()
         cameraFragmentBottomSheet.show(supportFragmentManager, cameraFragmentBottomSheet.tag)
-        cameraFragmentBottomSheet.setQrCodeScanListener { code: String ->
+        cameraFragmentBottomSheet.setOnScanListener { code ->
             cameraFragmentBottomSheet.dismissAllowingStateLoss()
             val params = SamouraiWallet.getInstance().currentNetworkParams
             val privKeyReader = PrivKeyReader(code, params)
