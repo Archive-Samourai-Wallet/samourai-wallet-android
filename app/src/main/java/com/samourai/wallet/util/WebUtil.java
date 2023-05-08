@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.beans.HttpException;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.tor.TorManager;
@@ -362,6 +363,10 @@ public class WebUtil {
 
         try (Response response = builder.build().newCall(request).execute()) {
             String responseBody = (response.body()!=null ? response.body().string() : "");
+            if (response.code() == 401) {
+                APIFactory.getInstance(context).getToken(true);
+                return null;
+            }
             if (!response.isSuccessful()) {
                 throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
             }
