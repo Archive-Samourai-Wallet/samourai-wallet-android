@@ -6,7 +6,9 @@ import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 
+import com.google.common.collect.Lists;
 import com.samourai.wallet.R;
+import com.samourai.wallet.RestoreSeedWalletActivity;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
@@ -65,6 +67,8 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
 
@@ -982,6 +986,24 @@ public class PayloadUtil	{
             }
         }
 
+    }
+
+    public List<String> getPaynymsFromBackupFile() {
+        String backupData = ExternalBackupManager.read();
+        List<String> pcodes = Lists.newArrayList("");
+        if (backupData != null) {
+            try {
+                String decrypted = getDecryptedBackupPayload(backupData, new CharSequenceX("123"));
+                JSONObject json = new JSONObject(decrypted);
+                JSONArray pCodes = json.getJSONObject("meta").getJSONObject("bip47").getJSONArray("pcodes");
+                for (int i = 0; i < pCodes.length(); i++) {
+                    pcodes.add(String.valueOf(pCodes.getJSONObject(i).get("payment_code")));
+                }
+            } catch (Exception e) {
+                System.out.println("Something went wrong: "+ e);
+            }
+        }
+        return pcodes;
     }
 
     public String getDecryptedBackupPayload(String data, CharSequenceX password) throws Exception {

@@ -73,6 +73,11 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
                 val followings = ArrayList(codes.distinctBy { it.code }.map { it.code })
+                val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application?>().applicationContext).paynymsFromBackupFile
+                backupFilePaynyms.forEach { pcode ->
+                    if (!followings.contains(pcode) && pcode != "")
+                        followings.add(pcode)
+                }
                 BIP47Meta.getInstance().addFollowings(followings)
                 sortByLabel(followings);
                 viewModelScope.launch(Dispatchers.Main) {
