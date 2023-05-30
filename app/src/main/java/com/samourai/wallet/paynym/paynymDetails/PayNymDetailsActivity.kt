@@ -184,7 +184,6 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                     Toast.makeText(this@PayNymDetailsActivity, "Unable to load avatar", Toast.LENGTH_SHORT).show()
                                 }
                             })
-                        Toast.makeText(this@PayNymDetailsActivity, "PayNym name not available", Toast.LENGTH_SHORT).show()
                     }
                 })
         if (menu != null) {
@@ -783,7 +782,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                             BIP49Util.getInstance(this@PayNymDetailsActivity).wallet.getAccount(0).change.incAddrIdx()
                                         }
                                         if (!BIP47Meta.getInstance().exists(pcode, false)) {
-                                            BIP47Meta.getInstance().setLabel(pcode, "unknown paynym");
+                                            BIP47Meta.getInstance().setLabel(pcode, BIP47Meta.getInstance().getAbbreviatedPcode(pcode));
                                             BIP47Meta.getInstance().setRole(pcode, true);
                                         }
                                         savePayLoad()
