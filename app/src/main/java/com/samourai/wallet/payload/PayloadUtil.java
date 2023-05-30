@@ -990,14 +990,17 @@ public class PayloadUtil	{
 
     public List<String> getPaynymsFromBackupFile() {
         String backupData = ExternalBackupManager.read();
-        List<String> pcodes = Lists.newArrayList("");
+        List<String> pcodes = Lists.newArrayList();
         if (backupData != null) {
             try {
-                String decrypted = getDecryptedBackupPayload(backupData, new CharSequenceX("123"));
+                String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
+                String decrypted = getDecryptedBackupPayload(backupData, new CharSequenceX(passphrase));
                 JSONObject json = new JSONObject(decrypted);
                 JSONArray pCodes = json.getJSONObject("meta").getJSONObject("bip47").getJSONArray("pcodes");
                 for (int i = 0; i < pCodes.length(); i++) {
-                    pcodes.add(String.valueOf(pCodes.getJSONObject(i).get("payment_code")));
+                    if (pCodes.getJSONObject(i).has("following")) {
+                        pcodes.add(String.valueOf(pCodes.getJSONObject(i).get("payment_code")));
+                    }
                 }
             } catch (Exception e) {
                 System.out.println("Something went wrong: "+ e);

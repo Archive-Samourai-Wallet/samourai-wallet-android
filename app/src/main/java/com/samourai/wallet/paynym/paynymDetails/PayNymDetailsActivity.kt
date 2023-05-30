@@ -111,8 +111,6 @@ class PayNymDetailsActivity : SamouraiActivity() {
         val drawable = ContextCompat.getDrawable(this, R.drawable.divider_grey)
         binding.historyRecyclerView.addItemDecoration(ItemDividerDecorator(drawable))
         setPayNym()
-        if (!isPaynymRegistered)
-            binding.followBtn.text = "Connect"
         loadTxes()
         payNymViewModel.followers.observe(this) {
             setPayNym()
@@ -125,6 +123,15 @@ class PayNymDetailsActivity : SamouraiActivity() {
         }
         binding.followBtn.setOnClickListener { followPaynym() }
 
+    }
+
+    private fun setUnrigesteredPcode() {
+        binding.followBtn.text = getString(R.string.connect)
+        binding.feeMessage.text = getString(R.string.connect_paynym_fee)
+        binding.followMessage.text = "${getString(R.string.blockchain_connect_with)} ${getLabel()} ${resources.getText(R.string.paynym_connect_message)}"
+        if (!following)
+            addChip(getString(R.string.following))
+        following = true
     }
 
     private fun setPayNym() {
@@ -169,6 +176,8 @@ class PayNymDetailsActivity : SamouraiActivity() {
                             .into( binding.userAvatar, object : Callback {
                                 override fun onSuccess() {
                                     binding.paynymAvatarProgress.visibility = View.GONE
+                                    isPaynymRegistered = false
+                                    setUnrigesteredPcode()
                                 }
 
                                 override fun onError(e: Exception) {
@@ -176,8 +185,6 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                     Toast.makeText(this@PayNymDetailsActivity, "Unable to load avatar", Toast.LENGTH_SHORT).show()
                                 }
                             })
-                        Toast.makeText(this@PayNymDetailsActivity, "This pcode doesn't exist!", Toast.LENGTH_SHORT).show()
-                        isPaynymRegistered = false
                     }
                 })
         if (menu != null) {
@@ -775,8 +782,10 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                         if (change > 0L) {
                                             BIP49Util.getInstance(this@PayNymDetailsActivity).wallet.getAccount(0).change.incAddrIdx()
                                         }
-                                        if (!BIP47Meta.getInstance().exists(pcode, false))
+                                        if (!BIP47Meta.getInstance().exists(pcode, false)) {
                                             BIP47Meta.getInstance().setLabel(pcode, "unknown paynym");
+                                            BIP47Meta.getInstance().setRole(pcode, true);
+                                        }
                                         savePayLoad()
                                     } else {
                                         Toast.makeText(this@PayNymDetailsActivity, R.string.tx_failed, Toast.LENGTH_SHORT).show()

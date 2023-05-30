@@ -1,13 +1,13 @@
 package com.samourai.wallet.bip47;
 
+import static com.samourai.wallet.util.LogUtil.info;
+
 import android.content.Context;
-import android.util.Log;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.samourai.wallet.util.LogUtil.info;
-
 public class BIP47Meta {
 
     public static final String strSamouraiDonationPCode = SamouraiWallet.samouraiDonationPCode;//    public static final String strSamouraiDonationMeta = "?title=Samourai Donations&desc=Donate to help fund development of Samourai Bitcoin Wallet&user=K6tS2X8";
@@ -39,6 +37,7 @@ public class BIP47Meta {
     public boolean  requiredRefresh=  false;
 
     private static ConcurrentHashMap<String,String> pcodeLabels = null;
+    private static ConcurrentHashMap<String,Boolean> pcodeRoles = null;
     private static ConcurrentHashMap<String,Boolean> pcodeArchived = null;
     private static ConcurrentHashMap<String,ConcurrentHashMap<String,Integer>> pcodeUnspentIdxs = null;
     private static ConcurrentHashMap<String,String> addr2pcode = null;
@@ -60,6 +59,7 @@ public class BIP47Meta {
 
         if(instance == null) {
             pcodeLabels = new ConcurrentHashMap<String,String>();
+            pcodeRoles = new ConcurrentHashMap<String,Boolean>();
             pcodeArchived = new ConcurrentHashMap<String,Boolean>();
             pcodeUnspentIdxs = new ConcurrentHashMap<String,ConcurrentHashMap<String,Integer>>();
             addr2pcode = new ConcurrentHashMap<String,String>();
@@ -81,6 +81,7 @@ public class BIP47Meta {
 
     public void clear() {
         pcodeLabels.clear();
+        pcodeRoles.clear();
         pcodeArchived.clear();
         pcodeUnspentIdxs.clear();
         addr2pcode.clear();
@@ -133,6 +134,10 @@ public class BIP47Meta {
 
     public void setLabel(String pcode, String label)   {
         pcodeLabels.put(pcode, label);
+    }
+
+    public void setRole (String pcode, boolean isFollowing) {
+        pcodeRoles.put(pcode, isFollowing);
     }
 
     public Set<String> getLabels()    {
@@ -502,6 +507,7 @@ public class BIP47Meta {
 
     public void remove(String pcode)    {
         pcodeLabels.remove(pcode);
+        pcodeRoles.remove(pcode);
 //        pcodeIncomingIdxs.remove(pcode);
         pcodeOutgoingIdxs.remove(pcode);
         pcodeOutgoingStatus.remove(pcode);
@@ -580,6 +586,7 @@ public class BIP47Meta {
                 pobj.put("label", pcodeLabels.get(pcode));
                 pobj.put("archived", pcodeArchived.get(pcode));
                 pobj.put("segwit", pcodeSegwit.get(pcode));
+                pobj.put("following", pcodeRoles.get(pcode));
 
                 if(pcodeUnspentIdxs.containsKey(pcode))    {
                     ConcurrentHashMap<String,Integer> incoming = pcodeUnspentIdxs.get(pcode);
@@ -669,6 +676,8 @@ public class BIP47Meta {
                 JSONObject obj = pcodes.getJSONObject(i);
 
                 pcodeLabels.put(obj.getString("payment_code"), obj.getString("label"));
+                if (obj.has("following"))
+                    pcodeRoles.put(obj.getString("payment_code"), obj.getBoolean("following"));
                 pcodeArchived.put(obj.getString("payment_code"), obj.has("archived") ? obj.getBoolean("archived") : false);
                 pcodeSegwit.put(obj.getString("payment_code"), obj.has("segwit") ? obj.getBoolean("segwit") : false);
 
