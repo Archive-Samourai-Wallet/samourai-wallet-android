@@ -129,9 +129,8 @@ class PayNymDetailsActivity : SamouraiActivity() {
         binding.followBtn.text = getString(R.string.connect)
         binding.feeMessage.text = getString(R.string.connect_paynym_fee)
         binding.followMessage.text = "${getString(R.string.blockchain_connect_with)} ${getLabel()} ${resources.getText(R.string.paynym_connect_message)}"
-        if (!following)
-            addChip(getString(R.string.following))
         following = true
+        binding.paynymChipLayout.removeView(binding.paynymChipLayout.getChildAt(1))
     }
 
     private fun setPayNym() {
@@ -185,6 +184,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                     Toast.makeText(this@PayNymDetailsActivity, "Unable to load avatar", Toast.LENGTH_SHORT).show()
                                 }
                             })
+                        Toast.makeText(this@PayNymDetailsActivity, "PayNym name not available", Toast.LENGTH_SHORT).show()
                     }
                 })
         if (menu != null) {
@@ -839,7 +839,6 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
     @Throws(MnemonicLengthException::class, DecryptionException::class, JSONException::class, IOException::class)
     private fun savePayLoad() {
-        println("Serialazing the following data 3: " + BIP47Meta.getInstance().toJSON())
         PayloadUtil.getInstance(this@PayNymDetailsActivity).serializePayNyms(BIP47Meta.getInstance().toJSON())
         PayloadUtil.getInstance(this@PayNymDetailsActivity).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(this@PayNymDetailsActivity).guid + AccessFactory.getInstance(this@PayNymDetailsActivity).pin))
     }

@@ -217,6 +217,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                     val res = PayloadUtil.getInstance(getApplication()).deserializePayNyms().toString()
                     setPaynymPayload(JSONObject(res))
                 } catch (ex: Exception) {
+                    setPaynymPayload(JSONObject().put("empty", true))
                     throw CancellationException(ex.message)
                 }
             }
@@ -285,6 +286,11 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
     init {
         if (PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PAYNYM_CLAIMED, false)) {
             init()
+        }
+        else {
+            viewModelScope.launch {
+                setPaynymPayload(JSONObject().put("empty", true))
+            }
         }
     }
 }
