@@ -88,6 +88,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
     private val job = Job()
     private lateinit var binding: ActivityPaynymDetailsBinding
     private val scope = CoroutineScope(Dispatchers.Main + job)
+    private var isPaynymRegistered = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,6 +125,14 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
     }
 
+    private fun setUnrigesteredPcode() {
+        binding.followBtn.text = getString(R.string.connect)
+        binding.feeMessage.text = getString(R.string.connect_paynym_fee)
+        binding.followMessage.text = "${getString(R.string.blockchain_connect_with)} ${getLabel()} ${resources.getText(R.string.paynym_connect_message)}"
+        following = true
+        binding.paynymChipLayout.removeView(binding.paynymChipLayout.getChildAt(1))
+    }
+
     private fun setPayNym() {
         binding.followMessage.text = resources.getString(R.string.follow) + " " + getLabel() + " " + resources.getText(R.string.paynym_follow_message_2).toString()
         if (BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_NOT_SENT) {
@@ -137,7 +146,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         if (BIP47Meta.getInstance().getIncomingIdx(pcode) >= 0) {
             binding.historyLayout!!.visibility = View.VISIBLE
         }
-        if (BIP47Meta.getInstance().isFollowing(pcode)) {
+        if (BIP47Meta.getInstance().isFollowing(pcode) || !isPaynymRegistered) {
             binding.followBtn.text = getString(R.string.connect)
             binding.feeMessage.text = getString(R.string.connect_paynym_fee)
             binding.followMessage.text = "${getString(R.string.blockchain_connect_with)} ${getLabel()} ${resources.getText(R.string.paynym_connect_message)}"
@@ -161,7 +170,20 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
                     override fun onError(e: Exception) {
                         binding.paynymAvatarProgress.visibility = View.GONE
-                        Toast.makeText(this@PayNymDetailsActivity, "Unable to load avatar", Toast.LENGTH_SHORT).show()
+                        Picasso.get()
+                            .load(WebUtil.PAYNYM_API + "/preview/" + pcode)
+                            .into( binding.userAvatar, object : Callback {
+                                override fun onSuccess() {
+                                    binding.paynymAvatarProgress.visibility = View.GONE
+                                    isPaynymRegistered = false
+                                    setUnrigesteredPcode()
+                                }
+
+                                override fun onError(e: Exception) {
+                                    binding.paynymAvatarProgress.visibility = View.GONE
+                                    Toast.makeText(this@PayNymDetailsActivity, "Unable to load avatar", Toast.LENGTH_SHORT).show()
+                                }
+                            })
                     }
                 })
         if (menu != null) {
@@ -249,7 +271,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                     .show()
             return
         }
-        if (BIP47Meta.getInstance().isFollowing(pcode)) {
+        if (BIP47Meta.getInstance().isFollowing(pcode) || !isPaynymRegistered) {
                 doNotifTx()
         } else {
             MaterialAlertDialogBuilder(this)
@@ -380,6 +402,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                         .show()
             }
             R.id.paynym_indexes -> {
+                PayloadUtil.getInstance(this@PayNymDetailsActivity).getPaynymsFromBackupFile();
                 val outgoing = BIP47Meta.getInstance().getOutgoingIdx(pcode)
                 val incoming = BIP47Meta.getInstance().getIncomingIdx(pcode)
                 Toast.makeText(this@PayNymDetailsActivity, "Incoming index:$incoming, Outgoing index:$outgoing", Toast.LENGTH_SHORT).show()
@@ -758,6 +781,10 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                         if (change > 0L) {
                                             BIP49Util.getInstance(this@PayNymDetailsActivity).wallet.getAccount(0).change.incAddrIdx()
                                         }
+                                        if (!BIP47Meta.getInstance().exists(pcode, false)) {
+                                            BIP47Meta.getInstance().setLabel(pcode, BIP47Meta.getInstance().getAbbreviatedPcode(pcode));
+                                            BIP47Meta.getInstance().setRole(pcode, true);
+                                        }
                                         savePayLoad()
                                     } else {
                                         Toast.makeText(this@PayNymDetailsActivity, R.string.tx_failed, Toast.LENGTH_SHORT).show()
@@ -811,6 +838,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
     @Throws(MnemonicLengthException::class, DecryptionException::class, JSONException::class, IOException::class)
     private fun savePayLoad() {
+        PayloadUtil.getInstance(this@PayNymDetailsActivity).serializePayNyms(BIP47Meta.getInstance().toJSON())
         PayloadUtil.getInstance(this@PayNymDetailsActivity).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(this@PayNymDetailsActivity).guid + AccessFactory.getInstance(this@PayNymDetailsActivity).pin))
     }
 

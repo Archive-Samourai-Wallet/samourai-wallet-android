@@ -54,8 +54,18 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
 
     private suspend fun setPaynymPayload(jsonObject: JSONObject) = withContext(Dispatchers.IO) {
         var array = JSONArray()
+        if (jsonObject.has("empty")) {
+            val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application?>().applicationContext).paynymsFromBackupFile
+            BIP47Meta.getInstance().addFollowings(backupFilePaynyms as java.util.ArrayList<String>?)
+            sortByLabel(backupFilePaynyms);
+            viewModelScope.launch(Dispatchers.Main) {
+                followingList.postValue(backupFilePaynyms)
+            }
+            return@withContext
+        }
         try {
             val nym = Gson().fromJson(jsonObject.toString(), NymResponse::class.java);
+            val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application?>().applicationContext).paynymsFromBackupFile
 
             array = jsonObject.getJSONArray("codes")
             if (array.getJSONObject(0).has("claimed") && array.getJSONObject(0).getBoolean("claimed")) {
@@ -73,6 +83,10 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
                 val followings = ArrayList(codes.distinctBy { it.code }.map { it.code })
+                backupFilePaynyms.forEach { pcode ->
+                    if (!followings.contains(pcode) && pcode != "")
+                        followings.add(pcode)
+                }
                 BIP47Meta.getInstance().addFollowings(followings)
                 sortByLabel(followings);
                 viewModelScope.launch(Dispatchers.Main) {
@@ -125,6 +139,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                     throw Exception("Invalid response ")
             }
         } catch (ex: Exception) {
+            setPaynymPayload(JSONObject().put("empty", true))
             LogUtil.error(TAG, ex)
         }
     }
@@ -202,6 +217,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                     val res = PayloadUtil.getInstance(getApplication()).deserializePayNyms().toString()
                     setPaynymPayload(JSONObject(res))
                 } catch (ex: Exception) {
+                    setPaynymPayload(JSONObject().put("empty", true))
                     throw CancellationException(ex.message)
                 }
             }
@@ -247,9 +263,9 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                     val apiService = PayNymApiService.getInstance(strPaymentCode, getApplication())
                     apiService.unfollow(pcode)
                     BIP47Meta.getInstance().remove(pcode)
+                    PayloadUtil.getInstance(getApplication()).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(getApplication()).guid + AccessFactory.getInstance(getApplication()).pin))
                     BIP47Meta.getInstance().isRequiredRefresh = true
                     //Refresh
-                    PayloadUtil.getInstance(getApplication()).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(getApplication()).guid + AccessFactory.getInstance(getApplication()).pin))
                     getPayNymData()
                 } catch (ex: Exception) {
                     throw CancellationException(ex.message)
@@ -270,6 +286,11 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
     init {
         if (PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PAYNYM_CLAIMED, false)) {
             init()
+        }
+        else {
+            viewModelScope.launch {
+                setPaynymPayload(JSONObject().put("empty", true))
+            }
         }
     }
 }

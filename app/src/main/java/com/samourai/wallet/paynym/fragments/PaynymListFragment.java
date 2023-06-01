@@ -100,7 +100,7 @@ public class PaynymListFragment extends Fragment {
         public void onBindViewHolder(ViewHolder holder, int position) {
 
             String strPaymentCode = pcodes.get(position);
-            Picasso.get().load(WebUtil.PAYNYM_API + strPaymentCode + "/avatar")
+            Picasso.get().load(WebUtil.PAYNYM_API + "/preview/"+ strPaymentCode)
                     .into(holder.avatar);
             holder.paynymCode.setText(BIP47Meta.getInstance().getDisplayLabel(strPaymentCode));
             holder.avatar.getRootView().setOnClickListener(view -> onPayNymItemClick(pcodes.get(position),holder));
