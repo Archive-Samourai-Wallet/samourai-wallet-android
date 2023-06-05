@@ -77,9 +77,9 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String thisString = s.toString();
                 String[] arr = thisString.split(separator);
-                String lastItem = arr[arr.length - 1];
-                if(validWordList.indexOf(lastItem) != -1) {
-                    if (thisString.length() > 0 && !thisString.equals(lastString)) {
+                if(arr.length != 0 && !thisString.isEmpty()) {
+                    String lastItem = arr[arr.length - 1];
+                    if (validWordList.indexOf(lastItem) != -1 && !thisString.equals(lastString)) {
                         format(thisString);
                     }
                 }
@@ -88,8 +88,8 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
             @Override
             public void afterTextChanged(Editable s) {
                 String thisString = s.toString();
-                if (thisString.length() != 0) {
-                    String[] arr = thisString.split(separator);
+                String[] arr = thisString.split(separator);
+                if(arr.length != 0 && !thisString.isEmpty()) {
                     String lastItem = arr[arr.length - 1];
                     if(lastItem.length() > 1 && lastItem.length() <= 4){
                         MnemonicSeedEditText.this.showDropDown();
@@ -181,7 +181,13 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
             String s = getText().toString();
             String s1 = s.substring(0, startIdx);
             String s2 = s.substring(Math.min(endIdx + 1, s.length() - 1), s.length());
-            MnemonicSeedEditText.this.setText(s1 + s2);
+            String finalString = s1 + s2;
+            if(finalString.trim().isEmpty()) {
+                MnemonicSeedEditText.this.setText(null);
+            } else {
+                MnemonicSeedEditText.this.setText(s1 + s2);
+            }
+
         }
 
     }
