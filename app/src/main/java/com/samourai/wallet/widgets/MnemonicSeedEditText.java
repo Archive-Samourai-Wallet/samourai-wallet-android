@@ -23,6 +23,8 @@ import android.widget.Toast;
 
 import com.samourai.wallet.R;
 
+import org.bitcoinj.crypto.MnemonicCode;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -74,12 +76,20 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String thisString = s.toString();
-                if (thisString.length() > 0 && !thisString.equals(lastString)) {
-                    format();
+                String[] arr = thisString.split(separator);
+                String lastItem = arr[arr.length - 1];
+                if(validWordList.indexOf(lastItem) != -1) {
+                    if (thisString.length() > 0 && !thisString.equals(lastString)) {
+                        format(thisString);
+                    }
                 }
-//                To control drop down
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String thisString = s.toString();
                 if (thisString.length() != 0) {
-                    String[] arr = thisString.split(" ");
+                    String[] arr = thisString.split(separator);
                     String lastItem = arr[arr.length - 1];
                     if(lastItem.length() > 1 && lastItem.length() <= 4){
                         MnemonicSeedEditText.this.showDropDown();
@@ -87,50 +97,24 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
                         MnemonicSeedEditText.this.dismissDropDown();
                     }
                 }
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-//                MnemonicSeedEditText.this.showDropDown();
             }
         };
         addTextChangedListener(textWatcher);
 
-        String BIP39_EN = null;
-        StringBuilder sb = new StringBuilder();
-        String mLine = null;
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(context.getAssets().open("BIP39/en.txt")));
-            mLine = reader.readLine();
-            while (mLine != null) {
-                sb.append("\n".concat(mLine));
-                mLine = reader.readLine();
-            }
-            reader.close();
-            BIP39_EN = sb.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (BIP39_EN != null) {
-            validWordList = Arrays.asList(BIP39_EN.split("\\n"));
-        }
-
+        validWordList = MnemonicCode.INSTANCE.getWordList();
     }
 
-    private void format() {
+    private void format(String thisString) {
 
         SpannableStringBuilder sb = new SpannableStringBuilder();
-        String fullString = getText().toString();
-
-        String[] strings = fullString.split(separator);
+        String[] strings = thisString.split(separator);
 
         for (int i = 0; i < strings.length; i++) {
             String string = strings[i];
             sb.append(string.replace("\n", ""));
-            if (fullString.charAt(fullString.length() - 1) != separator.charAt(0) && i == strings.length - 1) {
+            if (thisString.charAt(thisString.length() - 1) != separator.charAt(0) && i == strings.length - 1) {
                 break;
-            } else if (!validWordList.contains(string.trim())) {
+            } else if (validWordList.indexOf(string.trim()) == -1) {
                 Toast.makeText(context, R.string.invalid_mnemonic_word, Toast.LENGTH_SHORT).show();
                 break;
             }
@@ -143,14 +127,13 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
             sb.setSpan(myClickableSpan, Math.max(endIdx - 2, startIdx), endIdx, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             if (i < strings.length - 1) {
                 sb.append(separator);
-            } else if (fullString.charAt(fullString.length() - 1) == separator.charAt(0)) {
+            } else if (thisString.charAt(thisString.length() - 1) == separator.charAt(0)) {
                 sb.append(separator);
             }
         }
         lastString = sb.toString();
         setText(sb);
         setSelection(getText().length());
-
     }
 
     public View createTokenView(String text) {
