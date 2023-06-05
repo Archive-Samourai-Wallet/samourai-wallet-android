@@ -82,21 +82,17 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
                     if (validWordList.indexOf(lastItem) != -1 && !thisString.equals(lastString)) {
                         format(thisString);
                     }
-                }
-            }
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                String thisString = s.toString();
-                String[] arr = thisString.split(separator);
-                if(arr.length != 0 && !thisString.isEmpty()) {
-                    String lastItem = arr[arr.length - 1];
                     if(lastItem.length() > 1 && lastItem.length() <= 4){
                         MnemonicSeedEditText.this.showDropDown();
                     }else {
                         MnemonicSeedEditText.this.dismissDropDown();
                     }
                 }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         };
         addTextChangedListener(textWatcher);
@@ -107,33 +103,33 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
     private void format(String thisString) {
 
         SpannableStringBuilder sb = new SpannableStringBuilder();
-        String[] strings = thisString.split(separator);
+        String[] words = thisString.split(separator);
 
-        for (int i = 0; i < strings.length; i++) {
-            String string = strings[i];
-            sb.append(string.replace("\n", ""));
-            if (thisString.charAt(thisString.length() - 1) != separator.charAt(0) && i == strings.length - 1) {
-                break;
-            } else if (validWordList.indexOf(string.trim()) == -1) {
-                Toast.makeText(context, R.string.invalid_mnemonic_word, Toast.LENGTH_SHORT).show();
-                break;
+        if(thisString.charAt(thisString.length() - 1) == separator.charAt(0)) {
+            for (int i = 0; i < words.length; i++) {
+                String word = words[i];
+                sb.append(word.replace("\n", ""));
+                if (validWordList.indexOf(word.trim()) == -1) {
+                    Toast.makeText(context, R.string.invalid_mnemonic_word, Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                BitmapDrawable bd = convertViewToDrawable(createTokenView(word));
+                bd.setBounds(0, 0, bd.getIntrinsicWidth(), bd.getIntrinsicHeight());
+                int startIdx = sb.length() - (word.length());
+                int endIdx = sb.length();
+                sb.setSpan(new ImageSpan(bd), startIdx, endIdx, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                SpanClick myClickableSpan = new SpanClick(startIdx, endIdx);
+                sb.setSpan(myClickableSpan, Math.max(endIdx - 2, startIdx), endIdx, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                if (i < words.length - 1) {
+                    sb.append(separator);
+                } else if (thisString.charAt(thisString.length() - 1) == separator.charAt(0)) {
+                    sb.append(separator);
+                }
             }
-            BitmapDrawable bd = convertViewToDrawable(createTokenView(string));
-            bd.setBounds(0, 0, bd.getIntrinsicWidth(), bd.getIntrinsicHeight());
-            int startIdx = sb.length() - (string.length());
-            int endIdx = sb.length();
-            sb.setSpan(new ImageSpan(bd), startIdx, endIdx, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            SpanClick myClickableSpan = new SpanClick(startIdx, endIdx);
-            sb.setSpan(myClickableSpan, Math.max(endIdx - 2, startIdx), endIdx, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            if (i < strings.length - 1) {
-                sb.append(separator);
-            } else if (thisString.charAt(thisString.length() - 1) == separator.charAt(0)) {
-                sb.append(separator);
-            }
+            lastString = sb.toString();
+            setText(sb);
+            setSelection(sb.length());
         }
-        lastString = sb.toString();
-        setText(sb);
-        setSelection(getText().length());
     }
 
     public View createTokenView(String text) {
