@@ -166,7 +166,7 @@ fun SignMessage() {
                 Button(
                     onClick = {
                         keyboardController?.hide()
-                        vm.signMessage(message, context)
+                        vm.executeSignMessage(message, context)
                     },
                     Modifier
                         .fillMaxWidth()

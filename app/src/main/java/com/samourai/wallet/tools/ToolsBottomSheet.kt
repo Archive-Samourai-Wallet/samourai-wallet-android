@@ -157,6 +157,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     val context = LocalContext.current;
     val addressCalcBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val signMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val verifyMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val auth47BottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val broadcastBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
@@ -170,6 +171,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         addressCalcBottomSheetState.hide()
                     } else if (signMessageBottomSheetState.isVisible) {
                         signMessageBottomSheetState.hide()
+                    } else if (verifyMessageBottomSheetState.isVisible) {
+                        verifyMessageBottomSheetState.hide()
                     } else if (auth47BottomSheet.isVisible) {
                         auth47BottomSheet.hide()
                     } else if (broadcastBottomSheet.isVisible) {
@@ -188,16 +191,18 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     LaunchedEffect(
         addressCalcBottomSheetState.isVisible,
         signMessageBottomSheetState.isVisible,
+        verifyMessageBottomSheetState.isVisible,
         auth47BottomSheet.isVisible,
         broadcastBottomSheet.isVisible,
         sweepPrivateKeyBottomSheet.isVisible,
     ) {
         val anyToolWindowIsVisible = (
-                addressCalcBottomSheetState.isVisible ||
-                        signMessageBottomSheetState.isVisible ||
-                        auth47BottomSheet.isVisible ||
-                        broadcastBottomSheet.isVisible ||
-                        sweepPrivateKeyBottomSheet.isVisible)
+            addressCalcBottomSheetState.isVisible ||
+                signMessageBottomSheetState.isVisible ||
+                verifyMessageBottomSheetState.isVisible ||
+                auth47BottomSheet.isVisible ||
+                broadcastBottomSheet.isVisible ||
+                sweepPrivateKeyBottomSheet.isVisible)
         toolsBottomSheet?.dialog?.setCancelable(!anyToolWindowIsVisible)
     }
 
@@ -234,6 +239,20 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         vm.clearMessage()
                         toolsBottomSheet?.disableDragging()
                         signMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
+                    }
+                }
+            )
+            ToolsItem(
+                title = "Verify message",
+                subTitle = "Verify message using public key",
+                icon = R.drawable.ic_verify_signature,
+                onClick = {
+                    scope.launch {
+                        val types = context.resources.getStringArray(R.array.account_types)
+                        vm.calculateAddress(types.first(), true, index = 0, context = context)
+                        vm.clearMessage()
+                        toolsBottomSheet?.disableDragging()
+                        verifyMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
                     }
                 }
             )
@@ -297,7 +316,15 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             }
         }
-
+        if (verifyMessageBottomSheetState.currentValue != ModalBottomSheetValue.Hidden) {
+            DisposableEffect(Unit) {
+                onDispose {
+                    val types = context.resources.getStringArray(R.array.account_types)
+                    vm.calculateAddress(types.first(), true, index = 0, context = context)
+                    toolsBottomSheet?.disableDragging(disable = false)
+                }
+            }
+        }
         if (sweepPrivateKeyBottomSheet.currentValue != ModalBottomSheetValue.Hidden) {
             DisposableEffect(Unit) {
                 onDispose {
@@ -373,8 +400,22 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 SignMessage()
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
-        ) {
-        }
+        ) {}
+
+        ModalBottomSheetLayout(
+            sheetState = verifyMessageBottomSheetState,
+            scrimColor = Color.Black.copy(alpha = 0.7f),
+            sheetBackgroundColor = samouraiBottomSheetBackground,
+            sheetContent = {
+                VerifyMessage(
+                    modal = verifyMessageBottomSheetState,
+                    onClose = {
+                        scope.launch { verifyMessageBottomSheetState.hide() }
+                    }
+                )
+            },
+            sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+        ) {}
 
         ModalBottomSheetLayout(
             sheetState = auth47BottomSheet,
@@ -452,7 +493,7 @@ fun DefaultToolsItemPreview() {
             ToolsItem(
                 title = "Sweep Private Key",
                 subTitle = "Enter a private key and sweep any funds to" +
-                        "your next bitcoin address",
+                    "your next bitcoin address",
                 icon = R.drawable.ic_broom
             )
         }
