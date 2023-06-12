@@ -38,6 +38,7 @@ import com.samourai.wallet.widgets.ViewPager;
 
 import org.apache.commons.codec.DecoderException;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -234,7 +235,8 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                         return;
                     }
 
-                    if (s.length >= 12 && s.length <= 24 && s.length % 3 == 0) {
+                    // Pressing "next" on import seed screen
+                    if (s.length >= 12 && s.length <= 24 && s.length % 3 == 0 && isValidMnemonic(Arrays.asList(s))) {
                         wallet_create_viewpager.setCurrentItem(count + 1);
                     } else {
                         Toast.makeText(RestoreSeedWalletActivity.this, R.string.invalid_mnemonic, Toast.LENGTH_SHORT).show();
@@ -573,6 +575,15 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
         String tag = "android:switcher:" + R.id.wallet_create_viewpager + ":" + 0;
         ImportWalletFragment fragment = (ImportWalletFragment) getSupportFragmentManager().findFragmentByTag(tag);
         fragment.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private boolean isValidMnemonic(List<String> words) {
+        try {
+            MnemonicCode.INSTANCE.check(words);
+            return true;
+        } catch (MnemonicException e) {
+            return false;
+        }
     }
 }
 

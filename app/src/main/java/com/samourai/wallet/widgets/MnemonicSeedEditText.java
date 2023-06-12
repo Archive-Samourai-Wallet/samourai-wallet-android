@@ -23,6 +23,8 @@ import android.widget.Toast;
 
 import com.samourai.wallet.R;
 
+import org.bitcoinj.crypto.MnemonicCode;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -74,83 +76,60 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String thisString = s.toString();
-                if (thisString.length() > 0 && !thisString.equals(lastString)) {
-                    format();
-                }
-//                To control drop down
-                if (thisString.length() != 0) {
-                    String[] arr = thisString.split(" ");
+                String[] arr = thisString.split(separator);
+                if(arr.length != 0 && !thisString.isEmpty()) {
                     String lastItem = arr[arr.length - 1];
+                    if (validWordList.indexOf(lastItem) != -1 && !thisString.equals(lastString)) {
+                        format(thisString);
+                    }
+
                     if(lastItem.length() > 1 && lastItem.length() <= 4){
                         MnemonicSeedEditText.this.showDropDown();
                     }else {
                         MnemonicSeedEditText.this.dismissDropDown();
                     }
                 }
-
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-//                MnemonicSeedEditText.this.showDropDown();
             }
         };
         addTextChangedListener(textWatcher);
 
-        String BIP39_EN = null;
-        StringBuilder sb = new StringBuilder();
-        String mLine = null;
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(context.getAssets().open("BIP39/en.txt")));
-            mLine = reader.readLine();
-            while (mLine != null) {
-                sb.append("\n".concat(mLine));
-                mLine = reader.readLine();
-            }
-            reader.close();
-            BIP39_EN = sb.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (BIP39_EN != null) {
-            validWordList = Arrays.asList(BIP39_EN.split("\\n"));
-        }
-
+        validWordList = MnemonicCode.INSTANCE.getWordList();
     }
 
-    private void format() {
+    private void format(String thisString) {
 
         SpannableStringBuilder sb = new SpannableStringBuilder();
-        String fullString = getText().toString();
+        String[] words = thisString.split(separator);
 
-        String[] strings = fullString.split(separator);
-
-        for (int i = 0; i < strings.length; i++) {
-            String string = strings[i];
-            sb.append(string.replace("\n", ""));
-            if (fullString.charAt(fullString.length() - 1) != separator.charAt(0) && i == strings.length - 1) {
-                break;
-            } else if (!validWordList.contains(string.trim())) {
-                Toast.makeText(context, R.string.invalid_mnemonic_word, Toast.LENGTH_SHORT).show();
-                break;
+        if(thisString.charAt(thisString.length() - 1) == separator.charAt(0)) {
+            for (int i = 0; i < words.length; i++) {
+                String word = words[i];
+                sb.append(word.replace("\n", ""));
+                if (validWordList.indexOf(word.trim()) == -1) {
+                    Toast.makeText(context, R.string.invalid_mnemonic_word, Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                BitmapDrawable bd = convertViewToDrawable(createTokenView(word));
+                bd.setBounds(0, 0, bd.getIntrinsicWidth(), bd.getIntrinsicHeight());
+                int startIdx = sb.length() - (word.length());
+                int endIdx = sb.length();
+                sb.setSpan(new ImageSpan(bd), startIdx, endIdx, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                SpanClick myClickableSpan = new SpanClick(startIdx, endIdx);
+                sb.setSpan(myClickableSpan, Math.max(endIdx - 2, startIdx), endIdx, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                if (i < words.length - 1) {
+                    sb.append(separator);
+                } else if (thisString.charAt(thisString.length() - 1) == separator.charAt(0)) {
+                    sb.append(separator);
+                }
             }
-            BitmapDrawable bd = convertViewToDrawable(createTokenView(string));
-            bd.setBounds(0, 0, bd.getIntrinsicWidth(), bd.getIntrinsicHeight());
-            int startIdx = sb.length() - (string.length());
-            int endIdx = sb.length();
-            sb.setSpan(new ImageSpan(bd), startIdx, endIdx, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            SpanClick myClickableSpan = new SpanClick(startIdx, endIdx);
-            sb.setSpan(myClickableSpan, Math.max(endIdx - 2, startIdx), endIdx, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            if (i < strings.length - 1) {
-                sb.append(separator);
-            } else if (fullString.charAt(fullString.length() - 1) == separator.charAt(0)) {
-                sb.append(separator);
-            }
+            lastString = sb.toString();
+            setText(sb);
+            setSelection(sb.length());
         }
-        lastString = sb.toString();
-        setText(sb);
-        setSelection(getText().length());
-
     }
 
     public View createTokenView(String text) {
@@ -198,7 +177,13 @@ public class MnemonicSeedEditText extends androidx.appcompat.widget.AppCompatMul
             String s = getText().toString();
             String s1 = s.substring(0, startIdx);
             String s2 = s.substring(Math.min(endIdx + 1, s.length() - 1), s.length());
-            MnemonicSeedEditText.this.setText(s1 + s2);
+            String finalString = s1 + s2;
+            if(finalString.trim().isEmpty()) {
+                MnemonicSeedEditText.this.setText(null);
+            } else {
+                MnemonicSeedEditText.this.setText(s1 + s2);
+            }
+
         }
 
     }
