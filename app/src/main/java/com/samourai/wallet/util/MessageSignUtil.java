@@ -13,7 +13,6 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.params.MainNetParams;
 
 import java.security.SignatureException;
 import java.sql.Date;
@@ -106,19 +105,15 @@ public class MessageSignUtil {
 
     }
 
-    public boolean verifySignedMessage(String address, String strMessage, String strSignature) throws SignatureException {
+    public boolean verifySignedMessage(final String addr,
+                                       final String msg,
+                                       final String signature) throws SignatureException {
 
-        if(address == null || strMessage == null || strSignature == null)    {
-            return false;
-        }
-
-        ECKey ecKey = signedMessageToKey(strMessage, strSignature);
-        if(ecKey != null)   {
-            return ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString().equals(address);
-        }
-        else    {
-            return false;
-        }
+        return  MessageSignUtilGeneric.getInstance().verifySignedMessage(
+                addr,
+                msg,
+                signature,
+                SamouraiWallet.getInstance().getCurrentNetworkParams());
     }
 
     public String signMessage(ECKey key, String strMessage) {
