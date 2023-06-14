@@ -211,7 +211,16 @@ class AddressCalculatorViewModel : ViewModel() {
     }
 
     fun clearVerifiedMessageState() {
-        verifiedMessage.postValue(null)
+        try {
+            viewModelScope.launch {
+                withContext(Dispatchers.Default) {
+                    verifiedMessage.postValue(null)
+                }
+            }
+        } catch (e : Exception) {
+            // coroutine issue
+            verifiedMessage.postValue(null)
+        }
     }
 
     fun executeVerifyMessage(address: String, message: String, signature: String) {
