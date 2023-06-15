@@ -3,22 +3,45 @@ package com.samourai.wallet.tools
 import AddressCalculator
 import SweepPrivateKeyView
 import android.os.Bundle
-import android.view.*
+import android.view.KeyEvent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.Window
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -146,7 +169,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?, window: Window?) {
     val vm = viewModel<AddressCalculatorViewModel>()
@@ -161,6 +184,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val auth47BottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val broadcastBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val keyboard = LocalSoftwareKeyboardController.current
 
     //Handle BackPress
     LaunchedEffect(true) {
@@ -244,8 +268,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             )
             ToolsItem(
                 title = "Verify message",
-                subTitle = "Verify message using public key",
-                icon = R.drawable.ic_verify_signature,
+                subTitle = "Verify that a signed message contains a valid signature",
+                icon = R.drawable.ic_verify_message,
                 onClick = {
                     scope.launch {
                         val types = context.resources.getStringArray(R.array.account_types)
@@ -304,6 +328,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                     vm.setPage(0)
+                    keyboard?.hide()
                 }
             }
         }
@@ -313,6 +338,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
@@ -322,6 +348,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
@@ -330,6 +357,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 onDispose {
                     sweepViewModel.clear()
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
@@ -339,6 +367,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 onDispose {
                     auth47ViewModel.clear()
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
@@ -348,6 +377,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 onDispose {
                     broadcastHexViewModel.clear()
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
