@@ -347,6 +347,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 onDispose {
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
+                    vm.clearVerifiedMessageState()
                     toolsBottomSheet?.disableDragging(disable = false)
                     keyboard?.hide()
                 }
