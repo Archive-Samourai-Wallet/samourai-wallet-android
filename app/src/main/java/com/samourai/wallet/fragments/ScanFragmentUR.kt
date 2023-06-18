@@ -57,8 +57,8 @@ class ScanFragment : BottomSheetDialogFragment() {
             }
         }
 
-        mCodeScanner?.setURDecodeListener { bytes, type ->
-            onScanUR(bytesToHex(bytes))
+        mCodeScanner?.setURDecodeListener { result ->
+            onScanUR(bytesToHex(result.getOrNull()?.ur?.toBytes()))
         }
 
         permissionView!!.findViewById<View>(R.id.permissionCameraDialogGrantBtn)
