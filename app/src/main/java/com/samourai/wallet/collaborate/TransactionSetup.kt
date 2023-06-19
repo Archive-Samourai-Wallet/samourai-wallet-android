@@ -606,6 +606,7 @@ fun SendDestination(modifier: Modifier = Modifier) {
             CahootsType.MULTI -> {
                 allowPaynymClear = true
             }
+            else -> {}
         }
     }
     Box(modifier = modifier) {

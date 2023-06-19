@@ -1,6 +1,5 @@
 package com.samourai.wallet.whirlpool.newPool
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -68,6 +67,7 @@ class NewPoolViewModel : ViewModel() {
                     PoolCyclePriority.LOW -> {
                         mixFeeTarget = Tx0FeeTarget.BLOCKS_24
                     }
+                    else -> {}
                 }
                 var fee = feeSupplier.getFee(MinerFeeTarget.BLOCKS_2)
                 if (tx0PoolPriority.value != null) {
@@ -77,6 +77,7 @@ class NewPoolViewModel : ViewModel() {
                         PoolCyclePriority.LOW -> {
                             fee = feeSupplier.getFee(MinerFeeTarget.BLOCKS_24)
                         }
+                        else -> {}
                     }
                 }
 

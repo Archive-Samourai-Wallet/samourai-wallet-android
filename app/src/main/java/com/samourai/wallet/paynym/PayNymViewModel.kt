@@ -15,7 +15,15 @@ import com.samourai.wallet.paynym.models.NymResponse
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.LogUtil
 import com.samourai.wallet.util.PrefsUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.bitcoinj.core.AddressFormatException
 import org.json.JSONArray
 import org.json.JSONException
@@ -55,7 +63,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
     private suspend fun setPaynymPayload(jsonObject: JSONObject) = withContext(Dispatchers.IO) {
         var array = JSONArray()
         if (jsonObject.has("empty")) {
-            val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application?>().applicationContext).paynymsFromBackupFile
+            val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application>().applicationContext).paynymsFromBackupFile
             BIP47Meta.getInstance().addFollowings(backupFilePaynyms as java.util.ArrayList<String>?)
             sortByLabel(backupFilePaynyms);
             viewModelScope.launch(Dispatchers.Main) {
@@ -65,7 +73,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
         }
         try {
             val nym = Gson().fromJson(jsonObject.toString(), NymResponse::class.java);
-            val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application?>().applicationContext).paynymsFromBackupFile
+            val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application>().applicationContext).paynymsFromBackupFile
 
             array = jsonObject.getJSONArray("codes")
             if (array.getJSONObject(0).has("claimed") && array.getJSONObject(0).getBoolean("claimed")) {
