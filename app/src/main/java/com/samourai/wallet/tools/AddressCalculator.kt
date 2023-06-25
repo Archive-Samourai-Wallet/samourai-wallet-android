@@ -155,11 +155,11 @@ fun AddressCalcForm() {
     var index by remember { mutableStateOf("${addressDetails?.selectedIndex}") }
     var isExternal by remember { mutableStateOf(addressDetails?.isExternal ?: true) }
     val types = stringArrayResource(id = R.array.account_types)
-    var selectedType by remember { mutableStateOf(addressDetails?.keyType ?: types.first()) }
+    val selectedType = remember { mutableStateOf(addressDetails?.keyType ?: types.first()) }
 
     fun applyChanges() {
         vm.calculateAddress(
-            type = selectedType,
+            type = selectedType.value,
             index = if (index.isEmpty().or(index.isBlank())) 0 else index.toInt(),
             isExternal = isExternal,
             context = context,
@@ -181,7 +181,7 @@ fun AddressCalcForm() {
                 label = stringResource(id = R.string.address_type),
                 value = selectedType,
                 onOptionSelected = {
-                    selectedType = it
+                    selectedType.value = it
                     applyChanges()
                 },
                 options = types.toList()
@@ -272,7 +272,7 @@ fun AddressDetails(onSelect: (address: String, title: String) -> Unit) {
             Modifier
                 .fillMaxWidth()
                 .clickable {
-                    onSelect(addressDetails?.pubKey ?:""  ,stringReceiveAddress)
+                    onSelect(addressDetails?.pubKey ?: "", stringReceiveAddress)
                 }
                 .padding(horizontal = 40.dp, vertical = 24.dp),
 
@@ -296,7 +296,7 @@ fun AddressDetails(onSelect: (address: String, title: String) -> Unit) {
         Column(
             Modifier
                 .clickable {
-                    onSelect(addressDetails?.privateKey ?: "",stringPrivateKey)
+                    onSelect(addressDetails?.privateKey ?: "", stringPrivateKey)
                 }
                 .padding(horizontal = 40.dp, vertical = 24.dp)
                 .fillMaxWidth()
@@ -479,27 +479,29 @@ fun AddressCalculatorPreview() {
 fun DropDownTextField(
     modifier: Modifier = Modifier,
     label: String,
-    value: String,
+    value: MutableState<String>,
     onOptionSelected: (value: String) -> Unit,
-    options: List<String>
+    options: List<String>,
+    enable: MutableState<Boolean> = mutableStateOf(true)
 ) {
+
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf(value) }
+    var selectedOptionText by remember { mutableStateOf(value.value) }
+    var selectedItemIndex by remember { mutableStateOf(options.indexOf(value.value)) }
 
     ExposedDropdownMenuBox(
         modifier = modifier,
-        expanded = expanded,
+        expanded = enable.value && expanded,
         onExpandedChange = {
-            expanded = !expanded
+            expanded = enable.value && !expanded
         }
     ) {
         TextField(
             readOnly = true,
             modifier = modifier,
-            value = selectedOptionText,
+            value = value.value,
             textStyle = TextStyle(fontSize = 11.sp),
-            onValueChange = {
-            },
+            onValueChange = {},
             colors = TextFieldDefaults.textFieldColors(
                 backgroundColor = samouraiTextFieldBg
             ),
@@ -510,25 +512,34 @@ fun DropDownTextField(
             },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = expanded
+                    expanded = enable.value && expanded
                 )
             },
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-            }
-        ) {
-            options.forEach { selectionOption ->
-                DropdownMenuItem(
-                    onClick = {
-                        selectedOptionText = selectionOption
-                        expanded = false
-                        onOptionSelected(selectedOptionText)
+
+        if (enable.value) {
+            ExposedDropdownMenu(
+                expanded = enable.value && expanded,
+                onDismissRequest = {
+                    expanded = false
+                }
+            ) {
+                options.forEachIndexed { index, selectionOption ->
+                    DropdownMenuItem(
+                        onClick = {
+                            selectedItemIndex = index
+                            selectedOptionText = selectionOption
+                            expanded = false
+                            onOptionSelected(selectedOptionText)
+                        }
+                    ) {
+                        Text(
+                            text = selectionOption,
+                            fontSize = 12.sp,
+                            fontWeight = if (index == selectedItemIndex) FontWeight.Bold else null
+                        )
                     }
-                ) {
-                    Text(text = selectionOption, fontSize = 12.sp)
+                    Divider(color = samouraiBottomSheetBackground, thickness = 1.dp)
                 }
             }
         }

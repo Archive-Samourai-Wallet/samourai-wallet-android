@@ -1,3 +1,6 @@
+import SweepPrivateKey.Companion.MONTH_JANUARY
+import SweepPrivateKey.Companion.indexToMonth
+import SweepPrivateKey.Companion.monthToIndex
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -17,9 +20,9 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.common.collect.Lists
 import com.samourai.wallet.R
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.hd.WALLET_INDEX
@@ -50,6 +54,9 @@ import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.PrivKeyReader
 import org.bitcoinj.core.Coin
+import java.util.Calendar
+import java.util.GregorianCalendar
+
 
 @Composable
 fun SweepPrivateKeyView(
@@ -183,12 +190,42 @@ fun SweepFormSweepForm(supportFragmentManager: FragmentManager?) {
     val bip38Passphrase by vm.getBIP38PassphraseLive().observeAsState("")
     var passphraseEntry by remember { mutableStateOf(bip38Passphrase) }
 
+    var switchFBState = remember { mutableStateOf(false)}
+
+    val today: Calendar = GregorianCalendar()
+    val currentMonth = indexToMonth.get(today[Calendar.MONTH]) ?: MONTH_JANUARY
+    val currentYear = today[Calendar.YEAR]
+    var selectedMonth = remember { mutableStateOf(currentMonth) }
+    var selectedYear = remember { mutableStateOf(currentYear.toString()) }
+
+
+    val months = Lists.newArrayList(monthToIndex.keys)
+    val years: MutableList<String> = mutableListOf()
+    for(n in 2020..currentYear){
+        years.add("$n")
+    }
+
+
     LaunchedEffect(key1 = address, block = {
         if (addressEdit.value.isEmpty()) {
             addressEdit.value = address ?: "";
         }
         AppUtil.getInstance(context).checkOfflineState()
     })
+
+    LaunchedEffect(selectedMonth.value) {
+        val candidateYears = loadCandidateYears(selectedMonth.value, today)
+        if (! candidateYears.contains(selectedYear.value)) {
+            selectedYear.value = candidateYears.get(candidateYears.size-1)
+        }
+    }
+
+    LaunchedEffect(selectedYear.value) {
+        val candidateMonths = loadCandidateMonths(selectedYear.value.toInt(), today)
+        if (! candidateMonths.contains(selectedMonth.value)) {
+            selectedMonth.value = candidateMonths.get(candidateMonths.size-1)
+        }
+    }
 
     Scaffold(
         backgroundColor = samouraiBottomSheetBackground,
@@ -231,10 +268,7 @@ fun SweepFormSweepForm(supportFragmentManager: FragmentManager?) {
             }
             TextField(value = addressEdit.value,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged {
-                        vm.setAddress(addressEdit.value, context, passphraseEntry)
-                    },
+                    .fillMaxWidth(),
                 onValueChange = {
                     addressEdit.value = it
                 }, colors = TextFieldDefaults.textFieldColors(
@@ -249,8 +283,7 @@ fun SweepFormSweepForm(supportFragmentManager: FragmentManager?) {
                     keyboardType = KeyboardType.Text,
                 ),
                 keyboardActions = KeyboardActions(onDone = {
-                    vm.setAddress(addressEdit.value, context, passphraseEntry)
-                    keyboardController?.hide()
+                        keyboardController?.hide()
                 }),
                 isError = addressValidationError != null,
                 trailingIcon = {
@@ -266,7 +299,6 @@ fun SweepFormSweepForm(supportFragmentManager: FragmentManager?) {
                                     cameraFragmentBottomSheet.setQrCodeScanListener {
                                         cameraFragmentBottomSheet.dismiss()
                                         addressEdit.value = it
-                                        vm.setAddress(it, context, passphraseEntry)
                                     }
                                 }
                             } else {
@@ -308,13 +340,76 @@ fun SweepFormSweepForm(supportFragmentManager: FragmentManager?) {
                 ),
                 keyboardActions = KeyboardActions(onDone = {
                     keyboardController?.hide()
-                    vm.setAddress(addressEdit.value, context, passphraseEntry)
                 }),
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Column {
+                Row (
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clickable { switchFBState.value = !switchFBState.value }
+                ) {
+                    Switch(
+                        checked = switchFBState.value,
+                        onCheckedChange = {switchFBState.value = it},
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Timelocked fidelity bond",
+                    )
+                }
+                if (true) {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Row {
+                        DropDownTextField(
+                            modifier = Modifier
+                                .alpha(if (switchFBState.value) 1f else 0f)
+                                .fillMaxWidth()
+                                .weight(1.6f),
+                            label = "Month",
+                            value = selectedMonth,
+                            onOptionSelected = {
+                                selectedMonth.value = it
+                            },
+                            options = months,
+                            enable = switchFBState,
+                        )
+
+                        Spacer(modifier = Modifier.width(30.dp))
+
+                        DropDownTextField(
+                            modifier = Modifier
+                                .alpha(if (switchFBState.value) 1f else 0f)
+                                .fillMaxWidth()
+                                .weight(1.6f),
+                            label = "Year",
+                            value = selectedYear,
+                            onOptionSelected = {
+                                selectedYear.value = it
+                            },
+                            options = years,
+                            enable = switchFBState,
+                        )
+                    }
+                }
+            }
+
             Button(
                 onClick = {
                     keyboardController?.hide()
-                    vm.setAddress(addressEdit.value, context, passphraseEntry)
+
+                    val timelockDerivationIndex = computeTimelockDerivationIndex(
+                        selectedYear.value,
+                        selectedMonth.value,
+                        switchFBState.value)
+
+                    vm.setAddress(
+                        addressEdit.value,
+                        context,
+                        passphraseEntry,
+                        timelockDerivationIndex)
                 },
                 Modifier
                     .fillMaxWidth()
@@ -340,6 +435,61 @@ fun SweepFormSweepForm(supportFragmentManager: FragmentManager?) {
             }
         }
     }
+}
+
+fun loadCandidateMonths(
+    selectedYear: Int,
+    asofDate: Calendar
+):List<String> {
+
+    val candidateMonths = Lists.newArrayList<String>()
+    Lists.newArrayList(indexToMonth.keys)
+    val calendar = Calendar.getInstance()
+
+    for (indexToMonthEntry in indexToMonth.entries) {
+        calendar[selectedYear, indexToMonthEntry.key, 1, 0] = 0
+        if (asofDate.after(calendar)) {
+            candidateMonths.add(indexToMonthEntry.value)
+        } else {
+            break
+        }
+    }
+    return candidateMonths
+}
+
+private fun loadCandidateYears(
+    selectedMonth: String?,
+    asofDate: Calendar
+):List<String> {
+
+    val candidateYears = Lists.newArrayList<String>()
+    val currentYear = asofDate[Calendar.YEAR]
+    val calendar = Calendar.getInstance()
+
+    for (candidateYear in 2020..currentYear) {
+        val monthIndex = monthToIndex.get(selectedMonth) ?: 0
+        calendar[candidateYear, monthIndex, 1, 0] = 0
+        if (asofDate.after(calendar)) {
+            candidateYears.add("$candidateYear")
+        } else {
+            break
+        }
+    }
+    return candidateYears
+}
+
+fun computeTimelockDerivationIndex(
+    selectedYear: String,
+    selectedMonth: String?,
+    fidelityBondsMode: Boolean
+): Int {
+
+    if (fidelityBondsMode) {
+        val monthIndex = monthToIndex.get(selectedMonth) ?: 0
+        val yearIndex = selectedYear.toInt() - 2020
+        return yearIndex * 12 + monthIndex
+    }
+    return -1
 }
 
 
@@ -603,6 +753,8 @@ fun SweepAdvanceOption(onClose: () -> Unit) {
         WALLET_INDEX.BIP44_RECEIVE -> list[2]
         else -> list[0]
     }
+    var selectedItemState = remember { mutableStateOf(selectedItem) }
+
     Scaffold(
         backgroundColor = samouraiBottomSheetBackground,
         topBar = {
@@ -641,7 +793,7 @@ fun SweepAdvanceOption(onClose: () -> Unit) {
                 DropDownTextField(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    value = selectedItem,
+                    value = selectedItemState,
                     label = stringResource(id = R.string.address_type),
                     onOptionSelected = {
                         val index = when (it) {
@@ -711,4 +863,42 @@ fun SweepFormPreview() {
 @Preview(widthDp = 320, heightDp = 480)
 fun SweepBroadcastPreview() {
     SweepBroadcast(onCloseClick = {})
+}
+
+
+class SweepPrivateKey  {
+    companion object {
+
+        val MONTH_JANUARY = "January"
+
+        var monthToIndex = mapOf(
+            MONTH_JANUARY to 0,
+            "February" to 1,
+            "Mars" to 2,
+            "April" to 3,
+            "May" to 4,
+            "June" to 5,
+            "July" to 6,
+            "August" to 7,
+            "September" to 8,
+            "October" to 9,
+            "November" to 10,
+            "December" to 11
+        )
+
+        var indexToMonth = mapOf(
+            0 to MONTH_JANUARY,
+            1 to "February",
+            2 to "Mars",
+            3 to "April",
+            4 to "May",
+            5 to "June",
+            6 to "July",
+            7 to "August",
+            8 to "September",
+            9 to "October",
+            10 to "November",
+            11 to "December"
+        )
+    }
 }
