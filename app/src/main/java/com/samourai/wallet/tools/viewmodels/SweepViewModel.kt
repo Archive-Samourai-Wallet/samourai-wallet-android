@@ -297,11 +297,18 @@ class SweepViewModel : ViewModel() {
                     sweepAddressLive.postValue(address ?: "")
                     fees.postValue(transaction.fee.value)
                     foundAmount.postValue(totalValue)
-                    feesPerByte.postValue(decimalFormatSatPerByte.format(transaction.fee.value.toFloat() / transaction.virtualTransactionSize.toFloat()))
+                    val currentFeesPerByte = decimalFormatSatPerByte.format(transaction.fee.value.toFloat() / transaction.virtualTransactionSize.toFloat())
+                    feesPerByte.postValue(currentFeesPerByte)
+                }
 
+                /**
+                 * creation of a new context to allow the update of the model (postValue execution)
+                 * before consuming it to calculate the number of estimated waiting blocks
+                 */
+                withContext(Dispatchers.Default) {
                     val pct: Double
                     var nbBlocks = 6
-                    val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000)
+                    val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000.0)
 
                     if (feeForBlocks != null) {
                         if (feeForBlocks <= feeLow.toDouble()) {
@@ -398,7 +405,7 @@ class SweepViewModel : ViewModel() {
                     throw  CancellationException("Sign: ${e.message}")
                 }
                 try {
-                    if (transaction != null) {
+                    if (transaction != null && false) {
                         val hexTx = TxUtil.getInstance().getTxHex(transaction)
                         PushTx.getInstance(context).pushTx(hexTx)
                         WalletRefreshWorker.enqueue(context, notifTx = false, launched = false)
