@@ -292,8 +292,8 @@ class SweepViewModel : ViewModel() {
                     sweepPreview!!.utxos
                         .map { unspentOutput: UnspentOutput -> unspentOutput.computeOutpoint(params) }.toCollection(outpoints);
                     val bipFormatSupplier: BipFormatSupplier = getBipFormatSupplier(bipFormat.value);
-                    val tr = SendFactory.getInstance().makeTransaction(receivers, outpoints, bipFormatSupplier, rbfOptin, params, blockHeight)
-                    val transaction = SendFactory.getInstance().signTransactionForSweep(tr, sweepPreview!!.privKey, params)
+                    val tr = createTransaction(receivers, outpoints, bipFormatSupplier, rbfOptin, blockHeight)
+                    val transaction = TransactionForSweepHelper.signTransactionForSweep(tr, sweepPreview!!.privKey, params, bipFormatSupplier)
                     sweepAddressLive.postValue(address ?: "")
                     fees.postValue(transaction.fee.value)
                     foundAmount.postValue(totalValue)
