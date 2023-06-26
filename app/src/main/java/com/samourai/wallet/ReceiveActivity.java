@@ -1,5 +1,7 @@
 package com.samourai.wallet;
 
+import static java.lang.Long.parseLong;
+
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -30,6 +32,14 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.FileProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.transition.AutoTransition;
+import androidx.transition.TransitionManager;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -63,15 +73,11 @@ import java.text.ParseException;
 import java.util.Locale;
 import java.util.Objects;
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.FileProvider;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.transition.AutoTransition;
-import androidx.transition.TransitionManager;
-
 public class ReceiveActivity extends SamouraiActivity {
 
+    private static final double BTC_IN_SATOSHI = 1e8;
+    private static final double MAX_POSSIBLE_BTC = 21_000_000d;
+    private static final char NUMBER_DIGIT_GROUPING_SEP = ' ';
     private static int imgWidth = 0;
 
     private ImageView ivQR = null;
@@ -85,8 +91,6 @@ public class ReceiveActivity extends SamouraiActivity {
     private Spinner addressTypesSpinner = null;
 
     private boolean useSegwit = true;
-
-    private String defaultSeparator = null;
 
     private String addr = null;
     private String addr44 = null;
@@ -315,34 +319,39 @@ public class ReceiveActivity extends SamouraiActivity {
                     canRefresh44 = false;
                     _menu.findItem(R.id.action_refresh).setVisible(false);
                     displayQRCode();
-                } else {
-                    ;
                 }
 
             }
         });
 
-        DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
-        DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
-        defaultSeparator = Character.toString(symbols.getDecimalSeparator());
-
         displayQRCode();
     }
 
 
-    private Double getSatValue(Double btc) {
-        if (btc == 0) {
-            return (double) 0;
-        }
-        return btc * 100000000;
+    private Long getSatValue(final Number btc) {
+        return Math.round(btc.doubleValue() * BTC_IN_SATOSHI);
     }
 
 
-    private String formattedSatValue(Object number) {
-        NumberFormat nformat = NumberFormat.getNumberInstance(Locale.US);
-        DecimalFormat decimalFormat = (DecimalFormat) nformat;
-        decimalFormat.applyPattern("#,###");
-        return decimalFormat.format(number).replace(",", " ");
+    private String formattedSatValue(final Number number) {
+        return createDecimalFormat("#,###", true).format(number);
+    }
+
+    @NonNull
+    private static DecimalFormat createDecimalFormat(
+            final String pattern,
+            final boolean grouping) {
+
+        final DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+        if (grouping) {
+            symbols.setGroupingSeparator(NUMBER_DIGIT_GROUPING_SEP);
+        }
+
+        final DecimalFormat decimalFormat = new DecimalFormat(pattern);
+        decimalFormat.setDecimalFormatSymbols(symbols);
+        decimalFormat.setMinimumIntegerDigits(1);
+        decimalFormat.setMaximumFractionDigits(8);
+        return decimalFormat;
     }
 
 
@@ -370,50 +379,17 @@ public class ReceiveActivity extends SamouraiActivity {
                     return;
                 }
 
-                Double btc = Double.parseDouble(String.valueOf(editable));
-
-                if (btc > 21000000.0) {
+                final Double btc = Double.parseDouble(String.valueOf(editable));
+                if (btc > MAX_POSSIBLE_BTC) {
                     edAmountBTC.setText("0.00");
                     edAmountBTC.setSelection(edAmountBTC.getText().length());
                     edAmountSAT.setText("0");
                     edAmountSAT.setSelection(edAmountSAT.getText().length());
                     Toast.makeText(ReceiveActivity.this, R.string.invalid_amount, Toast.LENGTH_SHORT).show();
                 }
-                else    {
-                    DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
-                    DecimalFormatSymbols symbols=format.getDecimalFormatSymbols();
-                    String defaultSeparator = Character.toString(symbols.getDecimalSeparator());
-                    int max_len = 8;
-                    NumberFormat btcFormat = NumberFormat.getInstance(Locale.US);
-                    btcFormat.setMaximumFractionDigits(max_len + 1);
-
-                    try {
-                        double d = NumberFormat.getInstance(Locale.US).parse(editable.toString()).doubleValue();
-                        String s1 = btcFormat.format(d);
-                        if (s1.indexOf(defaultSeparator) != -1) {
-                            String dec = s1.substring(s1.indexOf(defaultSeparator));
-                            if (dec.length() > 0) {
-                                dec = dec.substring(1);
-                                if (dec.length() > max_len) {
-                                    edAmountBTC.setText(s1.substring(0, s1.length() - 1));
-                                    edAmountBTC.setSelection(edAmountBTC.getText().length());
-                                    editable = edAmountBTC.getEditableText();
-                                    btc = Double.parseDouble(edAmountBTC.getText().toString());
-                                }
-                            }
-                        }
-                    } catch (NumberFormatException nfe) {
-                        ;
-                    }
-                    catch(ParseException pe) {
-                        ;
-                    }
-
-                    Double sats = getSatValue(Double.valueOf(btc));
-                    edAmountSAT.setText(formattedSatValue(sats));
+                else {
+                    edAmountSAT.setText(formattedSatValue(getSatValue(btc)));
                 }
-
-                //
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }
@@ -425,8 +401,8 @@ public class ReceiveActivity extends SamouraiActivity {
     };
 
 
-    private Double getBtcValue(Double sats) {
-        return (double) (sats / 1e8);
+    private Double getBtcValue(final Number sats) {
+        return sats.longValue() / BTC_IN_SATOSHI;
     }
 
 
@@ -454,15 +430,14 @@ public class ReceiveActivity extends SamouraiActivity {
                 }
                 String cleared_space = editable.toString().replace(" ", "");
 
-                Double sats = Double.parseDouble(cleared_space);
-                Double btc = getBtcValue(sats);
-                String formatted = formattedSatValue(sats);
-
-
+                final Long sats = parseLong(cleared_space);
+                final String formatted = formattedSatValue(sats);
                 edAmountSAT.setText(formatted);
                 edAmountSAT.setSelection(formatted.length());
-                edAmountBTC.setText(String.format(Locale.ENGLISH, "%.8f", btc));
-                if (btc > 21000000.0) {
+
+                final Double btc = getBtcValue(sats);
+                edAmountBTC.setText(String.format(Locale.US, "%.8f", btc));
+                if (btc > MAX_POSSIBLE_BTC) {
                     edAmountBTC.setText("0.00");
                     edAmountBTC.setSelection(edAmountBTC.getText().length());
                     edAmountSAT.setText("0");
@@ -668,19 +643,21 @@ public class ReceiveActivity extends SamouraiActivity {
         }
 
         try {
-            Number amount = NumberFormat.getInstance(Locale.US).parse(edAmountBTC.getText().toString().trim());
+            final Number btcAmount = NumberFormat.getInstance(Locale.US)
+                    .parse(edAmountBTC.getText().toString().trim());
 
-            long lamount = (long) (amount.doubleValue() * 1e8);
-            if (lamount != 0L) {
+            long satAmount = getSatValue(btcAmount);
+            if (satAmount != 0l) {
                 if (!FormatsUtil.getInstance().isValidBech32(_addr)) {
-                    ivQR.setImageBitmap(generateQRCode(BitcoinURI.convertToBitcoinURI(Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), _addr), Coin.valueOf(lamount), null, null)));
+                    ivQR.setImageBitmap(
+                            generateQRCode(BitcoinURI.convertToBitcoinURI(
+                                    Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), _addr),
+                                    Coin.valueOf(satAmount),
+                                    null,
+                                    null)));
                 } else {
-                    String strURI = "bitcoin:" + _addr;
-                    DecimalFormat df = new DecimalFormat("#");
-                    df.setMinimumIntegerDigits(1);
-                    df.setMaximumFractionDigits(8);
-                    strURI += "?amount=" + df.format(amount);
-                    ivQR.setImageBitmap(generateQRCode(strURI));
+                    ivQR.setImageBitmap(generateQRCode("bitcoin:" + _addr +
+                            "?amount=" + Coin.valueOf(satAmount).toPlainString()));
                 }
             } else {
                 ivQR.setImageBitmap(generateQRCode(_addr));
