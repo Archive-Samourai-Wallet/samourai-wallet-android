@@ -405,7 +405,7 @@ class SweepViewModel : ViewModel() {
                     throw  CancellationException("Sign: ${e.message}")
                 }
                 try {
-                    if (transaction != null && false) {
+                    if (transaction != null) {
                         val hexTx = TxUtil.getInstance().getTxHex(transaction)
                         PushTx.getInstance(context).pushTx(hexTx)
                         WalletRefreshWorker.enqueue(context, notifTx = false, launched = false)
