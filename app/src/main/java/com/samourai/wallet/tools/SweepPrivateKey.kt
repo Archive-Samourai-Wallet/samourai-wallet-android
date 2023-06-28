@@ -874,7 +874,7 @@ class SweepPrivateKey  {
         var monthToIndex = mapOf(
             MONTH_JANUARY to 0,
             "February" to 1,
-            "Mars" to 2,
+            "March" to 2,
             "April" to 3,
             "May" to 4,
             "June" to 5,
@@ -889,7 +889,7 @@ class SweepPrivateKey  {
         var indexToMonth = mapOf(
             0 to MONTH_JANUARY,
             1 to "February",
-            2 to "Mars",
+            2 to "March",
             3 to "April",
             4 to "May",
             5 to "June",
