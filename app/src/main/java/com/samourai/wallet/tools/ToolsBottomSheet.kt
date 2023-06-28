@@ -298,7 +298,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             ToolsItem(
                 title = stringResource(id = R.string.auth_using_paynym),
                 subTitle = stringResource(R.string.simple_and_secure_auth_with),
-                icon = R.drawable.ic_paynym_white_24dp,
+                icon = R.drawable.ic_auth_with_paynym,
                 onClick = {
                     scope.launch {
                         toolsBottomSheet?.disableDragging()
@@ -309,7 +309,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             ToolsItem(
                 title = stringResource(id = R.string.broadcast_transactions),
                 subTitle = stringResource(R.string.options_broadcast_hex2),
-                icon = R.drawable.ic_broadcast_tx,
+                icon = R.drawable.ic_broadcast_transaction,
                 onClick = {
                     scope.launch {
                         broadcastHexViewModel.clear()
