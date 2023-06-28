@@ -88,7 +88,7 @@
     <string name="options_segwit">Receive to segwit addresses</string>
     <string name="options_segwit_2">Generate segwit addresses for incoming transactions.</string>
     <string name="options_broadcast_hex">Broadcast transaction hex</string>
-    <string name="options_broadcast_hex2">Broadcast signed transaction supplied in hex format</string>
+    <string name="options_broadcast_hex2">Broadcast any signed transaction supplied in hex format</string>
     <string name="options_like_typed_change">Receive change to like-typed outputs</string>
     <string name="options_like_typed_change2">Receive change to same type of address as spend output. Turn OFF to receive only to segwit change addresses.</string>
     <string name="options_haptic">Haptic PIN entry</string>
@@ -913,8 +913,8 @@
     <string name="enter_a_private_key_and">Enter a private key and sweep any funds to\nyour next bitcoin address</string>
     <string name="sign_messages_using_your">Sign messages using your wallet private key</string>
     <string name="wallet_address_calc">Wallet address calculator</string>
-    <string name="calculate_any_address_derived">Calculate any address derived from your\nwallet seed. Sign messages using your private key</string>
-    <string name="simple_and_secure_auth_with">Simple and secure authentication with a Bitcoin Payment Code (see BIP47)</string>
+    <string name="calculate_any_address_derived">Calculate all past and future addresses in your wallet</string>
+    <string name="simple_and_secure_auth_with">Simple and secure password-free authentication using your unique PayNym code</string>
     <string name="address_details">Address Details</string>
     <string name="address_index">Address Index</string>
     <string name="receive_address_external">Receive address (external)</string>

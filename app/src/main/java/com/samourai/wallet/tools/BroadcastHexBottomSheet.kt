@@ -29,7 +29,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -198,9 +197,10 @@ fun SweepHexBroadcast(onCloseClick: () -> Unit) {
                         .background(if (broadcastError != null) samouraiError else Color(0xff00D47D))
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_broadcast_tx),
+                        painter = painterResource(id = R.drawable.ic_broadcast_transaction),
                         modifier = Modifier
                             .size(48.dp)
+                            .alpha(0.96f)
                             .align(Alignment.Center),
                         tint = Color.White,
                         contentDescription = ""
