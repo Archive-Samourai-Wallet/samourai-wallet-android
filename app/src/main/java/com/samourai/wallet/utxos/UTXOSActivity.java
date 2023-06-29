@@ -331,6 +331,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
             UTXOCoinSegment active = new UTXOCoinSegment(null, null);
             active.id = 0;
             active.isActive = true;
+            active.hash = "active";
             sectioned.add(active);
         }
         for (UTXOCoin models : filteredAddress) {
@@ -663,7 +664,7 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
     public String getPreSelected() {
         ArrayList<UTXOCoin> utxos = new ArrayList<>();
         for (UTXOCoin utxo : this.filteredUTXOs) {
-            if (utxo.isSelected) {
+            if (utxo.isSelected && !utxo.hash.equals("active")) {
                 utxos.add(utxo);
             }
         }
