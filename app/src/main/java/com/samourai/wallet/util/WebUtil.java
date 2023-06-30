@@ -364,8 +364,7 @@ public class WebUtil {
         try (Response response = builder.build().newCall(request).execute()) {
             String responseBody = (response.body()!=null ? response.body().string() : "");
             if (response.code() == 401) {
-                APIFactory.getInstance(context).getToken(true);
-                return null;
+                APIFactory.getInstance(context).getToken(true, true);
             }
             if (!response.isSuccessful()) {
                 throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
@@ -378,9 +377,6 @@ public class WebUtil {
                     DojoUtil.getInstance(context).setDojoVersion(values.get(0));
                 }
 
-            }
-            else    {
-                ;
             }
             return responseBody;
 

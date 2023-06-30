@@ -90,7 +90,7 @@ public class DojoUtil {
 
            String apiToken = getApiKey(dojoParams);
            APIFactory.getInstance(context).setAppToken(apiToken);
-           boolean tokenRetrieved = APIFactory.getInstance(context).getToken(true);
+           boolean tokenRetrieved = APIFactory.getInstance(context).getToken(true, false);
            return  tokenRetrieved;
        });
     }
