@@ -61,8 +61,7 @@ import java.util.GregorianCalendar
 @Composable
 fun SweepPrivateKeyView(
     supportFragmentManager: FragmentManager?,
-    keyParameter: String = "",
-    onCloseClick: () -> Unit
+    keyParameter: String = ""
 ) {
     val vm = viewModel<SweepViewModel>()
     val page by vm.getPageLive().observeAsState()
@@ -92,7 +91,7 @@ fun SweepPrivateKeyView(
                 WrapToolsPageAnimation(
                     visible = page == 2
                 ) {
-                    SweepBroadcast(onCloseClick)
+                    SweepBroadcast()
                 }
             }
         }
@@ -100,7 +99,7 @@ fun SweepPrivateKeyView(
 }
 
 @Composable
-fun SweepBroadcast(onCloseClick: () -> Unit) {
+fun SweepBroadcast() {
     val vm = viewModel<SweepViewModel>()
     val broadcastError by vm.getBroadcastErrorStateLive().observeAsState()
     val broadCastLoading by vm.getBroadcastStateLive().observeAsState(false)
@@ -164,10 +163,6 @@ fun SweepBroadcast(onCloseClick: () -> Unit) {
             }
             Spacer(modifier = Modifier.size(8.dp))
             Text(text = "$message", fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.size(44.dp))
-            TextButton(onClick = onCloseClick) {
-                Text(text = "Close", color = Color.White)
-            }
         }
     }
 
@@ -862,7 +857,7 @@ fun SweepFormPreview() {
 @Composable
 @Preview(widthDp = 320, heightDp = 480)
 fun SweepBroadcastPreview() {
-    SweepBroadcast(onCloseClick = {})
+    SweepBroadcast()
 }
 
 
