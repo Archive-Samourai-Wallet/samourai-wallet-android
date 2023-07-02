@@ -186,7 +186,7 @@ public class APIFactory {
         if(currentAccessToken == null)    {
             // no current token => request new token
             Log.v("APIFactory", "getAccessTokenNotExpired => requesting new, setupDojo="+setupDojo);
-            getToken(setupDojo);
+            getToken(setupDojo, false);
             currentAccessToken = getAccessToken();
         }
 
@@ -201,7 +201,7 @@ public class APIFactory {
         if(jwt.isExpired(getAccessTokenRefresh())) {
             // expired => request new token
             Log.v("APIFactory", "getAccessTokenNotExpired => expired, request new");
-            getToken(setupDojo);
+            getToken(setupDojo, false);
             currentAccessToken = getAccessToken();
         }
         return currentAccessToken;
@@ -210,7 +210,7 @@ public class APIFactory {
     public String getAccessToken() {
         if(ACCESS_TOKEN == null && APIFactory.getInstance(context).APITokenRequired())    {
             try {
-                getToken(true);
+                getToken(true, false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -278,7 +278,7 @@ public class APIFactory {
 
             if(APIFactory.getInstance(context).getAccessToken() == null)    {
                 try {
-                    APIFactory.getInstance(context).getToken(false);
+                    APIFactory.getInstance(context).getToken(false, false);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -288,7 +288,7 @@ public class APIFactory {
                 JWT jwt = new JWT(APIFactory.getInstance(context).getAccessToken());
                 if(jwt != null && jwt.isExpired(APIFactory.getInstance(context).getAccessTokenRefresh()))    {
                     try {
-                        if(APIFactory.getInstance(context).getToken(false))  {
+                        if(APIFactory.getInstance(context).getToken(false, false))  {
                             return true;
                         }
                         else    {
@@ -314,7 +314,7 @@ public class APIFactory {
         return DojoUtil.getInstance(context).getDojoParams() == null ? false : true;
     }
 
-    public synchronized boolean getToken(boolean setupDojo) {
+    public synchronized boolean getToken(boolean setupDojo, boolean reauth401) {
 
         if(!APITokenRequired())    {
             return true;
@@ -361,6 +361,9 @@ public class APIFactory {
                     if(authObj.has("access_token"))    {
                         info("APIFactory", "setting access token:" + authObj.getString("access_token"));
                         setAccessToken(authObj.getString("access_token"));
+                        if (reauth401) {
+                            initWalletAmounts();
+                        }
                         return true;
                     }
                 }else{

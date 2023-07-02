@@ -435,7 +435,7 @@ public class NetworkDashboard extends SamouraiActivity {
                 APIFactory.getInstance(NetworkDashboard.this).setAccessToken(null);
                 APIFactory.getInstance(NetworkDashboard.this).setAppToken(null);
                 try {
-                    APIFactory.getInstance(NetworkDashboard.this).getToken(true);
+                    APIFactory.getInstance(NetworkDashboard.this).getToken(true, false);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
