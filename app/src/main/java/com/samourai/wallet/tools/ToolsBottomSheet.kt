@@ -150,9 +150,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                 SamouraiWalletTheme {
                     Surface(color = MaterialTheme.colors.background) {
                         when (toolType) {
-                            ToolType.SWEEP -> SweepPrivateKeyView(parentFragmentManager, onCloseClick = {
-                                this.dismiss()
-                            }, keyParameter = key)
+                            ToolType.SWEEP -> SweepPrivateKeyView(parentFragmentManager, keyParameter = key)
                             ToolType.SIGN -> SignMessage()
                             ToolType.ADDRESS_CALC -> AddressCalculator(this@SingleToolBottomSheet.dialog?.window)
                             ToolType.AUTH47 -> Auth47Login(param = key, onClose = {
@@ -414,11 +412,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             scrimColor = Color.Black.copy(alpha = 0.7f),
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
-                SweepPrivateKeyView(parentFragmentManager, onCloseClick = {
-                    scope.launch {
-                        sweepPrivateKeyBottomSheet.hide()
-                    }
-                })
+                SweepPrivateKeyView(parentFragmentManager)
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {}
