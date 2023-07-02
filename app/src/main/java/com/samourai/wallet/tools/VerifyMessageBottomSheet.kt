@@ -54,8 +54,7 @@ class MessageFormatType  {
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun VerifyMessage(
-    modal: ModalBottomSheetState?,
-    onClose: () -> Unit,
+    modal: ModalBottomSheetState?
 ) {
 
     val vm = viewModel<AddressCalculatorViewModel>()
@@ -110,8 +109,7 @@ fun VerifyMessage(
                     signature,
                     rfc2440Message,
                     rfc2440FormatErrorMessage,
-                    bringIntoViewRequester,
-                    onClose
+                    bringIntoViewRequester
                 )
             }
         }
@@ -130,8 +128,7 @@ private fun Body(
     signature: MutableState<String>,
     rfc2440Message: MutableState<String>,
     rfc2440FormatErrorMessage: MutableState<String>,
-    bringIntoViewRequester: BringIntoViewRequester,
-    onClose: () -> Unit
+    bringIntoViewRequester: BringIntoViewRequester
 ) {
     Box(
         modifier = Modifier
@@ -147,8 +144,7 @@ private fun Body(
             signature,
             rfc2440Message,
             rfc2440FormatErrorMessage,
-            bringIntoViewRequester,
-            onClose
+            bringIntoViewRequester
         )
     }
 }
@@ -165,8 +161,7 @@ private fun BoxedBody(
     signature: MutableState<String>,
     rfc2440Message: MutableState<String>,
     rfc2440FormatErrorMessage: MutableState<String>,
-    bringIntoViewRequester: BringIntoViewRequester,
-    onClose: () -> Unit
+    bringIntoViewRequester: BringIntoViewRequester
 ) {
 
     if (verifiedMessage == null) {
@@ -195,18 +190,6 @@ private fun BoxedBody(
                 Spacer(modifier = Modifier.height(50.dp))
                 InvalidResultBody()
                 Spacer(modifier = Modifier.height(50.dp))
-            }
-
-            Button(
-                onClick = {
-                    onClose()
-                },
-                colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = samouraiBottomSheetBackground,
-                    contentColor = Color.White
-                ),
-            ) {
-                Text(text = "Close")
             }
         }
 
@@ -851,7 +834,7 @@ fun isEnableVerifyButton(
 @Composable
 @Preview(widthDp = 320, heightDp = 480)
 fun VerifyMessagePreview() {
-    VerifyMessage(null, onClose = {})
+    VerifyMessage(null)
 }
 
 data class SignedMessage(

@@ -439,10 +439,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
                 VerifyMessage(
-                    modal = verifyMessageBottomSheetState,
-                    onClose = {
-                        scope.launch { verifyMessageBottomSheetState.hide() }
-                    }
+                    modal = verifyMessageBottomSheetState
                 )
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
