@@ -1798,13 +1798,14 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void initiateSpend() {
+        final long feeds = FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue();
         if (CahootsMode.MANUAL.equals(selectedCahootsType.getCahootsMode())) {
             // Cahoots manual
             final Intent intent = ManualCahootsActivity.createIntentSender(
                     this,
                     account,
                     selectedCahootsType.getCahootsType(),
-                    FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(),
+                    Math.round(feeds/1000d),
                     amount,
                     address,
                     strPCode);
@@ -1821,7 +1822,7 @@ public class SendActivity extends SamouraiActivity {
                     account,
                     selectedCahootsType.getCahootsType(),
                     amount,
-                    FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(),
+                    Math.round(feeds/1000d),
                     address,
                     strPcodeCounterParty,
                     strPCode);
