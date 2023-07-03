@@ -89,6 +89,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
     private lateinit var binding: ActivityPaynymDetailsBinding
     private val scope = CoroutineScope(Dispatchers.Main + job)
     private var isPaynymRegistered = true
+    private var claimed: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,6 +106,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         if (intent.hasExtra("label")) {
             label = intent.getStringExtra("label")
         }
+        claimed = PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED, false)
         paynymTxListAdapter = PaynymTxListAdapter(txesList, this)
         binding.historyRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.historyRecyclerView.adapter = paynymTxListAdapter
@@ -146,7 +148,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         if (BIP47Meta.getInstance().getIncomingIdx(pcode) >= 0) {
             binding.historyLayout!!.visibility = View.VISIBLE
         }
-        if (BIP47Meta.getInstance().isFollowing(pcode) || !isPaynymRegistered) {
+        if (BIP47Meta.getInstance().isFollowing(pcode) || !isPaynymRegistered || !claimed) {
             binding.followBtn.text = getString(R.string.connect)
             binding.feeMessage.text = getString(R.string.connect_paynym_fee)
             binding.followMessage.text = "${getString(R.string.blockchain_connect_with)} ${getLabel()} ${resources.getText(R.string.paynym_connect_message)}"
@@ -271,7 +273,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                     .show()
             return
         }
-        if (BIP47Meta.getInstance().isFollowing(pcode) || !isPaynymRegistered) {
+        if (BIP47Meta.getInstance().isFollowing(pcode) || !isPaynymRegistered || !claimed) {
                 doNotifTx()
         } else {
             MaterialAlertDialogBuilder(this)
