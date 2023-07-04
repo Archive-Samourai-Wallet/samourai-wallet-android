@@ -238,6 +238,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                     // Pressing "next" on import seed screen
                     if (s.length >= 12 && s.length <= 24 && s.length % 3 == 0 && isValidMnemonic(Arrays.asList(s))) {
                         wallet_create_viewpager.setCurrentItem(count + 1);
+                        setForwardButtonEnable(false);
                     } else {
                         Toast.makeText(RestoreSeedWalletActivity.this, R.string.invalid_mnemonic, Toast.LENGTH_SHORT).show();
                     }
