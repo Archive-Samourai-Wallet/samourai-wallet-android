@@ -50,7 +50,10 @@ public class ManualCahootsActivity extends SamouraiActivity {
                                             int account,
                                             CahootsType type,
                                             long fees,
-                                            long amount, String address,String destinationPcode) {
+                                            long amount,
+                                            String address,
+                                            String destinationPcode) {
+
         Intent intent = ManualCahootsUi.createIntent(ctx, ManualCahootsActivity.class, account, type, CahootsTypeUser.SENDER);
         intent.putExtra("sendAmount", amount);
         intent.putExtra("fees", fees);

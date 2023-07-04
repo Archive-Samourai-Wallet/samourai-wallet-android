@@ -5,8 +5,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
 
-import org.jetbrains.annotations.Nullable;
-
 public class PrefsUtil {
 
 	public static final String IS_SAT = "is_sat";
@@ -28,6 +26,7 @@ public class PrefsUtil {
 	public static final String AUTO_BACKUP = "autoBackup";
 	public static final String SPEND_TYPE = "spendType";
 	public static final String USE_RICOCHET = "useRicochet";
+	public static final String USE_JOINBOT = "useJoinbot";
 	public static final String RBF_OPT_IN = "rbfOptIn";
 	public static final String BROADCAST_TX = "broadcastTx";
 	public static final String TESTNET = "testnet";

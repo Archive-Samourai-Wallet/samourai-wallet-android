@@ -1,5 +1,8 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
+import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getSatValue;
+
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -29,6 +32,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -85,6 +94,7 @@ import com.samourai.wallet.util.DecimalDigitsInputFilter;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.FormatsUtilGeneric;
 import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.SatoshiBitcoinUnitHelper;
 import com.samourai.wallet.util.SendAddressUtil;
 import com.samourai.wallet.util.WebUtil;
 import com.samourai.wallet.utxos.PreSelectUtil;
@@ -124,11 +134,6 @@ import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -137,18 +142,22 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
+
 public class SendActivity extends SamouraiActivity {
 
     private final static int SCAN_QR = 2012;
     private final static int RICOCHET = 2013;
     private static final String TAG = "SendActivity";
+    public static final long JOINNBOT_MAX_AMOUNT = 125_000_000L;
 
     private SendTransactionDetailsView sendTransactionDetailsView;
     private ViewSwitcher amountViewSwitcher;
     private EditText toAddressEditText, btcEditText, satEditText;
-    private TextView tvMaxAmount, tvReviewSpendAmount, tvReviewSpendAmountInSats, tvTotalFee, tvToAddress, tvEstimatedBlockWait, tvSelectedFeeRate, tvSelectedFeeRateLayman, ricochetTitle, ricochetDesc, satbText;
+    private TextView tvMaxAmount, tvReviewSpendAmount, tvReviewSpendAmountInSats, tvTotalFee,
+            tvToAddress, tvEstimatedBlockWait, tvSelectedFeeRate, tvSelectedFeeRateLayman,
+            ricochetTitle, ricochetDesc, satbText, joinbotTitle, joinbotDesc;
     private MaterialButton btnReview, btnSend;
-    private SwitchCompat ricochetHopsSwitch, ricochetStaggeredDelivery;
+    private SwitchCompat joinbotSwitch, ricochetHopsSwitch, ricochetStaggeredDelivery;
     private ViewGroup totalMinerFeeLayout;
     private Slider feeSeekBar;
     private Group ricochetStaggeredOptionGroup;
@@ -168,6 +177,7 @@ public class SendActivity extends SamouraiActivity {
     public final static int SPEND_SIMPLE = 0;
     public final static int SPEND_BOLTZMANN = 1;
     public final static int SPEND_RICOCHET = 2;
+    public final static int SPEND_JOINBOT = 3;
     private int SPEND_TYPE = SPEND_BOLTZMANN;
     private boolean openedPaynym = false;
 
@@ -233,11 +243,17 @@ public class SendActivity extends SamouraiActivity {
         //view elements from review segment and transaction segment can be access through respective
         //methods which returns root viewGroup
         btnReview = sendTransactionDetailsView.getTransactionView().findViewById(R.id.review_button);
+
+        joinbotSwitch = sendTransactionDetailsView.getTransactionView().findViewById(R.id.joinbot_switch);
+        joinbotTitle = sendTransactionDetailsView.getTransactionView().findViewById(R.id.joinbot_title);
+        joinbotDesc = sendTransactionDetailsView.getTransactionView().findViewById(R.id.joinbot_desc);
+
         ricochetHopsSwitch = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_hops_switch);
         ricochetTitle = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_desc);
         ricochetDesc = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_title);
         ricochetStaggeredDelivery = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_staggered_option);
         ricochetStaggeredOptionGroup = sendTransactionDetailsView.getTransactionView().findViewById(R.id.ricochet_staggered_option_group);
+
         tvSelectedFeeRate = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.selected_fee_rate);
         tvSelectedFeeRateLayman = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.selected_fee_rate_in_layman);
         tvTotalFee = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.total_fee);
@@ -254,7 +270,7 @@ public class SendActivity extends SamouraiActivity {
         satEditText.addTextChangedListener(satWatcher);
         toAddressEditText.addTextChangedListener(AddressWatcher);
 
-        btnReview.setOnClickListener(v -> review());
+        btnReview.setOnClickListener(v -> reviewTransactionSafely());
         btnSend.setOnClickListener(v -> initiateSpend());
 
         View.OnClickListener clipboardCopy = view -> {
@@ -274,6 +290,7 @@ public class SendActivity extends SamouraiActivity {
 
         saveChangeIndexes();
 
+        setUpJoinBot();
         setUpRicochet();
 
         setUpFee();
@@ -329,16 +346,7 @@ public class SendActivity extends SamouraiActivity {
             }
         }
 
-
     }
-
-
-    private void hideToAddressForStowaway() {
-        toAddressEditText.setEnabled(true);
-        toAddressEditText.setText("");
-        address = "";
-    }
-
 
     public View createTag(String text) {
         float scale = getResources().getDisplayMetrics().density;
@@ -392,22 +400,24 @@ public class SendActivity extends SamouraiActivity {
         sendTransactionDetailsView.getStoneWallSwitch().setOnCheckedChangeListener(onCheckedChangeListener);
     }
 
-    private void checkRicochetPossibility() {
-        double btc_amount = 0.0;
+    private void checkJoinbotPossibility() {
+        amount = getSatValue(getBtcAmountFromWidget());
 
-        try {
-            btc_amount = NumberFormat.getInstance(Locale.US).parse(btcEditText.getText().toString().trim()).doubleValue();
-//                    Log.i("SendFragment", "amount entered:" + btc_amount);
-        } catch (NumberFormatException nfe) {
-            btc_amount = 0.0;
-        } catch (ParseException pe) {
-            btc_amount = 0.0;
-            return;
+        if (amount > JOINNBOT_MAX_AMOUNT || balance < amount) {
+            joinbotDesc.setAlpha(.6f);
+            joinbotTitle.setAlpha(.6f);
+            joinbotSwitch.setAlpha(.6f);
+            joinbotSwitch.setEnabled(false);
+        } else {
+            joinbotDesc.setAlpha(1f);
+            joinbotTitle.setAlpha(1f);
+            joinbotSwitch.setAlpha(1f);
+            joinbotSwitch.setEnabled(true);
         }
+    }
 
-        double dAmount = btc_amount;
-
-        amount = Math.round(dAmount * 1e8);
+    private void checkRicochetPossibility() {
+        amount = getSatValue(getBtcAmountFromWidget());
         if (amount < (balance - (RicochetMeta.samouraiFeeAmountV2.add(BigInteger.valueOf(50000L))).longValue())) {
             ricochetDesc.setAlpha(1f);
             ricochetTitle.setAlpha(1f);
@@ -643,8 +653,30 @@ public class SendActivity extends SamouraiActivity {
 
     }
 
+    private void setUpJoinBot() {
+
+        joinbotSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                strPcodeCounterParty = BIP47Meta.getMixingPartnerCode();
+                ricochetHopsSwitch.setChecked(false);
+                SPEND_TYPE = SPEND_JOINBOT;
+                selectedCahootsType = SelectCahootsType.type.MULTI_SOROBAN;
+                PrefsUtil.getInstance(this).setValue(PrefsUtil.USE_JOINBOT, true);
+            } else {
+                strPcodeCounterParty = null;
+                SPEND_TYPE = sendTransactionDetailsView.getStoneWallSwitch().isChecked() ? SPEND_BOLTZMANN : SPEND_SIMPLE;
+                selectedCahootsType = SelectCahootsType.type.NONE;
+                PrefsUtil.getInstance(this).setValue(PrefsUtil.USE_JOINBOT, false);
+            }
+        });
+        joinbotSwitch.setChecked(PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_JOINBOT, false));
+    }
+
     private void setUpRicochet() {
         ricochetHopsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                joinbotSwitch.setChecked(false);
+            }
             sendTransactionDetailsView.enableForRicochet(isChecked);
             ricochetStaggeredOptionGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             if (isChecked) {
@@ -826,7 +858,7 @@ public class SendActivity extends SamouraiActivity {
 
                 Double btc = Double.parseDouble(String.valueOf(editable));
 
-                if (btc > 21000000.0) {
+                if (btc > SatoshiBitcoinUnitHelper.MAX_POSSIBLE_BTC) {
                     btcEditText.setText("0.00");
                     btcEditText.setSelection(btcEditText.getText().length());
                     satEditText.setText("0");
@@ -861,9 +893,11 @@ public class SendActivity extends SamouraiActivity {
                         ;
                     }
 
-                    Double sats = getSatValue(Double.valueOf(btc));
+                    final Long sats = getSatValue(Double.valueOf(btc));
                     satEditText.setText(formattedSatValue(sats));
+
                     checkRicochetPossibility();
+                    checkJoinbotPossibility();
                 }
 
 //
@@ -936,7 +970,7 @@ public class SendActivity extends SamouraiActivity {
                 satEditText.setText(formatted);
                 satEditText.setSelection(formatted.length());
                 btcEditText.setText(String.format(Locale.ENGLISH, "%.8f", btc));
-                if (btc > 21000000.0) {
+                if (btc > SatoshiBitcoinUnitHelper.MAX_POSSIBLE_BTC) {
                     btcEditText.setText("0.00");
                     btcEditText.setSelection(btcEditText.getText().length());
                     satEditText.setText("0");
@@ -949,7 +983,9 @@ public class SendActivity extends SamouraiActivity {
             }
             satEditText.addTextChangedListener(this);
             btcEditText.addTextChangedListener(BTCWatcher);
+
             checkRicochetPossibility();
+            checkJoinbotPossibility();
             validateSpend();
 
         }
@@ -973,33 +1009,13 @@ public class SendActivity extends SamouraiActivity {
         return "";
     }
 
-    private Double getBtcValue(Double sats) {
-        return (double) (sats / 1e8);
-    }
+    private void reviewTransactionSafely() {
 
-    private Double getSatValue(Double btc) {
-        if (btc == 0) {
-            return (double) 0;
-        }
-        return btc * 1e8;
-    }
-
-    private void review() {
-
-        double btc_amount = 0.0;
-
-        try {
-            btc_amount = NumberFormat.getInstance(Locale.US).parse(btcEditText.getText().toString().trim()).doubleValue();
-//                    Log.i("SendFragment", "amount entered:" + btc_amount);
-        } catch (NumberFormatException nfe) {
-            btc_amount = 0.0;
-        } catch (ParseException pe) {
-            btc_amount = 0.0;
+        if (! checkMaxAmountReachForJoinbot()) {
+            return;
         }
 
-        double dAmount = btc_amount;
-
-        amount = (long) (Math.round(dAmount * 1e8));
+        amount = SatoshiBitcoinUnitHelper.getSatValue(getBtcAmountFromWidget());
 
         if (amount == balance && balance == selectableBalance) {
 
@@ -1016,7 +1032,7 @@ public class SendActivity extends SamouraiActivity {
 
                             dialog.dismiss();
 
-                            _review();
+                            reviewTransaction();
 
                         }
 
@@ -1032,18 +1048,27 @@ public class SendActivity extends SamouraiActivity {
             }
 
         } else {
-            _review();
+            reviewTransaction();
         }
-
     }
 
-    private void _review() {
+    private double getBtcAmountFromWidget() {
+        try {
+            return NumberFormat.getInstance(Locale.US)
+                    .parse(btcEditText.getText().toString().trim())
+                    .doubleValue();
+        } catch (Exception e) {
+            return 0d;
+        }
+    }
+
+    private void reviewTransaction() {
         setUpBoltzman();
         if (validateSpend() && prepareSpend()) {
             tvReviewSpendAmount.setText(FormatsUtil.formatBTC(amount));
             try {
-
-                tvReviewSpendAmountInSats.setText(formattedSatValue(getSatValue(Double.valueOf(btcEditText.getText().toString()))).concat(" sats"));
+                final Long satValue = getSatValue(getBtcAmountFromWidget());
+                tvReviewSpendAmountInSats.setText(formattedSatValue(satValue).concat(" sats"));
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -1087,29 +1112,13 @@ public class SendActivity extends SamouraiActivity {
 
             restoreChangeIndexes();
 
-            double btc_amount = 0.0;
-
-            try {
-                btc_amount = NumberFormat.getInstance(Locale.US).parse(btcEditText.getText().toString().trim()).doubleValue();
-//                    Log.i("SendFragment", "amount entered:" + btc_amount);
-            } catch (NumberFormatException nfe) {
-                btc_amount = 0.0;
-            } catch (ParseException pe) {
-                btc_amount = 0.0;
-            }
-
-            double dAmount = btc_amount;
-
-            amount = (long) (Math.round(dAmount * 1e8));
-            //                Log.i("SendActivity", "amount:" + amount);
-
+            amount = getSatValue(getBtcAmountFromWidget());
 
             if (selectedCahootsType.getCahootsType() == CahootsType.STOWAWAY) {
                 setButtonForStowaway(true);
                 return true;
             } else {
                 setButtonForStowaway(false);
-
             }
 
 
@@ -1128,7 +1137,7 @@ public class SendActivity extends SamouraiActivity {
                 changeType = 44;
             }
 
-            receivers = new HashMap<String, BigInteger>();
+            receivers = new HashMap<>();
             receivers.put(address, BigInteger.valueOf(amount));
 
             int countP2WSH_P2TR = 0;
@@ -1239,7 +1248,7 @@ public class SendActivity extends SamouraiActivity {
                 if (BIP47Meta.getInstance().getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM) {
                     samouraiFeeViaBIP47 = true;
                 }
-                ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this).script(amount, FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(), address, 4, strPCode, samouraiFeeViaBIP47, ricochetStaggeredDelivery.isChecked(), account);
+                ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this).script(amount, FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(), address, RicochetMeta.defaultNbHops, strPCode, samouraiFeeViaBIP47, ricochetStaggeredDelivery.isChecked(), account);
                 if (ricochetJsonObj != null) {
 
                     try {
@@ -1406,7 +1415,7 @@ public class SendActivity extends SamouraiActivity {
                 ;
             }
             // simple spend (less than balance)
-            else if (SPEND_TYPE == SPEND_SIMPLE) {
+            else if (SPEND_TYPE == SPEND_SIMPLE || SPEND_TYPE == SPEND_JOINBOT) {
                 List<UTXO> _utxos = utxos;
                 // sort in ascending order by value
                 Collections.sort(_utxos, new UTXO.UTXOComparator());
@@ -1504,9 +1513,9 @@ public class SendActivity extends SamouraiActivity {
             if (selectedUTXO.size() > 0) {
 
                 // estimate fee for simple spend, already done if boltzmann
-                if (SPEND_TYPE == SPEND_SIMPLE) {
+                if (SPEND_TYPE == SPEND_SIMPLE || SPEND_TYPE == SPEND_JOINBOT) {
 
-                    List<MyTransactionOutPoint> outpoints = new ArrayList<MyTransactionOutPoint>();
+                    List<MyTransactionOutPoint> outpoints = new ArrayList<>();
                     for (UTXO utxo : selectedUTXO) {
                         outpoints.addAll(utxo.getOutpoints());
                     }
@@ -1536,7 +1545,12 @@ public class SendActivity extends SamouraiActivity {
                         //
 
                     } else {
-                        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2 - countP2WSH_P2TR, countP2WSH_P2TR);
+                        fee = FeeUtil.getInstance().estimatedFeeSegwit(
+                                outpointTypes.getLeft(),
+                                outpointTypes.getMiddle(),
+                                outpointTypes.getRight(),
+                                2 - countP2WSH_P2TR,
+                                countP2WSH_P2TR);
                     }
                 }
 
@@ -1637,7 +1651,7 @@ public class SendActivity extends SamouraiActivity {
 
                 switch (selectedCahootsType) {
                     case NONE: {
-                        sendTransactionDetailsView.showStonewallx1Layout(null);
+                        sendTransactionDetailsView.showStonewallx1Layout();
                         // for ricochet entropy will be 0 always
                         if (SPEND_TYPE == SPEND_RICOCHET) {
                             break;
@@ -1679,14 +1693,20 @@ public class SendActivity extends SamouraiActivity {
                         switch (selectedCahootsType.getCahootsType()) {
                             case MULTI:
                             case STONEWALLX2:
-                                sendTransactionDetailsView.showStonewallX2Layout(selectedCahootsType.getCahootsMode(), getParticipantLabel(), 1000);
+                                sendTransactionDetailsView.showStonewallX2Layout(
+                                        getApplicationContext(),
+                                        selectedCahootsType.getCahootsMode(),
+                                        getParticipantLabel(),
+                                        amount);
                                 btnSend.setBackgroundResource(R.drawable.button_blue);
-                                btnSend.setText(getString(R.string.begin_stonewallx2));
+                                final long totalSpend = _fee.add(BigInteger.valueOf(amount)).longValue();
+                                btnSend.setText(getString(R.string.begin_stonewallx2)
+                                        .concat(" (")
+                                        .concat(FormatsUtil.formatBTC(totalSpend)).concat(")"));
                                 break;
 
                             case STOWAWAY:
-                                sendTransactionDetailsView.showStowawayLayout(selectedCahootsType.getCahootsMode(),
-                                        getParticipantLabel(), null, 1000);
+                                sendTransactionDetailsView.showStowawayLayout(selectedCahootsType.getCahootsMode(), getParticipantLabel());
                                 btnSend.setBackgroundResource(R.drawable.button_blue);
                                 btnSend.setText(getString(R.string.begin_stowaway));
                                 break;
@@ -1716,14 +1736,17 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private String getParticipantLabel() {
-        return strPcodeCounterParty != null ? BIP47Meta.getInstance().getDisplayLabel(strPcodeCounterParty) : null;
+        if (Objects.nonNull(strPcodeCounterParty)) {
+            return BIP47Meta.getInstance().getDisplayLabel(strPcodeCounterParty);
+        }
+        return null;
     }
 
     private void setButtonForStowaway(boolean prepare) {
         if (prepare) {
             // Sets view with stowaway message
             // also hides overlay push icon from button
-            sendTransactionDetailsView.showStowawayLayout(selectedCahootsType.getCahootsMode(), getParticipantLabel(), null, 1000);
+            sendTransactionDetailsView.showStowawayLayout(selectedCahootsType.getCahootsMode(), getParticipantLabel());
             btnSend.setBackgroundResource(R.drawable.button_blue);
             btnSend.setText(getString(R.string.begin_stowaway));
             sendTransactionDetailsView.getTransactionReview().findViewById(R.id.transaction_push_icon).setVisibility(View.INVISIBLE);
@@ -1741,16 +1764,35 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void initiateSpend() {
+        final long feeds = FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue();
         if (CahootsMode.MANUAL.equals(selectedCahootsType.getCahootsMode())) {
             // Cahoots manual
-            Intent intent = ManualCahootsActivity.createIntentSender(this, account, selectedCahootsType.getCahootsType(), FeeUtil.getInstance().getSuggestedFeeDefaultPerB(), amount, address,strPCode);
+            final Intent intent = ManualCahootsActivity.createIntentSender(
+                    this,
+                    account,
+                    selectedCahootsType.getCahootsType(),
+                    Math.round(feeds/1000d),
+                    amount,
+                    address,
+                    strPCode);
             startActivity(intent);
             return;
         }
         if (CahootsMode.SOROBAN.equals(selectedCahootsType.getCahootsMode())) {
+            if (!checkMaxAmountReachForJoinbot()) {
+                return;
+            }
             // Cahoots online
-            Intent intent = SorobanCahootsActivity.createIntentSender(getApplicationContext(), account, selectedCahootsType.getCahootsType(),
-                    amount, FeeUtil.getInstance().getSuggestedFeeDefaultPerB(), address, strPcodeCounterParty, strPCode);
+            final Intent intent = SorobanCahootsActivity.createIntentSender(
+                    getApplicationContext(),
+                    account,
+                    selectedCahootsType.getCahootsType(),
+                    amount,
+                    Math.round(feeds/1000d),
+                    address,
+                    strPcodeCounterParty,
+                    strPCode);
+
             startActivity(intent);
             return;
         }
@@ -1855,6 +1897,14 @@ public class SendActivity extends SamouraiActivity {
 
         builder.create().show();
 
+    }
+
+    private boolean checkMaxAmountReachForJoinbot() {
+        if (amount > JOINNBOT_MAX_AMOUNT && (SPEND_TYPE == SPEND_JOINBOT)) {
+            Toast.makeText(this, getString(R.string.joinbot_max_amount_reached), Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
     }
 
     private void ricochetSpend(boolean staggered) {
@@ -2208,10 +2258,12 @@ public class SendActivity extends SamouraiActivity {
 
     private boolean validateSpend() {
 
-        boolean isValid = false;
-        boolean insufficientFunds = false;
+        if (! checkMaxAmountReachForJoinbot()) {
+            enableReviewButton(false);
+            return false;
+        }
 
-        double btc_amount = 0.0;
+        boolean insufficientFunds = false;
 
         String strBTCAddress = getToAddress();
         if (strBTCAddress.startsWith("bitcoin:")) {
@@ -2219,20 +2271,7 @@ public class SendActivity extends SamouraiActivity {
         }
         setToAddress(strBTCAddress);
 
-        try {
-            btc_amount = NumberFormat.getInstance(Locale.US).parse(btcEditText.getText().toString()).doubleValue();
-//            Log.i("SendFragment", "amount entered:" + btc_amount);
-        } catch (NumberFormatException nfe) {
-            btc_amount = 0.0;
-        } catch (ParseException pe) {
-            btc_amount = 0.0;
-        }
-
-        final double dAmount = btc_amount;
-
-        //        Log.i("SendFragment", "amount entered (converted):" + dAmount);
-
-        final long amount = (long) (Math.round(dAmount * 1e8));
+        final long amount = getSatValue(getBtcAmountFromWidget());
         Log.i("SendFragment", "amount entered (converted to long):" + amount);
         Log.i("SendFragment", "balance:" + balance);
         if (amount > balance) {
@@ -2244,13 +2283,22 @@ public class SendActivity extends SamouraiActivity {
         } else {
             totalMinerFeeLayout.setVisibility(View.VISIBLE);
         }
-        if (selectedCahootsType.getCahootsType() == CahootsType.STOWAWAY && !insufficientFunds && amount != 0) {
+
+        final boolean hasEnoughFunds = !insufficientFunds;
+
+        if (hasEnoughFunds && amount != 0) {
             enableReviewButton(true);
             return true;
         }
 
-//        Log.i("SendFragment", "insufficient funds:" + insufficientFunds);
+        if (amount != 0 && insufficientFunds) {
+            Toast.makeText(this, getString(R.string.insufficient_funds), Toast.LENGTH_SHORT).show();
+            if (SPEND_TYPE == SPEND_JOINBOT) {
+                Toast.makeText(this, getString(R.string.joinbot_not_possible_with_current_utxo), Toast.LENGTH_SHORT).show();
+            }
+        }
 
+        boolean isValid;
         if (amount >= SamouraiWallet.bDust.longValue() && FormatsUtil.getInstance().isValidBitcoinAddress(getToAddress())) {
             isValid = true;
         } else if (amount >= SamouraiWallet.bDust.longValue() && strDestinationBTCAddress != null && FormatsUtil.getInstance().isValidBitcoinAddress(strDestinationBTCAddress)) {
@@ -2259,16 +2307,8 @@ public class SendActivity extends SamouraiActivity {
             isValid = false;
         }
 
-        if (insufficientFunds) {
-            Toast.makeText(this, getString(R.string.insufficient_funds), Toast.LENGTH_SHORT).show();
-        }
-        if (!isValid || insufficientFunds) {
-            enableReviewButton(false);
-            return false;
-        } else {
-            enableReviewButton(true);
-            return true;
-        }
+        enableReviewButton(isValid && hasEnoughFunds);
+        return isValid && hasEnoughFunds;
 
     }
 

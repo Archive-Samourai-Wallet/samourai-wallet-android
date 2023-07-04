@@ -1,5 +1,6 @@
 package com.samourai.wallet;
 
+import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.createDecimalFormat;
 import static java.lang.Long.parseLong;
 
 import android.app.AlertDialog;
@@ -33,7 +34,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
@@ -54,6 +54,7 @@ import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.DecimalDigitsInputFilter;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.SatoshiBitcoinUnitHelper;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.Address;
@@ -66,18 +67,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Locale;
 import java.util.Objects;
 
 public class ReceiveActivity extends SamouraiActivity {
-
-    private static final double BTC_IN_SATOSHI = 1e8;
-    private static final double MAX_POSSIBLE_BTC = 21_000_000d;
-    private static final char NUMBER_DIGIT_GROUPING_SEP = ' ';
     private static int imgWidth = 0;
 
     private ImageView ivQR = null;
@@ -328,32 +323,9 @@ public class ReceiveActivity extends SamouraiActivity {
     }
 
 
-    private Long getSatValue(final Number btc) {
-        return Math.round(btc.doubleValue() * BTC_IN_SATOSHI);
-    }
-
-
     private String formattedSatValue(final Number number) {
         return createDecimalFormat("#,###", true).format(number);
     }
-
-    @NonNull
-    private static DecimalFormat createDecimalFormat(
-            final String pattern,
-            final boolean grouping) {
-
-        final DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
-        if (grouping) {
-            symbols.setGroupingSeparator(NUMBER_DIGIT_GROUPING_SEP);
-        }
-
-        final DecimalFormat decimalFormat = new DecimalFormat(pattern);
-        decimalFormat.setDecimalFormatSymbols(symbols);
-        decimalFormat.setMinimumIntegerDigits(1);
-        decimalFormat.setMaximumFractionDigits(8);
-        return decimalFormat;
-    }
-
 
     private TextWatcher BTCWatcher = new TextWatcher() {
         @Override
@@ -380,7 +352,7 @@ public class ReceiveActivity extends SamouraiActivity {
                 }
 
                 final Double btc = Double.parseDouble(String.valueOf(editable));
-                if (btc > MAX_POSSIBLE_BTC) {
+                if (btc > SatoshiBitcoinUnitHelper.MAX_POSSIBLE_BTC) {
                     edAmountBTC.setText("0.00");
                     edAmountBTC.setSelection(edAmountBTC.getText().length());
                     edAmountSAT.setText("0");
@@ -388,7 +360,7 @@ public class ReceiveActivity extends SamouraiActivity {
                     Toast.makeText(ReceiveActivity.this, R.string.invalid_amount, Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    edAmountSAT.setText(formattedSatValue(getSatValue(btc)));
+                    edAmountSAT.setText(formattedSatValue(SatoshiBitcoinUnitHelper.getSatValue(btc)));
                 }
             } catch (NumberFormatException e) {
                 e.printStackTrace();
@@ -399,12 +371,6 @@ public class ReceiveActivity extends SamouraiActivity {
             displayQRCode();
         }
     };
-
-
-    private Double getBtcValue(final Number sats) {
-        return sats.longValue() / BTC_IN_SATOSHI;
-    }
-
 
     private TextWatcher satWatcher = new TextWatcher() {
         @Override
@@ -435,9 +401,9 @@ public class ReceiveActivity extends SamouraiActivity {
                 edAmountSAT.setText(formatted);
                 edAmountSAT.setSelection(formatted.length());
 
-                final Double btc = getBtcValue(sats);
+                final Double btc = SatoshiBitcoinUnitHelper.getBtcValue(sats);
                 edAmountBTC.setText(String.format(Locale.US, "%.8f", btc));
-                if (btc > MAX_POSSIBLE_BTC) {
+                if (btc > SatoshiBitcoinUnitHelper.MAX_POSSIBLE_BTC) {
                     edAmountBTC.setText("0.00");
                     edAmountBTC.setSelection(edAmountBTC.getText().length());
                     edAmountSAT.setText("0");
@@ -646,7 +612,7 @@ public class ReceiveActivity extends SamouraiActivity {
             final Number btcAmount = NumberFormat.getInstance(Locale.US)
                     .parse(edAmountBTC.getText().toString().trim());
 
-            long satAmount = getSatValue(btcAmount);
+            long satAmount = SatoshiBitcoinUnitHelper.getSatValue(btcAmount);
             if (satAmount != 0l) {
                 if (!FormatsUtil.getInstance().isValidBech32(_addr)) {
                     ivQR.setImageBitmap(

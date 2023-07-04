@@ -176,6 +176,9 @@
     <string name="destination">Address or payment channel</string>
 
     <string name="insufficient_funds">Insufficient funds</string>
+    <string name="joinbot_not_possible_with_current_utxo">Joinbot not possible with current UTXO set</string>
+    <string name="insufficient_funds_expect_postmix_account">Only transaction using postmix account is possible</string>
+    <string name="joinbot_max_amount_reached">max amount reached for Joinbot (1.25 BTC)</string>
     <string name="tx_length_error">Samourai does not handle transactions over 100KB in size. Please try splitting your transaction.</string>
     <string name="invalid_amount">Invalid amount</string>
     <string name="invalid_address">Invalid address</string>
@@ -216,6 +219,7 @@
     <string name="max_available">Max. available:</string>
 
     <string name="select_account">Select account</string>
+    <string name="account">Account</string>
     <string name="received_bitcoin">Received bitcoin</string>
     <string name="received">Received</string>
     <string name="sent">Transaction sent</string>
@@ -556,6 +560,8 @@
     <string name="path">Path</string>
     <string name="title_activity_send_new_ui">SendNewUIActivity</string>
     <string name="ricochet_hops_msg">Additional hops between your wallet and the final destination for increased fungibility</string>
+    <string name="joinbot_msg">Amount will be sent as a coinjoin output</string>
+    <string name="joinbot_spend_limit">Max spend amount: 1.25 BTC</string>
 
     <string name="review_transaction">REVIEW TRANSACTION</string>
     <string name="stonewall_increases_deniability">STONEWALL increases deniability and reduces linkability of this transaction.</string>
@@ -769,6 +775,7 @@
     <string name="note_you_are_making_a_post_mix_spend_if_cahoots_nis_not_selected_samourai_will">NOTE: You are making a post-mix spend. If #Cahoots\nis not selected Samourai will attempt to make a STONEWALL spend.</string>
     <string name="off">Off</string>
     <string name="privacy_addons">Privacy Addons</string>
+    <string name="joinbot">Joinbot</string>
     <string name="ricochet_">Ricochet</string>
     <string name="staggered_delivery">Staggered delivery</string>
     <string name="for_extra_privacy_message">For extra privacy and analysis resistance, each hop will appear in mempool 1 block apart.  Designed to be slow. Do not enable for urgent sends.</string>
