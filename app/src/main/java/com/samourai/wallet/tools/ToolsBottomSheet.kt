@@ -265,8 +265,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             )
             ToolsItem(
-                title = "Verify message",
-                subTitle = "Verify that a signed message contains a valid signature",
+                title = stringResource(id = R.string.verify_message),
+                subTitle = stringResource(id = R.string.verify_message_desc),
                 icon = R.drawable.ic_verify_message,
                 onClick = {
                     scope.launch {

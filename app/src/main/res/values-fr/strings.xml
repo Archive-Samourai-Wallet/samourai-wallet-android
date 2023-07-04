@@ -87,7 +87,7 @@
     <string name="options_segwit">Recevoir à des adresses segwit</string>
     <string name="options_segwit_2">Générer des adresses segwit pour les transactions entrantes.</string>
     <string name="options_broadcast_hex">Émettre la transaction hex</string>
-    <string name="options_broadcast_hex2">Émettre la transaction signée établie sous format hexadécimal.</string>
+    <string name="options_broadcast_hex2">Émettre une transaction signée établie en hexadécimal</string>
     <string name="options_like_typed_change">Recevoir la monnaie à une adresse de même type que l\'adresse expéditrice</string>
     <string name="options_like_typed_change2">Recevoir la monnaie à une adresse de même type que l\'adresse expéditrice. Désactiver pour l\'envoi de la monnaie à des adresses segwit uniquement.</string>
     <string name="options_haptic">Déverrouillage de l\'écran par saisie de code PIN avec retour tactile</string>
@@ -1066,6 +1066,19 @@
 
 <string name="add_new">Ajouter Nouveau</string>
 <string name="advanced">Fonctionnalité Avancée</string>
+
+    <string name="joinbot_not_possible_with_current_utxo">Joinbot impossible avec les UTXOs actuels</string>
+    <string name="joinbot_max_amount_reached">Dépassement du montant max pour Joinbot (1.25 BTC)</string>
+    <string name="account">Compte</string>
+    <string name="joinbot_msg">Le montant sera envoyé comme sortie de coinjoin</string>
+    <string name="joinbot_spend_limit">Dépense max: 1.25 BTC</string>
+    <string name="joinbot">Joinbot</string>
+    <string name="calculate_any_address_derived">Calculer toutes les adresses passées et futures de votre portefeuille</string>
+    <string name="simple_and_secure_auth_with">Authentification simple et sécurisée sans mot de passe à l\'aide de votre code PayNym unique</string>
+    <string name="enter_a_private_key_and">Entrer une clé privée et balayer tous les fonds vers votre prochaine adresse bitcoin</string>
+    <string name="sign_messages_using_your">Signer des messages à l\'aide de la clé privée de votre portefeuille</string>
+    <string name="verify_message">Vérifier un message</string>
+    <string name="verify_message_desc">Vérifier qu\'un message signé contient une signature valide</string>
 
 </resources>
 
