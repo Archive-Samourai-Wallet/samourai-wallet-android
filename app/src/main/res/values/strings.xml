@@ -270,6 +270,8 @@
     <string name="bip47_cannot_scan_own_pcode">Cannot scan your own payment code</string>
     <string name="bip47_spend_to_pcode">Send through this payment channel?</string>
     <string name="sign_message">Sign message</string>
+    <string name="verify_message">Verify message</string>
+    <string name="verify_message_desc">Verify that a signed message contains a valid signature</string>
     <string name="bip47_sign_text1">Sign message using BIP47 notification address private key?</string>
     <string name="bip47_sign_text2">Signed using my BIP47 notification address.</string>
     <string name="bip47_wait_for_confirmation_or_retry">This payment channel is waiting for 1 confirmation before sending is activated. Would you like to discard the previous attempt and resend a notification?</string>
