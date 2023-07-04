@@ -1,14 +1,11 @@
 package com.samourai.wallet.widgets;
 
-import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.createDecimalFormat;
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.RadioButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,15 +18,10 @@ import androidx.transition.TransitionSet;
 
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
-import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
-import com.samourai.wallet.send.FeeUtil;
-import com.samourai.wallet.send.UTXO;
 
 import java.text.DecimalFormat;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * A CustomView for showing and hiding transaction and transactionReview
@@ -41,11 +33,10 @@ public class SendTransactionDetailsView extends FrameLayout {
     private View transactionView, transactionReview;
     private ViewGroup ricochetHopsReview, stoneWallReview;
     private boolean reviewActive = false;
-    private ViewGroup stowawayLayout, stoneWallLayout, stonewallX2SpendType;
+    private ViewGroup stowawayLayout, stoneWallLayout;
     private EntropyBar entropyBarStoneWallX2, entropyBarStoneWallX1;
     private SwitchCompat stoneWallx1Switch;
     private TextView txType, stowawayMixingParticipant, entropyValueX1, entropyValueX2, stowawayMethod, stoneWallx2Fee;
-    private RadioButton radioBtnDepositAccount, radioBtnPostmixAccount;
 
 
     public SendTransactionDetailsView(@NonNull Context context) {
@@ -69,9 +60,6 @@ public class SendTransactionDetailsView extends FrameLayout {
         ricochetHopsReview = transactionReview.findViewById(R.id.ricochet_hops_layout);
         stowawayLayout = transactionReview.findViewById(R.id.stowaway_layout);
         stoneWallLayout = transactionReview.findViewById(R.id.stonewallx1_layout);
-        stonewallX2SpendType = transactionReview.findViewById(R.id.stonewallx2_spend_type_layout);
-        radioBtnDepositAccount = transactionReview.findViewById(R.id.radio_deposit_account);
-        radioBtnPostmixAccount = transactionReview.findViewById(R.id.radio_postmix_account);
         entropyBarStoneWallX1 = transactionReview.findViewById(R.id.entropy_bar_stonewallx1);
         stoneWallx1Switch = transactionReview.findViewById(R.id.stonewallx1_switch);
         txType = transactionReview.findViewById(R.id.txType);
@@ -107,20 +95,16 @@ public class SendTransactionDetailsView extends FrameLayout {
         stoneWallLayout.getRootView().post(() -> {
             stowawayLayout.setVisibility(VISIBLE);
             stoneWallLayout.setVisibility(GONE);
-            stonewallX2SpendType.setVisibility(VISIBLE);
         });
         stowawayMixingParticipant.setText(participant);
         stowawayMethod.setText(cahootsMode.getLabel());
         txType.setText(CahootsType.STONEWALLX2.getLabel());
-
-        updateBalanceRadioButton(context, amount);
     }
 
     public void showStowawayLayout(final CahootsMode cahootsMode, final String participant) {
         stoneWallLayout.getRootView().post(() -> {
             stowawayLayout.setVisibility(VISIBLE);
             stoneWallLayout.setVisibility(GONE);
-            stonewallX2SpendType.setVisibility(GONE);
         });
         stowawayMixingParticipant.setText(participant);
         stowawayMethod.setText(cahootsMode.getLabel());
@@ -131,7 +115,6 @@ public class SendTransactionDetailsView extends FrameLayout {
         stoneWallLayout.getRootView().post(() -> {
             stowawayLayout.setVisibility(GONE);
             stoneWallLayout.setVisibility(VISIBLE);
-            stonewallX2SpendType.setVisibility(GONE);
         });
     }
 
@@ -144,53 +127,8 @@ public class SendTransactionDetailsView extends FrameLayout {
             this.setEntropyBarStoneWallX1(null);
     }
 
-    public RadioButton getRadioBtnDepositAccount() {
-        return radioBtnDepositAccount;
-    }
-
-    public RadioButton getRadioBtnPostmixAccount() {
-        return radioBtnPostmixAccount;
-    }
-
     public SwitchCompat getStoneWallSwitch() {
         return stoneWallx1Switch;
-    }
-
-    public void updateBalanceRadioButton(final Context context,
-                                         final long amount) {
-
-        final List<UTXO> depositUtxos = APIFactory.getInstance(context).getUtxos(true);
-        final long balance = APIFactory.getInstance(context).getXpubBalance();
-        final int depositUtxoCount = Objects.nonNull(depositUtxos) ? depositUtxos.size() : 0;
-        radioBtnDepositAccount.setText(
-                "Deposit account" +
-                        System.lineSeparator() +
-                        String.format("(found %s sat - %s UTXOs)",
-                                createDecimalFormat("#,###", true).format(balance),
-                                depositUtxoCount));
-        radioBtnDepositAccount.setEnabled(depositUtxoCount != 0);
-
-        final List<UTXO> postMixUtxos = APIFactory.getInstance(context).getUtxosPostMix(true);
-        final long balancePostMix = APIFactory.getInstance(context).getXpubPostMixBalance();
-        final int postMixUtxoCount = Objects.nonNull(postMixUtxos) ? postMixUtxos.size() : 0;
-        radioBtnPostmixAccount.setText(
-                "Postmix account" +
-                        System.lineSeparator() +
-                        String.format("(found %s sat - %s UTXOs)",
-                                createDecimalFormat("#,###", true).format(balancePostMix),
-                                postMixUtxoCount));
-        radioBtnPostmixAccount.setEnabled(postMixUtxoCount != 0);
-
-        final long fees = FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue();
-        final long total = amount + fees;
-
-        if (balance < total && balancePostMix >= total && !radioBtnPostmixAccount.isChecked()) {
-            radioBtnDepositAccount.setChecked(false);
-            radioBtnPostmixAccount.setChecked(true);
-        } else if (balancePostMix < total && balance >= total && !radioBtnDepositAccount.isChecked()) {
-            radioBtnDepositAccount.setChecked(true);
-            radioBtnPostmixAccount.setChecked(false);
-        }
     }
 
     /**
@@ -204,7 +142,6 @@ public class SendTransactionDetailsView extends FrameLayout {
             stoneWallLayout.getRootView().post(() -> {
                 stowawayLayout.setVisibility(GONE);
                 stoneWallLayout.setVisibility(GONE);
-                stonewallX2SpendType.setVisibility(GONE);
             });
         }
 

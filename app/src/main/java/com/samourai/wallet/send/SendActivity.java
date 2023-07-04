@@ -103,7 +103,6 @@ import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolConst;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.wallet.widgets.SendTransactionDetailsView;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 import com.samourai.xmanager.client.XManagerClient;
 import com.samourai.xmanager.protocol.XManagerService;
 
@@ -306,8 +305,6 @@ public class SendActivity extends SamouraiActivity {
 
         checkDeepLinks();
 
-        setUpTransactionAccountTypeButton();
-
         if (getIntent().getExtras().containsKey("preselected")) {
             preselectedUTXOs = PreSelectUtil.getInstance().getPreSelected(getIntent().getExtras().getString("preselected"));
             setBalance();
@@ -350,28 +347,6 @@ public class SendActivity extends SamouraiActivity {
         }
 
     }
-
-    private void setUpTransactionAccountTypeButton() {
-        sendTransactionDetailsView.getRadioBtnDepositAccount().setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                account = SamouraiAccountIndex.DEPOSIT;
-                sendTransactionDetailsView.getRadioBtnPostmixAccount().setChecked(false);
-            }
-            setBalance();
-        });
-        sendTransactionDetailsView.getRadioBtnPostmixAccount().setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                account = SamouraiAccountIndex.POSTMIX;
-                sendTransactionDetailsView.getRadioBtnDepositAccount().setChecked(false);
-            }
-            setBalance();
-        });
-        account = sendTransactionDetailsView.getRadioBtnPostmixAccount().isChecked()
-                ? SamouraiAccountIndex.POSTMIX
-                : SamouraiAccountIndex.DEPOSIT;
-        sendTransactionDetailsView.updateBalanceRadioButton(getApplicationContext(), amount);
-    }
-
 
     public View createTag(String text) {
         float scale = getResources().getDisplayMetrics().density;
@@ -426,13 +401,9 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void checkJoinbotPossibility() {
-        if (! checkMaxAmountReachForJoinbot()) {
-            joinbotSwitch.setChecked(false);
-        }
         amount = getSatValue(getBtcAmountFromWidget());
-        final boolean insufficientPostMixFunds = amount > APIFactory.getInstance(SendActivity.this).getXpubPostMixBalance();
-        final boolean insufficientDepositFunds = amount > APIFactory.getInstance(SendActivity.this).getXpubBalance();
-        if (amount > JOINNBOT_MAX_AMOUNT || (insufficientPostMixFunds && insufficientDepositFunds)) {
+
+        if (amount > JOINNBOT_MAX_AMOUNT || balance < amount) {
             joinbotDesc.setAlpha(.6f);
             joinbotTitle.setAlpha(.6f);
             joinbotSwitch.setAlpha(.6f);
@@ -771,9 +742,6 @@ public class SendActivity extends SamouraiActivity {
             if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
                 balance = APIFactory.getInstance(SendActivity.this).getXpubPostMixBalance();
                 selectableBalance = balance;
-            } else if (account == SamouraiAccountIndex.POSTMIX) {
-                balance = APIFactory.getInstance(SendActivity.this).getXpubPostMixBalance();
-                selectableBalance = balance;
             } else {
                 balance = APIFactory.getInstance(SendActivity.this).getXpubBalance();
                 selectableBalance = balance;
@@ -928,7 +896,6 @@ public class SendActivity extends SamouraiActivity {
                     final Long sats = getSatValue(Double.valueOf(btc));
                     satEditText.setText(formattedSatValue(sats));
 
-                    sendTransactionDetailsView.updateBalanceRadioButton(getApplicationContext(), amount);
                     checkRicochetPossibility();
                     checkJoinbotPossibility();
                 }
@@ -1003,7 +970,7 @@ public class SendActivity extends SamouraiActivity {
                 satEditText.setText(formatted);
                 satEditText.setSelection(formatted.length());
                 btcEditText.setText(String.format(Locale.ENGLISH, "%.8f", btc));
-                if (btc > 21000000.0) {
+                if (btc > SatoshiBitcoinUnitHelper.MAX_POSSIBLE_BTC) {
                     btcEditText.setText("0.00");
                     btcEditText.setSelection(btcEditText.getText().length());
                     satEditText.setText("0");
@@ -1017,7 +984,6 @@ public class SendActivity extends SamouraiActivity {
             satEditText.addTextChangedListener(this);
             btcEditText.addTextChangedListener(BTCWatcher);
 
-            sendTransactionDetailsView.updateBalanceRadioButton(getApplicationContext(), amount);
             checkRicochetPossibility();
             checkJoinbotPossibility();
             validateSpend();
@@ -2292,6 +2258,11 @@ public class SendActivity extends SamouraiActivity {
 
     private boolean validateSpend() {
 
+        if (! checkMaxAmountReachForJoinbot()) {
+            enableReviewButton(false);
+            return false;
+        }
+
         boolean insufficientFunds = false;
 
         String strBTCAddress = getToAddress();
@@ -2307,32 +2278,20 @@ public class SendActivity extends SamouraiActivity {
             insufficientFunds = true;
         }
 
-        final boolean insufficientPostMixFunds = amount > APIFactory.getInstance(SendActivity.this).getXpubPostMixBalance();
-        final boolean insufficientDepositFunds = amount > APIFactory.getInstance(SendActivity.this).getXpubBalance();
-
         if (selectedCahootsType != SelectCahootsType.type.NONE) {
             totalMinerFeeLayout.setVisibility(View.INVISIBLE);
         } else {
             totalMinerFeeLayout.setVisibility(View.VISIBLE);
         }
 
-        final boolean hasEnoughFunds = !insufficientFunds ||
-                (!insufficientPostMixFunds && SPEND_TYPE == SPEND_JOINBOT) ||
-                !insufficientDepositFunds;
+        final boolean hasEnoughFunds = !insufficientFunds;
 
         if (hasEnoughFunds && amount != 0) {
             enableReviewButton(true);
             return true;
         }
 
-        if (amount != 0 && insufficientDepositFunds && hasEnoughFunds) {
-            Toast.makeText(this, getString(R.string.insufficient_funds), Toast.LENGTH_SHORT).show();
-            Toast.makeText(
-                    this,
-                    getString(R.string.insufficient_funds_expect_postmix_account),
-                    Toast.LENGTH_SHORT).show();
-
-        } else if (! hasEnoughFunds) {
+        if (amount != 0 && insufficientFunds) {
             Toast.makeText(this, getString(R.string.insufficient_funds), Toast.LENGTH_SHORT).show();
             if (SPEND_TYPE == SPEND_JOINBOT) {
                 Toast.makeText(this, getString(R.string.joinbot_not_possible_with_current_utxo), Toast.LENGTH_SHORT).show();
