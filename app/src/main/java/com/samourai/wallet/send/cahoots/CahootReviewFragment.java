@@ -18,6 +18,7 @@ import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.common.base.Optional;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
@@ -27,6 +28,7 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.Cahoots;
+import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
@@ -188,8 +190,14 @@ public class CahootReviewFragment extends Fragment {
 
     private void showPayloadInfo() {
         if (payload != null) {
+            if (payload instanceof MultiCahoots) {
+                MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
+                String total = formatForBtc(multiCahootsPayload.getSpendAmount() + multiCahootsPayload.getFeeAmount() + multiCahootsPayload.getStowaway().getSpendAmount());
+                sendBtn.setText(getString(R.string.send).concat(" ").concat(total));
+            } else {
+                sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
+            }
             toAddress.setText(payload.getDestination());
-            sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
             amountInBtc.setText(formatForBtc(payload.getSpendAmount()));
             amountInSats.setText(String.valueOf(payload.getSpendAmount()).concat(" sat"));
             if ((payload.getFeeAmount() == 0)) {
