@@ -753,6 +753,7 @@
     
     <string name="begin_stowaway">Démarrer Stowaway</string>
     <string name="begin_stonewallx2">Démarrer STONEWALLx2</string>
+    <string name="begin_multicahoots_with_joinbot">démarrer multicahoots avec Joinbot</string>
 
     <string name="you_will_pay">Vous règlerez :</string>
     <string name="total_miner_fee">Total Frais Mineur :</string>

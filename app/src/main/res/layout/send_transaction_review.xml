@@ -173,7 +173,7 @@
                     tools:text="32jf5AMate5Pgu72aS7ScJtHaXHMobdHok" />
 
                 <View
-                    android:id="@+id/divider6"
+                    android:id="@+id/dividerMethod"
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_marginTop="8dp"
@@ -183,14 +183,14 @@
                     app:layout_constraintTop_toBottomOf="@+id/stowaway_mixing_participant" />
 
                 <TextView
-                    android:id="@+id/textView79"
+                    android:id="@+id/methodLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Method"
                     android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="@+id/textView14"
-                    app:layout_constraintTop_toBottomOf="@+id/divider6" />
+                    app:layout_constraintTop_toBottomOf="@+id/dividerMethod" />
 
 
                 <TextView
@@ -204,8 +204,8 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="@+id/stowaway_mixing_participant"
                     app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toEndOf="@+id/textView79"
-                    app:layout_constraintTop_toBottomOf="@+id/divider6"
+                    app:layout_constraintStart_toEndOf="@+id/methodLabel"
+                    app:layout_constraintTop_toBottomOf="@+id/dividerMethod"
                     app:layout_constraintVertical_bias="0.0" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
