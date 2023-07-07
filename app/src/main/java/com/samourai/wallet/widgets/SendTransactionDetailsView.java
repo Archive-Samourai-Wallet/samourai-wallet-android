@@ -36,7 +36,9 @@ public class SendTransactionDetailsView extends FrameLayout {
     private ViewGroup stowawayLayout, stoneWallLayout;
     private EntropyBar entropyBarStoneWallX2, entropyBarStoneWallX1;
     private SwitchCompat stoneWallx1Switch;
-    private TextView txType, stowawayMixingParticipant, entropyValueX1, entropyValueX2, stowawayMethod, stoneWallx2Fee;
+    private TextView txType, stowawayMixingParticipant, entropyValueX1, entropyValueX2,
+            stowawayMethod, stoneWallx2Fee, methodLabel;
+    private View dividerMethod;
 
 
     public SendTransactionDetailsView(@NonNull Context context) {
@@ -66,6 +68,8 @@ public class SendTransactionDetailsView extends FrameLayout {
         stowawayMixingParticipant = transactionReview.findViewById(R.id.stowaway_mixing_participant);
         stowawayMethod = transactionReview.findViewById(R.id.stowaway_method);
         entropyValueX1 = transactionReview.findViewById(R.id.entropy_value_stonewallx1);
+        dividerMethod = transactionReview.findViewById(R.id.dividerMethod);
+        methodLabel = transactionReview.findViewById(R.id.methodLabel);
 
         entropyBarStoneWallX1.post(() -> {
             entropyBarStoneWallX1.setMaxBars(4);
@@ -87,18 +91,18 @@ public class SendTransactionDetailsView extends FrameLayout {
         stoneWallLayout.setVisibility(enable ? INVISIBLE : VISIBLE);
     }
 
-    public void showStonewallX2Layout(final Context context,
-                                      final CahootsMode cahootsMode,
-                                      final String participant,
-                                      final long amount) {
+    public void showStonewallX2Layout(final Context context, final CahootsMode cahootsMode) {
 
         stoneWallLayout.getRootView().post(() -> {
             stowawayLayout.setVisibility(VISIBLE);
             stoneWallLayout.setVisibility(GONE);
         });
-        stowawayMixingParticipant.setText(participant);
+        stowawayMixingParticipant.setText(context.getString(R.string.joinbot));
         stowawayMethod.setText(cahootsMode.getLabel());
         txType.setText(CahootsType.STONEWALLX2.getLabel());
+        stowawayMethod.setVisibility(GONE);
+        dividerMethod.setVisibility(GONE);
+        methodLabel.setVisibility(GONE);
     }
 
     public void showStowawayLayout(final CahootsMode cahootsMode, final String participant) {
@@ -109,6 +113,9 @@ public class SendTransactionDetailsView extends FrameLayout {
         stowawayMixingParticipant.setText(participant);
         stowawayMethod.setText(cahootsMode.getLabel());
         txType.setText(CahootsType.STOWAWAY.getLabel());
+        stowawayMethod.setVisibility(VISIBLE);
+        dividerMethod.setVisibility(VISIBLE);
+        methodLabel.setVisibility(VISIBLE);
     }
 
     public void showStonewallx1Layout() {

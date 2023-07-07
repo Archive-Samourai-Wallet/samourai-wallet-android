@@ -107,6 +107,7 @@ import com.samourai.xmanager.client.XManagerClient;
 import com.samourai.xmanager.protocol.XManagerService;
 
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
@@ -1106,6 +1107,10 @@ public class SendActivity extends SamouraiActivity {
 
         try {
 
+            feeSeekBar.setTrackActiveTintList(ContextCompat.getColorStateList(this, R.color.green_ui_2));
+            feeSeekBar.setThumbTintList(ContextCompat.getColorStateList(this, R.color.green_ui_2));
+            btnSend.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.green_ui_2));
+
             if (SPEND_TYPE == SPEND_SIMPLE && stoneWallChecked) {
                 SPEND_TYPE = SPEND_BOLTZMANN;
             }
@@ -1695,14 +1700,12 @@ public class SendActivity extends SamouraiActivity {
                             case STONEWALLX2:
                                 sendTransactionDetailsView.showStonewallX2Layout(
                                         getApplicationContext(),
-                                        selectedCahootsType.getCahootsMode(),
-                                        getParticipantLabel(),
-                                        amount);
-                                btnSend.setBackgroundResource(R.drawable.button_blue);
-                                final long totalSpend = _fee.add(BigInteger.valueOf(amount)).longValue();
-                                btnSend.setText(getString(R.string.begin_stonewallx2)
-                                        .concat(" (")
-                                        .concat(FormatsUtil.formatBTC(totalSpend)).concat(")"));
+                                        selectedCahootsType.getCahootsMode());
+                                feeSeekBar.setTrackActiveTintList(ContextCompat.getColorStateList(this, R.color.blue_ui_2));
+                                feeSeekBar.setThumbTintList(ContextCompat.getColorStateList(this, R.color.blue_ui_2));
+                                btnSend.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.blue_ui_2));
+                                btnSend.setText(StringUtils.upperCase(getString(R.string.begin_multicahoots_with_joinbot)));
+                                sendTransactionDetailsView.getTransactionReview().findViewById(R.id.transaction_push_icon).setVisibility(View.INVISIBLE);
                                 break;
 
                             case STOWAWAY:
