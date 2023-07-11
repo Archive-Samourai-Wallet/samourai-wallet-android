@@ -17,16 +17,13 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_Wallet;
-import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.stealth.calculator.CalculatorOperation;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
@@ -35,7 +32,6 @@ import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
-import org.bitcoinj.script.ScriptBuilder;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
@@ -170,8 +166,8 @@ public class PSBTUtil {
 
         Transaction tx = psbt.getTransaction();
 
-        HashMap<String,ECKey> keyBag = new HashMap<>();
-        HashMap<String,Long> amountBag = new HashMap<>();
+        HashMap<String,ECKey> keyBag = new HashMap<String,ECKey>();
+        HashMap<String,Long> amountBag = new HashMap<String,Long>();
 
         SegwitAddress address = null;
         long value = 0L;
@@ -179,23 +175,16 @@ public class PSBTUtil {
         ECKey eckeyPriv = null;
         List<PSBTEntry> psbtInputs = psbt.getPsbtInputs();
         List<TransactionInput> txInputs = tx.getInputs();
-        String[] s = null;
 
         for(PSBTEntry entry : psbtInputs) {
 
             if(entry.getKeyType() == null) {
                 continue;
             }
-
-            else if(org.spongycastle.util.encoders.Hex.toHexString(entry.getKeyType()).equals("00")) {
-                Transaction txData = new Transaction(SamouraiWallet.getInstance().getCurrentNetworkParams(), entry.getData());
-                if (txData.getOutput(0).getValue() != null) {
-                    value = txData.getOutput(0).getValue().value;
-                }
-            }
             else if(org.spongycastle.util.encoders.Hex.toHexString(entry.getKeyType()).equals("01")) {
 
                 address = null;
+                value = 0L;
                 eckeyPriv = null;
 
                 byte[] data = entry.getData();
@@ -207,25 +196,15 @@ public class PSBTUtil {
 
                 byte[] data = entry.getData();
                 String path = PSBT.readBIP32Derivation(data);
-                s = path.replaceAll("'", "").split("/");
+                String[] s = path.replaceAll("'", "").split("/");
                 debug("PSBTUtil", "path:" + path);
                 // BIP84Util returns pubkey only, use bip84Wallet to get privkey
-                if (s[1].equals("84")) {
-                    HD_Wallet bip84Wallet = BIP84Util.getInstance(context).getWallet();
-                    HD_Address addr = bip84Wallet.getAccount(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
-                    address = new SegwitAddress(addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                    debug("PSBTUtil", "address:" + address.getBech32AsString());
-                    eckeyPriv = address.getECKey();
-                    debug("PSBTUtil", "hasPrivKey:" + eckeyPriv.hasPrivKey());
-                }
-                else if ((s[1].equals("44"))) {
-                    HD_Wallet bip44w = HD_WalletFactory.getInstance(context).get();
-                    HD_Address addr = bip44w.getAccount(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
-                    address = new SegwitAddress(addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                    debug("PSBTUtil", "address:" + addr.getAddress());
-                    eckeyPriv = addr.getECKey();
-                    debug("PSBTUtil", "hasPrivKey:" + eckeyPriv.hasPrivKey());
-                }
+                HD_Wallet bip84Wallet = BIP84Util.getInstance(context).getWallet();
+                HD_Address addr = bip84Wallet.getAccount(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
+                address = new SegwitAddress(addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                debug("PSBTUtil", "address:" + address.getBech32AsString());
+                eckeyPriv = address.getECKey();
+                debug("PSBTUtil", "hasPrivKey:" + eckeyPriv.hasPrivKey());
             }
 
             if(eckeyPriv != null && address != null) {
@@ -237,12 +216,12 @@ public class PSBTUtil {
 
         }
 
-        tx = signTx(tx, keyBag, amountBag, s);
+        tx = signTx(tx, keyBag, amountBag);
 
         return tx;
     }
 
-    public Transaction signTx(Transaction transaction, HashMap<String,ECKey> keyBag, HashMap<String,Long> amountBag, String[] path) {
+    public Transaction signTx(Transaction transaction, HashMap<String,ECKey> keyBag, HashMap<String,Long> amountBag) {
 
         for(int i = 0; i < transaction.getInputs().size(); i++)   {
 
@@ -250,40 +229,25 @@ public class PSBTUtil {
             TransactionOutPoint outpoint = input.getOutpoint();
             if(keyBag.containsKey(outpoint.toString())) {
 
-                if (path[1].equals("84")) {
+                debug("PSBTUtil", "signTx outpoint:" + outpoint.toString());
 
-                    debug("PSBTUtil", "signTx outpoint:" + outpoint.toString());
+                ECKey key = keyBag.get(outpoint.toString());
+                SegwitAddress segwitAddress = new SegwitAddress(key.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
 
-                    ECKey key = keyBag.get(outpoint.toString());
-                    SegwitAddress segwitAddress = new SegwitAddress(key.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                debug("PSBTUtil", "signTx bech32:" + segwitAddress.getBech32AsString());
 
-                    debug("PSBTUtil", "signTx bech32:" + segwitAddress.getBech32AsString());
+                final Script redeemScript = segwitAddress.segwitRedeemScript();
+                debug("PSBTUtil", "signTx bech32:" + Hex.toHexString(redeemScript.getProgram()));
+                final Script scriptCode = redeemScript.scriptCode();
 
-                    final Script redeemScript = segwitAddress.segwitRedeemScript();
-                    debug("PSBTUtil", "signTx bech32:" + Hex.toHexString(redeemScript.getProgram()));
-                    final Script scriptCode = redeemScript.scriptCode();
+                long value = amountBag.get(outpoint.toString());
+                debug("PSBTUtil", "signTx value:" + value);
 
-                    long value = amountBag.get(outpoint.toString());
-                    debug("PSBTUtil", "signTx value:" + value);
-
-                    TransactionSignature sig = transaction.calculateWitnessSignature(i, key, scriptCode, Coin.valueOf(value), Transaction.SigHash.ALL, false);
-                    final TransactionWitness witness = new TransactionWitness(2);
-                    witness.setPush(0, sig.encodeToBitcoin());
-                    witness.setPush(1, key.getPubKey());
-                    transaction.setWitness(i, witness);
-                }
-                else if (path[1].equals("44")) {
-
-                    ECKey key = keyBag.get(outpoint.toString());
-                    SegwitAddress segwitAddress = new SegwitAddress(key.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-
-                    Address legacyAddr = Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), "n23j95YhaWqLuuJsyKBP1jD5WNCjJ2Ua9U");
-
-                    final Script redeemScript = ScriptBuilder.createOutputScript(legacyAddr);
-                    Script scriptCode = ScriptBuilder.createP2SHOutputScript(redeemScript);
-
-                    long value = amountBag.get(outpoint.toString());
-                }
+                TransactionSignature sig = transaction.calculateWitnessSignature(i, key, scriptCode, Coin.valueOf(value), Transaction.SigHash.ALL, false);
+                final TransactionWitness witness = new TransactionWitness(2);
+                witness.setPush(0, sig.encodeToBitcoin());
+                witness.setPush(1, key.getPubKey());
+                transaction.setWitness(i, witness);
 
             }
 
