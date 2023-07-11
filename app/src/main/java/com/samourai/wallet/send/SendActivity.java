@@ -1,5 +1,6 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getSatValue;
 
@@ -401,22 +402,6 @@ public class SendActivity extends SamouraiActivity {
         sendTransactionDetailsView.getStoneWallSwitch().setOnCheckedChangeListener(onCheckedChangeListener);
     }
 
-    private void checkJoinbotPossibility() {
-        amount = getSatValue(getBtcAmountFromWidget());
-
-        if (amount > JOINNBOT_MAX_AMOUNT || balance < amount) {
-            joinbotDesc.setAlpha(.6f);
-            joinbotTitle.setAlpha(.6f);
-            joinbotSwitch.setAlpha(.6f);
-            joinbotSwitch.setEnabled(false);
-        } else {
-            joinbotDesc.setAlpha(1f);
-            joinbotTitle.setAlpha(1f);
-            joinbotSwitch.setAlpha(1f);
-            joinbotSwitch.setEnabled(true);
-        }
-    }
-
     private void checkRicochetPossibility() {
         amount = getSatValue(getBtcAmountFromWidget());
         if (amount < (balance - (RicochetMeta.samouraiFeeAmountV2.add(BigInteger.valueOf(50000L))).longValue())) {
@@ -736,11 +721,15 @@ public class SendActivity extends SamouraiActivity {
         }
     }
 
+    public boolean isPostmixAccount() {
+        return account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix();
+    }
+
 
     private void setBalance() {
 
         try {
-            if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+            if (isPostmixAccount()) {
                 balance = APIFactory.getInstance(SendActivity.this).getXpubPostMixBalance();
                 selectableBalance = balance;
             } else {
@@ -898,7 +887,6 @@ public class SendActivity extends SamouraiActivity {
                     satEditText.setText(formattedSatValue(sats));
 
                     checkRicochetPossibility();
-                    checkJoinbotPossibility();
                 }
 
 //
@@ -986,7 +974,6 @@ public class SendActivity extends SamouraiActivity {
             btcEditText.addTextChangedListener(BTCWatcher);
 
             checkRicochetPossibility();
-            checkJoinbotPossibility();
             validateSpend();
 
         }
@@ -1012,7 +999,7 @@ public class SendActivity extends SamouraiActivity {
 
     private void reviewTransactionSafely() {
 
-        if (! checkMaxAmountReachForJoinbot()) {
+        if (! checkValidForJoinbot()) {
             return;
         }
 
@@ -1107,8 +1094,6 @@ public class SendActivity extends SamouraiActivity {
 
         try {
 
-            feeSeekBar.setTrackActiveTintList(ContextCompat.getColorStateList(this, R.color.green_ui_2));
-            feeSeekBar.setThumbTintList(ContextCompat.getColorStateList(this, R.color.green_ui_2));
             btnSend.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.green_ui_2));
 
             if (SPEND_TYPE == SPEND_SIMPLE && stoneWallChecked) {
@@ -1150,7 +1135,7 @@ public class SendActivity extends SamouraiActivity {
                 countP2WSH_P2TR = 1;
             }
 
-            if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+            if (isPostmixAccount()) {
                 change_index = idxBIP84PostMixInternal;
             } else if (changeType == 84) {
                 change_index = idxBIP84Internal;
@@ -1162,7 +1147,7 @@ public class SendActivity extends SamouraiActivity {
 
             // if possible, get UTXO by input 'type': p2pkh, p2sh-p2wpkh or p2wpkh, else get all UTXO
             long neededAmount = 0L;
-            if (FormatsUtil.getInstance().isValidBech32(address) || account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+            if (FormatsUtil.getInstance().isValidBech32(address) || isPostmixAccount()) {
                 neededAmount += FeeUtil.getInstance().estimatedFeeSegwit(0, 0, UTXOFactory.getInstance().getCountP2WPKH(), 4 - countP2WSH_P2TR, countP2WSH_P2TR).longValue();
 //                    Log.d("SendActivity", "segwit:" + neededAmount);
             } else if (Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
@@ -1191,17 +1176,17 @@ public class SendActivity extends SamouraiActivity {
                 utxos = UTXOFactory.getInstance().getUTXOS(address, neededAmount, account);
             }
 
-            List<UTXO> utxosP2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2WPKH(true));
-            List<UTXO> utxosP2SH_P2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2SH_P2WPKH(true));
-            List<UTXO> utxosP2PKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosP2PKH(true));
-            if ((preselectedUTXOs == null || preselectedUTXOs.size() == 0) && account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
-                utxos = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
-                utxosP2WPKH = new ArrayList<UTXO>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
+            List<UTXO> utxosP2WPKH = new ArrayList<>(APIFactory.getInstance(SendActivity.this).getUtxosP2WPKH(true));
+            List<UTXO> utxosP2SH_P2WPKH = new ArrayList<>(APIFactory.getInstance(SendActivity.this).getUtxosP2SH_P2WPKH(true));
+            List<UTXO> utxosP2PKH = new ArrayList<>(APIFactory.getInstance(SendActivity.this).getUtxosP2PKH(true));
+            if ((preselectedUTXOs == null || preselectedUTXOs.size() == 0) && isPostmixAccount()) {
+                utxos = new ArrayList<>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
+                utxosP2WPKH = new ArrayList<>(APIFactory.getInstance(SendActivity.this).getUtxosPostMix(true));
                 utxosP2PKH.clear();
                 utxosP2SH_P2WPKH.clear();
             }
 
-            selectedUTXO = new ArrayList<UTXO>();
+            selectedUTXO = new ArrayList<>();
             long totalValueSelected = 0L;
             long change = 0L;
             BigInteger fee = null;
@@ -1296,7 +1281,7 @@ public class SendActivity extends SamouraiActivity {
                 long valueP2WPKH = UTXOFactory.getInstance().getTotalP2WPKH();
                 long valueP2SH_P2WPKH = UTXOFactory.getInstance().getTotalP2SH_P2WPKH();
                 long valueP2PKH = UTXOFactory.getInstance().getTotalP2PKH();
-                if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+                if (isPostmixAccount()) {
 
                     valueP2WPKH = UTXOFactory.getInstance().getTotalPostMix();
                     valueP2SH_P2WPKH = 0L;
@@ -1314,7 +1299,7 @@ public class SendActivity extends SamouraiActivity {
                 boolean selectedP2SH_P2WPKH = false;
                 boolean selectedP2PKH = false;
 
-                if ((valueP2WPKH > (neededAmount * 2)) && account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+                if ((valueP2WPKH > (neededAmount * 2)) && isPostmixAccount()) {
                     Log.d("SendActivity", "set 1 P2WPKH 2x");
                     _utxos1 = utxosP2WPKH;
                     selectedP2WPKH = true;
@@ -1460,7 +1445,7 @@ public class SendActivity extends SamouraiActivity {
 //                            Log.d("SendActivity", "value selected:" + u.getValue());
 //                            Log.d("SendActivity", "total value selected/threshold:" + totalValueSelected + "/" + (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFee(selected, 2).longValue()));
 
-                        Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(u.getOutpoints()));
+                        final Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector<>(u.getOutpoints()));
                         p2pkh += outpointTypes.getLeft();
                         p2sh_p2wpkh += outpointTypes.getMiddle();
                         p2wpkh += outpointTypes.getRight();
@@ -1609,7 +1594,7 @@ public class SendActivity extends SamouraiActivity {
 
                 if (!canDoBoltzmann) {
                     restoreChangeIndexes();
-                    if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+                    if (isPostmixAccount()) {
                         strCannotDoBoltzmann = getString(R.string.boltzmann_cannot) + "\n\n";
                     }
                 }
@@ -1701,10 +1686,9 @@ public class SendActivity extends SamouraiActivity {
                                 sendTransactionDetailsView.showStonewallX2Layout(
                                         getApplicationContext(),
                                         selectedCahootsType.getCahootsMode());
-                                feeSeekBar.setTrackActiveTintList(ContextCompat.getColorStateList(this, R.color.blue_ui_2));
-                                feeSeekBar.setThumbTintList(ContextCompat.getColorStateList(this, R.color.blue_ui_2));
                                 btnSend.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.blue_ui_2));
-                                btnSend.setText(StringUtils.upperCase(getString(R.string.begin_multicahoots_with_joinbot)));
+                                btnSend.setText(StringUtils.upperCase(getString(R.string.start_joinbot_transaction)));
+                                btnSend.setPadding(0, 0, 0, 0);
                                 sendTransactionDetailsView.getTransactionReview().findViewById(R.id.transaction_push_icon).setVisibility(View.INVISIBLE);
                                 break;
 
@@ -1782,7 +1766,7 @@ public class SendActivity extends SamouraiActivity {
             return;
         }
         if (CahootsMode.SOROBAN.equals(selectedCahootsType.getCahootsMode())) {
-            if (!checkMaxAmountReachForJoinbot()) {
+            if (!checkValidForJoinbot()) {
                 return;
             }
             // Cahoots online
@@ -1838,7 +1822,7 @@ public class SendActivity extends SamouraiActivity {
             // add change
             if (_change > 0L) {
                 if (SPEND_TYPE == SPEND_SIMPLE) {
-                    if (account == WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()) {
+                    if (isPostmixAccount()) {
                         if (changeType == 44) {
                             HD_Address hd_addr = BIP84Util.getInstance(SendActivity.this).getWallet().getAccount(WhirlpoolMeta.getInstance(SendActivity.this).getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN).getAddressAt(change_index);
                             String change_address = hd_addr.getAddressString();
@@ -1902,12 +1886,43 @@ public class SendActivity extends SamouraiActivity {
 
     }
 
-    private boolean checkMaxAmountReachForJoinbot() {
-        if (amount > JOINNBOT_MAX_AMOUNT && (SPEND_TYPE == SPEND_JOINBOT)) {
-            Toast.makeText(this, getString(R.string.joinbot_max_amount_reached), Toast.LENGTH_SHORT).show();
-            return false;
+    private boolean checkValidForJoinbot() {
+
+        boolean valid = true;
+
+        if (amount > JOINNBOT_MAX_AMOUNT) {
+            if (joinbotSwitch.isEnabled()) {
+                Toast.makeText(this, getString(R.string.joinbot_max_amount_reached), Toast.LENGTH_SHORT).show();
+            }
+            valid = false;
         }
-        return true;
+
+        if (! isJoinbotPossibleWithCurrentUserUTXOs(
+                this,
+                isPostmixAccount(),
+                amount)) {
+
+            if (joinbotSwitch.isEnabled()) {
+                Toast.makeText(this, getString(R.string.joinbot_not_possible_with_current_utxo), Toast.LENGTH_SHORT).show();
+            }
+            valid = false;
+        }
+
+        if (valid) {
+            joinbotDesc.setAlpha(1f);
+            joinbotTitle.setAlpha(1f);
+            joinbotSwitch.setAlpha(1f);
+            joinbotSwitch.setEnabled(true);
+        } else {
+            joinbotDesc.setAlpha(.6f);
+            joinbotTitle.setAlpha(.6f);
+            joinbotSwitch.setAlpha(.6f);
+            joinbotSwitch.setEnabled(false);
+            joinbotSwitch.setChecked(false);
+        }
+
+        return SPEND_TYPE == SPEND_JOINBOT ? valid : true;
+
     }
 
     private void ricochetSpend(boolean staggered) {
@@ -2261,7 +2276,7 @@ public class SendActivity extends SamouraiActivity {
 
     private boolean validateSpend() {
 
-        if (! checkMaxAmountReachForJoinbot()) {
+        if (! checkValidForJoinbot()) {
             enableReviewButton(false);
             return false;
         }
@@ -2296,9 +2311,6 @@ public class SendActivity extends SamouraiActivity {
 
         if (amount != 0 && insufficientFunds) {
             Toast.makeText(this, getString(R.string.insufficient_funds), Toast.LENGTH_SHORT).show();
-            if (SPEND_TYPE == SPEND_JOINBOT) {
-                Toast.makeText(this, getString(R.string.joinbot_not_possible_with_current_utxo), Toast.LENGTH_SHORT).show();
-            }
         }
 
         boolean isValid;
