@@ -210,7 +210,7 @@ public class PSBTUtil {
                 s = path.replaceAll("'", "").split("/");
                 debug("PSBTUtil", "path:" + path);
                 // BIP84Util returns pubkey only, use bip84Wallet to get privkey
-                if (s[1].equals("84")) {
+                if (s[1].equals("84") || s[1].equals("49")) {
                     HD_Wallet bip84Wallet = BIP84Util.getInstance(context).getWallet();
                     HD_Address addr = bip84Wallet.getAccount(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
                     address = new SegwitAddress(addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
@@ -249,28 +249,32 @@ public class PSBTUtil {
             TransactionInput input = transaction.getInput(i);
             TransactionOutPoint outpoint = input.getOutpoint();
             if(keyBag.containsKey(outpoint.toString())) {
-
-                if (path[1].equals("84")) {
-
-                    debug("PSBTUtil", "signTx outpoint:" + outpoint.toString());
-
+                if (path[1].equals("84") || path[1].equals("49")) {
                     ECKey key = keyBag.get(outpoint.toString());
                     SegwitAddress segwitAddress = new SegwitAddress(key.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-
-                    debug("PSBTUtil", "signTx bech32:" + segwitAddress.getBech32AsString());
-
                     final Script redeemScript = segwitAddress.segwitRedeemScript();
-                    debug("PSBTUtil", "signTx bech32:" + Hex.toHexString(redeemScript.getProgram()));
                     final Script scriptCode = redeemScript.scriptCode();
 
                     long value = amountBag.get(outpoint.toString());
-                    debug("PSBTUtil", "signTx value:" + value);
 
-                    TransactionSignature sig = transaction.calculateWitnessSignature(i, key, scriptCode, Coin.valueOf(value), Transaction.SigHash.ALL, false);
+                    TransactionSignature sig =  transaction.calculateWitnessSignature(i, key, scriptCode, Coin.valueOf(value), Transaction.SigHash.ALL, false);
                     final TransactionWitness witness = new TransactionWitness(2);
                     witness.setPush(0, sig.encodeToBitcoin());
                     witness.setPush(1, key.getPubKey());
                     transaction.setWitness(i, witness);
+
+                    if(path[1].equals("49"))    {
+                        try {
+                            Script scriptPubKey = segwitAddress.segwitOutputScript();
+
+                            final ScriptBuilder sigScript = new ScriptBuilder();
+                            sigScript.data(redeemScript.getProgram());
+                            transaction.getInput(i).setScriptSig(sigScript.build());
+                            transaction.getInput(i).getScriptSig().correctlySpends(transaction, i, scriptPubKey, Coin.valueOf(value), Script.ALL_VERIFY_FLAGS);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
                 else if (path[1].equals("44")) {
 
@@ -284,7 +288,6 @@ public class PSBTUtil {
 
                     long value = amountBag.get(outpoint.toString());
                 }
-
             }
 
         }
