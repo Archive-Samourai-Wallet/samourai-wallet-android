@@ -1,5 +1,7 @@
 package com.samourai.wallet.psbt;
 
+import static com.samourai.wallet.util.LogUtil.debug;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -14,19 +16,14 @@ import android.widget.Toast;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
-import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
-import com.samourai.wallet.send.MyTransactionOutPoint;
-import com.samourai.wallet.send.SendFactory;
-import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.stealth.calculator.CalculatorOperation;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
@@ -38,12 +35,8 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.samourai.wallet.util.LogUtil.debug;
 
 public class PSBTUtil {
 
@@ -196,7 +189,6 @@ public class PSBTUtil {
             else if(org.spongycastle.util.encoders.Hex.toHexString(entry.getKeyType()).equals("01")) {
 
                 address = null;
-                eckeyPriv = null;
 
                 byte[] data = entry.getData();
                 Pair<Long,Byte[]> pair = PSBT.readSegwitInputUTXO(data);
@@ -210,11 +202,19 @@ public class PSBTUtil {
                 s = path.replaceAll("'", "").split("/");
                 debug("PSBTUtil", "path:" + path);
                 // BIP84Util returns pubkey only, use bip84Wallet to get privkey
-                if (s[1].equals("84") || s[1].equals("49")) {
+                if (s[1].equals("84")) {
                     HD_Wallet bip84Wallet = BIP84Util.getInstance(context).getWallet();
                     HD_Address addr = bip84Wallet.getAccount(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
                     address = new SegwitAddress(addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     debug("PSBTUtil", "address:" + address.getBech32AsString());
+                    eckeyPriv = address.getECKey();
+                    debug("PSBTUtil", "hasPrivKey:" + eckeyPriv.hasPrivKey());
+                }
+                else if (s[1].equals("49")) {
+                    HD_Wallet bip49Wallet = BIP49Util.getInstance(context).getWallet();
+                    HD_Address addr = bip49Wallet.getAccount(Integer.parseInt(s[3])).getChain(Integer.parseInt(s[4])).getAddressAt(Integer.parseInt(s[5]));
+                    address = new SegwitAddress(addr.getECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                    debug("PSBTUtil", "address:" + address.getAddress());
                     eckeyPriv = address.getECKey();
                     debug("PSBTUtil", "hasPrivKey:" + eckeyPriv.hasPrivKey());
                 }
@@ -232,6 +232,7 @@ public class PSBTUtil {
                 TransactionInput input = txInputs.get(idx);
                 keyBag.put(input.getOutpoint().toString(), eckeyPriv);
                 amountBag.put(input.getOutpoint().toString(), value);
+                eckeyPriv = null;
                 idx++;
             }
 
@@ -266,7 +267,6 @@ public class PSBTUtil {
                     if(path[1].equals("49"))    {
                         try {
                             Script scriptPubKey = segwitAddress.segwitOutputScript();
-
                             final ScriptBuilder sigScript = new ScriptBuilder();
                             sigScript.data(redeemScript.getProgram());
                             transaction.getInput(i).setScriptSig(sigScript.build());
@@ -277,16 +277,6 @@ public class PSBTUtil {
                     }
                 }
                 else if (path[1].equals("44")) {
-
-                    ECKey key = keyBag.get(outpoint.toString());
-                    SegwitAddress segwitAddress = new SegwitAddress(key.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-
-                    Address legacyAddr = Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), "n23j95YhaWqLuuJsyKBP1jD5WNCjJ2Ua9U");
-
-                    final Script redeemScript = ScriptBuilder.createOutputScript(legacyAddr);
-                    Script scriptCode = ScriptBuilder.createP2SHOutputScript(redeemScript);
-
-                    long value = amountBag.get(outpoint.toString());
                 }
             }
 
