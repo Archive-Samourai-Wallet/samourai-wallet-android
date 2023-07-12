@@ -250,8 +250,8 @@ public class PSBTUtil {
             TransactionInput input = transaction.getInput(i);
             TransactionOutPoint outpoint = input.getOutpoint();
             if(keyBag.containsKey(outpoint.toString())) {
+                ECKey key = keyBag.get(outpoint.toString());
                 if (path[1].equals("84") || path[1].equals("49")) {
-                    ECKey key = keyBag.get(outpoint.toString());
                     SegwitAddress segwitAddress = new SegwitAddress(key.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                     final Script redeemScript = segwitAddress.segwitRedeemScript();
                     final Script scriptCode = redeemScript.scriptCode();
@@ -277,6 +277,8 @@ public class PSBTUtil {
                     }
                 }
                 else if (path[1].equals("44")) {
+                    TransactionSignature sig = transaction.calculateSignature(i, key, ScriptBuilder.createOutputScript(key.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram(), Transaction.SigHash.ALL, false);
+                    transaction.getInput(i).setScriptSig(ScriptBuilder.createInputScript(sig, key));
                 }
             }
 
