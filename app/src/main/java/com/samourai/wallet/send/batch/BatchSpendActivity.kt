@@ -471,7 +471,7 @@ class BatchSpendActivity : SamouraiActivity() {
                 amount = entry.value.toLong()
                 addr = entry.key
             }
-            if (validate(batchItem.addr, batchItem.amount)) {
+            if (validateBatchSpendItem(batchItem.addr, batchItem.amount)) {
                 viewModel.add(batchItem)
                 ++ validatedItem
             }
@@ -481,6 +481,26 @@ class BatchSpendActivity : SamouraiActivity() {
             this@BatchSpendActivity,
             format(getString(R.string.options_import_batch_payment_count), validatedItem),
             Toast.LENGTH_SHORT).show()
+    }
+
+    private fun validateBatchSpendItem(address: String, amountSat: Long): Boolean {
+        var isValid: Boolean
+        var insufficientFunds = false
+
+        val walletBalance = viewModel.totalWalletBalance() ?: 0
+        if (amountSat > walletBalance) {
+            insufficientFunds = true
+        }
+
+        isValid = amountSat >= SamouraiWallet.bDust.toLong() &&
+            FormatsUtil.getInstance().isValidBitcoinAddress(address)
+
+        binding.addToBatch.isEnabled = !insufficientFunds
+
+        binding.addToBatch.text = if (this.selectedId == null)
+            getString(R.string.add_to_batch) else getString(R.string.update_to_batch)
+
+        return isValid && !insufficientFunds;
     }
 
     private fun doUTXO() {

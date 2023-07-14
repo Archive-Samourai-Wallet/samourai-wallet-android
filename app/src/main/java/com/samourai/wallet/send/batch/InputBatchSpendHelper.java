@@ -15,6 +15,13 @@ import org.json.JSONObject;
 import java.math.BigInteger;
 import java.util.Map;
 
+/**
+ * example of json content :
+ *
+ * { "batch": [{ "dest": "+holysnow471", "amt": 17000 }, { "dest": "PM8TJQpMzANwsqTFDwsf2ZK9fmqabrmH9Vk6ocTvTJoaAsqTGYRGMu6DzMDKArdyynHNGuJt2sxXk4xGwZZyYXqjLgFTJ8Y7kJu74a32yLVmBje7sbzP", "amt": 200000 }, { "dest": "mpQcGEbsZXoCWv464TyaC6KdKa8tvB3y6W", "amt": 3267 }, { "dest": "2My2UzTAR2ehZjDger7rypkKtymRxC1VKo1", "amt": 234532 }, { "dest": "tb1qjqdj7txr6d9t54kh496kysc3v7kyawxs5fez46", "amt": 200000 }, { "dest": "tb1pme503kta7rdpm5zctx4u7ystrt4c9463hk9r7zvw8cfr9ay7n6rq3xm626", "amt": 134782 }, { "dest": "tb1qr2rn7s7urcptk5d6mfwec5n9q4xtd5075ug3w2qy2q98pdmfna7q0vvx5p", "amt": 8209 } ]}
+ *
+ */
+
 public class InputBatchSpendHelper {
 
     private InputBatchSpendHelper() {}
@@ -24,7 +31,7 @@ public class InputBatchSpendHelper {
             final Context context
     ) throws Exception {
 
-        // { "batch": [{ "dest": "+holysnow471", "amt": 17000 }, { "dest": "PM8TJQpMzANwsqTFDwsf2ZK9fmqabrmH9Vk6ocTvTJoaAsqTGYRGMu6DzMDKArdyynHNGuJt2sxXk4xGwZZyYXqjLgFTJ8Y7kJu74a32yLVmBje7sbzP", "amt": 200000 }, { "dest": "mpQcGEbsZXoCWv464TyaC6KdKa8tvB3y6W", "amt": 3267 }, { "dest": "2My2UzTAR2ehZjDger7rypkKtymRxC1VKo1", "amt": 234532 }, { "dest": "tb1qjqdj7txr6d9t54kh496kysc3v7kyawxs5fez46", "amt": 200000 }, { "dest": "tb1pme503kta7rdpm5zctx4u7ystrt4c9463hk9r7zvw8cfr9ay7n6rq3xm626", "amt": 134782 }, { "dest": "tb1qr2rn7s7urcptk5d6mfwec5n9q4xtd5075ug3w2qy2q98pdmfna7q0vvx5p", "amt": 8209 } ]}
+
         final Map<String, BigInteger> receivers = Maps.newLinkedHashMap();
 
         final JSONObject obj = new JSONObject(jsonContent);
