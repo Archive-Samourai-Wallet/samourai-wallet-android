@@ -1891,7 +1891,7 @@ public class SendActivity extends SamouraiActivity {
         boolean valid = true;
 
         if (amount > JOINNBOT_MAX_AMOUNT) {
-            if (joinbotSwitch.isEnabled()) {
+            if (joinbotSwitch.isChecked()) {
                 Toast.makeText(this, getString(R.string.joinbot_max_amount_reached), Toast.LENGTH_SHORT).show();
             }
             valid = false;
@@ -1902,7 +1902,7 @@ public class SendActivity extends SamouraiActivity {
                 isPostmixAccount(),
                 amount)) {
 
-            if (joinbotSwitch.isEnabled()) {
+            if (joinbotSwitch.isChecked()) {
                 Toast.makeText(this, getString(R.string.joinbot_not_possible_with_current_utxo), Toast.LENGTH_SHORT).show();
             }
             valid = false;
