@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
+import android.widget.Toast;
 
 import com.auth0.android.jwt.JWT;
 import com.samourai.wallet.BuildConfig;
@@ -75,6 +76,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
 import java.util.Objects;
+
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
@@ -564,7 +567,7 @@ public class APIFactory {
                 if(infoObj.has("latest_block"))  {
                     JSONObject blockObj = (JSONObject)infoObj.get("latest_block");
                     if(blockObj.has("height"))  {
-                        latest_block_height = blockObj.getLong("height");
+                        setLatestBlockHeight(blockObj.getLong("height"));
                     }
                     if(blockObj.has("hash"))  {
                         latest_block_hash = blockObj.getString("hash");
@@ -957,6 +960,14 @@ public class APIFactory {
 
     public synchronized void setLatestBlockHeight(long blockHeight)  {
         latest_block_height = blockHeight;
+
+        try {
+            ContextCompat.getMainExecutor(context).execute(()  ->
+                Toast.makeText(context, "Setting block height: "+latest_block_height, Toast.LENGTH_LONG).show()
+            );
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public String getLatestBlockHash() {
@@ -2157,7 +2168,7 @@ public class APIFactory {
                 if(infoObj.has("latest_block"))  {
                     JSONObject blockObj = (JSONObject)infoObj.get("latest_block");
                     if(blockObj.has("height"))  {
-                        latest_block_height = blockObj.getLong("height");
+                        setLatestBlockHeight(blockObj.getLong("height"));
                     }
                     if(blockObj.has("hash"))  {
                         latest_block_hash = blockObj.getString("hash");
