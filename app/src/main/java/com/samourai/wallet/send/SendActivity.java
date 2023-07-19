@@ -193,6 +193,8 @@ public class SendActivity extends SamouraiActivity {
     private HashMap<String, BigInteger> receivers;
     private int changeType;
     private ConstraintLayout premiumAddons;
+    private ConstraintLayout premiumAddonsRicochet;
+    private ConstraintLayout premiumAddonsJoinbot;
     private TextView addonsNotAvailableMessage;
     private String address;
     private String message;
@@ -263,6 +265,8 @@ public class SendActivity extends SamouraiActivity {
         tvEstimatedBlockWait = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.est_block_time);
         feeSeekBar = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.fee_seekbar);
         premiumAddons = sendTransactionDetailsView.findViewById(R.id.premium_addons);
+        premiumAddonsRicochet = sendTransactionDetailsView.findViewById(R.id.premium_addons_ricochet);
+        premiumAddonsJoinbot = sendTransactionDetailsView.findViewById(R.id.premium_addons_joinbot);
         addonsNotAvailableMessage = sendTransactionDetailsView.findViewById(R.id.addons_not_available_message);
         totalMinerFeeLayout = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.total_miner_fee_group);
         progressBar = findViewById(R.id.send_activity_progress);
@@ -310,14 +314,38 @@ public class SendActivity extends SamouraiActivity {
         if (getIntent().getExtras().containsKey("preselected")) {
             preselectedUTXOs = PreSelectUtil.getInstance().getPreSelected(getIntent().getExtras().getString("preselected"));
             setBalance();
-            if (ricochetHopsSwitch.isChecked()) {
-                SPEND_TYPE = SPEND_RICOCHET;
-            } else {
-                SPEND_TYPE = SPEND_SIMPLE;
+
+            boolean premiumAddonsRicochetVisible = true;
+            boolean premiumAddonsJoinbotVisible = true;
+
+            if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1_000_000l) {
+                premiumAddonsRicochetVisible = false;
             }
-            if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1000000L) {
-                premiumAddons.setVisibility(View.GONE);
+            if (preselectedUTXOs != null && preselectedUTXOs.size() <= 2 ) {
+                premiumAddonsJoinbotVisible = false;
+            }
+
+            if (!premiumAddonsRicochetVisible && !premiumAddonsJoinbotVisible) {
                 addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+                addonsNotAvailableMessage.setText(R.string.note_privacy_addons_are_not_available_for_selected_utxo_s);
+                premiumAddons.setVisibility(View.GONE);
+                if (SPEND_TYPE == SPEND_RICOCHET || SPEND_TYPE == SPEND_JOINBOT) {
+                    SPEND_TYPE = SPEND_SIMPLE;
+                }
+            } else if (!premiumAddonsRicochetVisible) {
+                addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+                addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
+                premiumAddonsRicochet.setVisibility(View.GONE);
+                if (SPEND_TYPE == SPEND_RICOCHET) {
+                    SPEND_TYPE = SPEND_SIMPLE;
+                }
+            } else if (!premiumAddonsJoinbotVisible) {
+                addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+                addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
+                premiumAddonsJoinbot.setVisibility(View.GONE);
+                if (SPEND_TYPE == SPEND_JOINBOT) {
+                    SPEND_TYPE = SPEND_SIMPLE;
+                }
             }
 
         } else {
