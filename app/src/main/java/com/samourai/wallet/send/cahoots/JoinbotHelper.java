@@ -1,16 +1,23 @@
 package com.samourai.wallet.send.cahoots;
 
+import static java.lang.Math.max;
+import static java.lang.Math.round;
+
 import android.content.Context;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
+import com.samourai.wallet.utxos.models.UTXOCoin;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JoinbotHelper {
 
@@ -22,7 +29,12 @@ public class JoinbotHelper {
         P2PKH,
     }
 
-    private final static Comparator<UTXO> UTXO_COMPARATOR_BY_VALUE = (u1, u2) -> Long.compare(u1.getValue(), u2.getValue());
+    public final static Comparator<UTXO> UTXO_COMPARATOR_BY_VALUE = (o1, o2) -> {
+        if (o1 == o2) return 0;
+        if (o1 == null) return 1;
+        if (o2 == null) return -1;
+        return Long.compare(getValue(o1), getValue(o2));
+    };
 
     private static class IndexedUTXO implements Comparable<IndexedUTXO> {
         private final UTXO utxo;
@@ -59,13 +71,11 @@ public class JoinbotHelper {
         }
     }
 
-
     public static boolean isJoinbotPossibleWithCurrentUserUTXOs(
             final Context context,
             final boolean postmixAccount,
-            final long amount) {
-
-        if (amount <= 0) return true;
+            final long amount,
+            final List<UTXOCoin> preselectedCoins) {
 
         final APIFactory instance = APIFactory.getInstance(context);
 
@@ -81,11 +91,54 @@ public class JoinbotHelper {
                 ? Lists.newArrayList()
                 : Lists.newArrayList(instance.getUtxosP2PKH(true));
 
-        return isJoinbotPossibleWithCurrentUserUTXOs(
-                amount,
-                utxosP2WPKH,
-                utxosP2SH_P2WPKH,
-                utxosP2PKH);
+        if (preselectedCoins == null || preselectedCoins.size() == 0) {
+            return isJoinbotPossibleWithCurrentUserUTXOs(
+                    amount,
+                    utxosP2WPKH,
+                    utxosP2SH_P2WPKH,
+                    utxosP2PKH);
+        } else {
+            final Set<String> preselectedCoinId = toPreselectedCoinIds(preselectedCoins);
+            return isJoinbotPossibleWithCurrentUserUTXOs(
+                    amount,
+                    keepPreselectedCoins(utxosP2WPKH, preselectedCoinId),
+                    keepPreselectedCoins(utxosP2SH_P2WPKH, preselectedCoinId),
+                    keepPreselectedCoins(utxosP2PKH, preselectedCoinId));
+        }
+    }
+
+    private static Set<String> toPreselectedCoinIds(final List<UTXOCoin> preselectedCoins) {
+        final Set<String> preselectedCoinId = Sets.newHashSet();
+        for (final UTXOCoin coin : preselectedCoins) {
+            preselectedCoinId.add(coin.hash + "-" + coin.idx);
+        }
+        return preselectedCoinId;
+    }
+
+    private static List<UTXO> keepPreselectedCoins(final List<UTXO> utxoList,
+                                                   final Set<String> preselectedCoinIds) {
+
+        final List<UTXO> filteredUtxo = Lists.newArrayList();
+
+        for(final UTXO utxo : utxoList) {
+
+            final UTXO u = new UTXO();
+            u.setPath(utxo.getPath());
+
+            for(final MyTransactionOutPoint out : utxo.getOutpoints()) {
+                final String hash = out.getTxHash().toString();
+                final int idx = out.getTxOutputN();
+                if(preselectedCoinIds.contains(hash + "-" + idx))    {
+                    u.getOutpoints().add(out);
+                    u.setPath(utxo.getPath());
+                }
+            }
+            if(u.getOutpoints().size() > 0)    {
+                filteredUtxo.add(u);
+            }
+        }
+
+        return filteredUtxo;
     }
 
     static boolean isJoinbotPossibleWithCurrentUserUTXOs(
@@ -106,23 +159,26 @@ public class JoinbotHelper {
             }
         };
 
-        final long joinbotFees = Math.round(amount * 35d / 1000d); // joinbot fees are 3.5% of amount to spend
-        if (joinbotFees > 0) {
-            if (! enoughBalanceToPayFees(utxoByAddressType, joinbotFees)) {
-                return false;
-            }
-            if (! removedUtxoForJoinbotFees(utxoByAddressType, joinbotFees)) {
-                return false;
-            }
+        /**
+         * Joinbot fees are 3.5% of amount to spend. force min fees = 1 : allows to force to have
+         * at least 2 utxo
+         */
+        final long joinbotFees = max(1l, round(amount * 35d / 1000d));
+        if (! enoughBalanceToPayFees(utxoByAddressType, joinbotFees)) {
+            return false;
+        }
+        if (! removedUtxoForJoinbotFees(utxoByAddressType, joinbotFees)) {
+            return false;
         }
 
         /**
          * after removing UTXOs for Joinbot fees,
          * it needs to check if the amount to spend is possible
-         * => check if any group validate the amount0
+         * => check if any group validate the amount
          */
+        final long technicalAmount = max(1l, amount);
         for (final List<UTXO> utxoList : utxoByAddressType.values()) {
-            if (UTXO.sumValue(utxoList) >= amount) {
+            if (UTXO.sumValue(utxoList) >= technicalAmount) {
                 return true;
             }
         }
@@ -207,7 +263,7 @@ public class JoinbotHelper {
         long sum = 0;
         if (candidates != null) {
             for (final IndexedUTXO indexedUTXO : candidates) {
-                sum += indexedUTXO.utxo.getValue();
+                sum += getValue(indexedUTXO.utxo);
             }
         }
         return sum;
@@ -274,6 +330,16 @@ public class JoinbotHelper {
             ++ i;
         }
         return i;
+    }
+
+    public static long getValue(final UTXO utxo) {
+
+        long value = 0l;
+        for (MyTransactionOutPoint out : utxo.getOutpoints()) {
+            if (out == null || out.getValue() == null) continue;
+            value += out.getValue().longValue();
+        }
+        return value;
     }
 
 
