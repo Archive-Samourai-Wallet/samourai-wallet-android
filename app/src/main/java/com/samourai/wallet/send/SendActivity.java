@@ -1,5 +1,6 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
 import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getSatValue;
@@ -193,6 +194,8 @@ public class SendActivity extends SamouraiActivity {
     private HashMap<String, BigInteger> receivers;
     private int changeType;
     private ConstraintLayout premiumAddons;
+    private ConstraintLayout premiumAddonsRicochet;
+    private ConstraintLayout premiumAddonsJoinbot;
     private TextView addonsNotAvailableMessage;
     private String address;
     private String message;
@@ -263,6 +266,8 @@ public class SendActivity extends SamouraiActivity {
         tvEstimatedBlockWait = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.est_block_time);
         feeSeekBar = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.fee_seekbar);
         premiumAddons = sendTransactionDetailsView.findViewById(R.id.premium_addons);
+        premiumAddonsRicochet = sendTransactionDetailsView.findViewById(R.id.premium_addons_ricochet);
+        premiumAddonsJoinbot = sendTransactionDetailsView.findViewById(R.id.premium_addons_joinbot);
         addonsNotAvailableMessage = sendTransactionDetailsView.findViewById(R.id.addons_not_available_message);
         totalMinerFeeLayout = sendTransactionDetailsView.getTransactionReview().findViewById(R.id.total_miner_fee_group);
         progressBar = findViewById(R.id.send_activity_progress);
@@ -310,14 +315,42 @@ public class SendActivity extends SamouraiActivity {
         if (getIntent().getExtras().containsKey("preselected")) {
             preselectedUTXOs = PreSelectUtil.getInstance().getPreSelected(getIntent().getExtras().getString("preselected"));
             setBalance();
-            if (ricochetHopsSwitch.isChecked()) {
-                SPEND_TYPE = SPEND_RICOCHET;
-            } else {
-                SPEND_TYPE = SPEND_SIMPLE;
+
+            boolean premiumAddonsRicochetVisible = true;
+            boolean premiumAddonsJoinbotVisible = true;
+
+            if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1_000_000l) {
+                premiumAddonsRicochetVisible = false;
             }
-            if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1000000L) {
-                premiumAddons.setVisibility(View.GONE);
+            if (! isJoinbotPossibleWithCurrentUserUTXOs(
+                    this,
+                    isPostmixAccount(),
+                    amount,
+                    preselectedUTXOs)) {
+                premiumAddonsJoinbotVisible = false;
+            }
+
+            if (!premiumAddonsRicochetVisible && !premiumAddonsJoinbotVisible) {
                 addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+                addonsNotAvailableMessage.setText(R.string.note_privacy_addons_are_not_available_for_selected_utxo_s);
+                premiumAddons.setVisibility(View.GONE);
+                if (SPEND_TYPE == SPEND_RICOCHET || SPEND_TYPE == SPEND_JOINBOT) {
+                    SPEND_TYPE = SPEND_SIMPLE;
+                }
+            } else if (!premiumAddonsRicochetVisible) {
+                addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+                addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
+                premiumAddonsRicochet.setVisibility(View.GONE);
+                if (SPEND_TYPE == SPEND_RICOCHET) {
+                    SPEND_TYPE = SPEND_SIMPLE;
+                }
+            } else if (!premiumAddonsJoinbotVisible) {
+                addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+                addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
+                premiumAddonsJoinbot.setVisibility(View.GONE);
+                if (SPEND_TYPE == SPEND_JOINBOT) {
+                    SPEND_TYPE = SPEND_SIMPLE;
+                }
             }
 
         } else {
@@ -656,6 +689,7 @@ public class SendActivity extends SamouraiActivity {
             }
         });
         joinbotSwitch.setChecked(PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_JOINBOT, false));
+        checkValidForJoinbot();
     }
 
     private void setUpRicochet() {
@@ -747,18 +781,14 @@ public class SendActivity extends SamouraiActivity {
             if (preselectedUTXOs != null && preselectedUTXOs.size() > 0) {
 
                 //Checks utxo's state, if the item is blocked it will be removed from preselectedUTXOs
-                for (int i = 0; i < preselectedUTXOs.size(); i++) {
-                    UTXOCoin coin = preselectedUTXOs.get(i);
+                for (int i = preselectedUTXOs.size()-1; i >= 0; --i) {
+                    final UTXOCoin coin = preselectedUTXOs.get(i);
                     if (BlockedUTXO.getInstance().containsAny(coin.hash, coin.idx)) {
-                        try {
-                            preselectedUTXOs.remove(i);
-                        } catch (Exception ex) {
-
-                        }
+                        preselectedUTXOs.remove(i);
                     }
                 }
                 long amount = 0;
-                for (UTXOCoin utxo : preselectedUTXOs) {
+                for (final UTXOCoin utxo : preselectedUTXOs) {
                     amount += utxo.amount;
                 }
                 balance = amount;
@@ -1408,7 +1438,7 @@ public class SendActivity extends SamouraiActivity {
             else if (SPEND_TYPE == SPEND_SIMPLE || SPEND_TYPE == SPEND_JOINBOT) {
                 List<UTXO> _utxos = utxos;
                 // sort in ascending order by value
-                Collections.sort(_utxos, new UTXO.UTXOComparator());
+                Collections.sort(_utxos, UTXO_COMPARATOR_BY_VALUE);
                 Collections.reverse(_utxos);
 
                 // get smallest 1 UTXO > than spend + fee + dust
@@ -1900,7 +1930,8 @@ public class SendActivity extends SamouraiActivity {
         if (! isJoinbotPossibleWithCurrentUserUTXOs(
                 this,
                 isPostmixAccount(),
-                amount)) {
+                amount,
+                preselectedUTXOs)) {
 
             if (joinbotSwitch.isChecked()) {
                 Toast.makeText(this, getString(R.string.joinbot_not_possible_with_current_utxo), Toast.LENGTH_SHORT).show();
