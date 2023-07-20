@@ -308,7 +308,9 @@ class SweepViewModel : ViewModel() {
                 withContext(Dispatchers.Default) {
                     val pct: Double
                     var nbBlocks = 6
-                    val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000.0)
+
+                    val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true)
+                        0.0 else decimalFormatSatPerByte.parse(getFeeSatsValueLive().value)?.toDouble()?.times(1000.0)
 
                     if (feeForBlocks != null) {
                         if (feeForBlocks <= feeLow.toDouble()) {
@@ -336,7 +338,7 @@ class SweepViewModel : ViewModel() {
             } catch (e: Exception) {
                 addressValidationError.postValue("${e.message}")
                 loading.postValue(false)
-                e.printStackTrace()
+                Log.e(TAG, "issue on making transaction : " + e.message, e)
             }
         }
 
