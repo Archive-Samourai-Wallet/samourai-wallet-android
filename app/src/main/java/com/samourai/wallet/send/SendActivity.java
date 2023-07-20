@@ -308,79 +308,88 @@ public class SendActivity extends SamouraiActivity {
 
         setUpBoltzman();
 
+        if (getIntent().getExtras().containsKey("preselected")) {
+            setUpPreselecteUtxoCoins();
+        } else {
+            setUpCompositeDisposables();
+        }
+
         validateSpend();
 
         checkDeepLinks();
 
-        if (getIntent().getExtras().containsKey("preselected")) {
-            preselectedUTXOs = PreSelectUtil.getInstance().getPreSelected(getIntent().getExtras().getString("preselected"));
-            setBalance();
+    }
 
-            boolean premiumAddonsRicochetVisible = true;
-            boolean premiumAddonsJoinbotVisible = true;
+    private void setUpCompositeDisposables() {
+        Disposable disposable = APIFactory.getInstance(getApplicationContext())
+                .walletBalanceObserver
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(aLong -> setBalance(), Throwable::printStackTrace);
+        compositeDisposables.add(disposable);
 
-            if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1_000_000l) {
-                premiumAddonsRicochetVisible = false;
+
+        // Update fee
+        Disposable feeDisposable = Observable.fromCallable(() -> APIFactory.getInstance(getApplicationContext()).getDynamicFees())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(t -> {
+                    setUpFee();
+                }, Throwable::printStackTrace);
+
+        compositeDisposables.add(feeDisposable);
+        if (getIntent().getExtras() != null) {
+            if (!getIntent().getExtras().containsKey("balance")) {
+                return;
             }
-            if (! isJoinbotPossibleWithCurrentUserUTXOs(
-                    this,
-                    isPostmixAccount(),
-                    amount,
-                    preselectedUTXOs)) {
-                premiumAddonsJoinbotVisible = false;
-            }
+            balance = getIntent().getExtras().getLong("balance");
 
-            if (!premiumAddonsRicochetVisible && !premiumAddonsJoinbotVisible) {
-                addonsNotAvailableMessage.setVisibility(View.VISIBLE);
-                addonsNotAvailableMessage.setText(R.string.note_privacy_addons_are_not_available_for_selected_utxo_s);
-                premiumAddons.setVisibility(View.GONE);
-                if (SPEND_TYPE == SPEND_RICOCHET || SPEND_TYPE == SPEND_JOINBOT) {
-                    SPEND_TYPE = SPEND_SIMPLE;
-                }
-            } else if (!premiumAddonsRicochetVisible) {
-                addonsNotAvailableMessage.setVisibility(View.VISIBLE);
-                addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
-                premiumAddonsRicochet.setVisibility(View.GONE);
-                if (SPEND_TYPE == SPEND_RICOCHET) {
-                    SPEND_TYPE = SPEND_SIMPLE;
-                }
-            } else if (!premiumAddonsJoinbotVisible) {
-                addonsNotAvailableMessage.setVisibility(View.VISIBLE);
-                addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
-                premiumAddonsJoinbot.setVisibility(View.GONE);
-                if (SPEND_TYPE == SPEND_JOINBOT) {
-                    SPEND_TYPE = SPEND_SIMPLE;
-                }
-            }
+        }
+    }
 
-        } else {
+    private void setUpPreselecteUtxoCoins() {
+        preselectedUTXOs = PreSelectUtil.getInstance().getPreSelected(getIntent().getExtras().getString("preselected"));
+        setBalance();
 
-            Disposable disposable = APIFactory.getInstance(getApplicationContext())
-                    .walletBalanceObserver
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(aLong -> setBalance(), Throwable::printStackTrace);
-            compositeDisposables.add(disposable);
+        boolean premiumAddonsRicochetVisible = true;
+        boolean premiumAddonsJoinbotVisible = true;
 
-
-            // Update fee
-            Disposable feeDisposable = Observable.fromCallable(() -> APIFactory.getInstance(getApplicationContext()).getDynamicFees())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(t -> {
-                        setUpFee();
-                    }, Throwable::printStackTrace);
-
-            compositeDisposables.add(feeDisposable);
-            if (getIntent().getExtras() != null) {
-                if (!getIntent().getExtras().containsKey("balance")) {
-                    return;
-                }
-                balance = getIntent().getExtras().getLong("balance");
-
-            }
+        if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1_000_000l) {
+            premiumAddonsRicochetVisible = false;
+        }
+        if (! isJoinbotPossibleWithCurrentUserUTXOs(
+                this,
+                isPostmixAccount(),
+                amount,
+                preselectedUTXOs)) {
+            premiumAddonsJoinbotVisible = false;
         }
 
+        if (!premiumAddonsRicochetVisible && !premiumAddonsJoinbotVisible) {
+            addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+            addonsNotAvailableMessage.setText(R.string.note_privacy_addons_are_not_available_for_selected_utxo_s);
+            premiumAddons.setVisibility(View.GONE);
+            if (SPEND_TYPE == SPEND_RICOCHET || ricochetHopsSwitch.isChecked()) {
+                autoUncheckRicochetSwitch();
+            }
+            if (SPEND_TYPE == SPEND_JOINBOT || joinbotSwitch.isChecked()) {
+                autoUncheckJoinbotSwitch();
+            }
+        } else if (!premiumAddonsRicochetVisible) {
+            addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+            addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
+            premiumAddonsRicochet.setVisibility(View.GONE);
+            if (SPEND_TYPE == SPEND_RICOCHET || ricochetHopsSwitch.isChecked()) {
+                autoUncheckRicochetSwitch();
+            }
+        } else if (!premiumAddonsJoinbotVisible) {
+            addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+            addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
+            premiumAddonsJoinbot.setVisibility(View.GONE);
+            if (SPEND_TYPE == SPEND_JOINBOT || joinbotSwitch.isChecked()) {
+                autoUncheckJoinbotSwitch();
+            }
+        }
     }
 
     public View createTag(String text) {
@@ -690,6 +699,18 @@ public class SendActivity extends SamouraiActivity {
         });
         joinbotSwitch.setChecked(PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_JOINBOT, false));
         checkValidForJoinbot();
+    }
+
+    private void autoUncheckJoinbotSwitch() {
+        final boolean checked = PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_JOINBOT, false);
+        joinbotSwitch.setChecked(false);
+        PrefsUtil.getInstance(this).setValue(PrefsUtil.USE_JOINBOT, checked);
+    }
+
+    private void autoUncheckRicochetSwitch() {
+        final boolean checked = PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_RICOCHET, false);
+        ricochetHopsSwitch.setChecked(false);
+        PrefsUtil.getInstance(this).setValue(PrefsUtil.USE_RICOCHET, checked);
     }
 
     private void setUpRicochet() {
@@ -1275,7 +1296,7 @@ public class SendActivity extends SamouraiActivity {
                         long totalAmount = ricochetJsonObj.getLong("total_spend");
                         if (totalAmount > balance) {
                             Toast.makeText(SendActivity.this, R.string.insufficient_funds, Toast.LENGTH_SHORT).show();
-                            ricochetHopsSwitch.setChecked(false);
+                            autoUncheckRicochetSwitch();
                             return false;
                         }
                         long hop0Fee = ricochetJsonObj.getJSONArray("hops").getJSONObject(0).getLong("fee");
@@ -1949,7 +1970,7 @@ public class SendActivity extends SamouraiActivity {
             joinbotTitle.setAlpha(.6f);
             joinbotSwitch.setAlpha(.6f);
             joinbotSwitch.setEnabled(false);
-            joinbotSwitch.setChecked(false);
+            autoUncheckJoinbotSwitch();
         }
 
         return SPEND_TYPE == SPEND_JOINBOT ? valid : true;
