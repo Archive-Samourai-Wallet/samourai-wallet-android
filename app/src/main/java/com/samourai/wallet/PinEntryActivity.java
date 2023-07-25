@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Looper;
 import android.text.InputType;
 import android.transition.ChangeBounds;
@@ -163,7 +162,7 @@ public class PinEntryActivity extends AppCompatActivity {
             Toast.makeText(PinEntryActivity.this, R.string.pin_5_8_confirm, Toast.LENGTH_LONG).show();
         } else {
             if (isLocked()) {
-                startCountDownTimer();
+                lockWallet();
             }
         }
 
@@ -313,7 +312,7 @@ public class PinEntryActivity extends AppCompatActivity {
                             }
                             else {
                                 failures = 0;
-                                startCountDownTimer();
+                                lockWallet();
                             }
                         });
 
@@ -348,7 +347,7 @@ public class PinEntryActivity extends AppCompatActivity {
                     }
                     else {
                         failures = 0;
-                        startCountDownTimer();
+                        lockWallet();
                     }
                 });
 
@@ -625,33 +624,19 @@ public class PinEntryActivity extends AppCompatActivity {
         return PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.ATTEMPTS, 0) >= MAX_ATTEMPTS;
     }
 
-    void startCountDownTimer() {
-        TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
+    void lockWallet() {
+        try {
+            PayloadUtil.getInstance(PinEntryActivity.this).wipe();
+        }
+        catch(Exception e) {
+            ;
+        }
+
+        PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, 0L);
         pinEntryView.disable(true);
+        TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
         restoreLayout.setVisibility(View.VISIBLE);
-        long timeoutPref = PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PIN_TIMEOUT, 0L);
-        new CountDownTimer(timeoutPref == 0L ? 30000L : timeoutPref, 1000) {
-            public void onTick(long duration) {
-                long secs = (duration / 1000) % 60;
-                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, duration);
-                walletStatusTextView.setText(getString(R.string.wallet_locking_in).concat(" ").concat(String.valueOf(secs)).concat(" ").concat(getString(R.string.seconds)));
-            }
-
-            public void onFinish() {
-                try {
-                    PayloadUtil.getInstance(PinEntryActivity.this).wipe();
-                }
-                catch(Exception e) {
-                    ;
-                }
-
-                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, 0L);
-                pinEntryView.disable(true);
-                TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
-                restoreLayout.setVisibility(View.GONE);
-                walletStatusTextView.setText(R.string.wallet_locked);
-            }
-        }.start();
+        walletStatusTextView.setText(R.string.wallet_locked);
     }
 
     @Override
