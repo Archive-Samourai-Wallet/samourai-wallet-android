@@ -192,10 +192,7 @@ public class CahootReviewFragment extends Fragment {
         if (payload != null) {
             if (payload instanceof MultiCahoots) {
                 MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
-                long halfOfStonewallFee = (multiCahootsPayload.getStonewallx2().getFeeAmount()/2L);
-                long totalMinerFee = multiCahootsPayload.getStowaway().getFeeAmount() + halfOfStonewallFee; // stowaway tx fee + our half of stonewall miner fee we pay
-                long serviceFee = multiCahootsPayload.getStowaway().getSpendAmount(); // 3.5% + other half of stonewall miner fee that we also pay
-                String total = formatForBtc(multiCahootsPayload.getSpendAmount() + totalMinerFee + serviceFee);
+                String total = formatForBtc(multiCahootsPayload.getSpendAmount() + multiCahootsPayload.getFeeAmount() + multiCahootsPayload.getStowaway().getSpendAmount());
                 sendBtn.setText(getString(R.string.send).concat(" ").concat(total));
             } else {
                 sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
@@ -207,22 +204,18 @@ public class CahootReviewFragment extends Fragment {
                 feeInBtc.setText("__");
                 feeInSats.setText("__");
             } else {
+                feeInBtc.setText(formatForBtc(payload.getFeeAmount()));
+                feeInSats.setText(String.valueOf(payload.getFeeAmount()).concat(" sat"));
                 if (payload instanceof MultiCahoots) {
-                    MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
-                    long halfOfStonewallFee = (multiCahootsPayload.getStonewallx2().getFeeAmount()/2L);
-                    long totalMinerFee = multiCahootsPayload.getStowaway().getFeeAmount() + halfOfStonewallFee; // stowaway tx fee + our half of stonewall miner fee we pay
-                    long serviceFee = multiCahootsPayload.getStowaway().getSpendAmount(); // 3.5% + other half of stonewall miner fee that we also pay
                     cahootsSamouraiFeeGroup.setVisibility(View.VISIBLE);
                     cahootsSamouraiFeeGroupDivider.setVisibility(View.VISIBLE);
-                    samouraiFeeBtc.setText(formatForBtc(serviceFee));
-                    samouraiFeeSats.setText(String.valueOf(serviceFee).concat(" sat"));
-                    feeInBtc.setText(formatForBtc(totalMinerFee));
-                    feeInSats.setText(String.valueOf(totalMinerFee).concat(" sat"));
+                    MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
+                    samouraiFeeBtc.setText(formatForBtc(multiCahootsPayload.getStowaway().getSpendAmount()));
+                    samouraiFeeSats.setText(String.valueOf(multiCahootsPayload.getStowaway().getSpendAmount()).concat(" sat"));
                 } else {
                     cahootsSamouraiFeeGroup.setVisibility(View.GONE);
                     cahootsSamouraiFeeGroupDivider.setVisibility(View.GONE);
-                    feeInBtc.setText(formatForBtc(payload.getFeeAmount()));
-                    feeInSats.setText(String.valueOf(payload.getFeeAmount()).concat(" sat"));
+
                 }
             }
             if (payload instanceof Stowaway) {
