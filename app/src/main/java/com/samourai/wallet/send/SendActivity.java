@@ -2354,26 +2354,25 @@ public class SendActivity extends SamouraiActivity {
             totalMinerFeeLayout.setVisibility(View.VISIBLE);
         }
 
-        final boolean hasEnoughFunds = !insufficientFunds;
-
-        if (hasEnoughFunds && amount != 0) {
-            enableReviewButton(true);
-            return true;
-        }
-
-        if (amount != 0 && insufficientFunds) {
+        if (insufficientFunds && amount != 0) {
             Toast.makeText(this, getString(R.string.insufficient_funds), Toast.LENGTH_SHORT).show();
+            enableReviewButton(false);
+            return false;
         }
 
         boolean isValid;
-        if (amount >= SamouraiWallet.bDust.longValue() && FormatsUtil.getInstance().isValidBitcoinAddress(getToAddress())) {
+        if (amount >= SamouraiWallet.bDust.longValue()
+                && FormatsUtil.getInstance().isValidBitcoinAddress(getToAddress())) {
             isValid = true;
-        } else if (amount >= SamouraiWallet.bDust.longValue() && strDestinationBTCAddress != null && FormatsUtil.getInstance().isValidBitcoinAddress(strDestinationBTCAddress)) {
+        } else if (amount >= SamouraiWallet.bDust.longValue()
+                && strDestinationBTCAddress != null
+                && FormatsUtil.getInstance().isValidBitcoinAddress(strDestinationBTCAddress)) {
             isValid = true;
         } else {
             isValid = false;
         }
 
+        final boolean hasEnoughFunds = !insufficientFunds;
         enableReviewButton(isValid && hasEnoughFunds);
         return isValid && hasEnoughFunds;
 
