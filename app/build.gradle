@@ -128,7 +128,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
-    implementation 'com.neovisionaries:nv-websocket-client:1.9'
     implementation 'commons-io:commons-io:2.5'
     implementation 'commons-codec:commons-codec:1.4'
     implementation 'org.apache.commons:commons-lang3:3.3'

@@ -1,7 +1,5 @@
 package com.samourai.wallet.util;
 
-import static com.samourai.wallet.util.LogUtil.info;
-
 import android.content.Context;
 import android.util.Log;
 
@@ -36,6 +34,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
+
+import static com.samourai.wallet.util.LogUtil.info;
 
 //import android.util.Log;
 
@@ -287,17 +287,7 @@ public class WebUtil {
 
     private String tor_getURL(String URL, Map<String,String> headers) throws Exception {
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .proxy(TorManager.INSTANCE.getProxy())
-                .connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(90, TimeUnit.SECONDS);
-
-        if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
-        }
-        if(URL.contains("onion")){
-            getHostNameVerifier(builder);
-        }
+        OkHttpClient.Builder builder = WebUtil.getInstance(context).httpClientBuilder(URL);
 
         Request.Builder rb = new Request.Builder().url(URL);
 
@@ -334,18 +324,7 @@ public class WebUtil {
         }
 
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .proxy(TorManager.INSTANCE.getProxy())
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS);
-
-        if(URL.contains("onion")){
-            getHostNameVerifier(builder);
-        }
-
-        if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
-        }
+        OkHttpClient.Builder builder = WebUtil.getInstance(context).httpClientBuilder(URL);
 
         Request.Builder rb = new Request.Builder().url(URL);
 
@@ -393,18 +372,7 @@ public class WebUtil {
                 = MediaType.parse("application/json; charset=utf-8");
         RequestBody body = RequestBody.create(JSON, jsonToString);
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .proxy(TorManager.INSTANCE.getProxy())
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS);
-
-        if(URL.contains("onion")){
-            getHostNameVerifier(builder);
-        }
-
-        if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
-        }
+        OkHttpClient.Builder builder = httpClientBuilder(URL);
 
         Request.Builder rb = new Request.Builder();
 
@@ -475,6 +443,29 @@ public class WebUtil {
             return   SamouraiWallet.getInstance().isTestNet() ? SAMOURAI_API2_TESTNET : SAMOURAI_API2;
         }
 
+    }
+
+    public OkHttpClient.Builder httpClientBuilder(String url) throws Exception {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        if (new URL(url).getHost().contains(".onion")) {
+            this.getHostNameVerifier(builder);
+        }
+
+        builder.connectTimeout(45, TimeUnit.SECONDS)
+                .readTimeout(45, TimeUnit.SECONDS)
+                .callTimeout(45, TimeUnit.SECONDS);
+
+        if (TorManager.INSTANCE.isRequired()) {
+            builder.proxy(TorManager.INSTANCE.getProxy());
+            builder.connectTimeout(90, TimeUnit.SECONDS)
+                    .readTimeout(90, TimeUnit.SECONDS)
+                    .callTimeout(90, TimeUnit.SECONDS);
+        }
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
+        }
+        return builder;
     }
 
 }

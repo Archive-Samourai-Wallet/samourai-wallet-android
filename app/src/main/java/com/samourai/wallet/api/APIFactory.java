@@ -959,6 +959,7 @@ public class APIFactory {
     }
 
     public synchronized void setLatestBlockHeight(long blockHeight)  {
+        debug("APIFactory", "setLatestBlockHeight: " + blockHeight);
         latest_block_height = blockHeight;
 
         try {

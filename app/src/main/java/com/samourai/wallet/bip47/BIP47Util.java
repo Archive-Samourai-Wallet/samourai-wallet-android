@@ -180,10 +180,7 @@ public class BIP47Util extends BIP47UtilGeneric {
         String finalUrl = url;
         return Completable.fromCallable(() -> {
                     Request.Builder rb = new Request.Builder().url(finalUrl);
-                    OkHttpClient.Builder builder = new OkHttpClient.Builder();
-                    if (TorManager.INSTANCE.isRequired()) {
-                        builder.proxy(TorManager.INSTANCE.getProxy());
-                    }
+                    OkHttpClient.Builder builder = com.samourai.wallet.util.WebUtil.getInstance(context).httpClientBuilder(finalUrl);
                     OkHttpClient client = builder.build();
                     Response response = client.newCall(rb.build()).execute();
                     if (response.isSuccessful()) {

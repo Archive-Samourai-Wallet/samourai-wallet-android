@@ -211,12 +211,8 @@ class CPFPTask(private val context: Context, private val hash: String) {
         }
     }
 
-
     public fun doCPFP(): Boolean {
-        if (AppUtil.getInstance(context.applicationContext).isServiceRunning(WebSocketService::class.java)) {
-            context.stopService(Intent(context.applicationContext, WebSocketService::class.java))
-        }
-        context.startService(Intent(context.applicationContext, WebSocketService::class.java))
+        WebSocketService.restartService(context)
         var tx = SendFactory.getInstance(context).makeTransaction(outPoints, receivers)
         if (tx != null) {
             tx = SendFactory.getInstance(context).signTransaction(tx, 0)
