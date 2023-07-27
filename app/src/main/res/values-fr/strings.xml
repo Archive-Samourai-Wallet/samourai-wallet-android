@@ -857,7 +857,9 @@
 
 
 
-<string name="note_privacy_addons_are_not_available_for_selected_utxo_s">REMARQUE: les addons de confidentialité ne sont pas disponibles pour les UTXOs sélectionnées</string>
+    <string name="note_privacy_addons_are_not_available_for_selected_utxo_s">REMARQUE: les addons de confidentialité ne sont pas disponibles pour les UTXOs sélectionnées</string>
+    <string name="note_some_privacy_addons_are_not_available_for_selected_utxo_s">REMARQUE: certains addons de confidentialité ne sont pas disponibles pour les UTXOs sélectionnées</string>
+
 <string name="note_you_are_making_a_post_mix_spend_if_cahoots_nis_not_selected_samourai_will">REMARQUE: Vous effectuez une dépense post-mix. Si #Cahoots\nn\'est pas sélectionné, Samourai va tenter d\'effectuer une dépense STONEWALL.</string>
 <string name="off">Désactivé</string>
 <string name="privacy_addons">Addons de confidentialité</string>
