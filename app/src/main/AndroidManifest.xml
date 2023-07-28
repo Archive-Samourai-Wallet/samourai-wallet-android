@@ -251,11 +251,6 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="PayNym Calculator" />
         <activity
-            android:name=".AddressCalcActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:label="Address Calculator"
-            android:theme="@style/SamouraiAppTheme" />
-        <activity
             android:name=".CreateWalletActivity"
             android:theme="@style/Theme.Samourai.Material" />
         <activity

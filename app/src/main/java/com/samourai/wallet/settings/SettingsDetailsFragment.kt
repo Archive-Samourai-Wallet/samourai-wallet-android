@@ -706,11 +706,6 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         LogUtil.debugLarge("Settings", "# INDEXES DEBUG #\n"+builder.toString());
     }
 
-    private fun doAddressCalc() {
-        val intent = Intent(requireContext(), AddressCalcActivity::class.java)
-        startActivity(intent)
-    }
-
     private fun doPayNymCalc() {
         val intent = Intent(requireContext(), PayNymCalcActivity::class.java)
         startActivity(intent)
