@@ -167,4 +167,11 @@ public class ArcProgress extends View {
 
         invalidate();
     }
+
+    public void reset() {
+        firstAngle = 0f;
+        secondAngle = 0f;
+        thirdAngle = 0f;
+        invalidate();
+    }
 }

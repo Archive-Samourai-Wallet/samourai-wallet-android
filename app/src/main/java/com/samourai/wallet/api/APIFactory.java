@@ -73,7 +73,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.Objects;
 
@@ -96,25 +98,25 @@ public class APIFactory {
     private static long xpub_premix_balance = 0L;
     private static long xpub_postmix_balance = 0L;
     private static long xpub_badbank_balance = 0L;
-    private static HashMap<String, Long> xpub_amounts = null;
-    private static HashMap<String,List<Tx>> xpub_txs = null;
-    private static HashMap<String,List<Tx>> premix_txs = null;
-    private static HashMap<String,List<Tx>> postmix_txs = null;
-    private static HashMap<String,List<Tx>> badbank_txs = null;
-    private static HashMap<String,Integer> unspentAccounts = null;
-    private static HashMap<String,Integer> unspentBIP49 = null;
-    private static HashMap<String,Integer> unspentBIP84 = null;
-    private static HashMap<String,Integer> unspentBIP84PreMix = null;
-    private static HashMap<String,Integer> unspentBIP84PostMix = null;
-    private static HashMap<String,Integer> unspentBIP84BadBank = null;
-    private static HashMap<String,String> unspentPaths = null;
-    private static HashMap<String,UTXO> utxos = null;
-    private static HashMap<String, UTXO> utxosP2PKH = null;
-    private static HashMap<String, UTXO> utxosP2SH_P2WPKH = null;
-    private static HashMap<String, UTXO> utxosP2WPKH = null;
-    private static HashMap<String,UTXO> utxosPreMix = null;
-    private static HashMap<String,UTXO> utxosPostMix = null;
-    private static HashMap<String,UTXO> utxosBadBank = null;
+    private static Map<String, Long> xpub_amounts = null;
+    private static Map<String,List<Tx>> xpub_txs = null;
+    private static Map<String,List<Tx>> premix_txs = null;
+    private static Map<String,List<Tx>> postmix_txs = null;
+    private static Map<String,List<Tx>> badbank_txs = null;
+    private static Map<String,Integer> unspentAccounts = null;
+    private static Map<String,Integer> unspentBIP49 = null;
+    private static Map<String,Integer> unspentBIP84 = null;
+    private static Map<String,Integer> unspentBIP84PreMix = null;
+    private static Map<String,Integer> unspentBIP84PostMix = null;
+    private static Map<String,Integer> unspentBIP84BadBank = null;
+    private static Map<String,String> unspentPaths = null;
+    private static Map<String,UTXO> utxos = null;
+    private static Map<String, UTXO> utxosP2PKH = null;
+    private static Map<String, UTXO> utxosP2SH_P2WPKH = null;
+    private static Map<String, UTXO> utxosP2WPKH = null;
+    private static Map<String,UTXO> utxosPreMix = null;
+    private static Map<String,UTXO> utxosPostMix = null;
+    private static Map<String,UTXO> utxosBadBank = null;
 
     private static HashMap<String, Long> bip47_amounts = null;
     public boolean walletInit = false;
@@ -159,26 +161,26 @@ public class APIFactory {
         xpub_premix_balance = 0L;
         xpub_postmix_balance = 0L;
         xpub_badbank_balance = 0L;
-        xpub_amounts = new HashMap<>();
-        bip47_amounts = new HashMap<>();
-        xpub_txs = new HashMap<>();
-        premix_txs = new HashMap<>();
-        postmix_txs = new HashMap<>();
-        badbank_txs = new HashMap<>();
-        unspentPaths = new HashMap<String, String>();
-        unspentAccounts = new HashMap<String, Integer>();
-        unspentBIP49 = new HashMap<String, Integer>();
-        unspentBIP84 = new HashMap<String, Integer>();
-        unspentBIP84PostMix = new HashMap<String, Integer>();
-        unspentBIP84PreMix = new HashMap<String, Integer>();
-        unspentBIP84BadBank = new HashMap<String, Integer>();
-        utxos = new HashMap<String, UTXO>();
-        utxosP2PKH = new HashMap<String, UTXO>();
-        utxosP2SH_P2WPKH = new HashMap<String, UTXO>();
-        utxosP2WPKH = new HashMap<String, UTXO>();
-        utxosPostMix = new HashMap<String, UTXO>();
-        utxosPreMix = new HashMap<String, UTXO>();
-        utxosBadBank = new HashMap<String, UTXO>();
+        xpub_amounts = new LinkedHashMap<>();
+        bip47_amounts = new LinkedHashMap<>();
+        xpub_txs = new LinkedHashMap<>();
+        premix_txs = new LinkedHashMap<>();
+        postmix_txs = new LinkedHashMap<>();
+        badbank_txs = new LinkedHashMap<>();
+        unspentPaths = new LinkedHashMap<>();
+        unspentAccounts = new LinkedHashMap<>();
+        unspentBIP49 = new LinkedHashMap<>();
+        unspentBIP84 = new LinkedHashMap<>();
+        unspentBIP84PostMix = new LinkedHashMap<>();
+        unspentBIP84PreMix = new LinkedHashMap<>();
+        unspentBIP84BadBank = new LinkedHashMap<>();
+        utxos = new LinkedHashMap<>();
+        utxosP2PKH = new LinkedHashMap<>();
+        utxosP2SH_P2WPKH = new LinkedHashMap<>();
+        utxosP2WPKH = new LinkedHashMap<>();
+        utxosPostMix = new LinkedHashMap<>();
+        utxosPreMix = new LinkedHashMap<>();
+        utxosBadBank = new LinkedHashMap<>();
         onUtxoChange();
     }
 
@@ -1949,36 +1951,36 @@ public class APIFactory {
         xpub_badbank_balance = value;
     }
 
-    public HashMap<String,Long> getXpubAmounts()  {
+    public Map<String, Long> getXpubAmounts()  {
         return xpub_amounts;
     }
 
-    public HashMap<String,List<Tx>> getXpubTxs()  {
+    public Map<String, List<Tx>> getXpubTxs()  {
         return xpub_txs;
     }
 
-    public HashMap<String,List<Tx>> getPremixXpubTxs()  {
+    public Map<String, List<Tx>> getPremixXpubTxs()  {
         return premix_txs;
     }
 
-    public HashMap<String, String> getUnspentPaths() {
+    public Map<String, String> getUnspentPaths() {
         return unspentPaths;
     }
 
-    public HashMap<String, Integer> getUnspentAccounts() {
+    public Map<String, Integer> getUnspentAccounts() {
         return unspentAccounts;
     }
 
-    public HashMap<String, Integer> getUnspentBIP49() {
+    public Map<String, Integer> getUnspentBIP49() {
         return unspentBIP49;
     }
 
-    public HashMap<String, Integer> getUnspentBIP84() {
+    public Map<String, Integer> getUnspentBIP84() {
         return unspentBIP84;
     }
 
     private static List<UTXO> getUtxosFiltered(Collection<UTXO> utxos, boolean filter, Function<MyTransactionOutPoint,Boolean> checkBlocked) {
-        List<UTXO> unspents = new ArrayList<UTXO>();
+        List<UTXO> unspents = new ArrayList<>();
 
         if(filter)    {
             for(UTXO utxo : utxos)   {

@@ -109,6 +109,11 @@
         <!--<item name="android:maxHeight">22dip</item>-->
     </style>
 
+    <style name="SendUIProgressView" parent="android:Widget.ProgressBar">
+        <!-- Remplacez "your_progressbar_color" par la couleur souhaitée pour l'indicateur -->
+        <item name="android:progressTint">@color/white</item>
+    </style>
+
     <style name="BalanceToolbarExpandedTitleStyle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textSize">32sp</item>
         <item name="android:textColor">@color/white</item>

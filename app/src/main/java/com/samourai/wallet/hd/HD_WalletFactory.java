@@ -46,7 +46,7 @@ public class HD_WalletFactory	{
         context = ctx;
 
         if (instance == null) {
-            wallets = new ArrayList<HD_Wallet>();
+            wallets = new ArrayList<>();
             instance = new HD_WalletFactory();
         }
 
