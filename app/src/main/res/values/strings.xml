@@ -82,6 +82,7 @@
     <string name="options_fee_provider">Fee Estimation Source</string>
     <string name="options_fee_provider2">Select your preferred transaction fee estimation provider.</string>
     <string name="broadcast_transactions">Broadcast transaction</string>
+    <string name="sign_transactions">Sign transaction</string>
     <string name="options_broadcast_on2">Uncheck (broadcasting OFF) to copy raw signed transaction to the clipboard.</string>
     <string name="options_strictoutputs">Strict mode</string>
     <string name="options_strictoutputs2">Strict control of transaction outputs and address reuse.</string>
@@ -89,6 +90,7 @@
     <string name="options_segwit_2">Generate segwit addresses for incoming transactions.</string>
     <string name="options_broadcast_hex">Broadcast transaction hex</string>
     <string name="options_broadcast_hex2">Broadcast any signed transaction supplied in hex format</string>
+    <string name="options_sign_PSBT">Sign a partially signed bitcoin transaction (PSBT) ready for broadcasting</string>
     <string name="options_like_typed_change">Receive change to like-typed outputs</string>
     <string name="options_like_typed_change2">Receive change to same type of address as spend output. Turn OFF to receive only to segwit change addresses.</string>
     <string name="options_haptic">Haptic PIN entry</string>
@@ -392,6 +394,7 @@
     <string name="tx_hex">Transaction hex</string>
     <string name="enter_tx_hex">Enter transaction in hex format</string>
     <string name="broadcast">Broadcast transaction</string>
+    <string name="sign_psbt">Sign transaction</string>
 
     <string name="dusting_tx">DUST TRANSACTION</string>
     <string name="dusting_attempt">An unexpected dust transaction into your wallet can indicate an attempt to track your wallet addresses and spending.\n\nMark this dust as unspendable to mitigate against 3rd party tracking attempts.</string>
