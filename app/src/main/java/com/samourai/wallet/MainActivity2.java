@@ -1,29 +1,18 @@
 package com.samourai.wallet;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,7 +39,9 @@ import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 
-import io.matthewnelson.topl_service.TorServiceController;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -79,12 +70,7 @@ public class MainActivity2 extends AppCompatActivity {
 
 //                ReceiversUtil.getInstance(MainActivity2.this).initReceivers();
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                    if (AppUtil.getInstance(MainActivity2.this.getApplicationContext()).isServiceRunning(WebSocketService.class)) {
-                        stopService(new Intent(MainActivity2.this.getApplicationContext(), WebSocketService.class));
-                    }
-                    startService(new Intent(MainActivity2.this.getApplicationContext(), WebSocketService.class));
-                }
+                WebSocketService.restartService(MainActivity2.this);
 
             }
 
@@ -105,12 +91,6 @@ public class MainActivity2 extends AppCompatActivity {
         }
 
         public void onBecameBackground() {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (AppUtil.getInstance(MainActivity2.this.getApplicationContext()).isServiceRunning(WebSocketService.class)) {
-                    stopService(new Intent(MainActivity2.this.getApplicationContext(), WebSocketService.class));
-                }
-            }
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 new Thread(new Runnable() {

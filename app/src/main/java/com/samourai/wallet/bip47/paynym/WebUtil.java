@@ -46,24 +46,14 @@ public class WebUtil {
 
         RequestBody body = RequestBody.create(JSON, urlParameters);
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        OkHttpClient.Builder builder = com.samourai.wallet.util.WebUtil.getInstance(context).httpClientBuilder(requestURL);
 
-
-        builder.connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(90, TimeUnit.SECONDS);
-
-        if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
-        }
         Request.Builder rbuilder = new Request.Builder()
                 .url(requestURL)
                 .addHeader("Content-Type", contentType == null ? "application/x-www-form-urlencoded" : contentType);
 
         if (authToken != null) {
             rbuilder.addHeader("auth-token", authToken);
-        }
-        if (TorManager.INSTANCE.isConnected() || TorManager.INSTANCE.isRequired()) {
-            builder.proxy(TorManager.INSTANCE.getProxy());
         }
 
         Request request = rbuilder

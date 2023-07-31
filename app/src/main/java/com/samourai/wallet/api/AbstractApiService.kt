@@ -35,35 +35,6 @@ abstract class AbstractApiService {
         return client.newCall(request).await()
     }
 
-
-    /**
-     * Only for .onion endpoints
-     */
-    @Throws(Exception::class)
-    fun getHostNameVerifier(clientBuilder: OkHttpClient.Builder) {
-
-        // Create a trust manager that does not validate certificate chains
-        val trustAllCerts = arrayOf<TrustManager>(
-                object : X509TrustManager {
-                    override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-                    override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-                    override fun getAcceptedIssuers(): Array<X509Certificate> {
-                        return arrayOf()
-                    }
-                }
-        )
-
-        // Install the all-trusting trust manager
-        val sslContext = SSLContext.getInstance("SSL")
-        sslContext.init(null, trustAllCerts, SecureRandom())
-
-        // Create an ssl socket factory with our all-trusting manager
-        val sslSocketFactory = sslContext.socketFactory
-        clientBuilder.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
-        clientBuilder.hostnameVerifier { hostname: String?, session: SSLSession? -> true }
-    }
-
-
     private suspend fun Call.await(): Response {
         return suspendCancellableCoroutine { continuation ->
             enqueue(object : Callback {

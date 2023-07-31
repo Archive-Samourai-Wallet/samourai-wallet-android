@@ -7,7 +7,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -66,7 +65,6 @@ import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
-import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.settings.SettingsActivity
 import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.tools.ToolsBottomSheet
@@ -320,9 +318,6 @@ open class BalanceActivity : SamouraiActivity() {
         }
         if (!AppUtil.getInstance(this@BalanceActivity).isClipboardSeen) {
             doClipboardCheck()
-        }
-        if (!AppUtil.getInstance(this@BalanceActivity.applicationContext).isServiceRunning(WebSocketService::class.java)) {
-            startService(Intent(this@BalanceActivity.applicationContext, WebSocketService::class.java))
         }
         setUpTor()
         initViewModel()
@@ -578,15 +573,6 @@ open class BalanceActivity : SamouraiActivity() {
         return textView
     }
 
-    public override fun onPause() {
-        super.onPause()
-
-//        ibQuickSend.collapse();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && AppUtil.getInstance(this@BalanceActivity.applicationContext).isServiceRunning(WebSocketService::class.java)) {
-            stopService(Intent(this@BalanceActivity.applicationContext, WebSocketService::class.java))
-        }
-    }
-
     private fun makePaynymAvatarCache() {
         try {
             val paymentCodes = ArrayList(BIP47Meta.getInstance().getSortedByLabels(false, true))
@@ -656,11 +642,7 @@ open class BalanceActivity : SamouraiActivity() {
     public override fun onDestroy() {
         LocalBroadcastManager.getInstance(this@BalanceActivity).unregisterReceiver(receiver)
         LocalBroadcastManager.getInstance(this@BalanceActivity).unregisterReceiver(receiverDisplay)
-        if (account == 0) {
-            if (AppUtil.getInstance(this@BalanceActivity.applicationContext).isServiceRunning(WebSocketService::class.java)) {
-                stopService(Intent(this@BalanceActivity.applicationContext, WebSocketService::class.java))
-            }
-        }
+
         if (PrefsUtil.getInstance(this.application).getValue(StealthModeController.PREF_ENABLED, false)) {
             StealthModeController.enableStealth(applicationContext)
         }
