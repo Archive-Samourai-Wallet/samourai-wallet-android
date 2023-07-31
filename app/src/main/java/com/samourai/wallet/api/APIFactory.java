@@ -961,14 +961,6 @@ public class APIFactory {
     public synchronized void setLatestBlockHeight(long blockHeight)  {
         debug("APIFactory", "setLatestBlockHeight: " + blockHeight);
         latest_block_height = blockHeight;
-
-        try {
-            ContextCompat.getMainExecutor(context).execute(()  ->
-                Toast.makeText(context, "Setting block height: "+latest_block_height, Toast.LENGTH_LONG).show()
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     public String getLatestBlockHash() {

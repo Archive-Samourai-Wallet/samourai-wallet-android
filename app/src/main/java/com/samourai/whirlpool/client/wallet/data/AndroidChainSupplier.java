@@ -34,13 +34,6 @@ public class AndroidChainSupplier implements ChainSupplier {
         infoBlock.height = (int)apiFactory.getLatestBlockHeight();
         infoBlock.hash = apiFactory.getLatestBlockHash();
         infoBlock.time = apiFactory.getLatestBlockTime();
-        try {
-            ContextCompat.getMainExecutor(ctx).execute(()  ->
-                Toast.makeText(ctx, "Using block height: "+infoBlock.height, Toast.LENGTH_LONG).show()
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-        }
         return infoBlock;
     }
 }
