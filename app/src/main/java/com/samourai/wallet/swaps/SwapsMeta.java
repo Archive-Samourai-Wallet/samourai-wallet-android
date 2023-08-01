@@ -26,6 +26,9 @@ public class SwapsMeta {
         return instance;
     }
 
+    public int getSwapsMainAccount() {
+        return SwapsConst.SWAPS_MAIN_ACCOUNT;
+    }
     public int getSwapsRefundAccount() {
         return SwapsConst.SWAPS_REFUND_ACCOUNT;
     }
