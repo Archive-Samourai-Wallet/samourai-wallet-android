@@ -46,6 +46,10 @@
     <string name="options_xpub49_postmix2">Show extended public key for BIP49 Segwit account (P2SH-wrapped) Whirlpool post-mix change account.</string>
     <string name="options_xpub84_badbank">Show Whirlpool bad bank ZPUB</string>
     <string name="options_xpub84_badbank2">Show extended public key for BIP84 Segwit account (Bech32) Whirlpool bad bank.</string>
+    <string name="options_xpub84_swapsmain">Show Swaps main account ZPUB</string>
+    <string name="options_xpub84_swapsmain2">Show extended public key for BIP84 Segwit account (Bech32) XMR-BTC Swaps main account.</string>
+    <string name="options_xpub84_swapsrefund">Show Swaps refund account ZPUB</string>
+    <string name="options_xpub84_swapsrefund2">Show extended public key for BIP84 Segwit account (Bech32) XMR-BTC Swaps refund account.</string>
     <string name="options_wipe">Secure erase wallet</string>
     <string name="options_wipe2">Securely erase this wallet from the device.</string>
     <string name="options_stealth_display">Stealth launcher</string>

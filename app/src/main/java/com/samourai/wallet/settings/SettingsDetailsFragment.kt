@@ -37,6 +37,7 @@ import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.stealth.StealthModeSettings
+import com.samourai.wallet.swaps.SwapsMeta
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
@@ -150,6 +151,17 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         val zpubBadBankPref = findPreference("zpub_badbank") as Preference?
         zpubBadBankPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             getXPUB(84, WhirlpoolMeta.getInstance(requireContext()).whirlpoolBadBank)
+            true
+        }
+
+        val zpubSwapsMainPref = findPreference("zpub_swapsmain") as Preference?
+        zpubSwapsMainPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            getXPUB(84, SwapsMeta.getInstance(requireContext()).swapsMainAccount)
+            true
+        }
+        val zpubSwapsRefundPref = findPreference("zpub_swapsrefund") as Preference?
+        zpubSwapsRefundPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            getXPUB(84, SwapsMeta.getInstance(requireContext()).swapsRefundAccount)
             true
         }
 
