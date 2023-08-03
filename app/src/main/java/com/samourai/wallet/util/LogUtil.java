@@ -5,6 +5,7 @@ import android.util.Log;
 import com.samourai.wallet.BuildConfig;
 import com.samourai.whirlpool.client.utils.ClientUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
@@ -33,16 +34,22 @@ public class LogUtil {
         }
     }
 
-    public static void error(final String tag, Exception message) {
+    public static void error(final String tag, Exception exception) {
         if (BuildConfig.DEBUG) {
-            android.util.Log.e(tag, Objects.requireNonNull(message.getMessage()));
-            message.printStackTrace();
+            if (StringUtils.isNotBlank(exception.getMessage())) {
+                android.util.Log.e(tag, exception.getMessage());
+            } else {
+                android.util.Log.e(tag, "no error message", exception);
+            }
         }
     }
-    public static void error(final String tag, Throwable message) {
+    public static void error(final String tag, Throwable throwable) {
         if (BuildConfig.DEBUG) {
-            android.util.Log.e(tag, Objects.requireNonNull(message.getMessage()));
-            message.printStackTrace();
+            if (StringUtils.isNotBlank(throwable.getMessage())) {
+                android.util.Log.e(tag, throwable.getMessage());
+            } else {
+                android.util.Log.e(tag, "no error message", throwable);
+            }
         }
     }
 
