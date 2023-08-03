@@ -1,7 +1,6 @@
 package com.samourai.wallet.paynym.fragments;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,9 +29,9 @@ import java.util.ArrayList;
 
 public class PaynymListFragment extends Fragment {
 
-    private RecyclerView list;
     private static final String TAG = "PaynymListFragment";
-    private PaynymAdapter paynymAdapter;
+
+    private RecyclerView list;
 
     public static PaynymListFragment newInstance() {
         return new PaynymListFragment();
@@ -48,23 +47,15 @@ public class PaynymListFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         list = view.findViewById(R.id.paynym_accounts_rv);
-        Drawable drawable = this.getResources().getDrawable(R.drawable.divider_grey);
-        list.addItemDecoration(new ItemDividerDecorator(drawable));
+        list.addItemDecoration(new ItemDividerDecorator(this.getResources().getDrawable(R.drawable.divider_grey)));
         list.setLayoutManager(new LinearLayoutManager(this.getContext()));
         list.setNestedScrollingEnabled(true);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        paynymAdapter = new PaynymAdapter();
-        list.setAdapter(paynymAdapter);
-
+        list.setAdapter(new PaynymAdapter());
     }
 
     public void addPcodes(ArrayList<String> list) {
         if(isAdded()){
-            paynymAdapter.setPcodes(list);
+            ((PaynymAdapter)this.list.getAdapter()).setPcodes(list);
         }
     }
 
@@ -79,12 +70,17 @@ public class PaynymListFragment extends Fragment {
         return filtered;
     }
 
-    public void onPayNymItemClick(final String pcode, final View avatar) {
+    public void onPayNymItemClick(final String pcode, final View avatar, final boolean registered) {
         final ActivityOptionsCompat options = ActivityOptionsCompat.
                 makeSceneTransitionAnimation(getActivity(), avatar, "profile");
 
 
-        startActivity(new Intent(getActivity(), PayNymDetailsActivity.class).putExtra("pcode", pcode),options.toBundle());
+        startActivity(new Intent(
+                getActivity(),
+                PayNymDetailsActivity.class)
+                        .putExtra("pcode", pcode)
+                        .putExtra("registered", registered),
+                options.toBundle());
     }
 
 
@@ -99,7 +95,7 @@ public class PaynymListFragment extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(final ViewHolder holder, final int position) {
+        synchronized public void onBindViewHolder(final ViewHolder holder, final int position) {
 
             final String strPaymentCode = pcodes.get(position);
             final CircleImageView avatar = holder.avatar;
@@ -112,7 +108,7 @@ public class PaynymListFragment extends Fragment {
                             @Override
                             public void onSuccess() {
                                 paynymCode.setText(BIP47Meta.getInstance().getDisplayLabel(strPaymentCode));
-                                itemView.setOnClickListener(view -> onPayNymItemClick(strPaymentCode, avatar));
+                                itemView.setOnClickListener(view -> onPayNymItemClick(strPaymentCode, avatar, true));
                             }
 
                             @Override
@@ -123,7 +119,7 @@ public class PaynymListFragment extends Fragment {
                                             @Override
                                             public void onSuccess() {
                                                 paynymCode.setText(BIP47Meta.getInstance().getDisplayLabel(strPaymentCode));
-                                                itemView.setOnClickListener(view -> onPayNymItemClick(strPaymentCode, avatar));
+                                                itemView.setOnClickListener(view -> onPayNymItemClick(strPaymentCode, avatar, false));
                                             }
 
                                             @Override
