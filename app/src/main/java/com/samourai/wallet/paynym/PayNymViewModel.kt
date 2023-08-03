@@ -67,7 +67,9 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
             BIP47Meta.getInstance().addFollowings(backupFilePaynyms as java.util.ArrayList<String>?)
             sortByLabel(backupFilePaynyms);
             viewModelScope.launch(Dispatchers.Main) {
-                followingList.postValue(backupFilePaynyms)
+                synchronized(PayNymViewModel::class.java) {
+                    followingList.postValue(backupFilePaynyms)
+                }
             }
             return@withContext
         }
@@ -79,7 +81,9 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
             if (array.getJSONObject(0).has("claimed") && array.getJSONObject(0).getBoolean("claimed")) {
                 val strNymName = jsonObject.getString("nymName")
                 viewModelScope.launch(Dispatchers.Main) {
-                    paymentCode.postValue(strNymName)
+                    synchronized(PayNymViewModel::class.java) {
+                        paymentCode.postValue(strNymName)
+                    }
                 }
             }
 
@@ -98,7 +102,9 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                 BIP47Meta.getInstance().addFollowings(followings)
                 sortByLabel(followings);
                 viewModelScope.launch(Dispatchers.Main) {
-                    followingList.postValue(followings)
+                    synchronized(PayNymViewModel::class.java) {
+                        followingList.postValue(followings)
+                    }
                 }
             }
             nym.followers?.let { codes ->
@@ -111,7 +117,9 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                 val followers = ArrayList(codes.distinctBy { it.code }.map { it.code })
                  sortByLabel(followers);
                 viewModelScope.launch(Dispatchers.Main) {
-                    followersList.postValue(followers)
+                    synchronized(PayNymViewModel::class.java) {
+                        followersList.postValue(followers)
+                    }
                 }
             }
             PayloadUtil.getInstance(getApplication()).serializePayNyms(jsonObject);
@@ -156,17 +164,21 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
         if (refreshJob.isActive) {
             refreshJob.cancel("")
         }
-        refreshJob = viewModelScope.launch(Dispatchers.Main) {
-            loader.postValue(true)
-            withContext(Dispatchers.IO) {
-                try {
-                    getPayNymData()
-                } catch (error: Exception) {
-                    error.printStackTrace()
-                    throw CancellationException(error.message)
+
+        synchronized(PayNymViewModel::class.java) {
+            refreshJob = viewModelScope.launch(Dispatchers.Main) {
+                loader.postValue(true)
+                withContext(Dispatchers.IO) {
+                    try {
+                        getPayNymData()
+                    } catch (error: Exception) {
+                        error.printStackTrace()
+                        throw CancellationException(error.message)
+                    }
                 }
             }
         }
+
         refreshJob.invokeOnCompletion {
             viewModelScope.launch(Dispatchers.Main) {
                 loader.postValue(false)
@@ -215,10 +227,9 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-
     fun init() {
         paymentCode.postValue("")
-        //Load offline
+
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
@@ -232,7 +243,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    public fun doFollow(pcode: String) {
+    fun doFollow(pcode: String) {
         viewModelScope.launch {
             withContext(Dispatchers.Main) {
                 loader.postValue(true)
@@ -260,7 +271,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    public fun doUnFollow(pcode: String): Job {
+    fun doUnFollow(pcode: String): Job {
         val job = viewModelScope.launch {
             withContext(Dispatchers.Main) {
                 loader.postValue(true)

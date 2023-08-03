@@ -78,6 +78,7 @@ import java.util.*
 class PayNymDetailsActivity : SamouraiActivity() {
 
     private var pcode: String? = null
+    private var registered: Boolean = false
     private var label: String? = null
     private val txesList: MutableList<Tx> = ArrayList()
     private lateinit var paynymTxListAdapter: PaynymTxListAdapter
@@ -103,6 +104,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         } else {
             finish()
         }
+        registered = intent.getBooleanExtra("registered", false)
         if (intent.hasExtra("label")) {
             label = intent.getStringExtra("label")
         }
@@ -163,7 +165,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
         binding.paynymCode.text = BIP47Meta.getInstance().getAbbreviatedPcode(pcode)
         title = getLabel()
         binding.paynymAvatarProgress.visibility = View.VISIBLE
-        Picasso.get()
+
+        if (registered) {
+            Picasso.get()
                 .load(WebUtil.PAYNYM_API + pcode + "/avatar")
                 .into( binding.userAvatar, object : Callback {
                     override fun onSuccess() {
@@ -188,6 +192,23 @@ class PayNymDetailsActivity : SamouraiActivity() {
                             })
                     }
                 })
+        } else {
+            Picasso.get()
+                .load(WebUtil.PAYNYM_API + "/preview/" + pcode)
+                .into( binding.userAvatar, object : Callback {
+                    override fun onSuccess() {
+                        binding.paynymAvatarProgress.visibility = View.GONE
+                        isPaynymRegistered = false
+                        setUnrigesteredPcode()
+                    }
+
+                    override fun onError(e: Exception) {
+                        binding.paynymAvatarProgress.visibility = View.GONE
+                        Toast.makeText(this@PayNymDetailsActivity, "Unable to load avatar", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }
+
         if (menu != null) {
             menu!!.findItem(R.id.retry_notiftx).isVisible = BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_SENT_NO_CFM
             menu!!.findItem(R.id.action_unfollow).isVisible = BIP47Meta.getInstance().exists(pcode, true)
