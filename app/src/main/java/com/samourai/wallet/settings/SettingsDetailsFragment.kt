@@ -399,6 +399,12 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             true
         }
 
+        val swapsGUIPref = findPreference("swaps_gui") as Preference?
+        swapsGUIPref?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            doSwapsGUIPairing()
+            true
+        }
+
     }
 
     private fun troubleShootSettings() {
@@ -770,7 +776,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                     dialog.dismiss()
                     val strPSBT = edPSBT.text.toString().replace(" ".toRegex(), "").trim { it <= ' ' }
                     try {
-                        PSBTUtil.getInstance(requireContext()).doPSBT(strPSBT)
+                        com.samourai.wallet.cahoots.psbt.PSBTUtil.getInstance(requireContext()).doPSBT(strPSBT)
                     } catch (e: Exception) {
                     }
                 }.setNegativeButton(R.string.cancel) { dialog, whichButton -> dialog.dismiss() }
@@ -857,6 +863,60 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
         }
     }
 
+    private fun doSwapsGUIPairing() {
+
+        fun showQR(pairingObj: JSONObject) {
+            val dialog = QRBottomSheetDialog(
+                    qrData = pairingObj.toString(),
+                    getString(R.string.swaps_pairing), clipboardLabel = getString(R.string.swaps_pairing)
+            );
+            dialog.show(requireActivity().supportFragmentManager, dialog.tag)
+        }
+
+        val pairingObj = JSONObject()
+        val jsonObj = JSONObject()
+        try {
+            jsonObj.put("type", "swaps.gui")
+            jsonObj.put("version", "1.0.0")
+            jsonObj.put("network", if (SamouraiWallet.getInstance().isTestNet) "testnet" else "mainnet")
+            val mnemonic = HD_WalletFactory.getInstance(requireContext()).get().mnemonic
+            if (SamouraiWallet.getInstance().hasPassphrase(requireContext())) {
+                val encrypted = AESUtil.encrypt(mnemonic, CharSequenceX(HD_WalletFactory.getInstance(requireContext()).get().passphrase), AESUtil.DefaultPBKDF2Iterations)
+                jsonObj.put("passphrase", true)
+                jsonObj.put("mnemonic", encrypted)
+                pairingObj.put("pairing", jsonObj)
+                showQR(pairingObj)
+            } else {
+
+                val builder = MaterialAlertDialogBuilder(requireContext())
+                builder.setTitle(getString(R.string.enter_pairing_password))
+                val inflater = layoutInflater
+                val view = inflater.inflate(R.layout.password_input_dialog_layout, null)
+                val password = view.findViewById<EditText>(R.id.restore_dialog_password_edittext)
+                val message = view.findViewById<TextView>(R.id.dialogMessage)
+                message.setText(R.string.pairing_password)
+                builder.setPositiveButton(R.string.confirm) { dialog: DialogInterface, which: Int ->
+                    val pw = password.text.toString()
+                    if (pw.length >= AppUtil.MIN_BACKUP_PW_LENGTH && pw.length <= AppUtil.MAX_BACKUP_PW_LENGTH) {
+                        val encrypted = AESUtil.encrypt(mnemonic, CharSequenceX(pw), AESUtil.DefaultPBKDF2Iterations)
+                        jsonObj.put("passphrase", false)
+                        jsonObj.put("mnemonic", encrypted)
+                        pairingObj.put("pairing", jsonObj)
+                        showQR(pairingObj)
+                    }else{
+                        Toast.makeText(requireContext(), R.string.password_error, Toast.LENGTH_SHORT).show()
+                    }
+                    dialog.dismiss()
+                }
+                builder.setNegativeButton(R.string.cancel) { dialog: DialogInterface, _: Int -> dialog.cancel() }
+                builder.setView(view)
+                builder.show()
+            }
+
+        } catch (Er: Exception) {
+
+        }
+    }
 
     override fun onDestroy() {
         if (scope.isActive) {
