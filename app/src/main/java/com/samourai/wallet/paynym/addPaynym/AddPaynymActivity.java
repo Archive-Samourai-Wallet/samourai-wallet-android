@@ -87,7 +87,6 @@ public class AddPaynymActivity extends SamouraiActivity {
             processScan(item.getText().toString());
         } catch (Exception ex) {
             Toast.makeText(this, "Unable to access Clipboard", Toast.LENGTH_SHORT).show();
-
         }
     }
 

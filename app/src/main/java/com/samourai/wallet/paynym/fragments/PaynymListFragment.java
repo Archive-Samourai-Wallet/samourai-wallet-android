@@ -79,7 +79,7 @@ public class PaynymListFragment extends Fragment {
                 getActivity(),
                 PayNymDetailsActivity.class)
                         .putExtra("pcode", pcode)
-                        .putExtra("registered", registered),
+                        .putExtra("unregistered", !registered),
                 options.toBundle());
     }
 

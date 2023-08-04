@@ -78,7 +78,7 @@ import java.util.*
 class PayNymDetailsActivity : SamouraiActivity() {
 
     private var pcode: String? = null
-    private var registered: Boolean = false
+    private var unregistered: Boolean = false
     private var label: String? = null
     private val txesList: MutableList<Tx> = ArrayList()
     private lateinit var paynymTxListAdapter: PaynymTxListAdapter
@@ -104,7 +104,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         } else {
             finish()
         }
-        registered = intent.getBooleanExtra("registered", false)
+        unregistered = intent.getBooleanExtra("unregistered", false)
         if (intent.hasExtra("label")) {
             label = intent.getStringExtra("label")
         }
@@ -166,7 +166,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         title = getLabel()
         binding.paynymAvatarProgress.visibility = View.VISIBLE
 
-        if (registered) {
+        if (!unregistered) {
             Picasso.get()
                 .load(WebUtil.PAYNYM_API + pcode + "/avatar")
                 .into( binding.userAvatar, object : Callback {
