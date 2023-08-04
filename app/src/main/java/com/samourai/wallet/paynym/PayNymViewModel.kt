@@ -67,9 +67,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
             BIP47Meta.getInstance().addFollowings(backupFilePaynyms as java.util.ArrayList<String>?)
             sortByLabel(backupFilePaynyms);
             viewModelScope.launch(Dispatchers.Main) {
-                synchronized(PayNymViewModel::class.java) {
-                    followingList.postValue(backupFilePaynyms)
-                }
+                followingList.postValue(backupFilePaynyms)
             }
             return@withContext
         }
@@ -81,9 +79,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
             if (array.getJSONObject(0).has("claimed") && array.getJSONObject(0).getBoolean("claimed")) {
                 val strNymName = jsonObject.getString("nymName")
                 viewModelScope.launch(Dispatchers.Main) {
-                    synchronized(PayNymViewModel::class.java) {
-                        paymentCode.postValue(strNymName)
-                    }
+                    paymentCode.postValue(strNymName)
                 }
             }
 
@@ -102,9 +98,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                 BIP47Meta.getInstance().addFollowings(followings)
                 sortByLabel(followings);
                 viewModelScope.launch(Dispatchers.Main) {
-                    synchronized(PayNymViewModel::class.java) {
-                        followingList.postValue(followings)
-                    }
+                    followingList.postValue(followings)
                 }
             }
             nym.followers?.let { codes ->
@@ -117,9 +111,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                 val followers = ArrayList(codes.distinctBy { it.code }.map { it.code })
                  sortByLabel(followers);
                 viewModelScope.launch(Dispatchers.Main) {
-                    synchronized(PayNymViewModel::class.java) {
-                        followersList.postValue(followers)
-                    }
+                    followersList.postValue(followers)
                 }
             }
             PayloadUtil.getInstance(getApplication()).serializePayNyms(jsonObject);
@@ -154,6 +146,16 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
                 else
                     throw Exception("Invalid response ")
             }
+        } catch (ex: Exception) {
+            initPayNyms()
+        }
+    }
+
+    private suspend fun initPayNyms() {
+        try {
+            val res =
+                PayloadUtil.getInstance(getApplication()).deserializePayNyms().toString()
+            setPaynymPayload(JSONObject(res))
         } catch (ex: Exception) {
             setPaynymPayload(JSONObject().put("empty", true))
             LogUtil.error(TAG, ex)
@@ -229,18 +231,6 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
 
     fun init() {
         paymentCode.postValue("")
-
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                    val res = PayloadUtil.getInstance(getApplication()).deserializePayNyms().toString()
-                    setPaynymPayload(JSONObject(res))
-                } catch (ex: Exception) {
-                    setPaynymPayload(JSONObject().put("empty", true))
-                    throw CancellationException(ex.message)
-                }
-            }
-        }
     }
 
     fun doFollow(pcode: String) {

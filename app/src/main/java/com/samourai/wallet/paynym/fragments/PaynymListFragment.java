@@ -79,7 +79,7 @@ public class PaynymListFragment extends Fragment {
                 getActivity(),
                 PayNymDetailsActivity.class)
                         .putExtra("pcode", pcode)
-                        .putExtra("registered", registered),
+                        .putExtra("unregistered", !registered),
                 options.toBundle());
     }
 
@@ -95,7 +95,7 @@ public class PaynymListFragment extends Fragment {
         }
 
         @Override
-        synchronized public void onBindViewHolder(final ViewHolder holder, final int position) {
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
 
             final String strPaymentCode = pcodes.get(position);
             final CircleImageView avatar = holder.avatar;
