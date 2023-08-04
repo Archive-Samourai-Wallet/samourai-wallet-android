@@ -109,6 +109,8 @@
     <string name="options_whirlpool_state2">Show technical mixing data.</string>
     <string name="options_whirlpool_gui">Pair to Whirlpool GUI</string>
     <string name="options_whirlpool_gui2">Pair to Whirlpool GUI for continuous mixing.</string>
+    <string name="options_swaps_gui">Pair to Swaps GUI</string>
+    <string name="options_swaps_gui2">Pair to Swaps GUI to swap for XMR.</string>
     <string name="options_postmix">Spend from post-mix Whirlpool</string>
     <string name="options_ricochet_sync">Sync Ricochet</string>
     <string name="options_ricochet_sync2">Synchronize Ricochet index.</string>
@@ -816,6 +818,7 @@
     <string name="enter_backup_password">Enter backup password</string>
     <string name="restore_backup">Restore backup</string>
     <string name="whirlpool_pairing">Whirlpool Pairing</string>
+    <string name="swaps_pairing">XMR-BTC Swaps Pairing</string>
     <string name="enter_pairing_password">Enter pairing password</string>
     <string name="add_to_batch">Add to batch</string>
     <string name="update_to_batch">Update batch</string>
