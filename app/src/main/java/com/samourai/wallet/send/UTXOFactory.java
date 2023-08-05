@@ -123,11 +123,12 @@ public class UTXOFactory {
                 List<UTXO> postmix = apiFactory.getUtxosPostMix(true);
                 utxos = new ArrayList<>();
                 //Filtering out do not spends
-                for (UTXO u : postmix) {
-                    for (MyTransactionOutPoint out : u.getOutpoints()) {
+                for (UTXO item : postmix) {
+                    UTXO u = new UTXO();
+                    u.setPath(item.getPath());
+                    for (MyTransactionOutPoint out : item.getOutpoints()) {
                         if (!BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN())) {
                             u.getOutpoints().add(out);
-                            u.setPath(u.getPath());
                         }
                     }
                     if (u.getOutpoints().size() > 0) {

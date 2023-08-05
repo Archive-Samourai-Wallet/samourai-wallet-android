@@ -1,8 +1,13 @@
 package com.samourai.wallet.paynym.fragments;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityOptionsCompat;
@@ -10,28 +15,23 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
 import com.samourai.wallet.R;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.paynym.WebUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
 import com.samourai.wallet.widgets.CircleImageView;
 import com.samourai.wallet.widgets.ItemDividerDecorator;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-
 
 import java.util.ArrayList;
 
 
 public class PaynymListFragment extends Fragment {
 
-    private RecyclerView list;
     private static final String TAG = "PaynymListFragment";
-    private PaynymAdapter paynymAdapter;
+
+    private RecyclerView list;
 
     public static PaynymListFragment newInstance() {
         return new PaynymListFragment();
@@ -47,23 +47,15 @@ public class PaynymListFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         list = view.findViewById(R.id.paynym_accounts_rv);
-        Drawable drawable = this.getResources().getDrawable(R.drawable.divider_grey);
-        list.addItemDecoration(new ItemDividerDecorator(drawable));
+        list.addItemDecoration(new ItemDividerDecorator(this.getResources().getDrawable(R.drawable.divider_grey)));
         list.setLayoutManager(new LinearLayoutManager(this.getContext()));
         list.setNestedScrollingEnabled(true);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        paynymAdapter = new PaynymAdapter();
-        list.setAdapter(paynymAdapter);
-
+        list.setAdapter(new PaynymAdapter());
     }
 
     public void addPcodes(ArrayList<String> list) {
         if(isAdded()){
-            paynymAdapter.setPcodes(list);
+            ((PaynymAdapter)this.list.getAdapter()).setPcodes(list);
         }
     }
 
@@ -78,16 +70,22 @@ public class PaynymListFragment extends Fragment {
         return filtered;
     }
 
-    public void onPayNymItemClick(String pcode, PaynymAdapter.ViewHolder holder) {
-        ActivityOptionsCompat options = ActivityOptionsCompat.
-                makeSceneTransitionAnimation(getActivity(), holder.avatar, "profile");
+    public void onPayNymItemClick(final String pcode, final View avatar, final boolean registered) {
+        final ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(getActivity(), avatar, "profile");
 
 
-        startActivity(new Intent(getActivity(), PayNymDetailsActivity.class).putExtra("pcode", pcode),options.toBundle());
+        startActivity(new Intent(
+                getActivity(),
+                PayNymDetailsActivity.class)
+                        .putExtra("pcode", pcode)
+                        .putExtra("unregistered", !registered),
+                options.toBundle());
     }
 
 
     class PaynymAdapter extends RecyclerView.Adapter<PaynymAdapter.ViewHolder> {
+
         private ArrayList<String> pcodes = new ArrayList<>();
 
         @Override
@@ -97,13 +95,49 @@ public class PaynymListFragment extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
 
-            String strPaymentCode = pcodes.get(position);
-            Picasso.get().load(WebUtil.PAYNYM_API + strPaymentCode + "/avatar")
-                    .into(holder.avatar);
-            holder.paynymCode.setText(BIP47Meta.getInstance().getDisplayLabel(strPaymentCode));
-            holder.avatar.getRootView().setOnClickListener(view -> onPayNymItemClick(pcodes.get(position),holder));
+            final String strPaymentCode = pcodes.get(position);
+            final CircleImageView avatar = holder.avatar;
+            final View itemView = holder.itemView;
+            final TextView paynymCode = holder.paynymCode;
+
+            try {
+                Picasso.get().load(WebUtil.PAYNYM_API + strPaymentCode + "/avatar")
+                        .into(avatar, new Callback() {
+                            @Override
+                            public void onSuccess() {
+                                paynymCode.setText(BIP47Meta.getInstance().getDisplayLabel(strPaymentCode));
+                                itemView.setOnClickListener(view -> onPayNymItemClick(strPaymentCode, avatar, true));
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+
+                                Picasso.get().load(WebUtil.PAYNYM_API + "preview/" + strPaymentCode)
+                                        .into(avatar, new Callback() {
+                                            @Override
+                                            public void onSuccess() {
+                                                paynymCode.setText(BIP47Meta.getInstance().getDisplayLabel(strPaymentCode));
+                                                itemView.setOnClickListener(view -> onPayNymItemClick(strPaymentCode, avatar, false));
+                                            }
+
+                                            @Override
+                                            public void onError(final Exception e) {
+                                                Log.e(TAG, "issue when loading avatar for " + strPaymentCode, e);
+                                            }
+                                        });
+                            }
+                        });
+            } catch (final Throwable t) {
+                /**
+                 * This catch block is useful if ever the onSuccess/onError callback system
+                 * throws a runtime exception.
+                 * It indicates a problem to be fixed, so we log in error.
+                 * This has already been the case through the method LogUtil#error.
+                 */
+                Log.e(TAG, "error with Picasso: " + t.getMessage(), t);
+            }
         }
 
         @Override

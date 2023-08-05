@@ -18,6 +18,7 @@ import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.common.base.Optional;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
@@ -27,6 +28,7 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.Cahoots;
+import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
@@ -188,26 +190,39 @@ public class CahootReviewFragment extends Fragment {
 
     private void showPayloadInfo() {
         if (payload != null) {
+            if (payload instanceof MultiCahoots) {
+                MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
+                long halfOfStonewallFee = (multiCahootsPayload.getStonewallx2().getFeeAmount()/2L);
+                long totalMinerFee = multiCahootsPayload.getStowaway().getFeeAmount() + halfOfStonewallFee; // stowaway tx fee + our half of stonewall miner fee we pay
+                long serviceFee = multiCahootsPayload.getStowaway().getSpendAmount(); // 3.5% + other half of stonewall miner fee that we also pay
+                String total = formatForBtc(multiCahootsPayload.getSpendAmount() + totalMinerFee + serviceFee);
+                sendBtn.setText(getString(R.string.send).concat(" ").concat(total));
+            } else {
+                sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
+            }
             toAddress.setText(payload.getDestination());
-            sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
             amountInBtc.setText(formatForBtc(payload.getSpendAmount()));
             amountInSats.setText(String.valueOf(payload.getSpendAmount()).concat(" sat"));
             if ((payload.getFeeAmount() == 0)) {
                 feeInBtc.setText("__");
                 feeInSats.setText("__");
             } else {
-                feeInBtc.setText(formatForBtc(payload.getFeeAmount()));
-                feeInSats.setText(String.valueOf(payload.getFeeAmount()).concat(" sat"));
                 if (payload instanceof MultiCahoots) {
+                    MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
+                    long halfOfStonewallFee = (multiCahootsPayload.getStonewallx2().getFeeAmount()/2L);
+                    long totalMinerFee = multiCahootsPayload.getStowaway().getFeeAmount() + halfOfStonewallFee; // stowaway tx fee + our half of stonewall miner fee we pay
+                    long serviceFee = multiCahootsPayload.getStowaway().getSpendAmount(); // 3.5% + other half of stonewall miner fee that we also pay
                     cahootsSamouraiFeeGroup.setVisibility(View.VISIBLE);
                     cahootsSamouraiFeeGroupDivider.setVisibility(View.VISIBLE);
-                    MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
-                    samouraiFeeBtc.setText(formatForBtc(multiCahootsPayload.getStowaway().getSpendAmount()));
-                    samouraiFeeSats.setText(String.valueOf(multiCahootsPayload.getStowaway().getSpendAmount()).concat(" sat"));
+                    samouraiFeeBtc.setText(formatForBtc(serviceFee));
+                    samouraiFeeSats.setText(String.valueOf(serviceFee).concat(" sat"));
+                    feeInBtc.setText(formatForBtc(totalMinerFee));
+                    feeInSats.setText(String.valueOf(totalMinerFee).concat(" sat"));
                 } else {
                     cahootsSamouraiFeeGroup.setVisibility(View.GONE);
                     cahootsSamouraiFeeGroupDivider.setVisibility(View.GONE);
-
+                    feeInBtc.setText(formatForBtc(payload.getFeeAmount()));
+                    feeInSats.setText(String.valueOf(payload.getFeeAmount()).concat(" sat"));
                 }
             }
             if (payload instanceof Stowaway) {

@@ -606,7 +606,7 @@ public class RicochetMeta {
         HD_Address address = BIP84Util.getInstance(context).getWallet().getAccount(RICOCHET_ACCOUNT).getChain(AddressFactory.RECEIVE_CHAIN).getAddressAt(prevIndex);
         ECKey ecKey = address.getECKey();
         SegwitAddress p2wpkh = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-        Script redeemScript = p2wpkh.segWitRedeemScript();
+        Script redeemScript = p2wpkh.segwitRedeemScript();
 
         Transaction tx = new Transaction(SamouraiWallet.getInstance().getCurrentNetworkParams());
         if (nTimeLock > 0L) {

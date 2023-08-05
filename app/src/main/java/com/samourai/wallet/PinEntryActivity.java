@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Looper;
 import android.text.InputType;
 import android.transition.ChangeBounds;
@@ -59,10 +58,10 @@ import io.reactivex.schedulers.Schedulers;
 
 public class PinEntryActivity extends AppCompatActivity {
 
+    private final static int MAX_ATTEMPTS = 6;
 
     private ImageButton tsend = null;
     private ImageButton tback = null;
-
 
     private StringBuilder userInput = null;
 
@@ -89,6 +88,9 @@ public class PinEntryActivity extends AppCompatActivity {
         this.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         if (!BuildConfig.FLAVOR.equals("staging")) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
+        if (PrefsUtil.getInstance(PinEntryActivity.this).getValue(PrefsUtil.ATTEMPTS, 0) > 0) {
+            failures = PrefsUtil.getInstance(PinEntryActivity.this).getValue(PrefsUtil.ATTEMPTS, 0);
         }
         userInput = new StringBuilder();
         pinEntryView = findViewById(R.id.pinentry_view);
@@ -129,7 +131,6 @@ public class PinEntryActivity extends AppCompatActivity {
             setPinMaskView();
         });
 
-
         boolean scramble = PrefsUtil.getInstance(PinEntryActivity.this).getValue(PrefsUtil.SCRAMBLE_PIN, false);
 
         strUri = PrefsUtil.getInstance(PinEntryActivity.this).getValue("SCHEMED_URI", "");
@@ -142,11 +143,9 @@ public class PinEntryActivity extends AppCompatActivity {
             pinEntryView.setScramble(true);
         }
 
-
         Bundle extras = getIntent().getExtras();
 
         if (extras != null && extras.containsKey("create") && extras.getBoolean("create")) {
-//            tvPrompt.setText(R.string.create_pin);
             scramble = false;
             create = true;
             confirm = false;
@@ -154,7 +153,6 @@ public class PinEntryActivity extends AppCompatActivity {
             strPassphrase = extras.getString("passphrase");
             Toast.makeText(PinEntryActivity.this, R.string.pin_5_8, Toast.LENGTH_LONG).show();
         } else if (extras != null && extras.containsKey("confirm") && extras.getBoolean("confirm")) {
-//            tvPrompt.setText(R.string.confirm_pin);
             scramble = false;
             create = false;
             confirm = true;
@@ -164,7 +162,7 @@ public class PinEntryActivity extends AppCompatActivity {
             Toast.makeText(PinEntryActivity.this, R.string.pin_5_8_confirm, Toast.LENGTH_LONG).show();
         } else {
             if (isLocked()) {
-                startCountDownTimer();
+                lockWallet();
             }
         }
 
@@ -182,7 +180,6 @@ public class PinEntryActivity extends AppCompatActivity {
 
             if (create && strPassphrase.length() >= AccessFactory.MIN_PIN_LENGTH && userInput.toString().length() <= AccessFactory.MAX_PIN_LENGTH) {
                 Intent intent = new Intent(PinEntryActivity.this, PinEntryActivity.class);
-//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("confirm", true);
                 intent.putExtra("create", false);
                 intent.putExtra("first", userInput.toString());
@@ -200,7 +197,6 @@ public class PinEntryActivity extends AppCompatActivity {
 
                 } else {
                     Intent intent = new Intent(PinEntryActivity.this, PinEntryActivity.class);
-//                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("create", true);
                     intent.putExtra("seed", strSeed);
                     intent.putExtra("passphrase", strPassphrase);
@@ -212,8 +208,6 @@ public class PinEntryActivity extends AppCompatActivity {
                 validateThread(userInput.toString(), strUri);
             }
         });
-
-//
 
     }
 
@@ -254,12 +248,6 @@ public class PinEntryActivity extends AppCompatActivity {
     }
 
     private void displayUserInput() {
-
-//        tvUserInput.setText("");
-
-        for (int i = 0; i < userInput.toString().length(); i++) {
-//            tvUserInput.append("*");
-        }
 
         if (userInput.toString().length() >= AccessFactory.MIN_PIN_LENGTH && userInput.toString().length() <= AccessFactory.MAX_PIN_LENGTH) {
             tsend.setVisibility(View.VISIBLE);
@@ -302,6 +290,8 @@ public class PinEntryActivity extends AppCompatActivity {
 
                 AccessFactory.getInstance(PinEntryActivity.this).setPIN(pin);
 
+                PrefsUtil.getInstance(PinEntryActivity.this).setValue(PrefsUtil.ATTEMPTS, 0);
+
                 try {
                     HD_Wallet hdw = PayloadUtil.getInstance(PinEntryActivity.this).restoreWalletfromJSON(new CharSequenceX(AccessFactory.getInstance(PinEntryActivity.this).getGUID() + pin));
 
@@ -313,19 +303,18 @@ public class PinEntryActivity extends AppCompatActivity {
 
                         runOnUiThread(() -> {
                             failures++;
-                            userInput = new StringBuilder();
+                            PrefsUtil.getInstance(PinEntryActivity.this).setValue(PrefsUtil.ATTEMPTS, failures);
                             pinEntryMaskLayout.removeAllViews();
                             pinEntryView.hideCheckButton();
                             setPinMaskView();
-                            if (failures <= 2) {
-                                walletStatusTextView.setText(this.getText(R.string.login_error) + ": " + failures + "/3");
+                            if (failures < MAX_ATTEMPTS) {
+                                walletStatusTextView.setText(this.getText(R.string.login_error) + ": " + failures + "/" + MAX_ATTEMPTS);
                             }
-                            if (failures == 3) {
+                            else {
                                 failures = 0;
-                                startCountDownTimer();
+                                lockWallet();
                             }
                         });
-
 
                     }
 
@@ -349,15 +338,16 @@ public class PinEntryActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.INVISIBLE);
                     failures++;
+                    PrefsUtil.getInstance(PinEntryActivity.this).setValue(PrefsUtil.ATTEMPTS, failures);
                     userInput = new StringBuilder();
                     pinEntryMaskLayout.removeAllViews();
                     pinEntryView.hideCheckButton();
-                    if (failures <= 2) {
-                        walletStatusTextView.setText(this.getText(R.string.login_error) + ": " + failures + "/3");
+                    if (failures < MAX_ATTEMPTS) {
+                        walletStatusTextView.setText(this.getText(R.string.login_error) + ": " + failures + "/" + MAX_ATTEMPTS);
                     }
-                    if (failures == 3) {
+                    else {
                         failures = 0;
-                        startCountDownTimer();
+                        lockWallet();
                     }
                 });
 
@@ -631,29 +621,22 @@ public class PinEntryActivity extends AppCompatActivity {
     }
 
     boolean isLocked() {
-        return PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PIN_TIMEOUT, 30000L) != 0L;
+        return PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.ATTEMPTS, 0) >= MAX_ATTEMPTS;
     }
 
-    void startCountDownTimer() {
-        TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
-        pinEntryView.disable(true);
-        restoreLayout.setVisibility(View.VISIBLE);
-        long timeoutPref = PrefsUtil.getInstance(getApplication()).getValue(PrefsUtil.PIN_TIMEOUT, 0L);
-        new CountDownTimer(timeoutPref == 0L ? 30000L : timeoutPref, 1000) {
-            public void onTick(long duration) {
-                long secs = (duration / 1000) % 60;
-                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, duration);
-                walletStatusTextView.setText(getString(R.string.please_try_again_in).concat(" ").concat(String.valueOf(secs)).concat(" ").concat(getString(R.string.seconds)));
-            }
+    void lockWallet() {
+        try {
+            PayloadUtil.getInstance(PinEntryActivity.this).wipe();
+        }
+        catch(Exception e) {
+            ;
+        }
 
-            public void onFinish() {
-                PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, 0L);
-                pinEntryView.disable(false);
-                TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
-                restoreLayout.setVisibility(View.GONE);
-                walletStatusTextView.setText(R.string.wallet_locked);
-            }
-        }.start();
+        PrefsUtil.getInstance(getApplication()).setValue(PrefsUtil.PIN_TIMEOUT, 0L);
+        pinEntryView.disable(true);
+        TransitionManager.beginDelayedTransition((ViewGroup) restoreLayout.getRootView());
+        restoreLayout.setVisibility(View.VISIBLE);
+        walletStatusTextView.setText(R.string.wallet_locked);
     }
 
     @Override

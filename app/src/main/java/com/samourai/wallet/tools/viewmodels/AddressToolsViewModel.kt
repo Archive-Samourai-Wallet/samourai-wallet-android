@@ -1,7 +1,6 @@
 package com.samourai.wallet.tools
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -47,7 +46,8 @@ class AddressCalculatorViewModel : ViewModel() {
 
     private val pageLiveData: MutableLiveData<Int> = MutableLiveData(0)
 
-    private val singedMessage: MutableLiveData<String> = MutableLiveData("")
+    private val signedMessage: MutableLiveData<String> = MutableLiveData("")
+    private val verifiedMessage: MutableLiveData<Boolean?> = MutableLiveData()
 
     fun getAddressLiveData(): LiveData<AddressDetailsModel> {
         return addressLiveData
@@ -141,7 +141,7 @@ class AddressCalculatorViewModel : ViewModel() {
 
                 val strPrivKey: String = ecKey?.getPrivateKeyAsWiF(SamouraiWallet.getInstance().currentNetworkParams) ?: ""
                 val redeemScript: String = try {
-                    org.spongycastle.util.encoders.Hex.toHexString(segwitAddress?.segWitRedeemScript()?.program)
+                    org.spongycastle.util.encoders.Hex.toHexString(segwitAddress?.segwitRedeemScript()?.program)
                 } catch (e: Exception) {
                     ""
                 }
@@ -164,7 +164,7 @@ class AddressCalculatorViewModel : ViewModel() {
 
     }
 
-    fun signMessage(messageString: String, context: Context) {
+    fun executeSignMessage(messageString: String, context: Context) {
         try {
             viewModelScope.launch {
                 withContext(Dispatchers.Default) {
@@ -189,20 +189,59 @@ class AddressCalculatorViewModel : ViewModel() {
                         msg = context.getString(R.string.utxo_sign_text2)
                     }
                     val strSignedMessage = MessageSignUtil.getInstance().signMessageArmored(ecKey, messageString.ifEmpty { msg })
-                    singedMessage.postValue(strSignedMessage)
+                    signedMessage.postValue(strSignedMessage)
                 }
             }
         } catch (e: Exception) {
-            throw  e
+            throw e
         }
 
     }
 
     fun getSignedMessage(): LiveData<String> {
-        return singedMessage
+        return signedMessage
+    }
+
+    fun isVerifiedMessage(): LiveData<Boolean?> {
+        return verifiedMessage
     }
 
     fun clearMessage() {
-        singedMessage.postValue("")
+        signedMessage.postValue("")
+    }
+
+    fun clearVerifiedMessageState() {
+        try {
+            viewModelScope.launch {
+                withContext(Dispatchers.Default) {
+                    verifiedMessage.postValue(null)
+                }
+            }
+        } catch (e : Exception) {
+            // coroutine issue
+            verifiedMessage.postValue(null)
+        }
+    }
+
+    fun executeVerifyMessage(address: String, message: String, signature: String) {
+        try {
+            viewModelScope.launch {
+                withContext(Dispatchers.Default) {
+                    verifiedMessage.postValue(verifyMessage(address, message, signature))
+                }
+            }
+        } catch (e : Exception) {
+            // coroutine issue
+            verifiedMessage.postValue(null)
+        }
+    }
+
+    fun verifyMessage(addr: String, msg: String, signature: String): Boolean {
+        try {
+            return MessageSignUtil.getInstance().verifySignedMessage(addr, msg, signature)
+        } catch (e : Exception) {
+            // functional issue (like SignatureException about signature length)
+            return false
+        }
     }
 }

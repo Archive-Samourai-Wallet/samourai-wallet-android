@@ -8,8 +8,8 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.BIP47Wallet;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
+import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.FormatsUtil;
 
 import org.apache.commons.codec.DecoderException;
@@ -70,7 +70,6 @@ public class HD_WalletFactory	{
 
         NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
 
-        AppUtil.getInstance(context).applyPRNGFixes();
         SecureRandom random = new SecureRandom();
         byte seed[] = new byte[len];
         random.nextBytes(seed);
@@ -196,6 +195,9 @@ public class HD_WalletFactory	{
 
         // reset AddressFactory from BIPUtils
         AddressFactory.getInstance(context).reset();
+
+        // restart WebSocketService
+        WebSocketService.restartService(context);
     }
 
     public void clear() {

@@ -687,7 +687,7 @@
     <string name="preorder">pedido</string>
     <string name="add_new">Añadir Nuevo</string>
     <string name="paynym_follow_message_2">para generar automáticamente direcciones privadas únicas para enviar bitcoins a este contacto</string>
-    <string name="follow">Conectar</string>
+    <string name="follow">Seguir</string>
     <string name="wallet_locked">Billetera Bloqueada</string>
     <string name="address">Dirección</string>
 

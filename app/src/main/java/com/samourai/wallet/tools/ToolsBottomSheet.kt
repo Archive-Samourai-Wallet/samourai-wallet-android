@@ -3,22 +3,45 @@ package com.samourai.wallet.tools
 import AddressCalculator
 import SweepPrivateKeyView
 import android.os.Bundle
-import android.view.*
+import android.view.KeyEvent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.Window
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -127,9 +150,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                 SamouraiWalletTheme {
                     Surface(color = MaterialTheme.colors.background) {
                         when (toolType) {
-                            ToolType.SWEEP -> SweepPrivateKeyView(parentFragmentManager, onCloseClick = {
-                                this.dismiss()
-                            }, keyParameter = key)
+                            ToolType.SWEEP -> SweepPrivateKeyView(parentFragmentManager, keyParameter = key)
                             ToolType.SIGN -> SignMessage()
                             ToolType.ADDRESS_CALC -> AddressCalculator(this@SingleToolBottomSheet.dialog?.window)
                             ToolType.AUTH47 -> Auth47Login(param = key, onClose = {
@@ -146,7 +167,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: FragmentManager?, window: Window?) {
     val vm = viewModel<AddressCalculatorViewModel>()
@@ -157,9 +178,11 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     val context = LocalContext.current;
     val addressCalcBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val signMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val verifyMessageBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val auth47BottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val broadcastBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val keyboard = LocalSoftwareKeyboardController.current
 
     //Handle BackPress
     LaunchedEffect(true) {
@@ -170,6 +193,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         addressCalcBottomSheetState.hide()
                     } else if (signMessageBottomSheetState.isVisible) {
                         signMessageBottomSheetState.hide()
+                    } else if (verifyMessageBottomSheetState.isVisible) {
+                        verifyMessageBottomSheetState.hide()
                     } else if (auth47BottomSheet.isVisible) {
                         auth47BottomSheet.hide()
                     } else if (broadcastBottomSheet.isVisible) {
@@ -188,16 +213,18 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     LaunchedEffect(
         addressCalcBottomSheetState.isVisible,
         signMessageBottomSheetState.isVisible,
+        verifyMessageBottomSheetState.isVisible,
         auth47BottomSheet.isVisible,
         broadcastBottomSheet.isVisible,
         sweepPrivateKeyBottomSheet.isVisible,
     ) {
         val anyToolWindowIsVisible = (
-                addressCalcBottomSheetState.isVisible ||
-                        signMessageBottomSheetState.isVisible ||
-                        auth47BottomSheet.isVisible ||
-                        broadcastBottomSheet.isVisible ||
-                        sweepPrivateKeyBottomSheet.isVisible)
+            addressCalcBottomSheetState.isVisible ||
+                signMessageBottomSheetState.isVisible ||
+                verifyMessageBottomSheetState.isVisible ||
+                auth47BottomSheet.isVisible ||
+                broadcastBottomSheet.isVisible ||
+                sweepPrivateKeyBottomSheet.isVisible)
         toolsBottomSheet?.dialog?.setCancelable(!anyToolWindowIsVisible)
     }
 
@@ -238,6 +265,20 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             )
             ToolsItem(
+                title = stringResource(id = R.string.verify_message),
+                subTitle = stringResource(id = R.string.verify_message_desc),
+                icon = R.drawable.ic_verify_message,
+                onClick = {
+                    scope.launch {
+                        val types = context.resources.getStringArray(R.array.account_types)
+                        vm.calculateAddress(types.first(), true, index = 0, context = context)
+                        vm.clearMessage()
+                        toolsBottomSheet?.disableDragging()
+                        verifyMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
+                    }
+                }
+            )
+            ToolsItem(
                 title = stringResource(R.string.wallet_address_calc),
                 subTitle = stringResource(R.string.calculate_any_address_derived),
                 icon = R.drawable.ic_baseline_calculate,
@@ -255,7 +296,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             ToolsItem(
                 title = stringResource(id = R.string.auth_using_paynym),
                 subTitle = stringResource(R.string.simple_and_secure_auth_with),
-                icon = R.drawable.ic_paynym_white_24dp,
+                icon = R.drawable.ic_auth_with_paynym,
                 onClick = {
                     scope.launch {
                         toolsBottomSheet?.disableDragging()
@@ -266,7 +307,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             ToolsItem(
                 title = stringResource(id = R.string.broadcast_transactions),
                 subTitle = stringResource(R.string.options_broadcast_hex2),
-                icon = R.drawable.ic_broadcast_tx,
+                icon = R.drawable.ic_broadcast_transaction,
                 onClick = {
                     scope.launch {
                         broadcastHexViewModel.clear()
@@ -285,6 +326,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                     vm.setPage(0)
+                    keyboard?.hide()
                 }
             }
         }
@@ -294,15 +336,27 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     val types = context.resources.getStringArray(R.array.account_types)
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
-
+        if (verifyMessageBottomSheetState.currentValue != ModalBottomSheetValue.Hidden) {
+            DisposableEffect(Unit) {
+                onDispose {
+                    val types = context.resources.getStringArray(R.array.account_types)
+                    vm.calculateAddress(types.first(), true, index = 0, context = context)
+                    vm.clearVerifiedMessageState()
+                    toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
+                }
+            }
+        }
         if (sweepPrivateKeyBottomSheet.currentValue != ModalBottomSheetValue.Hidden) {
             DisposableEffect(Unit) {
                 onDispose {
                     sweepViewModel.clear()
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
@@ -312,6 +366,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 onDispose {
                     auth47ViewModel.clear()
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
@@ -321,6 +376,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 onDispose {
                     broadcastHexViewModel.clear()
                     toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
                 }
             }
         }
@@ -356,11 +412,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             scrimColor = Color.Black.copy(alpha = 0.7f),
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
-                SweepPrivateKeyView(parentFragmentManager, onCloseClick = {
-                    scope.launch {
-                        sweepPrivateKeyBottomSheet.hide()
-                    }
-                })
+                SweepPrivateKeyView(parentFragmentManager)
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {}
@@ -373,8 +425,19 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 SignMessage()
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
-        ) {
-        }
+        ) {}
+
+        ModalBottomSheetLayout(
+            sheetState = verifyMessageBottomSheetState,
+            scrimColor = Color.Black.copy(alpha = 0.7f),
+            sheetBackgroundColor = samouraiBottomSheetBackground,
+            sheetContent = {
+                VerifyMessage(
+                    modal = verifyMessageBottomSheetState
+                )
+            },
+            sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+        ) {}
 
         ModalBottomSheetLayout(
             sheetState = auth47BottomSheet,
@@ -452,7 +515,7 @@ fun DefaultToolsItemPreview() {
             ToolsItem(
                 title = "Sweep Private Key",
                 subTitle = "Enter a private key and sweep any funds to" +
-                        "your next bitcoin address",
+                    "your next bitcoin address",
                 icon = R.drawable.ic_broom
             )
         }

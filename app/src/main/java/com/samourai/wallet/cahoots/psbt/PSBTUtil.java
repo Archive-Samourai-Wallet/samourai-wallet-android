@@ -236,7 +236,7 @@ public class PSBTUtil {
 
                 debug("PSBTUtil", "signTx bech32:" + segwitAddress.getBech32AsString());
 
-                final Script redeemScript = segwitAddress.segWitRedeemScript();
+                final Script redeemScript = segwitAddress.segwitRedeemScript();
                 debug("PSBTUtil", "signTx bech32:" + Hex.toHexString(redeemScript.getProgram()));
                 final Script scriptCode = redeemScript.scriptCode();
 

@@ -23,7 +23,6 @@ import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
-import com.samourai.wallet.prng.PRNGFixes;
 import com.samourai.wallet.ricochet.RicochetMeta;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
@@ -278,32 +277,6 @@ public class AppUtil {
         File file = new File(strFileName);
         if (file.exists()) {
             file.delete();
-        }
-    }
-
-    public boolean isPRNG_FIXED() {
-        return PRNG_FIXES;
-    }
-
-    public void setPRNG_FIXED(boolean prng) {
-        PRNG_FIXES = prng;
-    }
-
-    public void applyPRNGFixes() {
-        try {
-            PRNGFixes.apply();
-        } catch (Exception e0) {
-            //
-            // some Android 4.0 devices throw an exception when PRNGFixes is re-applied
-            // removing provider before apply() is a workaround
-            //
-            Security.removeProvider("LinuxPRNG");
-            try {
-                PRNGFixes.apply();
-            } catch (Exception e1) {
-                Toast.makeText(context, R.string.cannot_launch_app, Toast.LENGTH_SHORT).show();
-                System.exit(0);
-            }
         }
     }
 

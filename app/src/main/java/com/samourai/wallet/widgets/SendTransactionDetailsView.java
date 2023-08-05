@@ -19,6 +19,7 @@ import androidx.transition.TransitionSet;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
 import com.samourai.wallet.cahoots.CahootsMode;
+import com.samourai.wallet.cahoots.CahootsType;
 
 import java.text.DecimalFormat;
 
@@ -35,7 +36,9 @@ public class SendTransactionDetailsView extends FrameLayout {
     private ViewGroup stowawayLayout, stoneWallLayout;
     private EntropyBar entropyBarStoneWallX2, entropyBarStoneWallX1;
     private SwitchCompat stoneWallx1Switch;
-    private TextView stowawayMixingParticipant, entropyValueX1,entropyValueX2, stowawayMethod, stoneWallx2Fee, stoneWallx2mixingParticipant;
+    private TextView txType, stowawayMixingParticipant, entropyValueX1, entropyValueX2,
+            stowawayMethod, stoneWallx2Fee, methodLabel;
+    private View dividerMethod;
 
 
     public SendTransactionDetailsView(@NonNull Context context) {
@@ -59,13 +62,14 @@ public class SendTransactionDetailsView extends FrameLayout {
         ricochetHopsReview = transactionReview.findViewById(R.id.ricochet_hops_layout);
         stowawayLayout = transactionReview.findViewById(R.id.stowaway_layout);
         stoneWallLayout = transactionReview.findViewById(R.id.stonewallx1_layout);
-//        entropyBarStoneWallX2 = transactionReview.findViewById(R.id.cahoots_entropy_bar);
         entropyBarStoneWallX1 = transactionReview.findViewById(R.id.entropy_bar_stonewallx1);
         stoneWallx1Switch = transactionReview.findViewById(R.id.stonewallx1_switch);
+        txType = transactionReview.findViewById(R.id.txType);
         stowawayMixingParticipant = transactionReview.findViewById(R.id.stowaway_mixing_participant);
         stowawayMethod = transactionReview.findViewById(R.id.stowaway_method);
         entropyValueX1 = transactionReview.findViewById(R.id.entropy_value_stonewallx1);
-//        entropyValueX2 = transactionReview.findViewById(R.id.entropy_value_stonewallx2);
+        dividerMethod = transactionReview.findViewById(R.id.dividerMethod);
+        methodLabel = transactionReview.findViewById(R.id.methodLabel);
 
         entropyBarStoneWallX1.post(() -> {
             entropyBarStoneWallX1.setMaxBars(4);
@@ -87,30 +91,38 @@ public class SendTransactionDetailsView extends FrameLayout {
         stoneWallLayout.setVisibility(enable ? INVISIBLE : VISIBLE);
     }
 
-    public void showStonewallX2Layout(CahootsMode cahootsMode, String participant,  long fee) {
+    public void showStonewallX2Layout(final Context context, final CahootsMode cahootsMode) {
 
         stoneWallLayout.getRootView().post(() -> {
-            stowawayLayout.setVisibility(GONE);
+            stowawayLayout.setVisibility(VISIBLE);
             stoneWallLayout.setVisibility(GONE);
         });
-        stoneWallx2mixingParticipant.setText(participant);
+        stowawayMixingParticipant.setText(context.getString(R.string.joinbot));
+        stowawayMethod.setText(cahootsMode.getLabel());
+        txType.setText(CahootsType.STONEWALLX2.getLabel());
+        stowawayMethod.setVisibility(GONE);
+        dividerMethod.setVisibility(GONE);
+        methodLabel.setVisibility(GONE);
     }
 
-    public void showStowawayLayout(CahootsMode cahootsMode, String participant, TxProcessorResult entropy, long fee) {
+    public void showStowawayLayout(final CahootsMode cahootsMode, final String participant) {
         stoneWallLayout.getRootView().post(() -> {
             stowawayLayout.setVisibility(VISIBLE);
             stoneWallLayout.setVisibility(GONE);
         });
         stowawayMixingParticipant.setText(participant);
         stowawayMethod.setText(cahootsMode.getLabel());
+        txType.setText(CahootsType.STOWAWAY.getLabel());
+        stowawayMethod.setVisibility(VISIBLE);
+        dividerMethod.setVisibility(VISIBLE);
+        methodLabel.setVisibility(VISIBLE);
     }
 
-    public void showStonewallx1Layout(TxProcessorResult entropyResult) {
+    public void showStonewallx1Layout() {
         stoneWallLayout.getRootView().post(() -> {
-            stoneWallLayout.setVisibility(VISIBLE);
             stowawayLayout.setVisibility(GONE);
+            stoneWallLayout.setVisibility(VISIBLE);
         });
-
     }
 
     public void enableStonewall(boolean enable) {
@@ -122,7 +134,6 @@ public class SendTransactionDetailsView extends FrameLayout {
             this.setEntropyBarStoneWallX1(null);
     }
 
-
     public SwitchCompat getStoneWallSwitch() {
         return stoneWallx1Switch;
     }
@@ -133,6 +144,13 @@ public class SendTransactionDetailsView extends FrameLayout {
      * @param ricochet will be used to show and hide ricochet hops slider
      */
     public void showReview(boolean ricochet) {
+
+        if (ricochet) {
+            stoneWallLayout.getRootView().post(() -> {
+                stowawayLayout.setVisibility(GONE);
+                stoneWallLayout.setVisibility(GONE);
+            });
+        }
 
         TransitionSet set = new TransitionSet();
 

@@ -6,7 +6,9 @@ import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 
+import com.google.common.collect.Lists;
 import com.samourai.wallet.R;
+import com.samourai.wallet.RestoreSeedWalletActivity;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
@@ -65,6 +67,8 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
 
@@ -314,6 +318,7 @@ public class PayloadUtil	{
             meta.put("is_sat", PrefsUtil.getInstance(context).getValue(PrefsUtil.IS_SAT, false));
             meta.put("localIndexes", LocalReceiveIndexes.getInstance(context).toJSON());
             meta.put("paynym_bot_name", PrefsUtil.getInstance(context).getValue(PrefsUtil.PAYNYM_BOT_NAME, ""));
+            meta.put("attempts", PrefsUtil.getInstance(context).getValue(PrefsUtil.ATTEMPTS, 0));
 
             if(DojoUtil.getInstance(context).getDojoParams() != null)    {
                 meta.put("dojo", DojoUtil.getInstance(context).toJSON());
@@ -661,6 +666,9 @@ public class PayloadUtil	{
                 if(meta.has("xpubpostxreg")) {
                     PrefsUtil.getInstance(context).setValue(PrefsUtil.XPUBPOSTXREG, meta.getBoolean("xpubpostxreg"));
                 }
+                if(meta.has("attempts")) {
+                    PrefsUtil.getInstance(context).setValue(PrefsUtil.ATTEMPTS, meta.getInt("attempts"));
+                }
 
             }
         }
@@ -978,6 +986,27 @@ public class PayloadUtil	{
             }
         }
 
+    }
+
+    public List<String> getPaynymsFromBackupFile() {
+        String backupData = ExternalBackupManager.read();
+        List<String> pcodes = Lists.newArrayList();
+        if (backupData != null) {
+            try {
+                String passphrase = HD_WalletFactory.getInstance(context).get().getPassphrase();
+                String decrypted = getDecryptedBackupPayload(backupData, new CharSequenceX(passphrase));
+                JSONObject json = new JSONObject(decrypted);
+                JSONArray pCodes = json.getJSONObject("meta").getJSONObject("bip47").getJSONArray("pcodes");
+                for (int i = 0; i < pCodes.length(); i++) {
+                    if (pCodes.getJSONObject(i).has("following")) {
+                        pcodes.add(String.valueOf(pCodes.getJSONObject(i).get("payment_code")));
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Something went wrong: "+ e);
+            }
+        }
+        return pcodes;
     }
 
     public String getDecryptedBackupPayload(String data, CharSequenceX password) throws Exception {

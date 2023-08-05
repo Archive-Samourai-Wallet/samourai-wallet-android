@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
+import android.widget.Toast;
 
 import com.auth0.android.jwt.JWT;
 import com.samourai.wallet.BuildConfig;
@@ -75,6 +76,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
 import java.util.Objects;
+
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
@@ -186,7 +189,7 @@ public class APIFactory {
         if(currentAccessToken == null)    {
             // no current token => request new token
             Log.v("APIFactory", "getAccessTokenNotExpired => requesting new, setupDojo="+setupDojo);
-            getToken(setupDojo);
+            getToken(setupDojo, false);
             currentAccessToken = getAccessToken();
         }
 
@@ -201,7 +204,7 @@ public class APIFactory {
         if(jwt.isExpired(getAccessTokenRefresh())) {
             // expired => request new token
             Log.v("APIFactory", "getAccessTokenNotExpired => expired, request new");
-            getToken(setupDojo);
+            getToken(setupDojo, false);
             currentAccessToken = getAccessToken();
         }
         return currentAccessToken;
@@ -210,7 +213,7 @@ public class APIFactory {
     public String getAccessToken() {
         if(ACCESS_TOKEN == null && APIFactory.getInstance(context).APITokenRequired())    {
             try {
-                getToken(true);
+                getToken(true, false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -278,7 +281,7 @@ public class APIFactory {
 
             if(APIFactory.getInstance(context).getAccessToken() == null)    {
                 try {
-                    APIFactory.getInstance(context).getToken(false);
+                    APIFactory.getInstance(context).getToken(false, false);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -288,7 +291,7 @@ public class APIFactory {
                 JWT jwt = new JWT(APIFactory.getInstance(context).getAccessToken());
                 if(jwt != null && jwt.isExpired(APIFactory.getInstance(context).getAccessTokenRefresh()))    {
                     try {
-                        if(APIFactory.getInstance(context).getToken(false))  {
+                        if(APIFactory.getInstance(context).getToken(false, false))  {
                             return true;
                         }
                         else    {
@@ -314,7 +317,7 @@ public class APIFactory {
         return DojoUtil.getInstance(context).getDojoParams() == null ? false : true;
     }
 
-    public synchronized boolean getToken(boolean setupDojo) {
+    public synchronized boolean getToken(boolean setupDojo, boolean reauth401) {
 
         if(!APITokenRequired())    {
             return true;
@@ -361,6 +364,9 @@ public class APIFactory {
                     if(authObj.has("access_token"))    {
                         info("APIFactory", "setting access token:" + authObj.getString("access_token"));
                         setAccessToken(authObj.getString("access_token"));
+                        if (reauth401) {
+                            initWalletAmounts();
+                        }
                         return true;
                     }
                 }else{
@@ -561,7 +567,7 @@ public class APIFactory {
                 if(infoObj.has("latest_block"))  {
                     JSONObject blockObj = (JSONObject)infoObj.get("latest_block");
                     if(blockObj.has("height"))  {
-                        latest_block_height = blockObj.getLong("height");
+                        setLatestBlockHeight(blockObj.getLong("height"));
                     }
                     if(blockObj.has("hash"))  {
                         latest_block_hash = blockObj.getString("hash");
@@ -950,6 +956,11 @@ public class APIFactory {
 
     public long getLatestBlockHeight()  {
         return latest_block_height;
+    }
+
+    public synchronized void setLatestBlockHeight(long blockHeight)  {
+        debug("APIFactory", "setLatestBlockHeight: " + blockHeight);
+        latest_block_height = blockHeight;
     }
 
     public String getLatestBlockHash() {
@@ -2150,7 +2161,7 @@ public class APIFactory {
                 if(infoObj.has("latest_block"))  {
                     JSONObject blockObj = (JSONObject)infoObj.get("latest_block");
                     if(blockObj.has("height"))  {
-                        latest_block_height = blockObj.getLong("height");
+                        setLatestBlockHeight(blockObj.getLong("height"));
                     }
                     if(blockObj.has("hash"))  {
                         latest_block_hash = blockObj.getString("hash");

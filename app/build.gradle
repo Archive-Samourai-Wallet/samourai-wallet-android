@@ -2,16 +2,16 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     buildToolsVersion "30.0.3"
     useLibrary 'org.apache.http.legacy'
     flavorDimensions "versionCode"
     defaultConfig {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
-        targetSdkVersion 32
-        versionCode 194
-        versionName "0.99.98g"
+        targetSdkVersion 33
+        versionCode 197
+        versionName "0.99.98h"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -43,17 +43,17 @@ android {
     productFlavors {
         production {
             applicationId 'com.samourai.wallet'
-            versionCode 194
-            versionName "0.99.98g"
+            versionCode 197
+            versionName "0.99.98h"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98g"
+            resValue "string", "version_name", "0.99.98h"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
-            versionCode 194
-            versionName "0.99.98g"
+            versionCode 197
+            versionName "0.99.98h"
             resValue "string", "app_name", "Samourai Staging"
-            resValue "string", "version_name", "0.99.98g"
+            resValue "string", "version_name", "0.99.98h"
         }
     }
 
@@ -128,7 +128,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
-    implementation 'com.neovisionaries:nv-websocket-client:1.9'
     implementation 'commons-io:commons-io:2.5'
     implementation 'commons-codec:commons-codec:1.4'
     implementation 'org.apache.commons:commons-lang3:3.3'
@@ -141,7 +140,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation ('io.samourai.code.whirlpool:whirlpool-client:0.24.2') {
+    implementation ('io.samourai.code.whirlpool:whirlpool-client:0.24.3') {
         exclude group:'org.hibernate', module:'hibernate-validator'
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
@@ -152,7 +151,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:0.0.40') {
+    implementation ('io.samourai.code.wallet:extlibj:0.0.46') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
@@ -171,7 +170,7 @@ dependencies {
     implementation 'com.auth0.android:jwtdecode:1.1.1'
     implementation 'net.sourceforge.streamsupport:streamsupport:1.6.0'
     implementation 'com.github.clans:fab:1.6.4'
-    implementation 'io.samourai.code.wallet:android-tor-binary:0.4.5.4'
+    implementation 'io.samourai.code.wallet:android-tor-binary:0.4.7.12'
 
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
@@ -182,6 +181,8 @@ dependencies {
     implementation "io.matthewnelson.topl-android:topl-service:$topl_android_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
+    implementation 'io.samourai.code.wallet:hummingbird-android:1701b8c728a281886507ac08f37167173726a66d'
+    implementation 'com.sparrowwallet:hummingbird:1.6.4'
 
     //JetpackCompose
     // Integration with activities

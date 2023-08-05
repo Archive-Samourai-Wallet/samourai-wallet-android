@@ -14,6 +14,7 @@ import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.bipFormat.BIP_FORMAT
 import com.samourai.wallet.bipFormat.BipFormat
+import com.samourai.wallet.bipFormat.BipFormatSupplier
 import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.MyTransactionOutPoint
@@ -21,8 +22,19 @@ import com.samourai.wallet.send.PushTx
 import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.send.beans.SweepPreview
 import com.samourai.wallet.service.WalletRefreshWorker
-import com.samourai.wallet.util.*
-import kotlinx.coroutines.*
+import com.samourai.wallet.tools.viewmodels.fidelitybonds.FidelityBondsTimelockedBipFormat
+import com.samourai.wallet.tools.viewmodels.fidelitybonds.FidelityBondsTimelockedBipFormatSupplier
+import com.samourai.wallet.util.AddressFactory
+import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.BackendApiAndroid
+import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.PrivKeyReader
+import com.samourai.wallet.util.TxUtil
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.bitcoinj.core.Transaction
 import java.text.DecimalFormat
 import kotlin.math.ceil
@@ -124,11 +136,16 @@ class SweepViewModel : ViewModel() {
         val walletIndex = if (PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_SEGWIT, true)) WALLET_INDEX.BIP84_RECEIVE else WALLET_INDEX.BIP44_RECEIVE
         receiveAddressType.postValue(walletIndex)
         if (keyParameter.isNotEmpty()) {
-            setAddress(privKey = keyParameter, context)
+            setAddress(privKey = keyParameter, context = context, timelockDerivationIndex = -1)
         }
     }
 
-    fun setAddress(privKey: String?, context: Context, bip38Passphrase: String? = null) {
+    fun setAddress(
+        privKey: String?,
+        context: Context,
+        bip38Passphrase: String? = null,
+        timelockDerivationIndex: Int = -1) {
+
         if (privKey.isNullOrEmpty()) {
             addressValidationError.postValue(null)
             return
@@ -153,7 +170,7 @@ class SweepViewModel : ViewModel() {
                             throw  CancellationException()
                         }
                         try {
-                            findUTXOs(context)
+                            findUTXOs(context, timelockDerivationIndex)
                         } catch (e: Exception) {
                             throw CancellationException(e.message)
                         }
@@ -197,13 +214,16 @@ class SweepViewModel : ViewModel() {
         return !(amount == 0L || fee > totalValue || amount <= SamouraiWalletConst.bDust.toLong())
     }
 
-    private suspend fun findUTXOs(context: Context) {
+    private suspend fun findUTXOs(context: Context, timelockDerivationIndex: Int = -1) {
+
         withContext(Dispatchers.IO) {
+
             loading.postValue(true)
-            val bipFormats: Collection<BipFormat> = listOf(BIP_FORMAT.LEGACY, BIP_FORMAT.SEGWIT_COMPAT, BIP_FORMAT.SEGWIT_NATIVE, BIP_FORMAT.TAPROOT)
+
+            val bipFormats: Collection<BipFormat> = getBipFormats(timelockDerivationIndex)
             bipFormats.forEach {
                 // find utxo
-                val address: String = it.getToAddress(privKeyReader!!.key, params)
+                val address = it.getToAddress(privKeyReader!!.key, privKeyReader!!.params)
                 val items = BackendApiAndroid.getInstance(context).fetchAddressForSweep(address)
                 if (items != null && items.isNotEmpty()) {
                     unspentOutputs.postValue(items)
@@ -215,6 +235,19 @@ class SweepViewModel : ViewModel() {
                     makeTransaction(context)
                 }
             }
+        }
+    }
+
+    private fun getBipFormats(timelockDerivationIndex: Int = -1) : List<BipFormat> {
+        if (timelockDerivationIndex >= 0) {
+            return listOf(FidelityBondsTimelockedBipFormat.create(timelockDerivationIndex))
+        } else {
+            return listOf(
+                BIP_FORMAT.LEGACY,
+                BIP_FORMAT.SEGWIT_COMPAT,
+                BIP_FORMAT.SEGWIT_NATIVE,
+                BIP_FORMAT.TAPROOT
+            )
         }
     }
 
@@ -258,16 +291,26 @@ class SweepViewModel : ViewModel() {
                     val outpoints: MutableCollection<MyTransactionOutPoint> = mutableListOf()
                     sweepPreview!!.utxos
                         .map { unspentOutput: UnspentOutput -> unspentOutput.computeOutpoint(params) }.toCollection(outpoints);
-                    val tr = SendFactory.getInstance().makeTransaction(receivers, outpoints, BIP_FORMAT.PROVIDER, rbfOptin, params, blockHeight)
-                    val transaction = SendFactory.getInstance().signTransactionForSweep(tr, sweepPreview!!.privKey, params)
+                    val bipFormatSupplier: BipFormatSupplier = getBipFormatSupplier(bipFormat.value);
+                    val tr = createTransaction(receivers, outpoints, bipFormatSupplier, rbfOptin, blockHeight)
+                    val transaction = TransactionForSweepHelper.signTransactionForSweep(tr, sweepPreview!!.privKey, params, bipFormatSupplier)
                     sweepAddressLive.postValue(address ?: "")
                     fees.postValue(transaction.fee.value)
                     foundAmount.postValue(totalValue)
-                    feesPerByte.postValue(decimalFormatSatPerByte.format(transaction.fee.value.toFloat() / transaction.virtualTransactionSize.toFloat()))
+                    val currentFeesPerByte = decimalFormatSatPerByte.format(transaction.fee.value.toFloat() / transaction.virtualTransactionSize.toFloat())
+                    feesPerByte.postValue(currentFeesPerByte)
+                }
 
+                /**
+                 * creation of a new context to allow the update of the model (postValue execution)
+                 * before consuming it to calculate the number of estimated waiting blocks
+                 */
+                withContext(Dispatchers.Default) {
                     val pct: Double
                     var nbBlocks = 6
-                    val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true) 0.0 else getFeeSatsValueLive().value?.toDouble()?.times(1000)
+
+                    val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true)
+                        0.0 else decimalFormatSatPerByte.parse(getFeeSatsValueLive().value)?.toDouble()?.times(1000.0)
 
                     if (feeForBlocks != null) {
                         if (feeForBlocks <= feeLow.toDouble()) {
@@ -295,10 +338,17 @@ class SweepViewModel : ViewModel() {
             } catch (e: Exception) {
                 addressValidationError.postValue("${e.message}")
                 loading.postValue(false)
-                e.printStackTrace()
+                Log.e(TAG, "issue on making transaction : " + e.message, e)
             }
         }
 
+    }
+
+    private fun getBipFormatSupplier(bipFormat: BipFormat?): BipFormatSupplier {
+        if (FidelityBondsTimelockedBipFormat.ID.equals(bipFormat?.id)) {
+            return FidelityBondsTimelockedBipFormatSupplier.create(bipFormat as FidelityBondsTimelockedBipFormat?);
+        }
+        return BIP_FORMAT.PROVIDER;
     }
 
     fun setFeeRange(it: Float, context: Context) {
@@ -340,11 +390,19 @@ class SweepViewModel : ViewModel() {
                     val blockHeight = APIFactory.getInstance(context).latestBlockHeight
                     val receivers: MutableMap<String, Long> = LinkedHashMap()
                     receivers[receiveAddress] = sweepPreview!!.amount
+                    val bipFormatSupplier: BipFormatSupplier = getBipFormatSupplier(bipFormat.value);
                     val outpoints: MutableCollection<MyTransactionOutPoint> = mutableListOf()
                     sweepPreview!!.utxos
-                        .map { unspentOutput: UnspentOutput -> unspentOutput.computeOutpoint(params) }.toCollection(outpoints);
-                    val tr = SendFactory.getInstance().makeTransaction(receivers, outpoints, BIP_FORMAT.PROVIDER, rbfOptin, params, blockHeight)
-                    transaction = SendFactory.getInstance().signTransactionForSweep(tr, sweepPreview!!.privKey, params)
+                        .map { unspentOutput: UnspentOutput -> unspentOutput.computeOutpoint(params) }.toCollection(outpoints)
+
+                    val tr = createTransaction(
+                        receivers,
+                        outpoints,
+                        bipFormatSupplier,
+                        rbfOptin,
+                        blockHeight)
+
+                    transaction = TransactionForSweepHelper.signTransactionForSweep(tr, sweepPreview!!.privKey, params, bipFormatSupplier)
                 } catch (e: Exception) {
                     throw  CancellationException("Sign: ${e.message}")
                 }
@@ -368,6 +426,24 @@ class SweepViewModel : ViewModel() {
             }
 
     }
+
+    private fun createTransaction(
+        receivers: MutableMap<String, Long>,
+        outpoints: MutableCollection<MyTransactionOutPoint>,
+        bipFormatSupplier: BipFormatSupplier,
+        rbfOptin: Boolean,
+        blockHeight: Long
+    ): Transaction? {
+
+        if (FidelityBondsTimelockedBipFormat.ID.equals(bipFormat?.value?.id)) {
+            return TransactionForSweepHelper.makeTimelockTransaction(receivers, outpoints,
+                bipFormat!!.value as FidelityBondsTimelockedBipFormat?, params)
+        } else {
+            return SendFactory.getInstance()
+                .makeTransaction(receivers, outpoints, bipFormatSupplier, rbfOptin, params, blockHeight)
+        }
+    }
+
 
     companion object {
         private const val TAG = "SweepViewModel"

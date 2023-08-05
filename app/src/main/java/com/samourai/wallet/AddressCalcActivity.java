@@ -272,7 +272,7 @@ public class AddressCalcActivity extends SamouraiActivity {
                             dlg.setPositiveButton(R.string.options_display_redeem_script, new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int whichButton) {
 
-                                        String redeemScript = org.spongycastle.util.encoders.Hex.toHexString(segwitAddress.segWitRedeemScript().getProgram());
+                                        String redeemScript = org.spongycastle.util.encoders.Hex.toHexString(segwitAddress.segwitRedeemScript().getProgram());
 
                                         TextView showText = new TextView(AddressCalcActivity.this);
                                         showText.setText(redeemScript);

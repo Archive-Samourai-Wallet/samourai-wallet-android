@@ -149,11 +149,12 @@ public class NetworkDashboard extends SamouraiActivity {
                 stopTor();
                 PrefsUtil.getInstance(getApplicationContext()).setValue(PrefsUtil.ENABLE_TOR, false);
             } else {
-                if (AppUtil.getInstance(NetworkDashboard.this.getApplicationContext()).isServiceRunning(WebSocketService.class)) {
-                    stopService(new Intent(NetworkDashboard.this.getApplicationContext(), WebSocketService.class));
-                }
+                WebSocketService.stopService(NetworkDashboard.this);
+
                 startTor();
                 PrefsUtil.getInstance(getApplicationContext()).setValue(PrefsUtil.ENABLE_TOR, true);
+
+                WebSocketService.restartService(NetworkDashboard.this);
             }
         });
 
@@ -435,7 +436,7 @@ public class NetworkDashboard extends SamouraiActivity {
                 APIFactory.getInstance(NetworkDashboard.this).setAccessToken(null);
                 APIFactory.getInstance(NetworkDashboard.this).setAppToken(null);
                 try {
-                    APIFactory.getInstance(NetworkDashboard.this).getToken(true);
+                    APIFactory.getInstance(NetworkDashboard.this).getToken(true, false);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

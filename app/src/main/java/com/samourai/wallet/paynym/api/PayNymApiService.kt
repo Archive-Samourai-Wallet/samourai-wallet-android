@@ -1,7 +1,6 @@
 package com.samourai.wallet.paynym.api
 
 import android.content.Context
-import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.AbstractApiService
@@ -11,13 +10,11 @@ import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception
 import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.payload.PayloadUtil
-import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.tor.TorManager.getProxy
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.MessageSignUtil
+import com.samourai.wallet.util.WebUtil
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.logging.HttpLoggingInterceptor
 import org.bitcoinj.crypto.MnemonicException
 import org.json.JSONException
 import org.json.JSONObject
@@ -26,7 +23,6 @@ import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
 import java.security.NoSuchProviderException
 import java.security.spec.InvalidKeySpecException
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -39,25 +35,8 @@ class PayNymApiService(private val paynymCode: String, private val context: Cont
     private var payNymToken: String? = null
 
     override fun buildClient(url: HttpUrl): OkHttpClient {
-        val builder = OkHttpClient.Builder()
+        val builder = WebUtil.getInstance(context).httpClientBuilder(url.toString());
 
-        if (url.host.contains("onion")) {
-            this.getHostNameVerifier(builder)
-        }
-
-        builder.connectTimeout(45, TimeUnit.SECONDS)
-            .readTimeout(45, TimeUnit.SECONDS)
-            .callTimeout(45, TimeUnit.SECONDS)
-
-        if (TorManager.isRequired()) {
-            builder.proxy(getProxy())
-            builder.connectTimeout(120, TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS)
-                .callTimeout(120, TimeUnit.SECONDS)
-        }
-        if (BuildConfig.DEBUG) {
-            builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
-        }
         builder.addInterceptor { chain ->
             val original = chain.request()
 

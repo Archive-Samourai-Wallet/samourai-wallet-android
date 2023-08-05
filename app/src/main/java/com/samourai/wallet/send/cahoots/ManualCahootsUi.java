@@ -10,6 +10,7 @@ import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.cahoots.ManualCahootsMessage;
 import com.samourai.soroban.cahoots.ManualCahootsService;
 import com.samourai.soroban.cahoots.TxBroadcastInteraction;
+import com.samourai.wallet.R;
 import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
@@ -212,7 +213,11 @@ public class ManualCahootsUi {
     }
 
     public String getTitle(CahootsMode cahootsMode) {
-        return (CahootsTypeUser.SENDER.equals(typeUser) ? "Sending" : "Receiving") + " " + cahootsMode.getLabel().toLowerCase() + " " + cahootsType.getLabel();
+        if(cahootsType == CahootsType.MULTI)
+            // JoinBot
+            return getActivity().getResources().getString(R.string.joinbot);
+        else
+            return (CahootsTypeUser.SENDER.equals(typeUser) ? "Sending" : "Receiving") + " " + cahootsMode.getLabel().toLowerCase() + " " + cahootsType.getLabel();
     }
 
     public CahootsContext computeCahootsContextInitiator(int account, long feePerB, long sendAmount, String sendAddress, String paynymDestination) throws Exception {

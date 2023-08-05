@@ -16,13 +16,12 @@ import androidx.webkit.ProxyConfig
 import androidx.webkit.ProxyController
 import androidx.webkit.WebViewFeature
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.R
+import com.samourai.wallet.databinding.ActivityExplorerBinding
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.BlockExplorerUtil
 import kotlinx.coroutines.*
-import android.webkit.WebView
-import com.samourai.wallet.BuildConfig
-import com.samourai.wallet.databinding.ActivityExplorerBinding
 
 
 class ExplorerActivity : AppCompatActivity() {
@@ -215,14 +214,14 @@ class ExplorerActivity : AppCompatActivity() {
             val icon = menu.findItem(R.id.menu_web_tor).icon
             when (it) {
                 TorManager.TorState.WAITING -> {
-                    icon.setTint(ContextCompat.getColor(applicationContext, R.color.warning_yellow))
+                    icon?.setTint(ContextCompat.getColor(applicationContext, R.color.warning_yellow))
                 }
                 TorManager.TorState.ON -> {
-                    icon.setTint(ContextCompat.getColor(applicationContext, R.color.green_ui_2))
+                    icon?.setTint(ContextCompat.getColor(applicationContext, R.color.green_ui_2))
                 }
                 TorManager.TorState.OFF -> {
                     menu.findItem(R.id.menu_web_tor).icon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_tor_on)
-                    menu.findItem(R.id.menu_web_tor).icon.setTint(ContextCompat.getColor(applicationContext, R.color.disabledRed))
+                    menu.findItem(R.id.menu_web_tor).icon?.setTint(ContextCompat.getColor(applicationContext, R.color.disabledRed))
                 }
                 else -> {
                 }

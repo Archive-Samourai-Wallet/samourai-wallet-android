@@ -59,6 +59,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -494,6 +495,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
         HashMap<String, ECKey> keyBag84 = new HashMap<String, ECKey>();
 
         HashMap<String, String> keys = rbf.getKeyBag();
+
         for (String outpoint : keys.keySet()) {
 
             ECKey ecKey = null;
@@ -545,60 +547,65 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
         }
 
-        List<TransactionInput> inputs = tx.getInputs();
-        for (int i = 0; i < inputs.size(); i++) {
+        try {
+            List<TransactionInput> inputs = tx.getInputs();
+            for (int i = 0; i < inputs.size(); i++) {
 
-            ECKey ecKey = null;
-            String address = null;
-            if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
-                if (keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
-                    ecKey = keyBag84.get(inputs.get(i).getOutpoint().toString());
-                    SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                    address = segwitAddress.getBech32AsString();
+                ECKey ecKey = null;
+                String address = null;
+                if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
+                    if (keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
+                        ecKey = keyBag84.get(inputs.get(i).getOutpoint().toString());
+                        SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                        address = segwitAddress.getBech32AsString();
+                    } else {
+                        ecKey = keyBag49.get(inputs.get(i).getOutpoint().toString());
+                        SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                        address = segwitAddress.getAddressAsString();
+                    }
                 } else {
-                    ecKey = keyBag49.get(inputs.get(i).getOutpoint().toString());
-                    SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                    address = segwitAddress.getAddressAsString();
+                    ecKey = keyBag.get(inputs.get(i).getOutpoint().toString());
+                    address = ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
                 }
-            } else {
-                ecKey = keyBag.get(inputs.get(i).getOutpoint().toString());
-                address = ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-            }
-            Log.d("RBF", "pubKey:" + Hex.toHexString(ecKey.getPubKey()));
-            Log.d("RBF", "address:" + address);
+                Log.d("RBF", "pubKey:" + Hex.toHexString(ecKey.getPubKey()));
+                Log.d("RBF", "address:" + address);
 
-            if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
+                if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
 
-                final SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                Script scriptPubKey = segwitAddress.segWitOutputScript();
-                final Script redeemScript = segwitAddress.segWitRedeemScript();
-                System.out.println("redeem script:" + Hex.toHexString(redeemScript.getProgram()));
-                final Script scriptCode = redeemScript.scriptCode();
-                System.out.println("script code:" + Hex.toHexString(scriptCode.getProgram()));
+                    final SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                    Script scriptPubKey = segwitAddress.segwitOutputScript();
+                    final Script redeemScript = segwitAddress.segwitRedeemScript();
+                    System.out.println("redeem script:" + Hex.toHexString(redeemScript.getProgram()));
+                    final Script scriptCode = redeemScript.scriptCode();
+                    System.out.println("script code:" + Hex.toHexString(scriptCode.getProgram()));
 
-                TransactionSignature sig = tx.calculateWitnessSignature(i, ecKey, scriptCode, Coin.valueOf(input_values.get(inputs.get(i).getOutpoint().toString())), Transaction.SigHash.ALL, false);
-                final TransactionWitness witness = new TransactionWitness(2);
-                witness.setPush(0, sig.encodeToBitcoin());
-                witness.setPush(1, ecKey.getPubKey());
-                tx.setWitness(i, witness);
+                    TransactionSignature sig = tx.calculateWitnessSignature(i, ecKey, scriptCode, Coin.valueOf(input_values.get(inputs.get(i).getOutpoint().toString())), Transaction.SigHash.ALL, false);
+                    final TransactionWitness witness = new TransactionWitness(2);
+                    witness.setPush(0, sig.encodeToBitcoin());
+                    witness.setPush(1, ecKey.getPubKey());
+                    tx.setWitness(i, witness);
 
-                if (!FormatsUtil.getInstance().isValidBech32(address) && Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
-                    final ScriptBuilder sigScript = new ScriptBuilder();
-                    sigScript.data(redeemScript.getProgram());
-                    tx.getInput(i).setScriptSig(sigScript.build());
-                    tx.getInput(i).getScriptSig().correctlySpends(tx, i, scriptPubKey, Coin.valueOf(input_values.get(inputs.get(i).getOutpoint().toString())), Script.ALL_VERIFY_FLAGS);
+                    if (!FormatsUtil.getInstance().isValidBech32(address) && Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
+                        final ScriptBuilder sigScript = new ScriptBuilder();
+                        sigScript.data(redeemScript.getProgram());
+                        tx.getInput(i).setScriptSig(sigScript.build());
+                        tx.getInput(i).getScriptSig().correctlySpends(tx, i, scriptPubKey, Coin.valueOf(input_values.get(inputs.get(i).getOutpoint().toString())), Script.ALL_VERIFY_FLAGS);
+                    }
+
+                } else {
+                    Log.i("RBF", "sign outpoint:" + inputs.get(i).getOutpoint().toString());
+                    Log.i("RBF", "ECKey address from keyBag:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
+
+                    Log.i("RBF", "script:" + ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())));
+                    Log.i("RBF", "script:" + Hex.toHexString(ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram()));
+                    TransactionSignature sig = tx.calculateSignature(i, ecKey, ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram(), Transaction.SigHash.ALL, false);
+                    tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(sig, ecKey));
                 }
 
-            } else {
-                Log.i("RBF", "sign outpoint:" + inputs.get(i).getOutpoint().toString());
-                Log.i("RBF", "ECKey address from keyBag:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-
-                Log.i("RBF", "script:" + ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())));
-                Log.i("RBF", "script:" + Hex.toHexString(ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram()));
-                TransactionSignature sig = tx.calculateSignature(i, ecKey, ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram(), Transaction.SigHash.ALL, false);
-                tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(sig, ecKey));
             }
-
+        }
+        catch(NoSuchAlgorithmException nsae) {
+            return null;
         }
 
         return tx;
