@@ -1,6 +1,7 @@
 package com.samourai.wallet.send.batch
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
@@ -10,9 +11,12 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.InputFilter
 import android.text.TextWatcher
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -24,6 +28,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.common.base.Splitter
+import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
@@ -45,7 +50,6 @@ import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.segwit.bech32.Bech32Util
-import com.samourai.wallet.segwit.bech32.Bech32Segwit
 import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
@@ -57,19 +61,22 @@ import com.samourai.wallet.whirlpool.WhirlpoolConst
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
+import org.apache.commons.lang3.StringUtils.isBlank
 import org.bitcoinj.core.Transaction
 import org.bouncycastle.util.encoders.Hex
 import java.io.UnsupportedEncodingException
+import java.lang.String.format
 import java.math.BigInteger
 import java.net.URLDecoder
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.ParseException
 import java.util.*
-import org.apache.commons.lang3.tuple.Pair
+
 
 class BatchSpendActivity : SamouraiActivity() {
 
+    private val TAG = BatchSpendActivity::class.java.simpleName
 
     private var strPCode: String? = null
     private var tx: Transaction? = null
@@ -95,9 +102,11 @@ class BatchSpendActivity : SamouraiActivity() {
     private var outpoints: MutableList<MyTransactionOutPoint> = mutableListOf()
     private var receivers: HashMap<String, BigInteger> = hashMapOf()
     private lateinit var binding: ActivityBatchSpendBinding
+    private lateinit var dialog : Dialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dialog = Dialog(this@BatchSpendActivity)
         binding = ActivityBatchSpendBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbarBatchSend)
@@ -139,15 +148,15 @@ class BatchSpendActivity : SamouraiActivity() {
         }
 
         binding.addToBatch.setOnClickListener {
-            this.hidekeyboard()
+            hidekeyboard()
             if (validate()) {
                 val batchItem = BatchSendUtil.BatchSend().apply {
-                    this.amount = this@BatchSpendActivity.amount.toLong()
-                    this.addr = destAddress
+                    amount = this@BatchSpendActivity.amount
+                    addr = destAddress
                     if (strPCode != null) {
-                        this.pcode = strPCode;
+                        pcode = strPCode;
                     }
-                    this.UUID = selectedId ?: System.currentTimeMillis()
+                    UUID = selectedId ?: System.currentTimeMillis()
                 }
                 selectedId = null
                 viewModel.add(batchItem)
@@ -178,35 +187,41 @@ class BatchSpendActivity : SamouraiActivity() {
         menuInflater.inflate(R.menu.send_menu, menu)
         menu.findItem(R.id.action_batch).isVisible = false
         menu.findItem(R.id.action_clear_batch).isVisible = true
+        menu.findItem(R.id.action_import_batch).isVisible = BuildConfig.FLAVOR == "staging"
         menu.findItem(R.id.action_ricochet).isVisible = false
         menu.findItem(R.id.action_empty_ricochet).isVisible = false
         this.menu = menu
         return super.onCreateOptionsMenu(menu)
     }
 
+    private fun getBtcAmountFromWidget(): Double {
+        return try {
+            NumberFormat.getInstance(Locale.US)
+                .parse(btcEditText.text.toString().trim { it <= ' ' })
+                .toDouble()
+        } catch (e: java.lang.Exception) {
+            0.0
+        }
+    }
 
     private fun validate(): Boolean {
-        var isValid = false
-        var insufficientFunds = false
-        var btcAmount = 0.0
+        return validate(
+            destAddress ?: "",
+            SatoshiBitcoinUnitHelper.getSatValue(getBtcAmountFromWidget()))
+    }
 
-        val strBTCAddress = destAddress ?: ""
+    private fun validate(strBTCAddress : String, amountRounded : Long): Boolean {
+
+        var isValid: Boolean
+        var insufficientFunds = false
 
         if (strBTCAddress.startsWith("bitcoin:")) {
             setToAddress(strBTCAddress.substring(8))
         }
+
         if (strPCode == null)
             setToAddress(strBTCAddress)
 
-        btcAmount = try {
-            NumberFormat.getInstance(Locale.US).parse(btcEditText.text.toString()).toDouble()
-        } catch (nfe: java.lang.NumberFormatException) {
-            0.0
-        } catch (pe: ParseException) {
-            0.0
-        }
-        val dAmount: Double = btcAmount
-        val amountRounded = (dAmount * 1e8)
         val walletBalance = viewModel.totalWalletBalance() ?: 0
         if (amountRounded > walletBalance) {
             insufficientFunds = true
@@ -217,14 +232,13 @@ class BatchSpendActivity : SamouraiActivity() {
         } else amountRounded >= SamouraiWallet.bDust.toLong() && FormatsUtil.getInstance().isValidBitcoinAddress(strBTCAddress)
 
         if (isValid && !insufficientFunds) {
-            amount = amountRounded.toLong()
+            amount = amountRounded
         }
 
         binding.addToBatch.isEnabled = isValid && !insufficientFunds
 
         binding.addToBatch.text = if (this.selectedId == null) getString(R.string.add_to_batch) else getString(R.string.update_to_batch)
         return isValid && !insufficientFunds;
-
     }
 
     @SuppressLint("SetTextI18n")
@@ -404,8 +418,89 @@ class BatchSpendActivity : SamouraiActivity() {
             R.id.action_utxo -> {
                 doUTXO()
             }
+            R.id.action_import_batch -> {
+                importBatch()
+            }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun importBatch() {
+        dialog.setContentView(R.layout.import_batch_spend)
+
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.setCancelable(false)
+        val btnCancel = dialog.findViewById<Button>(R.id.cancel)
+        val btnOk = dialog.findViewById<Button>(R.id.ok)
+        val txtJson = dialog.findViewById<EditText>(R.id.editText)
+        btnCancel.setOnClickListener {
+            hidekeyboard()
+            dialog.dismiss()
+        }
+        btnOk.setOnClickListener {
+            hidekeyboard()
+            dialog.dismiss()
+            importBatchFromJson(txtJson.editableText.toString())
+        }
+        dialog.show()
+    }
+
+    private fun importBatchFromJson(content: String) {
+
+        if (isBlank(content)) {
+            return;
+        }
+
+        val idStart = System.currentTimeMillis();
+        var offset = 0
+        var validatedItem = 0
+
+        val receivers : Map<String, BigInteger>
+        try {
+            receivers = InputBatchSpendHelper.loadReceivers(content, this@BatchSpendActivity)
+        } catch (e : Exception) {
+            val errorMessage = getString(R.string.options_import_batch_parsing_error)
+            Log.e(TAG, errorMessage, e)
+            Toast.makeText(this@BatchSpendActivity, errorMessage, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        receivers.entries.forEach { entry ->
+            val batchItem = BatchSendUtil.BatchSend().apply {
+                UUID = idStart + (offset ++)
+                amount = entry.value.toLong()
+                addr = entry.key
+            }
+            if (validateBatchSpendItem(batchItem.addr, batchItem.amount)) {
+                viewModel.add(batchItem)
+                ++ validatedItem
+            }
+        }
+
+        Toast.makeText(
+            this@BatchSpendActivity,
+            format(getString(R.string.options_import_batch_payment_count), validatedItem),
+            Toast.LENGTH_SHORT).show()
+    }
+
+    private fun validateBatchSpendItem(address: String, amountSat: Long): Boolean {
+        var isValid: Boolean
+        var insufficientFunds = false
+
+        val walletBalance = viewModel.totalWalletBalance() ?: 0
+        if (amountSat > walletBalance) {
+            insufficientFunds = true
+        }
+
+        isValid = amountSat >= SamouraiWallet.bDust.toLong() &&
+            FormatsUtil.getInstance().isValidBitcoinAddress(address)
+
+        binding.addToBatch.isEnabled = !insufficientFunds
+
+        binding.addToBatch.text = if (this.selectedId == null)
+            getString(R.string.add_to_batch) else getString(R.string.update_to_batch)
+
+        return isValid && !insufficientFunds;
     }
 
     private fun doUTXO() {

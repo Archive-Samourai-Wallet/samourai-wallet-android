@@ -954,4 +954,9 @@
     <string name="enable_stealth_mode">Enable stealth mode</string>
     <string name="disable_stealth_mode">Disable stealth mode</string>
     <string name="instructions">Instructions</string>
+
+    <string name="options_import_batch">Import batch spend</string>
+    <string name="options_import_batch_parsing_error">Error while parsing batch spend</string>
+    <string name="options_import_batch_payment_count">%d spend items found</string>
+    <string name="options_import_batch_input_hint">Batch spend in json format...</string>
 </resources>

@@ -1083,5 +1083,10 @@
     <string name="verify_message">Vérifier un message</string>
     <string name="verify_message_desc">Vérifier qu\'un message signé contient une signature valide</string>
 
+    <string name="options_import_batch">Importer des dépenses</string>
+    <string name="options_import_batch_parsing_error">Erreur lors de l\'interprétation des dépenses</string>
+    <string name="options_import_batch_payment_count">%d éléments de dépenses trouvés</string>
+    <string name="options_import_batch_input_hint">Dépenses au format json...</string>
+
 </resources>
 

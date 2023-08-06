@@ -1,14 +1,16 @@
 package com.samourai.wallet.send.batch
 
 import android.content.Context
-import android.util.Log
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.hd.HD_WalletFactory
-import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.util.BatchSendUtil
-import com.samourai.wallet.util.FeeUtil
 import com.samourai.wallet.whirlpool.WhirlpoolConst
+import kotlinx.coroutines.launch
 
 class BatchSpendViewModel() : ViewModel() {
 
@@ -70,19 +72,24 @@ class BatchSpendViewModel() : ViewModel() {
     }
 
     fun add(batchItem: BatchSendUtil.BatchSend) {
-        val list = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
-        val exist = list.find { it.UUID==batchItem.UUID }
-        if(exist==null){
-            list.add(batchItem)
-        }else{
-            list[list.indexOf(exist)] = batchItem
+        viewModelScope.launch {
+            val list = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
+
+            val exist = list.find { it.UUID == batchItem.UUID }
+            if (exist == null){
+                list.add(batchItem)
+            } else {
+                list[list.indexOf(exist)] = batchItem
+            }
+            list.sortByDescending { it.UUID }
+
+            list.let {
+                batchList.value = list
+                BatchSendUtil.getInstance().sends.clear()
+                BatchSendUtil.getInstance().sends.addAll(list)
+            }
         }
-        list.sortByDescending { it.UUID }
-        list.let {
-            batchList.postValue(list)
-            BatchSendUtil.getInstance().sends.clear()
-            BatchSendUtil.getInstance().sends.addAll(list)
-        }
+
     }
 
     fun remove(it: BatchSendUtil.BatchSend) {
