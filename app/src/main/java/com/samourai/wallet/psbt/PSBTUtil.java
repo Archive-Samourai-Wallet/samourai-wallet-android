@@ -1,4 +1,4 @@
-package com.samourai.wallet.cahoots.psbt;
+package com.samourai.wallet.psbt;
 
 import static com.samourai.wallet.util.LogUtil.debug;
 

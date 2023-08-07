@@ -13,6 +13,7 @@ import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import com.invertedx.hummingbird.QRScanner
 import com.samourai.wallet.R
@@ -24,7 +25,7 @@ import kotlinx.coroutines.launch
 
 class ScanFragment : BottomSheetDialogFragment() {
 
-    private var mCodeScanner: QRScanner? = null
+    private lateinit var  mCodeScanner: QRScanner;
     private var onScan: (scanData: String) -> Unit = {}
     private var onScanUR: (scanData: String) -> Unit = {}
     private var permissionView: MaterialCardView? = null
@@ -42,6 +43,7 @@ class ScanFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         permissionView = view.findViewById(R.id.permissionCameraDialog)
         mCodeScanner = view.findViewById(R.id.scanner_view);
+        mCodeScanner.setLifeCycleOwner(this)
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.CAMERA
@@ -51,14 +53,28 @@ class ScanFragment : BottomSheetDialogFragment() {
         } else {
             showPermissionView(true)
         }
-        mCodeScanner?.setQRDecodeListener {
+        mCodeScanner.setQRDecodeListener {
             GlobalScope.launch(Dispatchers.Main) {
                 onScan(it)
             }
         }
 
-        mCodeScanner?.setURDecodeListener { bytes, type ->
-            onScanUR(bytesToHex(bytes))
+        mCodeScanner.setURDecodeListener { result ->
+            mCodeScanner.stopScanner()
+            result.fold(
+                onSuccess = {
+                    onScanUR(bytesToHex(it.ur.toBytes()))
+                },
+                onFailure = {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Error decoding UR")
+                        .setMessage("Exception: ${it.message}")
+                        .setPositiveButton("Ok") { dialog, which ->
+                            dialog.dismiss()
+                        }.show()
+                    mCodeScanner?.stopScanner()
+                }
+            )
         }
 
         permissionView!!.findViewById<View>(R.id.permissionCameraDialogGrantBtn)
@@ -105,10 +121,10 @@ class ScanFragment : BottomSheetDialogFragment() {
         )
         if (show) {
             permissionView!!.visibility = View.VISIBLE
-            mCodeScanner!!.visibility = View.INVISIBLE
+            mCodeScanner.visibility = View.INVISIBLE
         } else {
             permissionView!!.visibility = View.INVISIBLE
-            mCodeScanner!!.visibility = View.VISIBLE
+            mCodeScanner.visibility = View.VISIBLE
         }
     }
 
@@ -120,7 +136,6 @@ class ScanFragment : BottomSheetDialogFragment() {
                 Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            mCodeScanner?.startScanner()
         }
     }
 
@@ -137,6 +152,7 @@ class ScanFragment : BottomSheetDialogFragment() {
                 bottomSheetBehavior.peekHeight = view.measuredHeight
             }
         }
+        mCodeScanner.startScanner()
     }
 
 }

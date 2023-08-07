@@ -160,6 +160,7 @@ dependencies {
         exclude group:'org.apache.commons', module:'commons-lang3'
         exclude group:'org.json', module:'json'
     }
+
     implementation ('io.samourai.code.wallet:boltzmann-java:1.0.4') {
         exclude group: 'it.unimi.dsi', module: 'fastutil'
     }
@@ -181,8 +182,8 @@ dependencies {
     implementation "io.matthewnelson.topl-android:topl-service:$topl_android_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    implementation 'io.samourai.code.wallet:hummingbird-android:1701b8c728a281886507ac08f37167173726a66d'
-    implementation 'com.sparrowwallet:hummingbird:1.6.4'
+    implementation 'io.samourai.code.wallet:hummingbird-android:0.8'
+    implementation 'com.sparrowwallet:hummingbird:1.6.6'
 
     //JetpackCompose
     // Integration with activities
