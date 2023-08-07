@@ -43,7 +43,6 @@ import com.samourai.wallet.collaborate.CollaborateActivity
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.databinding.ActivityBalanceBinding
-import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.fragments.ScanFragment
 import com.samourai.wallet.hd.HD_WalletFactory
@@ -73,6 +72,7 @@ import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.tx.TxDetailsActivity
 import com.samourai.wallet.util.*
+import com.samourai.wallet.util.activity.ActivityHelper
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.WhirlpoolHome
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
@@ -704,7 +704,7 @@ open class BalanceActivity : SamouraiActivity() {
             startActivity(Intent(this, NetworkDashboard::class.java))
         } // noinspection SimplifiableIfStatement
         if (id == R.id.action_support) {
-            doSupport()
+            ActivityHelper.launchSupportPageInBrowser(this, isConnected())
         } else if (id == R.id.action_utxo) {
             doUTXO()
         } else if (id == R.id.action_backup) {
@@ -915,16 +915,6 @@ open class BalanceActivity : SamouraiActivity() {
         val intent = Intent(this@BalanceActivity, SettingsActivity::class.java)
         startActivity(intent)
     }
-
-    private fun doSupport() {
-        var url = "https://samouraiwallet.com/support"
-        if (isConnected())
-            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
-        val explorerIntent = Intent(this, ExplorerActivity::class.java)
-        explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
-        startActivity(explorerIntent)
-    }
-
 
     var utxoListResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()

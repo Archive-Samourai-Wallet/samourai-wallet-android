@@ -1,10 +1,24 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
+import static com.samourai.wallet.send.SendActivity.SPEND_SIMPLE;
+import static com.samourai.wallet.util.LogUtil.debug;
+
+import android.content.Context;
+
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.hd.HD_Address;
+import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.segwit.BIP49Util;
+import com.samourai.wallet.segwit.BIP84Util;
+import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
+import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.BatchSendUtil;
+import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
@@ -14,9 +28,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
-import static com.samourai.wallet.util.LogUtil.debug;
 
 public class SendParams	{
 
@@ -185,4 +196,63 @@ public class SendParams	{
         return ret;
     }
 
+    public boolean isPostmixAccount(final Context ctx) {
+        return account == WhirlpoolMeta.getInstance(ctx).getWhirlpoolPostmix();
+    }
+
+    public boolean isBadBankAccount(final Context ctx) {
+        return account == WhirlpoolMeta.getInstance(ctx).getWhirlpoolBadBank();
+    }
+
+    public String generateChangeAddress(final Context ctx) {
+        return generateChangeAddress(
+                ctx,
+                changeAmount,
+                SPEND_TYPE,
+                account,
+                changeType,
+                changeIdx);
+    }
+
+    public static String generateChangeAddress(final Context ctx,
+                                               final long changeAmount,
+                                               final int spendType,
+                                               final int account,
+                                               final int changeType,
+                                               final int change_index) {
+
+        if (changeAmount <= 0l) return null;
+        if (spendType != SPEND_SIMPLE) return null;
+        if (account == WhirlpoolMeta.getInstance(ctx).getWhirlpoolPostmix()) {
+            if (changeType == 44) {
+                final HD_Address hd_addr = BIP84Util.getInstance(ctx).getWallet()
+                        .getAccount(WhirlpoolMeta.getInstance(ctx)
+                                .getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN)
+                        .getAddressAt(change_index);
+                return hd_addr.getAddressString();
+            } else if (changeType == 49) {
+                final HD_Address hd_addr = BIP84Util.getInstance(ctx).getWallet()
+                        .getAccount(WhirlpoolMeta.getInstance(ctx)
+                                .getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN)
+                        .getAddressAt(change_index);
+                final NetworkParameters networkParams = SamouraiWallet.getInstance()
+                        .getCurrentNetworkParams();
+                return new SegwitAddress(hd_addr.getECKey(), networkParams).getAddressAsString();
+            } else {
+                return BIP84Util.getInstance(ctx)
+                        .getAddressAt(
+                                WhirlpoolMeta.getInstance(ctx).getWhirlpoolPostmix(),
+                                AddressFactory.CHANGE_CHAIN, change_index).getBech32AsString();
+            }
+        } else if (changeType == 84) {
+            return BIP84Util.getInstance(ctx)
+                    .getAddressAt(AddressFactory.CHANGE_CHAIN, change_index).getBech32AsString();
+        } else if (changeType == 49) {
+            return BIP49Util.getInstance(ctx)
+                    .getAddressAt(AddressFactory.CHANGE_CHAIN, change_index).getAddressAsString();
+        } else {
+            return HD_WalletFactory.getInstance(ctx).get().getAccount(0).getChange()
+                    .getAddressAt(change_index).getAddressString();
+        }
+    }
 }

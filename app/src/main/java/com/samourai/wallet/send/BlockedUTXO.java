@@ -23,7 +23,7 @@ public class BlockedUTXO {
 
     public final static long BLOCKED_UTXO_THRESHOLD = 1001L;
 
-    private BlockedUTXO() { ; }
+    private BlockedUTXO() {}
 
     public static BlockedUTXO getInstance() {
 
@@ -43,20 +43,20 @@ public class BlockedUTXO {
     }
 
     public long get(String hash, int idx)    {
-        return blockedUTXO.get(hash + "-" + Integer.toString(idx));
+        return blockedUTXO.get(hash + "-" + idx);
     }
 
     public void add(String hash, int idx, long value)    {
-        blockedUTXO.put(hash + "-" + Integer.toString(idx), value);
+        blockedUTXO.put(hash + "-" + idx, value);
         onUtxoChange();
-        debug("BlockedUTXO", "add:" + hash + "-" + Integer.toString(idx));
+        debug("BlockedUTXO", "add:" + hash + "-" + idx);
     }
 
     public void remove(String hash, int idx)   {
-        if(blockedUTXO != null && blockedUTXO.containsKey(hash + "-" + Integer.toString(idx)))  {
-            blockedUTXO.remove(hash + "-" + Integer.toString(idx));
+        if(blockedUTXO != null && blockedUTXO.containsKey(hash + "-" + idx))  {
+            blockedUTXO.remove(hash + "-" + idx);
             onUtxoChange();
-            debug("BlockedUTXO", "remove:" + hash + "-" + Integer.toString(idx));
+            debug("BlockedUTXO", "remove:" + hash + "-" + idx);
         }
     }
 
@@ -69,7 +69,7 @@ public class BlockedUTXO {
     }
 
     public boolean contains(String hash, int idx)   {
-        return blockedUTXO.containsKey(hash + "-" + Integer.toString(idx));
+        return blockedUTXO.containsKey(hash + "-" + idx);
     }
 
     public void clear()    {
@@ -103,8 +103,8 @@ public class BlockedUTXO {
     }
 
     public void addNotDusted(String hash, int idx)    {
-        if(!notDustedUTXO.contains(hash + "-" + Integer.toString(idx)))    {
-            notDustedUTXO.add(hash + "-" + Integer.toString(idx));
+        if(!notDustedUTXO.contains(hash + "-" + idx))    {
+            notDustedUTXO.add(hash + "-" + idx);
         }
     }
 
@@ -115,8 +115,8 @@ public class BlockedUTXO {
     }
 
     public void addNotDustedPostMix(String hash, int idx)    {
-        if(!notDustedUTXOPostMix.contains(hash + "-" + Integer.toString(idx)))    {
-            notDustedUTXOPostMix.add(hash + "-" + Integer.toString(idx));
+        if(!notDustedUTXOPostMix.contains(hash + "-" + idx))    {
+            notDustedUTXOPostMix.add(hash + "-" + idx);
         }
     }
 
@@ -127,35 +127,27 @@ public class BlockedUTXO {
     }
 
     public void removeNotDusted(String hash, int idx)   {
-        if(notDustedUTXO.contains(hash + "-" + Integer.toString(idx)))    {
-            notDustedUTXO.remove(hash + "-" + Integer.toString(idx));
-        }
+        notDustedUTXO.remove(hash + "-" + idx);
     }
 
     public void removeNotDusted(String s)   {
-        if(notDustedUTXO.contains(s))    {
-            notDustedUTXO.remove(s);
-        }
+        notDustedUTXO.remove(s);
     }
 
     public void removeNotDustedPostMix(String hash, int idx)   {
-        if(notDustedUTXOPostMix.contains(hash + "-" + Integer.toString(idx)))    {
-            notDustedUTXOPostMix.remove(hash + "-" + Integer.toString(idx));
-        }
+        notDustedUTXOPostMix.remove(hash + "-" + idx);
     }
 
     public void removeNotDustedPostMix(String s)   {
-        if(notDustedUTXOPostMix.contains(s))    {
-            notDustedUTXOPostMix.remove(s);
-        }
+        notDustedUTXOPostMix.remove(s);
     }
 
     public boolean containsNotDusted(String hash, int idx)   {
-        return notDustedUTXO.contains(hash + "-" + Integer.toString(idx));
+        return notDustedUTXO.contains(hash + "-" + idx);
     }
 
     public boolean containsNotDustedPostMix(String hash, int idx)   {
-        return notDustedUTXOPostMix.contains(hash + "-" + Integer.toString(idx));
+        return notDustedUTXOPostMix.contains(hash + "-" + idx);
     }
 
     public ConcurrentHashMap<String, Long> getBlockedUTXO() {
@@ -167,20 +159,20 @@ public class BlockedUTXO {
     }
 
     public long getBadBank(String hash, int idx)    {
-        return blockedUTXOBadBank.get(hash + "-" + Integer.toString(idx));
+        return blockedUTXOBadBank.get(hash + "-" + idx);
     }
 
     public void addBadBank(String hash, int idx, long value)    {
-        blockedUTXOBadBank.put(hash + "-" + Integer.toString(idx), value);
+        blockedUTXOBadBank.put(hash + "-" + idx, value);
         onUtxoChange();
-        debug("BlockedUTXO", "add:" + hash + "-" + Integer.toString(idx));
+        debug("BlockedUTXO", "add:" + hash + "-" + idx);
     }
 
     public void removeBadBank(String hash, int idx)   {
-        if(blockedUTXOBadBank != null && blockedUTXOBadBank.containsKey(hash + "-" + Integer.toString(idx)))  {
-            blockedUTXOBadBank.remove(hash + "-" + Integer.toString(idx));
+        if(blockedUTXOBadBank != null && blockedUTXOBadBank.containsKey(hash + "-" + idx))  {
+            blockedUTXOBadBank.remove(hash + "-" + idx);
             onUtxoChange();
-            debug("BlockedUTXO", "remove:" + hash + "-" + Integer.toString(idx));
+            debug("BlockedUTXO", "remove:" + hash + "-" + idx);
         }
     }
 
@@ -193,7 +185,7 @@ public class BlockedUTXO {
     }
 
     public boolean containsBadBank(String hash, int idx)   {
-        return blockedUTXOBadBank.containsKey(hash + "-" + Integer.toString(idx));
+        return blockedUTXOBadBank.containsKey(hash + "-" + idx);
     }
 
     public void clearBadBank()    {
@@ -225,20 +217,20 @@ public class BlockedUTXO {
     }
 
     public long getPostMix(String hash, int idx)    {
-        return blockedUTXOPostMix.get(hash + "-" + Integer.toString(idx));
+        return blockedUTXOPostMix.get(hash + "-" + idx);
     }
 
     public void addPostMix(String hash, int idx, long value)    {
-        blockedUTXOPostMix.put(hash + "-" + Integer.toString(idx), value);
+        blockedUTXOPostMix.put(hash + "-" + idx, value);
         onUtxoChange();
-        debug("BlockedUTXO", "add:" + hash + "-" + Integer.toString(idx));
+        debug("BlockedUTXO", "add:" + hash + "-" + idx);
     }
 
     public void removePostMix(String hash, int idx)   {
-        if(blockedUTXOPostMix != null && blockedUTXOPostMix.containsKey(hash + "-" + Integer.toString(idx)))  {
-            blockedUTXOPostMix.remove(hash + "-" + Integer.toString(idx));
+        if(blockedUTXOPostMix != null && blockedUTXOPostMix.containsKey(hash + "-" + idx))  {
+            blockedUTXOPostMix.remove(hash + "-" + idx);
             onUtxoChange();
-            debug("BlockedUTXO", "remove:" + hash + "-" + Integer.toString(idx));
+            debug("BlockedUTXO", "remove:" + hash + "-" + idx);
         }
     }
 
@@ -251,7 +243,7 @@ public class BlockedUTXO {
     }
 
     public boolean containsPostMix(String hash, int idx)   {
-        return blockedUTXOPostMix.containsKey(hash + "-" + Integer.toString(idx));
+        return blockedUTXOPostMix.containsKey(hash + "-" + idx);
     }
 
     public void clearPostMix()    {
@@ -316,7 +308,6 @@ public class BlockedUTXO {
 
         }
         catch(JSONException je) {
-            ;
         }
 
         return blockedObj;

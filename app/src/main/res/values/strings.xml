@@ -955,7 +955,22 @@
     <string name="disable_stealth_mode">Disable stealth mode</string>
     <string name="instructions">Instructions</string>
 
+    <string name="tx_option_section_change">Change</string>
+    <string name="tx_option_change_do_not_spend">Mark Do Not Spend</string>
+    <string name="tx_status_not_sent">Transaction not sent</string>
+    <string name="tx_status_details_not_sent_offline_mode">Samourai Wallet is in Offline Mode</string>
+    <string name="tx_option_section_broadcast">Broadcast</string>
+    <string name="tx_option_broadcast_manually">Broadcast manually</string>
+    <string name="tx_status_broadcast_error">Broadcast Error</string>
+    <string name="tx_status_details_try_rebroadcating">Please try rebroadcasting</string>
+    <string name="tx_option_section_troubleshoot">Troubleshoot</string>
+    <string name="tx_option_attempt_broadcast">Attempt rebroadcast</string>
+    <string name="tx_option_contact_support">Contact support</string>
+    <string name="tx_toast_change_utxo_locked">Change UTXO locked</string>
+    <string name="tx_toast_no_change_utxo_found">No change UTXO found</string>
+    <string name="tx_toast_lock_change_utxo_issue">Issue when trying to lock change UTXO</string>
     <string name="options_import_batch">Import batch spend</string>
+
     <string name="options_import_batch_parsing_error">Error while parsing batch spend</string>
     <string name="options_import_batch_payment_count">%d spend items found</string>
     <string name="options_import_batch_input_hint">Batch spend in json format...</string>
