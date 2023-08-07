@@ -14,6 +14,7 @@ import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.SegwitAddress
+import com.samourai.wallet.swaps.SwapsMeta
 import com.samourai.wallet.util.AddressFactory
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.util.MessageSignUtil
@@ -123,6 +124,14 @@ class AddressCalculatorViewModel : ViewModel() {
                     8 -> {
                         currentIndex = AddressFactory.getInstance(context).getIndex(if (chain == 0) WALLET_INDEX.BADBANK_RECEIVE else WALLET_INDEX.BADBANK_CHANGE)
                         hdAddress = BIP84Util.getInstance(context).wallet.getAccount(WhirlpoolMeta.getInstance(context).whirlpoolBadBank).getChain(chain).getAddressAt(index)
+                        segwitAddress = SegwitAddress(hdAddress.ecKey, SamouraiWallet.getInstance().currentNetworkParams)
+                    }
+                    9 -> {
+                        hdAddress = BIP84Util.getInstance(context).wallet.getAccount(SwapsMeta.getInstance(context).getSwapsMainAccount()).getChain(chain).getAddressAt(index)
+                        segwitAddress = SegwitAddress(hdAddress.ecKey, SamouraiWallet.getInstance().currentNetworkParams)
+                    }
+                    10 -> {
+                        hdAddress = BIP84Util.getInstance(context).wallet.getAccount(SwapsMeta.getInstance(context).getSwapsRefundAccount()).getChain(chain).getAddressAt(index)
                         segwitAddress = SegwitAddress(hdAddress.ecKey, SamouraiWallet.getInstance().currentNetworkParams)
                     }
                 }
