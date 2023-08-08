@@ -211,7 +211,8 @@ public class SendParams	{
                 SPEND_TYPE,
                 account,
                 changeType,
-                changeIdx);
+                changeIdx,
+                false);
     }
 
     public static String generateChangeAddress(final Context ctx,
@@ -219,22 +220,23 @@ public class SendParams	{
                                                final int spendType,
                                                final int account,
                                                final int changeType,
-                                               final int change_index) {
+                                               final int changeIndex,
+                                               final boolean forTxBuilding) {
 
         if (changeAmount <= 0l) return null;
-        if (spendType != SPEND_SIMPLE) return null;
+        if (spendType != SPEND_SIMPLE && (forTxBuilding || spendType != SPEND_BOLTZMANN)) return null;
         if (account == WhirlpoolMeta.getInstance(ctx).getWhirlpoolPostmix()) {
             if (changeType == 44) {
                 final HD_Address hd_addr = BIP84Util.getInstance(ctx).getWallet()
                         .getAccount(WhirlpoolMeta.getInstance(ctx)
                                 .getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN)
-                        .getAddressAt(change_index);
+                        .getAddressAt(changeIndex);
                 return hd_addr.getAddressString();
             } else if (changeType == 49) {
                 final HD_Address hd_addr = BIP84Util.getInstance(ctx).getWallet()
                         .getAccount(WhirlpoolMeta.getInstance(ctx)
                                 .getWhirlpoolPostmix()).getChain(AddressFactory.CHANGE_CHAIN)
-                        .getAddressAt(change_index);
+                        .getAddressAt(changeIndex);
                 final NetworkParameters networkParams = SamouraiWallet.getInstance()
                         .getCurrentNetworkParams();
                 return new SegwitAddress(hd_addr.getECKey(), networkParams).getAddressAsString();
@@ -242,17 +244,17 @@ public class SendParams	{
                 return BIP84Util.getInstance(ctx)
                         .getAddressAt(
                                 WhirlpoolMeta.getInstance(ctx).getWhirlpoolPostmix(),
-                                AddressFactory.CHANGE_CHAIN, change_index).getBech32AsString();
+                                AddressFactory.CHANGE_CHAIN, changeIndex).getBech32AsString();
             }
         } else if (changeType == 84) {
             return BIP84Util.getInstance(ctx)
-                    .getAddressAt(AddressFactory.CHANGE_CHAIN, change_index).getBech32AsString();
+                    .getAddressAt(AddressFactory.CHANGE_CHAIN, changeIndex).getBech32AsString();
         } else if (changeType == 49) {
             return BIP49Util.getInstance(ctx)
-                    .getAddressAt(AddressFactory.CHANGE_CHAIN, change_index).getAddressAsString();
+                    .getAddressAt(AddressFactory.CHANGE_CHAIN, changeIndex).getAddressAsString();
         } else {
             return HD_WalletFactory.getInstance(ctx).get().getAccount(0).getChange()
-                    .getAddressAt(change_index).getAddressString();
+                    .getAddressAt(changeIndex).getAddressString();
         }
     }
 }

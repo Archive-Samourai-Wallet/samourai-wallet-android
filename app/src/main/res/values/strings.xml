@@ -544,7 +544,7 @@
 
     <string name="in_offline_mode">Samourai Wallet is in offline mode.</string>
 
-    <string name="broadcast_off">Your Samourai Wallet broadcasting is switched off.</string>
+    <string name="broadcast_off">Samourai Wallet is in Offline Mode</string>
     <string name="tx_standby">Transaction in stand-by</string>
     <string name="show_hex">Display Hex Code</string>
     <string name="tx_tenna_coming_soon">TxTenna on Android coming soon</string>
@@ -978,7 +978,7 @@
     <string name="tx_option_section_troubleshoot">Troubleshoot</string>
     <string name="tx_option_attempt_broadcast">Attempt rebroadcast</string>
     <string name="tx_option_contact_support">Contact support</string>
-    <string name="tx_toast_change_utxo_locked">Change UTXO locked</string>
+    <string name="tx_toast_change_utxo_locked">Change UTXO/s marked DO NOT SPEND</string>
     <string name="tx_toast_no_change_utxo_found">No change UTXO found</string>
     <string name="tx_toast_lock_change_utxo_issue">Issue when trying to lock change UTXO</string>
     <string name="options_import_batch">Import batch spend</string>

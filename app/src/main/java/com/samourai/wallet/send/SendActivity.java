@@ -1872,7 +1872,8 @@ public class SendActivity extends SamouraiActivity {
                     SPEND_TYPE,
                     account,
                     changeType,
-                    change_index);
+                    change_index,
+                    true);
             if (changeAddress != null) {
                 receivers.put(changeAddress, BigInteger.valueOf(_change));
             }
