@@ -783,7 +783,7 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                     dialog.dismiss()
                     val strPSBT = edPSBT.text.toString().replace(" ".toRegex(), "").trim { it <= ' ' }
                     try {
-                        com.samourai.wallet.cahoots.psbt.PSBTUtil.getInstance(requireContext()).doPSBT(strPSBT)
+                        com.samourai.wallet.psbt.PSBTUtil.getInstance(requireContext()).doPSBT(strPSBT)
                     } catch (e: Exception) {
                     }
                 }.setNegativeButton(R.string.cancel) { dialog, whichButton -> dialog.dismiss() }
