@@ -575,7 +575,7 @@
     <string name="address_type">Type d\'Adresse</string>
     <string name="path">Chemin d\'accès</string>
 
-    <string name="broadcast_off">La fonction Émission de votre portefeuille Samourai est désactivée.</string>
+    <string name="broadcast_off">Le portefeuille Samourai est en mode hors ligne</string>
 
     <string name="title_activity_send_new_ui">EnvoyerNouvelleUIActivité</string>
     <string name="ricochet_hops_msg">Sauts additionnels entre votre portefeuille et la destination finale pour une fongibilité accrue</string>
@@ -1080,7 +1080,7 @@
     <string name="tx_option_section_troubleshoot">Dépannage</string>
     <string name="tx_option_attempt_broadcast">Essayer de transmettre</string>
     <string name="tx_option_contact_support">Contacter le support</string>
-    <string name="tx_toast_change_utxo_locked">Les UTXOs de la monnaie ont été verrouillés</string>
+    <string name="tx_toast_change_utxo_locked">Les UTXOs de la monnaie ont été statués comme Ne Pas Dépenser</string>
     <string name="tx_toast_no_change_utxo_found">aucun UTXO de monnaie n\'a été trouvé pour être verrouillé</string>
     <string name="tx_toast_lock_change_utxo_issue">Problème lors de la tentative de verrouillage des UTXOs de monnaie</string>
 

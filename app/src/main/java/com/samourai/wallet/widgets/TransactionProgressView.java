@@ -137,6 +137,8 @@ public class TransactionProgressView extends FrameLayout {
             optionBtn1.setVisibility(INVISIBLE);
             optionBtn2.setVisibility(INVISIBLE);
         }
+
+        getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_close_button));
     }
 
     public void showOfflineTxOptions(final int resIdDetails) {

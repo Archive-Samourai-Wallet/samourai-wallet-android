@@ -302,21 +302,28 @@ public class TxAnimUIActivity extends AppCompatActivity {
                                 }
                             }
 
-                            progressView.showSuccessSentTxOptions(false);
-                            progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
-                            Toast.makeText(
-                                    TxAnimUIActivity.this,
-                                    getResources().getString(R.string.tx_toast_change_utxo_locked),
-                                    Toast.LENGTH_SHORT
-                            ).show();
+                            TxAnimUIActivity.this.runOnUiThread(() -> {
+                                progressView.showSuccessSentTxOptions(false);
+                                progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                                progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+                                Toast.makeText(
+                                        TxAnimUIActivity.this,
+                                        getResources().getString(R.string.tx_toast_change_utxo_locked),
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            });
                         } catch (final Throwable t) {
-                            Toast.makeText(
-                                    TxAnimUIActivity.this,
-                                    getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                            progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+
                             Log.e(TAG, t.getMessage(), t);
+
+                            TxAnimUIActivity.this.runOnUiThread(() -> {
+                                progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                                Toast.makeText(
+                                        TxAnimUIActivity.this,
+                                        getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            });
                         }
 
 
@@ -329,13 +336,16 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     }
                 }, throwable -> {
 
-                    Toast.makeText(
-                            TxAnimUIActivity.this,
-                            getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
                     Log.e(TAG, throwable.getMessage(), throwable);
+
+                    TxAnimUIActivity.this.runOnUiThread(() -> {
+                        progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                        Toast.makeText(
+                                TxAnimUIActivity.this,
+                                getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    });
                 });
 
         disposables.add(disposable);
@@ -457,7 +467,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
             progressView.getOptionBtn2().setOnClickListener(v -> launchSupportPageInBrowser(
                     TxAnimUIActivity.this,
                     TorManager.INSTANCE.isConnected()));
-            progressView.getLeftTopImgBtn().setOnClickListener(v -> finish());
+            progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
         });
     }
 
@@ -484,6 +494,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
             final int resIdDetails) {
 
         TxAnimUIActivity.this.runOnUiThread(() -> {
+
             ViewHelper.animateChangeBackgroundColor(
                     animation -> getWindow().setStatusBarColor((int) animation.getAnimatedValue()),
                     getResources().getColor(R.color.blue_send_ui),
@@ -494,7 +505,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
             progressView.showOfflineTxOptions(resIdDetails);
             progressView.getOptionBtn1().setOnClickListener(v -> txTenna(hex));
             progressView.getOptionBtn2().setOnClickListener(v -> doShowTx(hex, hash));
-            progressView.getLeftTopImgBtn().setOnClickListener(v -> finish());
+            progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
         });
     }
 
@@ -535,7 +546,6 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     SendParams.getInstance().getChangeType());
 
             if (isOK) {
-                Toast.makeText(TxAnimUIActivity.this, R.string.tx_sent, Toast.LENGTH_SHORT).show();
 
                 if (SendParams.getInstance().getChangeAmount() > 0L && SendParams.getInstance().getSpendType() == SendActivity.SPEND_SIMPLE) {
                     // increment change index
@@ -617,22 +627,33 @@ public class TxAnimUIActivity extends AppCompatActivity {
                 }
 
                 final boolean doNotSpendChangeBtnVisible = getChangeAddress() != null;
-                progressView.showSuccessSentTxOptions(doNotSpendChangeBtnVisible);
-                progressView.getOptionBtn1().setOnClickListener(view -> {
-                    if (getChangeAddress() == null) return;
-                    lockChangeUtxo(hexTx);
+                TxAnimUIActivity.this.runOnUiThread(() -> {
+                    Toast.makeText(TxAnimUIActivity.this, R.string.tx_sent, Toast.LENGTH_SHORT).show();
+                    progressView.getOptionBtn1().setOnClickListener(view -> {
+                        if (!doNotSpendChangeBtnVisible) return;
+                        lockChangeUtxo(hexTx);
+                    });
+                    progressView.getOptionBtn2().setOnClickListener(view -> {});
+                    progressView.showSuccessSentTxOptions(doNotSpendChangeBtnVisible);
                 });
-                progressView.getOptionBtn2().setOnClickListener(view -> {});
-
             } else {
-                Toast.makeText(TxAnimUIActivity.this, R.string.tx_failed, Toast.LENGTH_SHORT).show();
+
+                TxAnimUIActivity.this.runOnUiThread(
+                        () -> Toast.makeText(
+                                TxAnimUIActivity.this,
+                                R.string.tx_failed,
+                                Toast.LENGTH_SHORT).show()
+                );
+
                 // reset change index upon tx fail
                 AddressFactory.getInstance().setWalletIdx(changeIndex,SendParams.getInstance().getChangeIdx(),true);
             }
 
         } catch (final DecoderException de) {
-            Toast.makeText(TxAnimUIActivity.this, "pushTx:" + de.getMessage(), Toast.LENGTH_SHORT).show();
-            progressView.getLeftTopImgBtn().setVisibility(View.VISIBLE);
+            TxAnimUIActivity.this.runOnUiThread(() -> {
+                Toast.makeText(TxAnimUIActivity.this, "pushTx:" + de.getMessage(), Toast.LENGTH_SHORT).show();
+                progressView.getLeftTopImgBtn().setVisibility(View.VISIBLE);
+            });
         }
 
     }
