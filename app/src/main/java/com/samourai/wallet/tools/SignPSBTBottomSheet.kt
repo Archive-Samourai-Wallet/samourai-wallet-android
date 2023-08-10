@@ -305,7 +305,6 @@ fun InputFormPSBT() {
                                     cameraFragmentBottomSheet.show(supportFragmentManager, cameraFragmentBottomSheet.tag)
                                     cameraFragmentBottomSheet .setOnScanListener {
                                         cameraFragmentBottomSheet.dismissAllowingStateLoss()
-                                        println("Scanned: " + it)
                                         psbtEdit = it
                                         vm.setPSBT(psbtEdit)
                                     }
