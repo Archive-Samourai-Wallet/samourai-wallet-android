@@ -329,9 +329,7 @@ public class SendActivity extends SamouraiActivity {
         Disposable feeDisposable = Observable.fromCallable(() -> APIFactory.getInstance(getApplicationContext()).getDynamicFees())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(t -> {
-                    setUpFee();
-                }, Throwable::printStackTrace);
+                .subscribe(t -> setUpFee(), Throwable::printStackTrace);
 
         compositeDisposables.add(feeDisposable);
         if (getIntent().getExtras() != null) {

@@ -1403,32 +1403,17 @@ public class APIFactory {
         return jsonObject;
     }
 
-    public synchronized JSONObject getDynamicFees() {
+    public synchronized JSONObject getDynamicFees() throws Exception {
 
-        JSONObject jsonObject  = null;
-
-        try {
-            String _url =  WebUtil.getAPIUrl(context);
-            String response = null;
-            if(!AppUtil.getInstance(context).isOfflineMode())    {
-                response = WebUtil.getInstance(null).getURL(_url + "fees" + "?at=" + getAccessToken());
-            }
-            else    {
-                response = PayloadUtil.getInstance(context).deserializeMultiAddr().toString();
-            }
-            try {
-                jsonObject = new JSONObject(response);
-                parseDynamicFees_bitcoind(jsonObject);
-            }
-            catch(JSONException je) {
-                je.printStackTrace();
-                jsonObject = null;
-            }
+        final String _url =  WebUtil.getAPIUrl(context);
+        final String response;
+        if(!AppUtil.getInstance(context).isOfflineMode()) {
+            response = WebUtil.getInstance(null).getURL(_url + "fees" + "?at=" + getAccessToken());
+        } else {
+            response = PayloadUtil.getInstance(context).deserializeMultiAddr().toString();
         }
-        catch(Exception e) {
-            jsonObject = null;
-            e.printStackTrace();
-        }
+        final JSONObject jsonObject = new JSONObject(response);
+        parseDynamicFees_bitcoind(jsonObject);
 
         return jsonObject;
     }
