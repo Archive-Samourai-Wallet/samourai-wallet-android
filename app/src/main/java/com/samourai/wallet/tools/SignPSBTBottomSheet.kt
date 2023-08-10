@@ -149,7 +149,7 @@ fun SignSuccess() {
                     painter = painterResource(id = R.drawable.ic_sign_check),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(samouraiSuccess),
-                    modifier = Modifier.size(96.dp)
+                    modifier = Modifier.size(60.dp)
                 )
                 androidx.compose.material.Text(
                     modifier = Modifier.align(Alignment.CenterVertically),
