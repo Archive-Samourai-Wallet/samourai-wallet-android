@@ -931,7 +931,7 @@
     <string name="enter_challenge">Enter Challenge</string>
     <string name="auth_success">Authentication success</string>
     <string name="is_requesting_your_auth">is requesting your authentication.</string>
-    <string name="auth_using_paynym">Authenticate using paynym</string>
+    <string name="auth_using_paynym">Authenticate using PayNym</string>
     <string name="authenticate">Authenticate</string>
     <string name="estimated_wait_time">Estimated wait time</string>
     <string name="enter_a_private_key_and">Enter a private key and sweep any funds to\nyour next bitcoin address</string>
