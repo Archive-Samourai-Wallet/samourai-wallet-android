@@ -170,19 +170,17 @@ fun SignSuccess() {
                     Image(
                         bitmap = bitmap!!, contentDescription = "",
                         Modifier
-                            .requiredSize(240.dp)
+                            .requiredSize(280.dp)
                             .alpha(if (isQRAnimated) 0f else 1f),
                         contentScale = ContentScale.Fit,
                     )
                     AndroidView(
                         modifier = Modifier
-                            .requiredSize(240.dp)
+                            .requiredSize(280.dp)
                             .alpha(if (isQRAnimated) 1f else 0f),
                         factory = { context ->
-                            // Create and return your custom Kotlin View here
                             URQRView(context)
                         }) { view ->
-                        // Configure your custom view here, similar to how you would do it in traditional Android UI
                         view.setContent(
                             UR.fromBytes(
                                 RegistryType.CRYPTO_PSBT.type,
