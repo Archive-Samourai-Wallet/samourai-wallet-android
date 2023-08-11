@@ -1,29 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:background="@color/window"
-    android:layout_height="match_parent">
+    android:layout_height="0dp"
+    android:layout_weight="0.5"
+    android:orientation="vertical">
 
-
-    <com.invertedx.hummingbird.QRScanner
-        android:id="@+id/scanner_view"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:autoFocusButtonColor="@android:color/white"
-        app:autoFocusButtonVisible="false"
-        app:flashButtonColor="@android:color/white"
-        app:flashButtonVisible="true"
-        app:frameAspectRatioHeight="1"
-        app:frameAspectRatioWidth="1"
-        app:frameColor="@android:color/white"
-        app:frameCornersRadius="0dp"
-        app:frameCornersSize="50dp"
-        app:frameSize="0.75"
-        app:frameThickness="2dp"
-        app:maskColor="#77000000" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
 
+        <TextView
+            android:id="@+id/scanInstructions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/white"
+            app:layout_constraintEnd_toEndOf="@+id/frameLayout"
+            app:layout_constraintStart_toStartOf="@+id/frameLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Scan the QR/Paste code of any public key such as a bitcoin or an extended public key" />
 
+        <FrameLayout
+            android:id="@+id/frameLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/scanInstructions">
+
+            <com.invertedx.hummingbird.QRScanner
+                android:id="@+id/scanner_view"
+                android:layout_width="300dp"
+                android:layout_height="320dp"
+                android:layout_marginBottom="16dp"
+                app:autoFocusButtonColor="@android:color/white"
+                app:autoFocusButtonVisible="false"
+                app:flashButtonColor="@android:color/white"
+                app:flashButtonVisible="true"
+                app:frameAspectRatioHeight="1.8"
+                app:frameAspectRatioWidth="1.8"
+                app:frameColor="@android:color/white"
+                app:frameCornersRadius="8dp"
+                app:frameCornersSize="24dp"
+                app:frameSize="0.7"
+                app:frameThickness="0dp"
+                app:maskColor="#00FFFFFF" />
+
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -42,7 +72,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-        >
+            >
 
             <TextView
                 android:id="@+id/textView84"
@@ -94,6 +124,5 @@
                 app:layout_constraintVertical_bias="1.0"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
+</LinearLayout>
 
-
-</FrameLayout>

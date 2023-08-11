@@ -259,6 +259,30 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             )
             ToolsItem(
+                title = stringResource(id = R.string.sign_transactions),
+                subTitle = stringResource(R.string.options_sign_PSBT),
+                icon = R.drawable.ic_sign_transaction,
+                onClick = {
+                    scope.launch {
+                        signPSBTViewModel.clear()
+                        toolsBottomSheet?.disableDragging()
+                        signPSBTBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
+                    }
+                }
+            )
+            ToolsItem(
+                title = stringResource(id = R.string.broadcast_transactions),
+                subTitle = stringResource(R.string.options_broadcast_hex2),
+                icon = R.drawable.ic_broadcast_transaction,
+                onClick = {
+                    scope.launch {
+                        broadcastHexViewModel.clear()
+                        toolsBottomSheet?.disableDragging()
+                        broadcastBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
+                    }
+                }
+            )
+            ToolsItem(
                 title = stringResource(id = R.string.sign_message),
                 subTitle = stringResource(R.string.sign_messages_using_your),
                 icon = R.drawable.ic_signature,
@@ -309,30 +333,6 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         toolsBottomSheet?.disableDragging()
                         auth47BottomSheet.show()
-                    }
-                }
-            )
-            ToolsItem(
-                title = stringResource(id = R.string.sign_transactions),
-                subTitle = stringResource(R.string.options_sign_PSBT),
-                icon = R.drawable.ic_sign_transaction,
-                onClick = {
-                    scope.launch {
-                        signPSBTViewModel.clear()
-                        toolsBottomSheet?.disableDragging()
-                        signPSBTBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
-                    }
-                }
-            )
-            ToolsItem(
-                title = stringResource(id = R.string.broadcast_transactions),
-                subTitle = stringResource(R.string.options_broadcast_hex2),
-                icon = R.drawable.ic_broadcast_transaction,
-                onClick = {
-                    scope.launch {
-                        broadcastHexViewModel.clear()
-                        toolsBottomSheet?.disableDragging()
-                        broadcastBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
                     }
                 }
             )

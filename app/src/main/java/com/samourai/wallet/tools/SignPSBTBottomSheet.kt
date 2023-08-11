@@ -149,7 +149,7 @@ fun SignSuccess() {
                     painter = painterResource(id = R.drawable.ic_sign_check),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(samouraiSuccess),
-                    modifier = Modifier.size(96.dp)
+                    modifier = Modifier.size(60.dp)
                 )
                 androidx.compose.material.Text(
                     modifier = Modifier.align(Alignment.CenterVertically),
@@ -170,19 +170,17 @@ fun SignSuccess() {
                     Image(
                         bitmap = bitmap!!, contentDescription = "",
                         Modifier
-                            .requiredSize(240.dp)
+                            .requiredSize(280.dp)
                             .alpha(if (isQRAnimated) 0f else 1f),
                         contentScale = ContentScale.Fit,
                     )
                     AndroidView(
                         modifier = Modifier
-                            .requiredSize(240.dp)
+                            .requiredSize(280.dp)
                             .alpha(if (isQRAnimated) 1f else 0f),
                         factory = { context ->
-                            // Create and return your custom Kotlin View here
                             URQRView(context)
                         }) { view ->
-                        // Configure your custom view here, similar to how you would do it in traditional Android UI
                         view.setContent(
                             UR.fromBytes(
                                 RegistryType.CRYPTO_PSBT.type,
@@ -307,7 +305,6 @@ fun InputFormPSBT() {
                                     cameraFragmentBottomSheet.show(supportFragmentManager, cameraFragmentBottomSheet.tag)
                                     cameraFragmentBottomSheet .setOnScanListener {
                                         cameraFragmentBottomSheet.dismissAllowingStateLoss()
-                                        println("Scanned: " + it)
                                         psbtEdit = it
                                         vm.setPSBT(psbtEdit)
                                     }
