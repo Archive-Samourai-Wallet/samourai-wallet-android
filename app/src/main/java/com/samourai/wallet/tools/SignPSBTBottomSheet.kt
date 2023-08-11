@@ -94,20 +94,6 @@ fun SignSuccess() {
     val vm = viewModel<SignPSBTViewModel>()
     val transaction by vm.signedTx.observeAsState(null)
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
-    var bitmap by rememberSaveable {
-        mutableStateOf<ImageBitmap?>(null)
-    }
-    var isQRAnimated by remember { mutableStateOf(false) }
-
-
-    LaunchedEffect(transaction) {
-        withContext(Dispatchers.Default) {
-            val qrCodeEncoder = QRCodeEncoder(
-                String(Hex.encode(transaction?.bitcoinSerialize())), null, Contents.Type.TEXT, BarcodeFormat.QR_CODE.toString(), 500)
-            qrCodeEncoder.setMargin(1)
-            bitmap = qrCodeEncoder.encodeAsBitmap().asImageBitmap()
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -143,7 +129,8 @@ fun SignSuccess() {
         ) {
             Row (
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 110.dp),
+                    .padding(horizontal = 130.dp)
+                    .padding(bottom = 50.dp),
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_sign_check),
@@ -161,23 +148,16 @@ fun SignSuccess() {
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
             ) {
-                if (bitmap != null) Box(
+                Box(
                     modifier = Modifier
                         .padding(12.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.White),
                 ) {
-                    Image(
-                        bitmap = bitmap!!, contentDescription = "",
-                        Modifier
-                            .requiredSize(280.dp)
-                            .alpha(if (isQRAnimated) 0f else 1f),
-                        contentScale = ContentScale.Fit,
-                    )
                     AndroidView(
                         modifier = Modifier
                             .requiredSize(280.dp)
-                            .alpha(if (isQRAnimated) 1f else 0f),
+                            .alpha(1f),
                         factory = { context ->
                             URQRView(context)
                         }) { view ->
@@ -189,22 +169,6 @@ fun SignSuccess() {
                         )
                     }
                 }
-            }
-            Button(
-                onClick = {
-                    isQRAnimated = !isQRAnimated
-                },
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 12.dp)
-                    .padding(top = 1.dp),
-                contentPadding = PaddingValues(vertical = 12.dp),
-                colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = samouraiAccent,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(if (!isQRAnimated) "Show animated QR" else "Show static QR", color = Color.White, fontWeight = FontWeight.SemiBold)
             }
         }
     }
