@@ -90,6 +90,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
     private long signDelay = 2000L;
     private long broadcastDelay = 1599L;
     private AtomicBoolean txInProgress = new AtomicBoolean(false);
+    private AtomicBoolean txSuccess = new AtomicBoolean(false);
 
     private CompositeDisposable disposables = new CompositeDisposable();
     private Handler resultHandler = null;
@@ -227,7 +228,9 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     return;
                 }
 
-                txInProgress.set(true);
+                TxAnimUIActivity.this.runOnUiThread(() -> {
+                    txInProgress.set(true);
+                });
                 final Disposable disposable = pushTx(hexTx, strictModeVouts)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -467,7 +470,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
             progressView.getOptionBtn2().setOnClickListener(v -> launchSupportPageInBrowser(
                     TxAnimUIActivity.this,
                     TorManager.INSTANCE.isConnected()));
-            progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+            progressView.getLeftTopImgBtn().setOnClickListener(view -> finish());
         });
     }
 
@@ -505,7 +508,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
             progressView.showOfflineTxOptions(resIdDetails);
             progressView.getOptionBtn1().setOnClickListener(v -> txTenna(hex));
             progressView.getOptionBtn2().setOnClickListener(v -> doShowTx(hex, hash));
-            progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+            progressView.getLeftTopImgBtn().setOnClickListener(view -> finish());
         });
     }
 
@@ -541,14 +544,18 @@ public class TxAnimUIActivity extends AppCompatActivity {
                               final Transaction _tx) {
 
         try {
-            final WALLET_INDEX changeIndex = WALLET_INDEX.findChangeIndex(
-                    SendParams.getInstance().getAccount(),
-                    SendParams.getInstance().getChangeType());
 
             if (isOK) {
 
-                if (SendParams.getInstance().getChangeAmount() > 0L && SendParams.getInstance().getSpendType() == SendActivity.SPEND_SIMPLE) {
+                txSuccess.set(true);
+
+                if (SendParams.getInstance().getChangeAmount() > 0l
+                        && SendParams.getInstance().getSpendType() == SendActivity.SPEND_SIMPLE) {
+
                     // increment change index
+                    final WALLET_INDEX changeIndex = WALLET_INDEX.findChangeIndex(
+                            SendParams.getInstance().getAccount(),
+                            SendParams.getInstance().getChangeType());
                     AddressFactory.getInstance().increment(changeIndex);
                 }
 
@@ -646,6 +653,9 @@ public class TxAnimUIActivity extends AppCompatActivity {
                 );
 
                 // reset change index upon tx fail
+                final WALLET_INDEX changeIndex = WALLET_INDEX.findChangeIndex(
+                        SendParams.getInstance().getAccount(),
+                        SendParams.getInstance().getChangeType());
                 AddressFactory.getInstance().setWalletIdx(changeIndex,SendParams.getInstance().getChangeIdx(),true);
             }
 
@@ -659,25 +669,26 @@ public class TxAnimUIActivity extends AppCompatActivity {
     }
 
     private void gotoBalanceHomeActivity() {
-        new Handler().postDelayed(() -> {
-            if (SendParams.getInstance().getAccount() != 0) {
-                final Intent balanceHome = new Intent(this, BalanceActivity.class);
-                balanceHome.putExtra("_account", SendParams.getInstance().getAccount());
-                balanceHome.putExtra("refresh", true);
-                final Intent parentIntent = new Intent(this, BalanceActivity.class);
-                parentIntent.putExtra("_account", 0);
-                balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                TaskStackBuilder.create(getApplicationContext())
-                        .addNextIntent(parentIntent)
-                        .addNextIntent(balanceHome)
-                        .startActivities();
-            } else {
-                final Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
-                _intent.putExtra("refresh", true);
-                _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(_intent);
-            }
-        }, 1000L);
+        if (SendParams.getInstance().getAccount() != 0) {
+
+            final Intent balanceHome = new Intent(this, BalanceActivity.class);
+            balanceHome.putExtra("_account", SendParams.getInstance().getAccount());
+            balanceHome.putExtra("refresh", true);
+            final Intent parentIntent = new Intent(this, BalanceActivity.class);
+            parentIntent.putExtra("_account", 0);
+            balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            TaskStackBuilder.create(getApplicationContext())
+                    .addNextIntent(parentIntent)
+                    .addNextIntent(balanceHome)
+                    .startActivities();
+
+        } else {
+            final Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
+            _intent.putExtra("refresh", true);
+            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(_intent);
+        }
+        finish();
     }
 
     private void doShowTx(final String hexTx, final String txHash) {
@@ -848,8 +859,12 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(!txInProgress.get()){
-            super.onBackPressed();
+        if(!txInProgress.get()) {
+            if (txSuccess.get()) {
+                gotoBalanceHomeActivity();
+            } else {
+                finish();
+            }
         }
     }
 }
