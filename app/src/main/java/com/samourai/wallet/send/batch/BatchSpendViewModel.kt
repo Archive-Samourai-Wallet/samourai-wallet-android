@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.api.APIFactory
+import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.util.BatchSendUtil
 import com.samourai.wallet.whirlpool.WhirlpoolConst
@@ -47,6 +48,18 @@ class BatchSpendViewModel() : ViewModel() {
 
     fun totalWalletBalance(): Long? {
         return balance.value;
+    }
+
+    fun isValidBatchSpend(): Boolean {
+        if (getBatchList().size <= 0) return false
+        val bip47Meta = BIP47Meta.getInstance()
+        for (item in getBatchList()) {
+            if (item.pcode == null) continue
+            if (bip47Meta.getOutgoingStatus(item.pcode) != BIP47Meta.STATUS_SENT_CFM) {
+                return false
+            }
+        }
+        return true
     }
 
     //A live-data instance that returns balance
@@ -117,8 +130,15 @@ class BatchSpendViewModel() : ViewModel() {
         }
     }
 
-    fun clearBatch() {
-        batchList.postValue(arrayListOf())
-        BatchSendUtil.getInstance().sends.clear()
+    fun clearBatch(now:Boolean) {
+        if (now) {
+            viewModelScope.launch {
+                batchList.value = arrayListOf()
+                BatchSendUtil.getInstance().sends.clear()
+            }
+        } else {
+            batchList.postValue(arrayListOf())
+            BatchSendUtil.getInstance().sends.clear()
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.samourai.wallet.widgets;
 import static com.samourai.wallet.TxAnimUIActivity.BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS;
 
 import android.content.Context;
+import android.content.res.Resources.Theme;
 import android.graphics.drawable.Animatable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -30,6 +31,7 @@ public class TransactionProgressView extends FrameLayout {
     private TextView txProgressText, txSubText, optionTitle;
     private View mainView;
     private ProgressBar optionProgressBar;
+    private Theme theme;
 
     public TransactionProgressView(@NonNull Context context) {
         super(context);
@@ -75,7 +77,7 @@ public class TransactionProgressView extends FrameLayout {
     }
 
     public void showCheck() {
-        mCheckMark.setImageDrawable(getResources().getDrawable(R.drawable.animated_check_vd));
+        mCheckMark.setImageDrawable(getResources().getDrawable(R.drawable.animated_check_vd, theme));
         ((Animatable) mCheckMark.getDrawable()).start();
     }
 
@@ -97,6 +99,10 @@ public class TransactionProgressView extends FrameLayout {
         txProgressText.setText(null);
         txSubText.setText(null);
         mArcProgress.reset();
+    }
+
+    public void setTheme(Theme theme) {
+        this.theme = theme;
     }
 
     public View getMainView() {
@@ -137,8 +143,8 @@ public class TransactionProgressView extends FrameLayout {
             optionBtn1.setVisibility(INVISIBLE);
             optionBtn2.setVisibility(INVISIBLE);
         }
-
-        getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_close_button));
+        getResources().getDrawable(R.drawable.ic_close_button);
+        getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_close_button, theme));
     }
 
     public void showOfflineTxOptions(final int resIdDetails) {
@@ -162,8 +168,8 @@ public class TransactionProgressView extends FrameLayout {
         optionBtn1.setVisibility(VISIBLE);
         optionBtn2.setVisibility(VISIBLE);
 
-        getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_arrow_back_24));
-        getmCheckMark().setImageDrawable(getResources().getDrawable(R.drawable.ic_network_strength_off));
+        getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_arrow_back_24, theme));
+        getmCheckMark().setImageDrawable(getResources().getDrawable(R.drawable.ic_network_strength_off, theme));
     }
 
     public void showFailedTxOptions(final int resIdDetails) {
@@ -187,8 +193,8 @@ public class TransactionProgressView extends FrameLayout {
         optionBtn1.setVisibility(VISIBLE);
         optionBtn2.setVisibility(VISIBLE);
 
-        getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_arrow_back_24));
-        getmCheckMark().setImageDrawable(getResources().getDrawable(R.drawable.ic_alert_circle));
+        getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_arrow_back_24, theme));
+        getmCheckMark().setImageDrawable(getResources().getDrawable(R.drawable.ic_alert_circle, theme));
     }
 
     public void setBackgroundColorForOnlineMode(final int durationInMs,

@@ -832,6 +832,7 @@
     <string name="recipients">Recipients</string>
     <string name="clear_batch_list">Clear batch list</string>
     <string name="confirm_batch_list_clear">Are you sure want to clear batch list?</string>
+    <string name="confirm_import_batch_list">Import will overwrite existing batch entries, would you like to continue?</string>
     <string name="break_free">Break free of third party custody. Remain in complete control of your wallet at all times.</string>
     <string name="perfect_toolbox">The perfect toolbox for managing your bitcoin experience privately</string>
     <string name="offline_mode_allows">Offline mode allows you to interact with your bitcoin even without data</string>
@@ -985,5 +986,8 @@
 
     <string name="options_import_batch_parsing_error">Error while parsing batch spend</string>
     <string name="options_import_batch_payment_count">%d spend items found</string>
+    <string name="options_import_batch_payment_count_invalid_addr">%d item(s) with invalid address skipped</string>
+    <string name="options_import_batch_payment_count_invalid_amount">ignore %d item(s) with invalid amount skipped</string>
+    <string name="options_import_batch_pcode_connection_request">Some PayNyms or payment codes are not connected. Do you want to connect in before to create batch spend ?</string>
     <string name="options_import_batch_input_hint">Batch spend in json format...</string>
 </resources>

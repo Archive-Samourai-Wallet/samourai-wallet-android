@@ -106,6 +106,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
         progressView = findViewById(R.id.transactionProgressView);
         progressView.getMainView().setBackgroundColor(getResources().getColor(R.color.blue_send_ui));
+        progressView.setTheme(getTheme());
         broadcastTx();
     }
 

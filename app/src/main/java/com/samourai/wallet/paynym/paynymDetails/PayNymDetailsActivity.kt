@@ -1,7 +1,6 @@
 package com.samourai.wallet.paynym.paynymDetails
 
 import android.app.Dialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -9,7 +8,11 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.view.Window
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -44,11 +47,23 @@ import com.samourai.wallet.paynym.fragments.ShowPayNymQRBottomSheet
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.bech32.Bech32Util
-import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
+import com.samourai.wallet.send.MyTransactionInput
+import com.samourai.wallet.send.MyTransactionOutPoint
+import com.samourai.wallet.send.PushTx
+import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.SendFactory
+import com.samourai.wallet.send.SuggestedFee
+import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.UTXO.UTXOComparator
+import com.samourai.wallet.send.UTXOFactory
 import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.util.*
+import com.samourai.wallet.util.AddressFactory
+import com.samourai.wallet.util.CharSequenceX
+import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.MonetaryUtil
+import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.SentToFromBIP47Util
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.xmanager.client.XManagerClient
@@ -59,7 +74,10 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.bitcoinj.core.AddressFormatException
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.bitcoinj.script.Script
@@ -73,7 +91,7 @@ import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
 import java.security.NoSuchProviderException
 import java.security.spec.InvalidKeySpecException
-import java.util.*
+import java.util.Collections
 
 class PayNymDetailsActivity : SamouraiActivity() {
 
@@ -615,7 +633,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                 val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.samourai.io/wallet/usage#follow-paynyms"))
                                 startActivity(browserIntent)
                             }
-                            .setNegativeButton(R.string.close) { dialog, _ -> dialog.dismiss() }
+                            .setNegativeButton(R.string.close) { _, _ -> }
                     if (!isFinishing) {
                         dlg.show()
                     }

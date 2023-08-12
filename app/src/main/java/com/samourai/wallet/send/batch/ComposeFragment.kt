@@ -42,7 +42,7 @@ class ComposeFragment : Fragment() {
             enableReview(false)
             viewModel.getBatchListLive().observe(viewLifecycleOwner) {
                 batchListAdapter.submitList(it)
-                enableReview(it.size != 0)
+                enableReview(viewModel.isValidBatchSpend())
             }
             batchListAdapter.setOnDeleteClick {
                 viewModel.remove(it)
@@ -98,28 +98,37 @@ class ComposeFragment : Fragment() {
             data class BatchViewHolder(val v: View,
                                        val amount: TextView,
                                        val to: TextView,
-                                       val deleteButton: MaterialButton) : RecyclerView.ViewHolder(v)
+                                       val deleteButton: MaterialButton,
+                                       val needConnectionStatus: View) : RecyclerView.ViewHolder(v)
 
 
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BatchViewHolder {
                 val view = LayoutInflater.from(parent.context)
                         .inflate(R.layout.item_batch_spend, parent, false)
-                return BatchViewHolder(view, amount = view.findViewById(R.id.batchItemAmount),
-                        deleteButton = view.findViewById(R.id.batchDeleteBtn),
-                        to = view.findViewById(R.id.batchItemToAddress));
+                return BatchViewHolder(
+                    view,
+                    amount = view.findViewById(R.id.batchItemAmount),
+                    deleteButton = view.findViewById(R.id.batchDeleteBtn),
+                    to = view.findViewById(R.id.batchItemToAddress),
+                    needConnectionStatus = view.findViewById(R.id.PCodeNotConnectedGroup)
+                )
             }
 
             override fun onBindViewHolder(holder: BatchViewHolder, position: Int) {
+
                 val item = mDiffer.currentList[position]
                 holder.itemView.setOnClickListener {
                     viewOnClick?.invoke(item)
                 }
+
+                val bip47Meta = BIP47Meta.getInstance()
+
                 holder.itemView.setOnLongClickListener {
                     MaterialAlertDialogBuilder(holder.itemView.context)
                             .setTitle("Batch Item Details")
                             .setMessage("Address: ${item.addr}\n" +
                                     "Amount: ${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC\n" +
-                                    "PayNym: ${if (item.pcode != null) BIP47Meta.getInstance().getDisplayLabel(item.pcode) else ""}")
+                                    "PayNym: ${if (item.pcode != null) bip47Meta.getDisplayLabel(item.pcode) else ""}")
                             .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
                             .show()
                     true
@@ -127,7 +136,13 @@ class ComposeFragment : Fragment() {
                 holder.amount.text = "${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC"
                 holder.to.text = item.addr
                 if (item.pcode != null) {
-                    holder.to.text = BIP47Meta.getInstance().getDisplayLabel(item.pcode);
+                    holder.to.text = bip47Meta.getDisplayLabel(item.pcode);
+                    holder.needConnectionStatus.visibility =
+                        if (bip47Meta.getOutgoingStatus(item.pcode) != BIP47Meta.STATUS_SENT_CFM)
+                            View.VISIBLE
+                        else View.INVISIBLE
+                } else {
+                    holder.needConnectionStatus.visibility = View.INVISIBLE
                 }
                 holder.deleteButton.setOnClickListener {
                     onDeleteClick?.invoke(item)
