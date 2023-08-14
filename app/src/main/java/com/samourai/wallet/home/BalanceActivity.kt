@@ -954,7 +954,10 @@ open class BalanceActivity : SamouraiActivity() {
                         startActivity(cahootIntent)
                     }
                     FormatsUtil.getInstance().isPSBT(code.trim { it <= ' ' }) -> {
-                        PSBTUtil.getInstance(this@BalanceActivity).doPSBT(code.trim { it <= ' ' })
+                        ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.PSBT,
+                            bundle = Bundle().apply {
+                                putString("KEY", code)
+                            })
                     }
                     DojoUtil.getInstance(this@BalanceActivity).isValidPairingPayload(code.trim { it <= ' ' }) -> {
                         val intent = Intent(this@BalanceActivity, NetworkDashboard::class.java)
