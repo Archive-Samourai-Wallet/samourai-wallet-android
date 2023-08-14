@@ -398,13 +398,6 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             true
         }
 
-
-        val psbtPref = findPreference("psbt") as Preference?
-        psbtPref?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            doPSBT()
-            true
-        }
-
         val whirlpoolGUIPref = findPreference("whirlpool_gui") as Preference?
         whirlpoolGUIPref?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             doWhirlpoolGUIPairing()
