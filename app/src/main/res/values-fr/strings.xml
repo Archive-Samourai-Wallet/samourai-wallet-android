@@ -915,6 +915,7 @@
 
     <string name="clear_batch_list">Vider Liste Lot</string>
     <string name="confirm_batch_list_clear">Êtes-vous sûr de vouloir vider la Liste Lot ?</string>
+    <string name="confirm_import_batch_list">L\'importation écrasera les entrées de lot existantes, voulez-vous continuer ?</string>
 
 
     <string name="break_free">Affranchissez-vous de la gestion par un tiers. Gardez en permanence le total contrôle de votre portefeuille.</string>
@@ -1086,7 +1087,10 @@
 
     <string name="options_import_batch">Importer des dépenses</string>
     <string name="options_import_batch_parsing_error">Erreur lors de l\'interprétation des dépenses</string>
-    <string name="options_import_batch_payment_count">%d éléments de dépenses trouvés</string>
+    <string name="options_import_batch_payment_count">%d élément(s) de dépense(s) trouvé(s)</string>
+    <string name="options_import_batch_payment_count_invalid_addr">%d élément(s) avec adresse invalide ont été ignorés</string>
+    <string name="options_import_batch_payment_count_invalid_amount">%d élément(s) avec montant invalide ont été ignorés</string>
+    <string name="options_import_batch_pcode_connection_request">Certains PayNyms ou codes de paiement ne sont pas connectés. Souhaitez-vous vous connecter avant de créer des dépenses groupées?</string>
     <string name="options_import_batch_input_hint">Dépenses au format json...</string>
 </resources>
 
