@@ -71,7 +71,8 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
         ADDRESS_CALC,
         AUTH47,
         SIGN,
-        SWEEP
+        SWEEP,
+        PSBT
     }
 
     var behavior: BottomSheetBehavior<*>? = null
@@ -154,6 +155,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                         when (toolType) {
                             ToolType.SWEEP -> SweepPrivateKeyView(parentFragmentManager, keyParameter = key)
                             ToolType.SIGN -> SignMessage()
+                            ToolType.PSBT -> SignPSBTTool(keyParameter = key)
                             ToolType.ADDRESS_CALC -> AddressCalculator(this@SingleToolBottomSheet.dialog?.window)
                             ToolType.AUTH47 -> Auth47Login(param = key, onClose = {
                                 dismiss()
@@ -266,7 +268,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         signPSBTViewModel.clear()
                         toolsBottomSheet?.disableDragging()
-                        signPSBTBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
+                            signPSBTBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
                     }
                 }
             )
@@ -442,13 +444,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             scrimColor = Color.Black.copy(alpha = 0.7f),
             sheetBackgroundColor = samouraiBottomSheetBackground,
             sheetContent = {
-                SignPSBTTool(
-                    onCloseClick = {
-                        scope.launch {
-                            signPSBTBottomSheet.hide()
-                        }
-                    }
-                )
+                SignPSBTTool()
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {}

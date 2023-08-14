@@ -58,7 +58,7 @@ import org.bouncycastle.util.encoders.Hex
 
 @Composable
 fun SignPSBTTool(
-    onCloseClick: () -> Unit
+    keyParameter: String = ""
 ) {
     val vm = viewModel<SignPSBTViewModel>()
     val page by vm.page.observeAsState(0)
@@ -75,7 +75,7 @@ fun SignPSBTTool(
                 WrapToolsPageAnimation(
                     visible = page == 0
                 ) {
-                    InputFormPSBT()
+                    InputFormPSBT(keyParameter = keyParameter)
                 }
                 WrapToolsPageAnimation(
                     visible = page == 2
@@ -212,10 +212,10 @@ fun SignSuccess() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun InputFormPSBT() {
+fun InputFormPSBT(keyParameter: String = "") {
     val context = LocalContext.current
     val isOffline by AppUtil.getInstance(context).offlineStateLive().observeAsState(false)
-    var psbtEdit by remember { mutableStateOf("") }
+    var psbtEdit by remember { mutableStateOf(keyParameter) }
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val vm = viewModel<SignPSBTViewModel>()
     val validPSBT by vm.validPSBT.observeAsState(null)
