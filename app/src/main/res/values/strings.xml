@@ -928,7 +928,7 @@
     <string name="pin_length_error">Pin must be between 5 and 8 digits long</string>
     <string name="pins_not_match">Pins do not match, try again.</string>
     <string name="auth_challenge">Auth Challenge</string>
-    <string name="auth_with_paynym">Authenticate with paynym</string>
+    <string name="auth_with_paynym">Authenticate with PayNym</string>
     <string name="enter_challenge">Enter Challenge</string>
     <string name="auth_success">Authentication success</string>
     <string name="is_requesting_your_auth">is requesting your authentication.</string>
@@ -940,7 +940,7 @@
     <string name="wallet_address_calc">Wallet address calculator</string>
     <string name="calculate_any_address_derived">Calculate all past and future addresses in your wallet</string>
     <string name="simple_and_secure_auth_with">Simple and secure password-free authentication using your unique PayNym code</string>
-    <string name="address_details">Address Details</string>
+    <string name="address_details">Address details</string>
     <string name="address_index">Address Index</string>
     <string name="receive_address_external">Receive address (external)</string>
     <string name="change_address_internal">Change address (internal)</string>
