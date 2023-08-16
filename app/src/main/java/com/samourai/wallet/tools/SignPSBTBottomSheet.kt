@@ -163,7 +163,7 @@ fun SignSuccess() {
                         }) { view ->
                         view.setContent(
                             UR.fromBytes(
-                                RegistryType.CRYPTO_PSBT.type,
+                                RegistryType.BYTES.type,
                                 Hex.decode(String(Hex.encode(transaction?.bitcoinSerialize())))
                             )
                         )
