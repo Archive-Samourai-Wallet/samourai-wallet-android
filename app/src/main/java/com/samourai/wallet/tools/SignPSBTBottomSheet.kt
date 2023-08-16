@@ -206,25 +206,6 @@ fun InputFormPSBT(keyParameter: String = "") {
                 .padding(horizontal = 24.dp),
             Arrangement.Center
         ) {
-            AnimatedVisibility(visible = isOffline) {
-                Text(
-                    text = stringResource(id = R.string.in_offline_mode),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .padding(
-                            vertical = 12.dp,
-                            horizontal = 2.dp
-                        )
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(samouraiWarning)
-                        .padding(
-                            12.dp
-                        )
-                        .fillMaxWidth(),
-                    color = Color.White
-                )
-            }
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
