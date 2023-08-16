@@ -123,28 +123,28 @@ fun SignSuccess() {
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                 ) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 1.dp,
-                        modifier = Modifier.size(160.dp),
-                    )
-                    Box(
+                CircularProgressIndicator(
+                    color = Color.White,
+                    strokeWidth = 1.dp,
+                    modifier = Modifier.size(160.dp),
+                )
+                Box(
+                    modifier = Modifier
+                        .size(150.dp)
+                        .align(Alignment.Center)
+                        .clip(RoundedCornerShape(150.dp))
+                        .background(samouraiSuccess)
+                ) {
+                    Icon(
+                        painter = painter,
                         modifier = Modifier
-                            .size(150.dp)
-                            .align(Alignment.Center)
-                            .clip(RoundedCornerShape(150.dp))
-                            .background(Color(0xff00D47D))
-                    ) {
-                        Icon(
-                            painter = painter,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .align(Alignment.Center),
-                            tint = Color.White,
-                            contentDescription = ""
-                        )
-                    }
+                            .size(48.dp)
+                            .align(Alignment.Center),
+                        tint = Color.White,
+                        contentDescription = ""
+                    )
                 }
+                    }
             }
             else {
                 Box(
