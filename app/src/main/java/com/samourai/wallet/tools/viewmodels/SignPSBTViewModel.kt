@@ -6,11 +6,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.cahoots.psbt.PSBT
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.bitcoinj.core.Transaction
@@ -66,25 +68,28 @@ class SignPSBTViewModel : ViewModel() {
     }
 
     fun signPSBT(context: Context, psbtString: String) {
-        var _psbt: PSBT? = null
-        _psbt = try {
-            PSBT.fromBytes(
-                Hex.decode(psbtString),
-                SamouraiWallet.getInstance().currentNetworkParams
-            )
-        } catch (e: java.lang.Exception) {
-            Toast.makeText(context, R.string.psbt_error, Toast.LENGTH_SHORT).show()
-            return
-        }
-        val psbt = PSBT.fromBytes(
-            _psbt?.toBytes(),
-            SamouraiWallet.getInstance().currentNetworkParams
-        )
-
-
-        _loading.postValue(true)
-        _signedTx.postValue(PSBTUtil.getInstance(context).doPSBTSignTx(psbt))
         _page.postValue(2)
-        _loading.postValue(false)
+        viewModelScope.launch {
+            var _psbt: PSBT? = null
+            _loading.postValue(true)
+            withContext(Dispatchers.IO) {
+                delay(1500)
+                _psbt = try {
+                    PSBT.fromBytes(
+                        Hex.decode(psbtString),
+                        SamouraiWallet.getInstance().currentNetworkParams
+                    )
+                } catch (e: java.lang.Exception) {
+                    Toast.makeText(context, R.string.psbt_error, Toast.LENGTH_SHORT).show()
+                    return@withContext
+                }
+                val psbt = PSBT.fromBytes(
+                    _psbt?.toBytes(),
+                    SamouraiWallet.getInstance().currentNetworkParams
+                )
+                _signedTx.postValue(PSBTUtil.getInstance(context).doPSBTSignTx(psbt))
+                _loading.postValue(false)
+            }
+        }
     }
 }
