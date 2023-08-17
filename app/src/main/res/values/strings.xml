@@ -50,6 +50,8 @@
     <string name="options_xpub84_swapsmain2">Show extended public key for BIP84 Segwit account (Bech32) XMR-BTC Swaps main account.</string>
     <string name="options_xpub84_swapsrefund">Show Swaps refund account ZPUB</string>
     <string name="options_xpub84_swapsrefund2">Show extended public key for BIP84 Segwit account (Bech32) XMR-BTC Swaps refund account.</string>
+    <string name="options_xpub84_swapsasbmain">Show Swaps ASB main account ZPUB</string>
+    <string name="options_xpub84_swapsasbmain2">Show extended public key for BIP84 Segwit account (Bech32) XMR-BTC Swaps ASB main account.</string>
     <string name="options_wipe">Secure erase wallet</string>
     <string name="options_wipe2">Securely erase this wallet from the device.</string>
     <string name="options_stealth_display">Stealth launcher</string>
