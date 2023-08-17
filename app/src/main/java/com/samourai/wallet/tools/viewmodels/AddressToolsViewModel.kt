@@ -134,6 +134,10 @@ class AddressCalculatorViewModel : ViewModel() {
                         hdAddress = BIP84Util.getInstance(context).wallet.getAccount(SwapsMeta.getInstance(context).getSwapsRefundAccount()).getChain(chain).getAddressAt(index)
                         segwitAddress = SegwitAddress(hdAddress.ecKey, SamouraiWallet.getInstance().currentNetworkParams)
                     }
+                    11 -> {
+                        hdAddress = BIP84Util.getInstance(context).wallet.getAccount(SwapsMeta.getInstance(context).swapsAsbMainAccount).getChain(chain).getAddressAt(index)
+                        segwitAddress = SegwitAddress(hdAddress.ecKey, SamouraiWallet.getInstance().currentNetworkParams)
+                    }
                 }
 
                 if (types.indexOf(type) == 2 || types.indexOf(type) == 6) {

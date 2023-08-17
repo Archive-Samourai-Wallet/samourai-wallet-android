@@ -758,6 +758,7 @@
         <item>Whirlpool Segwit bad bank</item>
         <item>XMR-BTC main swaps account</item>
         <item>XMR-BTC swaps refunds</item>
+        <item>XMR-BTC swaps ASB main</item>
     </string-array>
 
     <string name="mixing"><em>%1$s</em> : %2$s</string>
