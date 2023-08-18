@@ -2,7 +2,6 @@ package com.samourai.wallet.tools
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,7 +12,6 @@ import androidx.compose.material.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -21,10 +19,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -40,9 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.client.android.Contents
-import com.google.zxing.client.android.encode.QRCodeEncoder
 import com.invertedx.hummingbird.URQRView
 import com.samourai.wallet.R
 import com.samourai.wallet.fragments.ScanFragment
@@ -51,8 +42,6 @@ import com.samourai.wallet.tools.viewmodels.SignPSBTViewModel
 import com.samourai.wallet.util.AppUtil
 import com.sparrowwallet.hummingbird.UR
 import com.sparrowwallet.hummingbird.registry.RegistryType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.bouncycastle.util.encoders.Hex
 
 
@@ -94,6 +83,7 @@ fun SignSuccess() {
     val vm = viewModel<SignPSBTViewModel>()
     val transaction by vm.signedTx.observeAsState(null)
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
+    val loading by vm.loading.observeAsState(false)
 
     Scaffold(
         topBar = {
@@ -127,46 +117,60 @@ fun SignSuccess() {
             Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row (
-                modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 130.dp)
-                    .padding(bottom = 50.dp),
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_sign_check),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(samouraiSuccess),
-                    modifier = Modifier.size(60.dp)
-                )
-                androidx.compose.material.Text(
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                    text = "Signed",
-                    color = samouraiSuccess,
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-            ) {
+            val painter = painterResource(id = R.drawable.ic_sign_check)
+            if (loading) {
                 Box(
                     modifier = Modifier
-                        .padding(12.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White),
+                        .align(Alignment.CenterHorizontally)
                 ) {
-                    AndroidView(
+                CircularProgressIndicator(
+                    color = Color.White,
+                    strokeWidth = 1.dp,
+                    modifier = Modifier.size(160.dp),
+                )
+                Box(
+                    modifier = Modifier
+                        .size(150.dp)
+                        .align(Alignment.Center)
+                        .clip(RoundedCornerShape(150.dp))
+                        .background(samouraiSuccess)
+                ) {
+                    Icon(
+                        painter = painter,
                         modifier = Modifier
-                            .requiredSize(280.dp)
-                            .alpha(1f),
-                        factory = { context ->
-                            URQRView(context)
-                        }) { view ->
-                        view.setContent(
-                            UR.fromBytes(
-                                RegistryType.BYTES.type,
-                                Hex.decode(String(Hex.encode(transaction?.bitcoinSerialize())))
+                            .size(48.dp)
+                            .align(Alignment.Center),
+                        tint = Color.White,
+                        contentDescription = ""
+                    )
+                }
+                    }
+            }
+            else {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White),
+                    ) {
+                        AndroidView(
+                            modifier = Modifier
+                                .requiredSize(280.dp)
+                                .alpha(1f),
+                            factory = { context ->
+                                URQRView(context)
+                            }) { view ->
+                                view.setContent(
+                                UR.fromBytes(
+                                    RegistryType.BYTES.type,
+                                    Hex.decode(String(Hex.encode(transaction?.bitcoinSerialize())))
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
