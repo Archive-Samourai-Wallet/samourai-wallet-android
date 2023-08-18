@@ -198,13 +198,10 @@ fun InputFormPSBT(keyParameter: String = "") {
         },
         backgroundColor = samouraiBottomSheetBackground,
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxHeight()
+                .padding(horizontal = 24.dp, vertical = 4.dp)
                 .fillMaxWidth()
-                .padding(top = 24.dp)
-                .padding(horizontal = 24.dp),
-            Arrangement.Center
         ) {
             Column(
                 verticalArrangement = Arrangement.Center,
@@ -256,7 +253,8 @@ fun InputFormPSBT(keyParameter: String = "") {
                                 }
                             }
                         )
-                    })
+                    }
+                )
                 Button(
                     onClick = {
                         vm.signPSBT(context, psbtEdit)
@@ -264,8 +262,7 @@ fun InputFormPSBT(keyParameter: String = "") {
                     Modifier
                         .fillMaxWidth()
                         .alpha(if (validPSBT != null) 1f else 0.5f)
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
-                        .padding(top = 1.dp),
+                        .padding(top = 3.dp),
                     enabled = validPSBT != null,
                     contentPadding = PaddingValues(vertical = 12.dp),
                     colors = ButtonDefaults.textButtonColors(

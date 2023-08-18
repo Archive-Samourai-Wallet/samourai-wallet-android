@@ -89,15 +89,8 @@ fun Auth47Login(param: String? = null, onClose: () -> Unit) {
             TopAppBar(
                 backgroundColor = samouraiBottomSheetBackground,
                 elevation = 0.dp,
-                navigationIcon = {
-                    IconButton(onClick = {
-                        onClose()
-                    }) {
-                        Icon(imageVector = Icons.Outlined.Close, contentDescription = stringResource(id = R.string.close))
-                    }
-                },
                 title = {
-                    Text(text = stringResource(R.string.auth_with_paynym), fontSize = 13.sp)
+                    Text(text = stringResource(R.string.auth_with_paynym), fontSize = 13.sp, color = samouraiAccent)
                 },
                 actions = {
                     if (authChallenge.isNotEmpty())
