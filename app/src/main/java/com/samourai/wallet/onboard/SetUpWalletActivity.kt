@@ -10,7 +10,9 @@ import android.view.animation.DecelerateInterpolator
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.*
+import androidx.lifecycle.Observer
+import androidx.lifecycle.observe
+import androidx.lifecycle.viewModelScope
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.google.android.material.color.MaterialColors
@@ -23,9 +25,8 @@ import com.samourai.wallet.databinding.ActivitySetUpWalletBinding
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.payload.ExternalBackupManager
-import com.samourai.wallet.permissions.PermissionsUtil
 import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.*
 import io.matthewnelson.topl_service.TorServiceController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -152,6 +153,12 @@ class SetUpWalletActivity : AppCompatActivity() {
         setUpWalletRestoreButton.setOnClickListener {
             val intent = Intent(this, RestoreOptionActivity::class.java)
             startActivity(intent)
+        }
+
+        setUpWalletViewModel.viewModelScope.launch {
+            withContext(Dispatchers.Main) {
+                askNotificationPermission(this@SetUpWalletActivity)
+            }
         }
     }
 

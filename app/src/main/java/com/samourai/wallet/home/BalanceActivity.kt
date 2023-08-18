@@ -373,6 +373,12 @@ open class BalanceActivity : SamouraiActivity() {
                 }
             }
         }
+
+        balanceViewModel.viewModelScope.launch {
+            withContext(Dispatchers.Main) {
+                askNotificationPermission(this@BalanceActivity)
+            }
+        }
     }
 
     private fun showToolOptions(it: View) {
