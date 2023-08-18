@@ -260,6 +260,9 @@
             android:name=".TxAnimUIActivity"
             android:theme="@style/SamouraiAppTheme" />
         <activity
+            android:name=".TxBroadcastManuallyActivity"
+            android:theme="@style/SamouraiAppTheme" />
+        <activity
             android:name=".send.SendActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:theme="@style/Theme.Samourai.Material"

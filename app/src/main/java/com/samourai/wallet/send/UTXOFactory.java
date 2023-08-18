@@ -7,6 +7,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+ import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
@@ -100,15 +101,16 @@ public class UTXOFactory {
         }
     }
 
-    public Map<String, Long> getMapAmountByCoinId(final int account) {
+    public Map<String, Long> getAmountsByCoinId(final int account,
+                                                final boolean onlyUnlockedUtxo) {
 
         final List<UTXO> utxoList = Lists.newArrayList();
         if (account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()) {
-            utxoList.addAll(APIFactory.getInstance(context).getUtxosPostMix(true));
+            utxoList.addAll(APIFactory.getInstance(context).getUtxosPostMix(onlyUnlockedUtxo));
         } else if (account == WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()) {
-            utxoList.addAll(APIFactory.getInstance(context).getUtxosBadBank(true));
+            utxoList.addAll(APIFactory.getInstance(context).getUtxosBadBank(onlyUnlockedUtxo));
         } else {
-            utxoList.addAll(APIFactory.getInstance(context).getUtxos(true));
+            utxoList.addAll(APIFactory.getInstance(context).getUtxos(onlyUnlockedUtxo));
         }
 
         final Map<String, Long> coinIdToAmount = new HashMap<>();
@@ -124,11 +126,10 @@ public class UTXOFactory {
         return coinIdToAmount;
     }
 
-    public void markUTXOAsNonSpendable(
-            final String hexTx,
-            final int account) {
+    public void markUTXOAsNonSpendable(final String hexTx,
+                                       final int account) {
 
-        final Map<String, Long> amountByCoinId = getMapAmountByCoinId(account);
+        final Map<String, Long> amountByCoinId = getAmountsByCoinId(account, true);
 
         final Transaction tx = new Transaction(
                 SamouraiWallet.getInstance().getCurrentNetworkParams(),
@@ -152,6 +153,53 @@ public class UTXOFactory {
                 }
             }
         }
+    }
+
+    public boolean markUTXOChange(final String hexTx,
+                                  final int account,
+                                  final boolean lock) {
+
+        final List<TransactionOutPoint> changeTxOutPoints
+                = getChangeTxOutPoints(account, hexTx, lock);
+
+        for (final TransactionOutPoint out : changeTxOutPoints) {
+
+            if (account == SamouraiAccountIndex.POSTMIX) {
+                if (lock) {
+                    BlockedUTXO.getInstance().addPostMix(
+                            out.getHash().toString(),
+                            (int)out.getIndex(),
+                            out.getValue().longValue());
+                } else {
+                    BlockedUTXO.getInstance().removePostMix(
+                            out.getHash().toString(),
+                            (int)out.getIndex());
+                }
+            } else if (account == SamouraiAccountIndex.BADBANK) {
+                if (lock) {
+                    BlockedUTXO.getInstance().addBadBank(
+                            out.getHash().toString(),
+                            (int)out.getIndex(),
+                            out.getValue().longValue());
+                } else {
+                    BlockedUTXO.getInstance().removeBadBank(
+                            out.getHash().toString(),
+                            (int)out.getIndex());
+                }
+            } else {
+                if (lock) {
+                    BlockedUTXO.getInstance().add(
+                            out.getHash().toString(),
+                            (int)out.getIndex(),
+                            out.getValue().longValue());
+                } else {
+                    BlockedUTXO.getInstance().remove(
+                            out.getHash().toString(),
+                            (int)out.getIndex());
+                }
+            }
+        }
+        return ! changeTxOutPoints.isEmpty();
     }
 
     public List<UTXO> getUTXOS(
@@ -209,13 +257,13 @@ public class UTXOFactory {
         return utxos;
     }
 
-    public List<TransactionOutPoint> getChangeTxOutPoints(
-            final int account,
-            final String hexTx) {
+    public List<TransactionOutPoint> getChangeTxOutPoints(final int account,
+                                                          final String hexTx,
+                                                          final boolean onlyUnlockedUtxo) {
 
         final List<TransactionOutPoint> changeTxOutPoints = Lists.newArrayList();
 
-        final Map<String, Long> amountByCoinId = getMapAmountByCoinId(account);
+        final Map<String, Long> amountByCoinId = getAmountsByCoinId(account, onlyUnlockedUtxo);
 
         final NetworkParameters netParams = SamouraiWallet.getInstance().getCurrentNetworkParams();
         final Transaction tx = new Transaction(
