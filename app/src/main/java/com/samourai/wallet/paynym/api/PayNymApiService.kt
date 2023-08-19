@@ -202,7 +202,7 @@ class PayNymApiService(private val paynymCode: String, private val context: Cont
     }
 
 
-    public fun syncPcode(pcode: String) {
+    fun syncPcode(pcode: String) {
         try {
             val payment_code = PaymentCode(pcode)
             var idx = 0

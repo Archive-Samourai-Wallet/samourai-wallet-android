@@ -1,7 +1,6 @@
 package com.samourai.wallet.paynym.addPaynym;
 
 import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -33,6 +32,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.samourai.wallet.bip47.BIP47Meta.strSamouraiDonationPCode;
+import static com.samourai.wallet.util.activity.ActivityHelper.getFirstItemFromClipboard;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class AddPaynymActivity extends SamouraiActivity {
 
@@ -68,7 +70,6 @@ public class AddPaynymActivity extends SamouraiActivity {
 
         findViewById(R.id.add_paynym_paste).setOnClickListener(view -> {
             pastePcode();
-
         });
 
         findViewById(R.id.dev_fund_button).setOnClickListener(view -> {
@@ -81,13 +82,8 @@ public class AddPaynymActivity extends SamouraiActivity {
     }
 
     private void pastePcode() {
-        try {
-            ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
-            processScan(item.getText().toString());
-        } catch (Exception ex) {
-            Toast.makeText(this, "Unable to access Clipboard", Toast.LENGTH_SHORT).show();
-        }
+        final ClipData.Item item = getFirstItemFromClipboard(this);
+        processScan(isNotBlank(item.getText()) ? item.getText().toString() : EMPTY);
     }
 
     @Override

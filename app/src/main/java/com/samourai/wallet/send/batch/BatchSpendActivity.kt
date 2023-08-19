@@ -1,7 +1,6 @@
 package com.samourai.wallet.send.batch
 
 import android.annotation.SuppressLint
-import android.app.Dialog
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
@@ -15,9 +14,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -56,12 +54,13 @@ import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.util.*
+import com.samourai.wallet.util.activity.ActivityHelper
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.WhirlpoolConst
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import org.apache.commons.lang3.StringUtils.isBlank
 import org.bitcoinj.core.Transaction
 import org.bouncycastle.util.encoders.Hex
 import java.io.UnsupportedEncodingException
@@ -72,6 +71,8 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.ParseException
 import java.util.*
+import java.util.Objects.isNull
+import java.util.Objects.nonNull
 
 
 class BatchSpendActivity : SamouraiActivity() {
@@ -102,11 +103,9 @@ class BatchSpendActivity : SamouraiActivity() {
     private var outpoints: MutableList<MyTransactionOutPoint> = mutableListOf()
     private var receivers: HashMap<String, BigInteger> = hashMapOf()
     private lateinit var binding: ActivityBatchSpendBinding
-    private lateinit var dialog : Dialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        dialog = Dialog(this@BatchSpendActivity)
         binding = ActivityBatchSpendBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbarBatchSend)
@@ -181,6 +180,11 @@ class BatchSpendActivity : SamouraiActivity() {
                 viewModel.setBalance(applicationContext, account)
             }) { obj: Throwable -> obj.printStackTrace() }
         compositeDisposable.add(disposable)
+
+        val inputBatchSpendAsJson = intent.getStringExtra("inputBatchSpend")
+        if (nonNull(inputBatchSpendAsJson)) {
+            tryLoadBatchSpend(inputBatchSpendAsJson);
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -426,33 +430,36 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     private fun importBatch() {
-        dialog.setContentView(R.layout.import_batch_spend)
 
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        dialog.setCancelable(false)
-        val btnCancel = dialog.findViewById<Button>(R.id.cancel)
-        val btnOk = dialog.findViewById<Button>(R.id.ok)
-        val txtJson = dialog.findViewById<EditText>(R.id.editText)
-        btnCancel.setOnClickListener {
-            hidekeyboard()
-            dialog.dismiss()
-        }
-        btnOk.setOnClickListener {
-
-            val content = txtJson.editableText.toString()
-            if (isBlank(content)) return@setOnClickListener
-
-            var inputBatchSpend : InputBatchSpend
-            CoroutineScope(Dispatchers.Default).launch {
-
-                inputBatchSpend = loadInputBatchSpend(content)
-
+        val content: String = getContentFromClipboard()
+        CoroutineScope(Dispatchers.Default).launch {
+            try {
+                var inputBatchSpend = loadInputBatchSpend(content)
                 CoroutineScope(Dispatchers.Main).launch {
                     clearAndCreateBatchSpend(inputBatchSpend)
                 }
+            } catch (e : Exception) {
+                CoroutineScope(Dispatchers.Main).launch {
+
+                    val firstPartOfContentContent =
+                        if (content.isEmpty()) content
+                        else content.subSequence(0, Math.min(content.length, 300))
+                    Log.e(TAG, getString(R.string.options_import_batch_parsing_error) + " : " + firstPartOfContentContent, e)
+
+                    val shortContent =
+                        if (content.isEmpty()) content
+                        else content.subSequence(0, Math.min(content.length, 30))
+                    val errorMessage = getString(R.string.options_import_batch_parsing_error) + " : " + shortContent
+                    Toast.makeText(this@BatchSpendActivity, errorMessage, Toast.LENGTH_SHORT).show()
+                }
             }
         }
-        dialog.show()
+    }
+
+    private fun getContentFromClipboard(): String {
+        val item = ActivityHelper.getFirstItemFromClipboard(this@BatchSpendActivity)
+        val content: String = if (item.text != null) item.text.toString() else ""
+        return content
     }
 
     private fun clearAndCreateBatchSpend(inputBatchSpend: InputBatchSpend) {
@@ -461,19 +468,45 @@ class BatchSpendActivity : SamouraiActivity() {
                 .setMessage(getString(R.string.confirm_import_batch_list))
                 .setPositiveButton(R.string.ok) { _, _ ->
                     viewModel.clearBatch(true)
-                    hidekeyboard()
-                    dialog.dismiss()
                     importBatchFromJson(inputBatchSpend)
                 }.setNegativeButton(R.string.cancel) { _, _ -> }.show()
         } else {
-            hidekeyboard()
-            dialog.dismiss()
             importBatchFromJson(inputBatchSpend)
         }
     }
 
     private fun importBatchFromJson(inputBatchSpend: InputBatchSpend) {
 
+
+        val loadingStatus = findViewById<ProgressBar>(R.id.batch_spend_loading_status)
+        loadingStatus.visibility = View.VISIBLE
+
+        compositeDisposable.add(
+
+            Observable.fromCallable {
+                inputBatchSpend.spendDescriptionMap.forEach { spendDescription ->
+                    spendDescription.computeAddress(this@BatchSpendActivity)
+                }
+                true
+            }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ success: Boolean ->
+
+                    applyImportBatchFromJson(inputBatchSpend)
+                    loadingStatus.visibility = View.INVISIBLE
+
+                }) { error: Throwable ->
+                    loadingStatus.visibility = View.INVISIBLE
+                    val errorMessage = getString(R.string.options_import_batch_parsing_error) +
+                        " : " + error.message
+                    Log.e(TAG, errorMessage, error)
+                    Toast.makeText(this@BatchSpendActivity, errorMessage, Toast.LENGTH_SHORT).show()
+                }
+        )
+    }
+
+    private fun applyImportBatchFromJson(inputBatchSpend: InputBatchSpend) {
         var validatedItem = 0
         var addressInvalidItem = 0
         var amountInvalidItem = 0
@@ -483,11 +516,10 @@ class BatchSpendActivity : SamouraiActivity() {
             val idStart = System.currentTimeMillis();
             var offset = 0
 
-            inputBatchSpend.spendDescriptionList.entries.forEach { entry ->
+            inputBatchSpend.spendDescriptionMap.forEach { spendDescription ->
 
-                val spendDescription = entry.value
-                if (spendDescription.isValidAddress
-                    && spendDescription.isValidAmount) {
+                val address = spendDescription.address
+                if (nonNull(address) && spendDescription.isValidAmount) {
 
                     val walletBalance = viewModel.totalWalletBalance() ?: 0
                     var insufficientFunds =
@@ -499,18 +531,19 @@ class BatchSpendActivity : SamouraiActivity() {
                         UUID = idStart + (offset++)
                         amount = spendDescription.amount
                         pcode = spendDescription.pcode
-                        addr = spendDescription.computeAddress(this@BatchSpendActivity);
+                        paynymCode = spendDescription.paynym
+                        addr = address
                     }
                     viewModel.add(batchItem)
                     ++validatedItem
-                } else if (! spendDescription.isValidAddress) {
-                    ++ addressInvalidItem
-                } else if (! spendDescription.isValidAmount) {
-                    ++ amountInvalidItem
+                } else if (isNull(address)) {
+                    ++addressInvalidItem
+                } else if (!spendDescription.isValidAmount) {
+                    ++amountInvalidItem
                 }
             }
 
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             val errorMessage = getString(R.string.options_import_batch_parsing_error)
             Log.e(TAG, errorMessage, e)
             Toast.makeText(this@BatchSpendActivity, errorMessage, Toast.LENGTH_SHORT).show()
@@ -520,22 +553,30 @@ class BatchSpendActivity : SamouraiActivity() {
         Toast.makeText(
             this@BatchSpendActivity,
             format(getString(R.string.options_import_batch_payment_count), validatedItem),
-            Toast.LENGTH_SHORT).show()
+            Toast.LENGTH_SHORT
+        ).show()
 
         if (addressInvalidItem > 0) {
             Toast.makeText(
                 this@BatchSpendActivity,
-                format(getString(R.string.options_import_batch_payment_count_invalid_addr), addressInvalidItem),
-                Toast.LENGTH_SHORT).show()
+                format(
+                    getString(R.string.options_import_batch_payment_count_invalid_addr),
+                    addressInvalidItem
+                ),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         if (amountInvalidItem > 0) {
             Toast.makeText(
                 this@BatchSpendActivity,
-                format(getString(R.string.options_import_batch_payment_count_invalid_amount), amountInvalidItem),
-                Toast.LENGTH_SHORT).show()
+                format(
+                    getString(R.string.options_import_batch_payment_count_invalid_amount),
+                    amountInvalidItem
+                ),
+                Toast.LENGTH_SHORT
+            ).show()
         }
-
     }
 
     private fun doUTXO() {
@@ -590,6 +631,9 @@ class BatchSpendActivity : SamouraiActivity() {
     private fun processScan(code: String) {
         strPCode = null
         var data = code;
+
+        if (tryLoadBatchSpend(data)) return
+
         if (data.contains("https://bitpay.com")) {
             val dlg = MaterialAlertDialogBuilder(this@BatchSpendActivity)
                 .setTitle(R.string.app_name)
@@ -680,6 +724,23 @@ class BatchSpendActivity : SamouraiActivity() {
             Toast.makeText(this, R.string.scan_error, Toast.LENGTH_SHORT).show()
         }
 
+    }
+
+    private fun tryLoadBatchSpend(data: String?): Boolean {
+        try {
+            loadBatchSpendFromJson(data)
+            return true
+        } catch (e: Exception) {
+            Log.d(TAG, "content from QR code is not parsable as InputBatchSpend:" + e.message)
+        }
+        return false
+    }
+
+    private fun loadBatchSpendFromJson(data: String?) {
+        val inputBatchSpend = loadInputBatchSpend(data)
+        CoroutineScope(Dispatchers.Main).launch {
+            clearAndCreateBatchSpend(inputBatchSpend)
+        }
     }
 
     private fun processPCode(pcode: String, meta: String?) {

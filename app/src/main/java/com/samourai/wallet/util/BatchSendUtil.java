@@ -12,6 +12,7 @@ public class BatchSendUtil {
 
     public static class BatchSend   {
         public String pcode = null;
+        public String paynymCode = null;
         public String addr = null;
         public long amount = 0L;
         public long UUID = 0L;

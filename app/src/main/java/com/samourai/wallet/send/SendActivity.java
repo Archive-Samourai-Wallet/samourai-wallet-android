@@ -1,9 +1,11 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend;
 import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
 import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getSatValue;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 import android.app.Activity;
 import android.content.ClipData;
@@ -2112,11 +2114,20 @@ public class SendActivity extends SamouraiActivity {
         satEditText.setEnabled(enable);
     }
 
-    private void processScan(String data) {
+    private void processScan(final String inputData) {
+
+        String data = inputData;
+
         strPCode = null;
         toAddressEditText.setEnabled(true);
         address = null;
         strDestinationBTCAddress = null;
+
+        if (canParseAsBatchSpend(data)) {
+            launchBatchSpend(data);
+            return;
+        }
+
         if (data.contains("https://bitpay.com")) {
 
             MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(this)
@@ -2144,9 +2155,9 @@ public class SendActivity extends SamouraiActivity {
             return;
         }
 
-        if (Cahoots.isCahoots(data.trim())) {
+        if (Cahoots.isCahoots(trim(data))) {
             try {
-                Intent cahootsIntent = ManualCahootsActivity.createIntentResume(this, account, data.trim());
+                Intent cahootsIntent = ManualCahootsActivity.createIntentResume(this, account, trim(data));
                 startActivity(cahootsIntent);
             } catch (Exception e) {
                 Toast.makeText(this, R.string.cannot_process_cahoots, Toast.LENGTH_SHORT).show();
@@ -2154,9 +2165,9 @@ public class SendActivity extends SamouraiActivity {
             }
             return;
         }
-        if (FormatsUtil.getInstance().isPSBT(data.trim())) {
+        if (FormatsUtil.getInstance().isPSBT(trim(data))) {
             try {
-                PSBTUtil.getInstance(SendActivity.this).doPSBT(data.trim());
+                PSBTUtil.getInstance(SendActivity.this).doPSBT(trim(data));
             } catch (Exception e) {
                 ;
             }
@@ -2425,7 +2436,7 @@ public class SendActivity extends SamouraiActivity {
         } else if (id == R.id.action_fees) {
             doFees();
         } else if (id == R.id.action_batch) {
-            doBatchSpend();
+            launchBatchSpend();
         } else if (id == R.id.action_support) {
             doSupport();
         } else {
@@ -2458,7 +2469,7 @@ public class SendActivity extends SamouraiActivity {
 
     private void doScan() {
 
-        CameraFragmentBottomSheet cameraFragmentBottomSheet = new CameraFragmentBottomSheet();
+        final CameraFragmentBottomSheet cameraFragmentBottomSheet = new CameraFragmentBottomSheet();
         cameraFragmentBottomSheet.show(getSupportFragmentManager(), cameraFragmentBottomSheet.getTag());
 
         cameraFragmentBottomSheet.setQrCodeScanListener(code -> {
@@ -2484,8 +2495,13 @@ public class SendActivity extends SamouraiActivity {
         startActivity(intent);
     }
 
-    private void doBatchSpend() {
-        Intent intent = new Intent(SendActivity.this, BatchSpendActivity.class);
+    private void launchBatchSpend() {
+        launchBatchSpend(null);
+    }
+
+    private void launchBatchSpend(final String inputBatchSpendAsJson) {
+        final Intent intent = new Intent(SendActivity.this, BatchSpendActivity.class);
+        intent.putExtra("inputBatchSpend", inputBatchSpendAsJson);
         startActivity(intent);
     }
 
