@@ -1089,12 +1089,22 @@
     <string name="tx_toast_offline_mark_outputs_do_not_spend">Marquer les sorties liées comme ne pas dépenser</string>
     <string name="tx_toast_lock_change_utxo_issue">Problème lors de la tentative de verrouillage des UTXOs de monnaie</string>
 
-    <string name="options_import_batch">Importer des dépenses</string>
+    <string name="options_import_batch">Coller un lot de dépenses</string>
     <string name="options_import_batch_parsing_error">Erreur lors de l\'interprétation des dépenses</string>
     <string name="options_import_batch_payment_count">%d élément(s) de dépense(s) trouvé(s)</string>
     <string name="options_import_batch_payment_count_invalid_addr">%d élément(s) avec adresse invalide ont été ignorés</string>
     <string name="options_import_batch_payment_count_invalid_amount">%d élément(s) avec montant invalide ont été ignorés</string>
     <string name="options_import_batch_pcode_connection_request">Certains PayNyms ou codes de paiement ne sont pas connectés. Souhaitez-vous vous connecter avant de créer des dépenses groupées?</string>
     <string name="options_import_batch_input_hint">Dépenses au format json...</string>
+
+    <string name="featured_paynym">PayNym en vedette</string>
+    <string name="scan_qr_code">Scannez le code QR</string>
+    <string name="paste_payment_code">Coller le code de paiement</string>
+    <string name="samourai_wallet_dev_fund">Fonds de Dev de la Wallet Samourai</string>
+    <string name="samourai_wallet_dev_fund_sentence">Faites un don pour aider à financer le développement de \nSamourai Wallet</string>
+
+    <string name="clipboard_unable_access">Impossible d\'accéder au Presse-papiers</string>
+    <string name="clipboard_item_inconsistent">Élément incohérent trouvé dans le Presse-papiers</string>
+
 </resources>
 

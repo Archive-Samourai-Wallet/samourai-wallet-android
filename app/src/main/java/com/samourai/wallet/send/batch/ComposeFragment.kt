@@ -19,6 +19,7 @@ import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.databinding.BatchSpendComposeBinding
 import com.samourai.wallet.util.BatchSendUtil
 import com.samourai.wallet.util.FormatsUtil
+import java.util.Objects.nonNull
 
 class ComposeFragment : Fragment() {
 
@@ -136,7 +137,7 @@ class ComposeFragment : Fragment() {
                 holder.amount.text = "${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC"
                 holder.to.text = item.addr
                 if (item.pcode != null) {
-                    holder.to.text = bip47Meta.getDisplayLabel(item.pcode);
+                    holder.to.text = if (nonNull(item.paynymCode)) item.paynymCode else bip47Meta.getDisplayLabel(item.pcode);
                     holder.needConnectionStatus.visibility =
                         if (bip47Meta.getOutgoingStatus(item.pcode) != BIP47Meta.STATUS_SENT_CFM)
                             View.VISIBLE

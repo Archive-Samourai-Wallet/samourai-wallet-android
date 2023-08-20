@@ -986,7 +986,7 @@
     <string name="tx_toast_lock_change_utxo_issue">Issue when trying to lock change UTXO</string>
     <string name="tx_toast_offline_read_broadcast">Ready to broadcast</string>
     <string name="tx_toast_offline_mark_outputs_do_not_spend">Mark related outputs as do not spend</string>
-    <string name="options_import_batch">Import batch spend</string>
+    <string name="options_import_batch">Paste batch spend</string>
 
     <string name="options_import_batch_parsing_error">Error while parsing batch spend</string>
     <string name="options_import_batch_payment_count">%d spend items found</string>
@@ -994,4 +994,13 @@
     <string name="options_import_batch_payment_count_invalid_amount">ignore %d item(s) with invalid amount skipped</string>
     <string name="options_import_batch_pcode_connection_request">Some PayNyms or payment codes are not connected. Do you want to connect in before to create batch spend ?</string>
     <string name="options_import_batch_input_hint">Batch spend in json format...</string>
+
+    <string name="featured_paynym">Featured PayNym</string>
+    <string name="scan_qr_code">Scan QR code</string>
+    <string name="paste_payment_code">Paste payment code</string>
+    <string name="samourai_wallet_dev_fund">Samourai Wallet Dev Fund</string>
+    <string name="samourai_wallet_dev_fund_sentence">Donate to help fund the development of \nSamourai Wallet</string>
+
+    <string name="clipboard_unable_access">Unable to access Clipboard</string>
+    <string name="clipboard_item_inconsistent">Inconsistent item found in clipboard</string>
 </resources>

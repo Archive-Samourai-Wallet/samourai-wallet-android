@@ -1,5 +1,7 @@
 package com.samourai.wallet.send.batch;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -12,6 +14,8 @@ import org.json.JSONObject;
 
 public class InputBatchSpendHelper {
 
+    public static final String TAG = "InputBatchSpendHelper";
+
     private InputBatchSpendHelper() {}
 
     public static InputBatchSpend loadInputBatchSpend(
@@ -22,30 +26,43 @@ public class InputBatchSpendHelper {
         final InputBatchSpend inputBatchSpend = InputBatchSpend.createInputBatchSpend();
 
         final JSONObject obj = new JSONObject(jsonContent);
-        if(! obj.has("batch")) return inputBatchSpend;
+        if(obj.has("batch")) {
+            final JSONArray array = obj.getJSONArray("batch");
 
-        final JSONArray array = obj.getJSONArray("batch");
+            for(int i = 0; i < array.length(); i++) {
 
-        for(int i = 0; i < array.length(); i++) {
+                final JSONObject dest = (JSONObject) array.get(i);
+                String strDestination = null;
+                long amount = 0l;
 
-            final JSONObject dest = (JSONObject) array.get(i);
-            String strDestination = null;
-            long amount = 0l;
+                if(dest.has("dest")) {
+                    strDestination = dest.getString("dest");
+                }
 
-            if(dest.has("dest")) {
-                strDestination = dest.getString("dest");
+                if(dest.has("amt")) {
+                    amount = dest.getLong("amt");
+                }
+
+                inputBatchSpend.addSpend(strDestination, amount);
             }
+        }
 
-            if(dest.has("amt")) {
-                amount = dest.getLong("amt");
-            }
-
-            inputBatchSpend.addSpend(strDestination, amount);
+        if (inputBatchSpend.getSpendDescriptionMap().isEmpty()) {
+            throw new Exception("the content does not represent batch spend");
         }
 
         return inputBatchSpend;
     }
 
+    public static boolean canParseAsBatchSpend(final String inputBatchSpendAsJson) {
+        try {
+            loadInputBatchSpend(inputBatchSpendAsJson);
+            return true;
+        } catch (final Exception e) {
+            Log.d(TAG, "content from QR code is not parsable as InputBatchSpend:" + e.getMessage());
+        }
+        return false;
+    }
 
 }
 
