@@ -125,17 +125,18 @@ public class TransactionProgressView extends FrameLayout {
         return optionProgressBar;
     }
 
-    public void showSuccessSentTxOptions(final boolean doNotSpendChangeBtnVisible) {
+    public void showSuccessSentTxOptions(final boolean changeBtnVisible, final int changeBtnText) {
 
         leftTopImgBtn.setVisibility(VISIBLE);
         mArcProgress.setVisibility(INVISIBLE);
 
-        if (doNotSpendChangeBtnVisible) {
+        if (changeBtnVisible) {
             //optionInfoDetails.setVisibility(VISIBLE);
             optionTitle.setText(R.string.tx_option_section_change);
             optionTitle.setVisibility(VISIBLE);
-            optionBtn1.setText(R.string.tx_option_change_do_not_spend);
+            optionBtn1.setText(changeBtnText);
             optionBtn1.setVisibility(VISIBLE);
+            optionBtn1.setTextColor(getResources().getColor(R.color.blue_send_ui));
             optionBtn2.setVisibility(INVISIBLE);
         } else {
             optionInfoDetails.setVisibility(INVISIBLE);
@@ -163,10 +164,22 @@ public class TransactionProgressView extends FrameLayout {
         //optionInfoDetails.setVisibility(VISIBLE);
         optionTitle.setText(R.string.tx_option_section_broadcast);
         optionTitle.setVisibility(VISIBLE);
+
         optionBtn1.setText(getResources().getText(R.string.broadcast_with_txtenna));
-        optionBtn2.setText(R.string.tx_option_broadcast_manually);
         optionBtn1.setVisibility(VISIBLE);
+        ViewHelper.animateChangeColor(
+                animator -> optionBtn1.setTextColor((int) animator.getAnimatedValue()),
+                getResources().getColor(R.color.blue_send_ui),
+                getResources().getColor(R.color.orange_send_ui),
+                BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
+
+        optionBtn2.setText(R.string.tx_option_broadcast_manually);
         optionBtn2.setVisibility(VISIBLE);
+        ViewHelper.animateChangeColor(
+                animator -> optionBtn2.setTextColor((int) animator.getAnimatedValue()),
+                getResources().getColor(R.color.blue_send_ui),
+                getResources().getColor(R.color.orange_send_ui),
+                BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
 
         getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_arrow_back_24, theme));
         getmCheckMark().setImageDrawable(getResources().getDrawable(R.drawable.ic_network_strength_off, theme));
@@ -188,10 +201,22 @@ public class TransactionProgressView extends FrameLayout {
         //optionInfoDetails.setVisibility(VISIBLE);
         optionTitle.setText(R.string.tx_option_section_troubleshoot);
         optionTitle.setVisibility(VISIBLE);
+
         optionBtn1.setText(R.string.tx_option_attempt_broadcast);
-        optionBtn2.setText(R.string.tx_option_contact_support);
         optionBtn1.setVisibility(VISIBLE);
+        ViewHelper.animateChangeColor(
+                animator -> optionBtn1.setTextColor((int) animator.getAnimatedValue()),
+                getResources().getColor(R.color.blue_send_ui),
+                getResources().getColor(R.color.red_send_ui),
+                BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
+
+        optionBtn2.setText(R.string.tx_option_contact_support);
         optionBtn2.setVisibility(VISIBLE);
+        ViewHelper.animateChangeColor(
+                animator -> optionBtn2.setTextColor((int) animator.getAnimatedValue()),
+                getResources().getColor(R.color.blue_send_ui),
+                getResources().getColor(R.color.red_send_ui),
+                BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
 
         getLeftTopImgBtn().setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_arrow_back_24, theme));
         getmCheckMark().setImageDrawable(getResources().getDrawable(R.drawable.ic_alert_circle, theme));
@@ -201,7 +226,7 @@ public class TransactionProgressView extends FrameLayout {
                                                 final int colorFrom,
                                                 final int colorTo) {
 
-        ViewHelper.animateChangeBackgroundColor(
+        ViewHelper.animateChangeColor(
                 mainView,
                 getResources().getColor(colorFrom),
                 getResources().getColor(colorTo),

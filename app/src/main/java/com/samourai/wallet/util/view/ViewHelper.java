@@ -6,10 +6,9 @@ import android.view.View;
 
 public class ViewHelper {
 
-    private ViewHelper() {
-    }
+    private ViewHelper() {}
 
-    public static void animateChangeBackgroundColor(
+    public static void animateChangeColor(
             final View view,
             final int colorFrom,
             final int colorTo,
@@ -24,7 +23,7 @@ public class ViewHelper {
         colorAnimation.start();
     }
 
-    public static void animateChangeBackgroundColor(
+    public static void animateChangeColor(
             final ValueAnimator.AnimatorUpdateListener listener,
             final int colorFrom,
             final int colorTo,

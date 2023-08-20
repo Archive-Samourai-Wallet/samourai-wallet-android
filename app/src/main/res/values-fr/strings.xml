@@ -1072,6 +1072,7 @@
 
     <string name="tx_option_section_change">Monnaie</string>
     <string name="tx_option_change_do_not_spend">Statuer comme Ne Pas Dépenser</string>
+    <string name="tx_option_change_spendable">Statuer comme Dépensable</string>
     <string name="tx_status_not_sent">Transaction non envoyée</string>
     <string name="tx_status_details_not_sent_offline_mode">Le portefeuille Samourai est hors ligne</string>
     <string name="tx_option_section_broadcast">Transmission</string>
@@ -1079,10 +1080,13 @@
     <string name="tx_status_broadcast_error">Erreur pendant la transmission</string>
     <string name="tx_status_details_try_rebroadcating">réessayer la transmission</string>
     <string name="tx_option_section_troubleshoot">Dépannage</string>
-    <string name="tx_option_attempt_broadcast">Essayer de transmettre</string>
+    <string name="tx_option_attempt_broadcast">Essayer de retransmettre</string>
     <string name="tx_option_contact_support">Contacter le support</string>
     <string name="tx_toast_change_utxo_locked">Les UTXOs de la monnaie ont été statués comme Ne Pas Dépenser</string>
+    <string name="tx_toast_change_utxo_unlocked">Les UTXOs de la monnaie ont été statués comme Dépensable</string>
     <string name="tx_toast_no_change_utxo_found">aucun UTXO de monnaie n\'a été trouvé pour être verrouillé</string>
+    <string name="tx_toast_offline_read_broadcast">Prêt à transmettre</string>
+    <string name="tx_toast_offline_mark_outputs_do_not_spend">Marquer les sorties liées comme ne pas dépenser</string>
     <string name="tx_toast_lock_change_utxo_issue">Problème lors de la tentative de verrouillage des UTXOs de monnaie</string>
 
     <string name="options_import_batch">Importer des dépenses</string>

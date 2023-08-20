@@ -36,7 +36,6 @@ import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
-import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.RBFSpend;
 import com.samourai.wallet.send.RBFUtil;
@@ -58,7 +57,6 @@ import com.samourai.wallet.widgets.TransactionProgressView;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -93,7 +91,6 @@ public class TxAnimUIActivity extends AppCompatActivity {
     private AtomicBoolean txSuccess = new AtomicBoolean(false);
 
     private CompositeDisposable disposables = new CompositeDisposable();
-    private Handler resultHandler = null;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -211,8 +208,6 @@ public class TxAnimUIActivity extends AppCompatActivity {
             debug("TxAnimUIActivity", "hex tx:" + hexTx);
             final String strTxHash = _tx.getHashAsString();
 
-            resultHandler = new Handler();
-
             new Handler().postDelayed(() -> {
                 TxAnimUIActivity.this.runOnUiThread(() -> {
                     progressView.getmArcProgress().startArc3(arcdelay);
@@ -269,7 +264,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
         }, signDelay);
     }
 
-    private void lockChangeUtxo(final String hexTx) {
+    private void editChangeUtxo(final String hexTx, final boolean lock) {
 
         progressView.getOptionProgressBar().setVisibility(View.VISIBLE);
 
@@ -280,76 +275,73 @@ public class TxAnimUIActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(status -> {
 
+                    final UTXOFactory utxoFact = UTXOFactory.getInstance(this);
                     final SendParams sendParams = SendParams.getInstance();
-                    final UTXOFactory utxoFactory = UTXOFactory.getInstance(this);
-                    final List<TransactionOutPoint> changeTxOutPoints = utxoFactory
-                            .getChangeTxOutPoints(sendParams.getAccount(), hexTx);
+                    if (utxoFact.markUTXOChange(hexTx, sendParams.getAccount(), lock)) {
 
-                    if (!changeTxOutPoints.isEmpty()) {
                         try {
-                            for (final TransactionOutPoint out : changeTxOutPoints) {
-                                if (sendParams.isPostmixAccount(TxAnimUIActivity.this)) {
-                                    BlockedUTXO.getInstance().addPostMix(
-                                            out.getHash().toString(),
-                                            (int)out.getIndex(),
-                                            out.getValue().longValue());
-                                } else if (sendParams.isBadBankAccount(TxAnimUIActivity.this)) {
-                                    BlockedUTXO.getInstance().addBadBank(
-                                            out.getHash().toString(),
-                                            (int)out.getIndex(),
-                                            out.getValue().longValue());
-                                } else {
-                                    BlockedUTXO.getInstance().add(
-                                            out.getHash().toString(),
-                                            (int)out.getIndex(),
-                                            out.getValue().longValue());
-                                }
+
+                            progressView.getOptionBtn1().setOnClickListener(view ->
+                                    editChangeUtxo(hexTx, !lock));
+
+                            if (lock) {
+                                progressView.showSuccessSentTxOptions(true, R.string.tx_option_change_spendable);
+                            } else {
+                                progressView.showSuccessSentTxOptions(true, R.string.tx_option_change_do_not_spend);
                             }
 
-                            TxAnimUIActivity.this.runOnUiThread(() -> {
-                                progressView.showSuccessSentTxOptions(false);
-                                progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
-                                progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+                            progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                            progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+
+                            if (lock) {
                                 Toast.makeText(
                                         TxAnimUIActivity.this,
                                         getResources().getString(R.string.tx_toast_change_utxo_locked),
                                         Toast.LENGTH_SHORT
                                 ).show();
-                            });
-                        } catch (final Throwable t) {
-
-                            Log.e(TAG, t.getMessage(), t);
-
-                            TxAnimUIActivity.this.runOnUiThread(() -> {
-                                progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                            } else {
                                 Toast.makeText(
                                         TxAnimUIActivity.this,
-                                        getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
+                                        getResources().getString(R.string.tx_toast_change_utxo_unlocked),
                                         Toast.LENGTH_SHORT
                                 ).show();
-                            });
+                            }
+                        } catch (final Throwable t) {
+                            Log.e(TAG, t.getMessage(), t);
+                            progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                            Toast.makeText(
+                                    TxAnimUIActivity.this,
+                                    getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
+                                    Toast.LENGTH_SHORT
+                            ).show();
                         }
 
-
                     } else {
+
                         Toast.makeText(
                                 TxAnimUIActivity.this,
                                 getResources().getString(R.string.tx_toast_no_change_utxo_found),
                                 Toast.LENGTH_SHORT
                         ).show();
+
+                        progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                        progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+                        if (lock) {
+                            progressView.showSuccessSentTxOptions(false, R.string.tx_option_change_spendable);
+                        } else {
+                            progressView.showSuccessSentTxOptions(false, R.string.tx_option_change_do_not_spend);
+                        }
                     }
+
                 }, throwable -> {
 
                     Log.e(TAG, throwable.getMessage(), throwable);
-
-                    TxAnimUIActivity.this.runOnUiThread(() -> {
-                        progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
-                        Toast.makeText(
-                                TxAnimUIActivity.this,
-                                getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    });
+                    progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
+                    Toast.makeText(
+                            TxAnimUIActivity.this,
+                            getResources().getString(R.string.tx_toast_lock_change_utxo_issue),
+                            Toast.LENGTH_SHORT
+                    ).show();
                 });
 
         disposables.add(disposable);
@@ -459,7 +451,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
     private void failTx(final int resIdDetails) {
         TxAnimUIActivity.this.runOnUiThread(() -> {
 
-            ViewHelper.animateChangeBackgroundColor(
+            ViewHelper.animateChangeColor(
                     animation -> getWindow().setStatusBarColor((int) animation.getAnimatedValue()),
                     getResources().getColor(R.color.blue_send_ui),
                     getResources().getColor(R.color.red_send_ui),
@@ -477,7 +469,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
     private void reBroadcastTx() {
 
-        ViewHelper.animateChangeBackgroundColor(
+        ViewHelper.animateChangeColor(
             animation -> getWindow().setStatusBarColor((int) animation.getAnimatedValue()),
             getResources().getColor(R.color.red_send_ui),
             getResources().getColor(R.color.blue_send_ui),
@@ -499,7 +491,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
         TxAnimUIActivity.this.runOnUiThread(() -> {
 
-            ViewHelper.animateChangeBackgroundColor(
+            ViewHelper.animateChangeColor(
                     animation -> getWindow().setStatusBarColor((int) animation.getAnimatedValue()),
                     getResources().getColor(R.color.blue_send_ui),
                     getResources().getColor(R.color.orange_send_ui),
@@ -508,9 +500,15 @@ public class TxAnimUIActivity extends AppCompatActivity {
             progressView.reset();
             progressView.showOfflineTxOptions(resIdDetails);
             progressView.getOptionBtn1().setOnClickListener(v -> txTenna(hex));
-            progressView.getOptionBtn2().setOnClickListener(v -> doShowTx(hex, hash));
+            progressView.getOptionBtn2().setOnClickListener(v -> launchManualTxBroadcastActivity(hex));
             progressView.getLeftTopImgBtn().setOnClickListener(view -> finish());
         });
+    }
+
+    private void launchManualTxBroadcastActivity(final String hex) {
+        final Intent intent = new Intent(TxAnimUIActivity.this, TxBroadcastManuallyActivity.class);
+        intent.putExtra("txHex", hex);
+        startActivity(intent);
     }
 
     private void txTenna(final String hex) {
@@ -639,10 +637,11 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     Toast.makeText(TxAnimUIActivity.this, R.string.tx_sent, Toast.LENGTH_SHORT).show();
                     progressView.getOptionBtn1().setOnClickListener(view -> {
                         if (!doNotSpendChangeBtnVisible) return;
-                        lockChangeUtxo(hexTx);
+                        editChangeUtxo(hexTx, true);
                     });
                     progressView.getOptionBtn2().setOnClickListener(view -> {});
-                    progressView.showSuccessSentTxOptions(doNotSpendChangeBtnVisible);
+                    progressView.showSuccessSentTxOptions(doNotSpendChangeBtnVisible, R.string.tx_option_change_do_not_spend);
+                    progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
                 });
             } else {
 
@@ -692,180 +691,19 @@ public class TxAnimUIActivity extends AppCompatActivity {
         finish();
     }
 
-    private void doShowTx(final String hexTx, final String txHash) {
-
-        final int QR_ALPHANUM_CHAR_LIMIT = 4296;    // tx max size in bytes == 2148
-
-        final TextView showTx = new TextView(TxAnimUIActivity.this);
-        showTx.setText(hexTx);
-        showTx.setTextIsSelectable(true);
-        showTx.setPadding(40, 10, 40, 10);
-        showTx.setTextSize(18.0f);
-
-        final CheckBox cbMarkInputsUnspent = new CheckBox(TxAnimUIActivity.this);
-        cbMarkInputsUnspent.setText(R.string.mark_inputs_as_unspendable);
-        cbMarkInputsUnspent.setChecked(false);
-
-        final LinearLayout hexLayout = new LinearLayout(TxAnimUIActivity.this);
-        hexLayout.setOrientation(LinearLayout.VERTICAL);
-        hexLayout.addView(cbMarkInputsUnspent);
-        hexLayout.addView(showTx);
-
-        new AlertDialog.Builder(TxAnimUIActivity.this)
-                .setTitle(txHash)
-                .setView(hexLayout)
-                .setCancelable(false)
-                .setPositiveButton(R.string.close, (dialog, whichButton) -> {
-
-                    if (cbMarkInputsUnspent.isChecked()) {
-
-                        UTXOFactory.getInstance(TxAnimUIActivity.this).markUTXOAsNonSpendable(
-                                hexTx,
-                                SendParams.getInstance().getAccount());
-
-                        final Intent intent = new Intent("com.samourai.wallet.BalanceFragment.REFRESH");
-                        intent.putExtra("notifTx", false);
-                        intent.putExtra("fetch", true);
-                        LocalBroadcastManager.getInstance(TxAnimUIActivity.this).sendBroadcast(intent);
-                    }
-
-                    dialog.dismiss();
-                    TxAnimUIActivity.this.finish();
-
-                })
-                .setNeutralButton(R.string.copy_to_clipboard, (dialog, whichButton) -> {
-
-                    if (cbMarkInputsUnspent.isChecked()) {
-
-                        UTXOFactory.getInstance(TxAnimUIActivity.this).markUTXOAsNonSpendable(
-                                hexTx,
-                                SendParams.getInstance().getAccount());
-
-                        final Intent intent = new Intent("com.samourai.wallet.BalanceFragment.REFRESH");
-                        intent.putExtra("notifTx", false);
-                        intent.putExtra("fetch", true);
-                        LocalBroadcastManager.getInstance(TxAnimUIActivity.this).sendBroadcast(intent);
-                    }
-
-
-                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) TxAnimUIActivity.this.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-                    android.content.ClipData clip = null;
-                    clip = android.content.ClipData.newPlainText("TX", hexTx);
-                    clipboard.setPrimaryClip(clip);
-                    Toast.makeText(TxAnimUIActivity.this, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show();
-
-                })
-                .setNegativeButton(R.string.show_qr, (dialog, whichButton) -> {
-
-                    if (cbMarkInputsUnspent.isChecked()) {
-
-                        UTXOFactory.getInstance(TxAnimUIActivity.this).markUTXOAsNonSpendable(
-                                hexTx,
-                                SendParams.getInstance().getAccount());
-
-                        final Intent intent = new Intent("com.samourai.wallet.BalanceFragment.REFRESH");
-                        intent.putExtra("notifTx", false);
-                        intent.putExtra("fetch", true);
-                        LocalBroadcastManager.getInstance(TxAnimUIActivity.this).sendBroadcast(intent);
-                    }
-
-                    if (hexTx.length() <= QR_ALPHANUM_CHAR_LIMIT) {
-
-                        final ImageView ivQR = new ImageView(TxAnimUIActivity.this);
-
-                        final Display display = (TxAnimUIActivity.this).getWindowManager().getDefaultDisplay();
-                        final Point size = new Point();
-                        display.getSize(size);
-                        final int imgWidth = Math.max(size.x - 240, 150);
-
-                        Bitmap bitmap = null;
-
-                        QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(hexTx, null, Contents.Type.TEXT, BarcodeFormat.QR_CODE.toString(), imgWidth);
-
-                        try {
-                            bitmap = qrCodeEncoder.encodeAsBitmap();
-                        } catch (WriterException e) {
-                            e.printStackTrace();
-                        }
-
-                        ivQR.setImageBitmap(bitmap);
-
-                        final LinearLayout qrLayout = new LinearLayout(TxAnimUIActivity.this);
-                        qrLayout.setOrientation(LinearLayout.VERTICAL);
-                        qrLayout.addView(ivQR);
-
-                        new AlertDialog.Builder(TxAnimUIActivity.this)
-                                .setTitle(txHash)
-                                .setView(qrLayout)
-                                .setCancelable(false)
-                                .setPositiveButton(R.string.close, (dialog1, whichButton1) -> {
-
-                                    dialog1.dismiss();
-                                    TxAnimUIActivity.this.finish();
-
-                                })
-                                .setNegativeButton(R.string.share_qr, (dialog12, whichButton12) -> {
-
-                                    String strFileName = AppUtil.getInstance(TxAnimUIActivity.this).getReceiveQRFilename();
-                                    File file = new File(strFileName);
-                                    if (!file.exists()) {
-                                        try {
-                                            file.createNewFile();
-                                        } catch (Exception e) {
-                                            Toast.makeText(TxAnimUIActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-                                    file.setReadable(true, false);
-
-                                    FileOutputStream fos = null;
-                                    try {
-                                        fos = new FileOutputStream(file);
-                                    } catch (FileNotFoundException fnfe) {
-                                        ;
-                                    }
-
-                                    if (file != null && fos != null) {
-                                        Bitmap bitmap1 = ((BitmapDrawable) ivQR.getDrawable()).getBitmap();
-                                        bitmap1.compress(Bitmap.CompressFormat.PNG, 0, fos);
-
-                                        try {
-                                            fos.close();
-                                        } catch (IOException ioe) {
-                                            ;
-                                        }
-
-                                        Intent intent = new Intent();
-                                        intent.setAction(Intent.ACTION_SEND);
-                                        intent.setType("image/png");
-                                        if (android.os.Build.VERSION.SDK_INT >= 24) {
-                                            //From API 24 sending FIle on intent ,require custom file provider
-                                            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(
-                                                    TxAnimUIActivity.this,
-                                                    getApplicationContext()
-                                                            .getPackageName() + ".provider", file));
-                                        } else {
-                                            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-                                        }
-                                        startActivity(Intent.createChooser(intent, TxAnimUIActivity.this.getText(R.string.send_tx)));
-                                    }
-
-                                }).show();
-                    } else {
-                        Toast.makeText(TxAnimUIActivity.this, R.string.tx_too_large_qr, Toast.LENGTH_SHORT).show();
-                    }
-
-                }).show();
-
-    }
-
     @Override
     public void onBackPressed() {
-        if(!txInProgress.get()) {
+        if(! activityInProgress()) {
             if (txSuccess.get()) {
                 gotoBalanceHomeActivity();
             } else {
                 finish();
             }
         }
+    }
+
+    private boolean activityInProgress() {
+        return txInProgress.get()
+                || progressView.getOptionProgressBar().getVisibility() == View.VISIBLE;
     }
 }

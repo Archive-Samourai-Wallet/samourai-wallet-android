@@ -970,6 +970,7 @@
 
     <string name="tx_option_section_change">Change</string>
     <string name="tx_option_change_do_not_spend">Mark Do Not Spend</string>
+    <string name="tx_option_change_spendable">Mark Spendable</string>
     <string name="tx_status_not_sent">Transaction not sent</string>
     <string name="tx_status_details_not_sent_offline_mode">Samourai Wallet is in Offline Mode</string>
     <string name="tx_option_section_broadcast">Broadcast</string>
@@ -979,9 +980,12 @@
     <string name="tx_option_section_troubleshoot">Troubleshoot</string>
     <string name="tx_option_attempt_broadcast">Attempt rebroadcast</string>
     <string name="tx_option_contact_support">Contact support</string>
-    <string name="tx_toast_change_utxo_locked">Change UTXO/s marked DO NOT SPEND</string>
+    <string name="tx_toast_change_utxo_locked">Change UTXO/s marked Do Not Spend</string>
+    <string name="tx_toast_change_utxo_unlocked">Change UTXO/s marked Spendable</string>
     <string name="tx_toast_no_change_utxo_found">No change UTXO found</string>
     <string name="tx_toast_lock_change_utxo_issue">Issue when trying to lock change UTXO</string>
+    <string name="tx_toast_offline_read_broadcast">Ready to broadcast</string>
+    <string name="tx_toast_offline_mark_outputs_do_not_spend">Mark related outputs as do not spend</string>
     <string name="options_import_batch">Import batch spend</string>
 
     <string name="options_import_batch_parsing_error">Error while parsing batch spend</string>
