@@ -29,6 +29,7 @@ class ScanFragment : BottomSheetDialogFragment() {
     private var onScan: (scanData: String) -> Unit = {}
     private var onScanUR: (scanData: String) -> Unit = {}
     private var permissionView: MaterialCardView? = null
+    private var isScannerStarted: Boolean = false
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -54,13 +55,15 @@ class ScanFragment : BottomSheetDialogFragment() {
             showPermissionView(true)
         }
         mCodeScanner.setQRDecodeListener {
-            GlobalScope.launch(Dispatchers.Main) {
+            if (isScannerStarted)
                 onScan(it)
-            }
+            mCodeScanner.stopScanner()
+            isScannerStarted = false
         }
 
         mCodeScanner.setURDecodeListener { result ->
             mCodeScanner.stopScanner()
+            isScannerStarted = false
             result.fold(
                 onSuccess = {
                     onScanUR(bytesToHex(it.ur.toBytes()))
@@ -72,7 +75,7 @@ class ScanFragment : BottomSheetDialogFragment() {
                         .setPositiveButton("Ok") { dialog, which ->
                             dialog.dismiss()
                         }.show()
-                    mCodeScanner?.stopScanner()
+                    mCodeScanner.stopScanner()
                 }
             )
         }
@@ -153,6 +156,7 @@ class ScanFragment : BottomSheetDialogFragment() {
             }
         }
         mCodeScanner.startScanner()
+        isScannerStarted = true
     }
 
 }
