@@ -87,7 +87,7 @@ fun SweepSuccessView(onCloseClick: () -> Unit) {
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 title = {
-                    Text(text = "Broadcast Transaction", color = Color.White)
+                    Text(text = "Broadcast transaction", color = samouraiAccent)
                 }
             )
         },
@@ -164,7 +164,7 @@ fun SweepHexBroadcast(onCloseClick: () -> Unit) {
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 title = {
-                    Text(text = "Broadcast Transaction", color = Color.White)
+                    Text(text = "Broadcast transaction", color = samouraiAccent)
                 }
             )
         },

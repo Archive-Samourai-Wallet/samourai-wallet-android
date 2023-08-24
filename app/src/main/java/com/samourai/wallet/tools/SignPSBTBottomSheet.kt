@@ -91,7 +91,7 @@ fun SignSuccess() {
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 title = {
-                    Text(text = "Signed Transaction", color = Color.White)
+                    Text(text = "Sign transaction", color = samouraiAccent)
                 },
                 actions = {
                     IconButton(onClick = {
