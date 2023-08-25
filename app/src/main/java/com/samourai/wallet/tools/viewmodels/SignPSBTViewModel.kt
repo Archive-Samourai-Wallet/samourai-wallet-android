@@ -75,7 +75,7 @@ class SignPSBTViewModel : ViewModel() {
             var _psbt: PSBT? = null
             _loading.postValue(true)
             withContext(Dispatchers.IO) {
-                delay(1500)
+                delay(2500)
                 _psbt = try {
                     PSBT.fromBytes(
                         Hex.decode(psbtString),
@@ -91,7 +91,7 @@ class SignPSBTViewModel : ViewModel() {
                 )
                 _signedTx.postValue(PSBTUtil.getInstance(context).doPSBTSignTx(psbt))
                 _showCheck.postValue(true)
-                delay(3000)
+                delay(2000)
                 _showCheck.postValue(false)
                 _loading.postValue(false)
             }
