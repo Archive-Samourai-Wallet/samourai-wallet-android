@@ -27,7 +27,9 @@ class SignPSBTViewModel : ViewModel() {
     val signedTx: LiveData<Transaction> get() = _signedTx;
 
     private val _loading: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val _showCheck: MutableLiveData<Boolean> = MutableLiveData(false)
     val loading: LiveData<Boolean> get() = _loading;
+    val showCheck: LiveData<Boolean> get() = _showCheck;
 
     private val _signError: MutableLiveData<String?> = MutableLiveData(null)
     val signError: LiveData<String?> get() = _signError;
@@ -88,6 +90,9 @@ class SignPSBTViewModel : ViewModel() {
                     SamouraiWallet.getInstance().currentNetworkParams
                 )
                 _signedTx.postValue(PSBTUtil.getInstance(context).doPSBTSignTx(psbt))
+                _showCheck.postValue(true)
+                delay(3000)
+                _showCheck.postValue(false)
                 _loading.postValue(false)
             }
         }

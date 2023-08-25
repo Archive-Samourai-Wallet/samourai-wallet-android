@@ -84,6 +84,7 @@ fun SignSuccess() {
     val transaction by vm.signedTx.observeAsState(null)
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val loading by vm.loading.observeAsState(false)
+    val showCheck by vm.showCheck.observeAsState(false)
 
     Scaffold(
         topBar = {
@@ -118,7 +119,8 @@ fun SignSuccess() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val painter = painterResource(id = R.drawable.ic_sign_check)
-            if (loading) {
+            val checkMark = painterResource(id = R.drawable.ic_check_white)
+            if (loading && !showCheck) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -145,6 +147,29 @@ fun SignSuccess() {
                     )
                 }
                     }
+            }
+            else if (loading && showCheck) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .align(Alignment.Center)
+                            .clip(RoundedCornerShape(150.dp))
+                            .background(samouraiSuccess)
+                    ) {
+                        Icon(
+                            painter = checkMark,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .align(Alignment.Center),
+                            tint = Color.White,
+                            contentDescription = ""
+                        )
+                    }
+                }
             }
             else {
                 Box(
