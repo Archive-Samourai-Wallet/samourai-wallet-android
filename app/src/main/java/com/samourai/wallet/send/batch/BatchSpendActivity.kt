@@ -231,9 +231,8 @@ class BatchSpendActivity : SamouraiActivity() {
             insufficientFunds = true
         }
 
-        isValid = if (amountRounded >= SamouraiWallet.bDust.toLong() && FormatsUtil.getInstance().isValidBitcoinAddress(strBTCAddress)) {
-            true
-        } else amountRounded >= SamouraiWallet.bDust.toLong() && FormatsUtil.getInstance().isValidBitcoinAddress(strBTCAddress)
+        isValid = amountRounded >= SamouraiWallet.bDust.toLong()
+            && FormatsUtil.getInstance().isValidBitcoinAddress(strBTCAddress)
 
         if (isValid && !insufficientFunds) {
             amount = amountRounded

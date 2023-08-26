@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.strip;
+import static java.util.Objects.isNull;
 import static java8.util.Objects.nonNull;
 
 import android.content.Context;
@@ -72,7 +73,7 @@ public class InputBatchSpend {
         private String address;
         private final String inputAddress;
         private String pcode;
-        private final String paynym;
+        private String paynym;
         private long amount;
         private final boolean validAddress;
         private final boolean validAmount;
@@ -154,10 +155,53 @@ public class InputBatchSpend {
         private String computeAddressSafe(final Context context) {
             try {
                 if (nonNull(inputAddress)) return inputAddress;
-                if (nonNull(pcode)) return getDestinationAddrFromPcode(context, pcode);
+                if (nonNull(pcode)) {
+                    final String destAddress = getDestinationAddrFromPcode(context, pcode);
+                    if(isNull(paynym)) {
+                        paynym = retrievePayNym(context, pcode);
+                    }
+                    return destAddress;
+                }
                 if (nonNull(paynym)) return getDestinationAddrFromPcode(
                         context,
                         retrievePaymentCode(context, paynym));
+            } catch (final Exception e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return null;
+        }
+
+        private String retrievePaymentCode(final Context context, final String pCodeOrPayNym) {
+
+            try {
+                final String jsonString = callPayNymApi(context, pCodeOrPayNym);
+                if (nonNull(jsonString)) {
+                    pcode = retrieveCodeFromJson(new JSONObject(jsonString));
+                    return pcode;
+                }
+            } catch (final Exception e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+            return null;
+        }
+
+        private static String callPayNymApi(final Context context,
+                                            final String pCodeOrPayNym) throws Exception {
+            return WebUtil.getInstance(context).postURL(
+                    "application/json",
+                    null,
+                    WebUtil.PAYNYM_API + "api/v1/nym?compact=true",
+                    String.format("{\"nym\":\"%s\"}", pCodeOrPayNym));
+        }
+
+        private String retrievePayNym(final Context context, final String pcode) {
+            final String label = BIP47Meta.getInstance().getLabel(pcode);
+            if (isNotBlank(label)) return label;
+            try {
+                final String jsonString = callPayNymApi(context, pcode);
+                if (nonNull(jsonString)) {
+                    return retrievePayNymFromJson(new JSONObject(jsonString));
+                }
             } catch (final Exception e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -183,21 +227,9 @@ public class InputBatchSpend {
             return null;
         }
 
-        private String retrievePaymentCode(final Context context, final String paynymCode) {
-
-            try {
-                final String jsonString = WebUtil.getInstance(context).postURL(
-                        "application/json",
-                        null,
-                        WebUtil.PAYNYM_API + "api/v1/nym?compact=true",
-                        String.format("{\"nym\":\"%s\"}", paynymCode));
-
-                if (nonNull(jsonString)) {
-                    pcode = retrieveCodeFromJson(new JSONObject(jsonString));
-                    return pcode;
-                }
-            } catch (final Exception e) {
-                Log.e(TAG, e.getMessage(), e);
+        private static String retrievePayNymFromJson(final JSONObject json) throws JSONException {
+            if (json.has("nymName")) {
+                return json.getString("nymName");
             }
             return null;
         }
