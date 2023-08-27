@@ -1,7 +1,12 @@
 package com.samourai.wallet.tools
 
 import android.widget.Toast
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,8 +22,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.invertedx.hummingbird.URQRView
 import com.samourai.wallet.R
 import com.samourai.wallet.fragments.ScanFragment
@@ -84,7 +93,11 @@ fun SignSuccess() {
     val transaction by vm.signedTx.observeAsState(null)
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val loading by vm.loading.observeAsState(false)
-
+    val showCheck by vm.showCheck.observeAsState(false)
+    val animatedIconDrawable = AnimatedVectorDrawableCompat.create(
+        LocalContext.current,
+        R.drawable.animated_check_vd
+    )
     Scaffold(
         topBar = {
             TopAppBar(
@@ -118,7 +131,7 @@ fun SignSuccess() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val painter = painterResource(id = R.drawable.ic_sign_check)
-            if (loading) {
+            if (loading && !showCheck) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -145,6 +158,32 @@ fun SignSuccess() {
                     )
                 }
                     }
+            }
+            else if (loading && showCheck) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .align(Alignment.Center)
+                            .clip(RoundedCornerShape(150.dp))
+                            .background(samouraiSuccess)
+                    ) {
+                        AndroidView(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .align(Alignment.Center),
+                            factory = { context ->
+                                androidx.appcompat.widget.AppCompatImageView(context).apply {
+                                    setImageDrawable(animatedIconDrawable)
+                                    animatedIconDrawable?.start()
+                                }
+                            }
+                        )
+                    }
+                }
             }
             else {
                 Box(
