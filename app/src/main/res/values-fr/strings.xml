@@ -1091,7 +1091,7 @@
 
     <string name="options_import_batch">Coller un lot de dépenses</string>
     <string name="options_import_batch_parsing_error">Erreur lors de l\'interprétation des dépenses</string>
-    <string name="options_import_batch_payment_count">%d élément(s) de dépense(s) trouvé(s)</string>
+    <string name="options_import_batch_payment_count">%d élément(s) de dépense(s) ajouté(s)</string>
     <string name="options_import_batch_payment_count_invalid_addr">%d élément(s) avec adresse invalide ont été ignorés</string>
     <string name="options_import_batch_payment_count_invalid_amount">%d élément(s) avec montant invalide ont été ignorés</string>
     <string name="options_import_batch_pcode_connection_request">Certains PayNyms ou codes de paiement ne sont pas connectés. Souhaitez-vous vous connecter avant de créer des dépenses groupées?</string>
@@ -1105,6 +1105,7 @@
 
     <string name="clipboard_unable_access">Impossible d\'accéder au Presse-papiers</string>
     <string name="clipboard_item_inconsistent">Élément incohérent trouvé dans le Presse-papiers</string>
-
+    <string name="Amount">Montant</string>
+    <string name="batch_item_details">Détails d\'une dépense du lot</string>
 </resources>
 

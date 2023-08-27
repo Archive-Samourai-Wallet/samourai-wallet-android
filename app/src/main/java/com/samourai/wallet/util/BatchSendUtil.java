@@ -1,11 +1,12 @@
 package com.samourai.wallet.util;
 
+import static java.util.Objects.nonNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class BatchSendUtil {
@@ -52,12 +53,15 @@ public class BatchSendUtil {
 
     public JSONArray toJSON() {
 
-        JSONArray batch = new JSONArray();
+        final JSONArray batch = new JSONArray();
         try {
-            for(BatchSend send : batchSends) {
-                JSONObject obj = new JSONObject();
-                if(send.pcode != null)    {
+            for(final BatchSend send : batchSends) {
+                final JSONObject obj = new JSONObject();
+                if (nonNull(send.pcode))    {
                     obj.put("pcode", send.pcode);
+                }
+                if (nonNull(send.paynymCode))    {
+                    obj.put("paynym", send.paynymCode);
                 }
                 obj.put("addr", send.addr);
                 obj.put("amount", send.amount);
@@ -77,10 +81,13 @@ public class BatchSendUtil {
 
         try {
             for(int i = 0; i < batch.length(); i++) {
-                JSONObject send = batch.getJSONObject(i);
-                BatchSend batchSend = new BatchSend();
-                if(send.has("pcode"))    {
+                final JSONObject send = batch.getJSONObject(i);
+                final BatchSend batchSend = new BatchSend();
+                if (send.has("pcode"))    {
                     batchSend.pcode = send.getString("pcode");
+                }
+                if (send.has("paynym"))    {
+                    batchSend.paynymCode = send.getString("paynym");
                 }
                 batchSend.addr = send.getString("addr");
                 batchSend.amount = send.getLong("amount");

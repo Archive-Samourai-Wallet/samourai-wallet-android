@@ -989,7 +989,7 @@
     <string name="options_import_batch">Paste batch spend</string>
 
     <string name="options_import_batch_parsing_error">Error while parsing batch spend</string>
-    <string name="options_import_batch_payment_count">%d spend items found</string>
+    <string name="options_import_batch_payment_count">%d Batch Entries Added</string>
     <string name="options_import_batch_payment_count_invalid_addr">%d item(s) with invalid address skipped</string>
     <string name="options_import_batch_payment_count_invalid_amount">ignore %d item(s) with invalid amount skipped</string>
     <string name="options_import_batch_pcode_connection_request">Some PayNyms or payment codes are not connected. Do you want to connect in before to create batch spend ?</string>
@@ -1003,4 +1003,6 @@
 
     <string name="clipboard_unable_access">Unable to access Clipboard</string>
     <string name="clipboard_item_inconsistent">Inconsistent item found in clipboard</string>
+    <string name="Amount">Amount</string>
+    <string name="batch_item_details">Batch Item Details</string>
 </resources>
