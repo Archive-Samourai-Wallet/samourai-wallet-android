@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
-import android.widget.EditText
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -292,7 +291,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
-                        vm.clearMessage()
+                        vm.clearSignedMessage()
                         toolsBottomSheet?.disableDragging()
                         signMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
                     }
@@ -306,7 +305,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
-                        vm.clearMessage()
+                        vm.clearSignedMessage()
                         toolsBottomSheet?.disableDragging()
                         verifyMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
                     }
@@ -322,7 +321,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         //Load first account type to viewmodel
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
-                        vm.clearMessage()
+                        vm.clearSignedMessage()
                         addressCalcBottomSheetState.show()
                     }
                 }
@@ -359,6 +358,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                     toolsBottomSheet?.disableDragging(disable = false)
                     keyboard?.hide()
+                    vm.clearSignedMessage()
+                    vm.clearMessage()
                 }
             }
         }

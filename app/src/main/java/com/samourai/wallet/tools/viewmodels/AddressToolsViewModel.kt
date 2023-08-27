@@ -48,6 +48,7 @@ class AddressCalculatorViewModel : ViewModel() {
     private val pageLiveData: MutableLiveData<Int> = MutableLiveData(0)
 
     private val signedMessage: MutableLiveData<String> = MutableLiveData("")
+    private val message: MutableLiveData<String> = MutableLiveData("")
     private val verifiedMessage: MutableLiveData<Boolean?> = MutableLiveData()
 
     fun getAddressLiveData(): LiveData<AddressDetailsModel> {
@@ -211,12 +212,24 @@ class AddressCalculatorViewModel : ViewModel() {
         return signedMessage
     }
 
+    fun getMessage(): LiveData<String> {
+        return message
+    }
+
     fun isVerifiedMessage(): LiveData<Boolean?> {
         return verifiedMessage
     }
 
-    fun clearMessage() {
+    fun clearSignedMessage() {
         signedMessage.postValue("")
+    }
+
+    fun clearMessage() {
+        message.postValue("")
+    }
+
+    fun setMessage(data:String) {
+        message.postValue(data)
     }
 
     fun clearVerifiedMessageState() {

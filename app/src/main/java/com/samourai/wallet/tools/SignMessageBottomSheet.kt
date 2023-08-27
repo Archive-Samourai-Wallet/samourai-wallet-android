@@ -43,7 +43,7 @@ fun SignMessage() {
     val signedMessage by vm.getSignedMessage().observeAsState()
     val context = LocalContext.current
     var openDialog by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf("") }
+    val message by vm.getMessage().observeAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val insets = WindowInsets.ime.asPaddingValues(LocalDensity.current)
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
@@ -128,10 +128,10 @@ fun SignMessage() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(60.dp),
-                        value = message,
+                        value = message!!,
                         trailingIcon = {
-                            if (message.isNotEmpty()) IconButton(onClick = {
-                                message = ""
+                            if (message!!.isNotEmpty()) IconButton(onClick = {
+                                vm.setMessage("")
                             }) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_close_white_24dp),
@@ -150,7 +150,7 @@ fun SignMessage() {
                             keyboardController?.hide()
                         }),
                         onValueChange = {
-                            message = it
+                            vm.setMessage(it)
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             backgroundColor = samouraiTextFieldBg
@@ -166,7 +166,7 @@ fun SignMessage() {
                 Button(
                     onClick = {
                         keyboardController?.hide()
-                        vm.executeSignMessage(message, context)
+                        vm.executeSignMessage(message!!, context)
                     },
                     Modifier
                         .fillMaxWidth()
@@ -215,16 +215,6 @@ fun SignMessage() {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_baseline_content_copy_24),
                                     contentDescription = "Copy"
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = {
-                                vm.clearMessage()
-                            }) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24), tint = samouraiAccent,
-                                    contentDescription = ""
                                 )
                             }
                         }
