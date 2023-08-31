@@ -4,6 +4,8 @@ import static com.samourai.wallet.util.LogUtil.debug;
 import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
 
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -22,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.TaskStackBuilder;
 import androidx.core.content.FileProvider;
@@ -512,28 +515,28 @@ public class TxAnimUIActivity extends AppCompatActivity {
     }
 
     private void txTenna(final String hex) {
-
-        final String pkgName = "com.samourai.txtenna";
-
-        String _hex = hex;
-        Intent txTennaIntent = new Intent("com.samourai.txtenna.HEX");
-        if (SamouraiWallet.getInstance().isTestNet()) {
-            _hex += "-t";
-        }
-        txTennaIntent.putExtra(Intent.EXTRA_TEXT, _hex);
-        txTennaIntent.setType("text/plain");
-
-        final Uri marketUri = Uri.parse("market://search?q=pname:" + pkgName);
-        final Intent marketIntent = new Intent(Intent.ACTION_VIEW).setData(marketUri);
-
-        final PackageManager pm = getPackageManager();
         try {
-            pm.getPackageInfo(pkgName, 0);
-            startActivity(txTennaIntent);
-        } catch (PackageManager.NameNotFoundException e) {
+            startActivity(createTxTennaIntent(hex));
+        } catch (final ActivityNotFoundException e) {
             Log.w(TAG, e.getMessage(), e);
-            startActivity(marketIntent);
+            Log.i(TAG, "no txTenna app found, will redirect user to the txTenna github page");
+            startActivity(new Intent(Intent.ACTION_VIEW)
+                    .setData(Uri.parse("https://github.com/MuleTools/txTenna/releases")));
         }
+    }
+
+    private static Intent createTxTennaIntent(String hex) {
+        final Intent txTennaIntent = new Intent("com.samourai.txtenna.HEX");
+        txTennaIntent.setComponent(new ComponentName(
+                "com.samourai.txtenna",
+                "com.samourai.txtenna.MainActivity"));
+        txTennaIntent.setType("text/plain");
+        if (SamouraiWallet.getInstance().isTestNet()) {
+            txTennaIntent.putExtra(Intent.EXTRA_TEXT, hex + "-t");
+        } else {
+            txTennaIntent.putExtra(Intent.EXTRA_TEXT, hex);
+        }
+        return txTennaIntent;
     }
 
     private void handleResult(final boolean isOK,
