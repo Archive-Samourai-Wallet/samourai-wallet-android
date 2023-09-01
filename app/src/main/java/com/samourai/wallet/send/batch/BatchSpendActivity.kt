@@ -441,12 +441,12 @@ class BatchSpendActivity : SamouraiActivity() {
                 CoroutineScope(Dispatchers.Main).launch {
 
                     val firstPartOfContentContent =
-                        if (content.isEmpty()) content
+                        if (content == null || content.isBlank()) "no data"
                         else content.subSequence(0, Math.min(content.length, 300))
                     Log.e(TAG, getString(R.string.options_import_batch_parsing_error) + " : " + firstPartOfContentContent, e)
 
                     val shortContent =
-                        if (content.isEmpty()) content
+                        if (content == null || content.isBlank()) "no data"
                         else content.subSequence(0, Math.min(content.length, 30))
                     val errorMessage = getString(R.string.options_import_batch_parsing_error) + " : " + shortContent
                     Toast.makeText(this@BatchSpendActivity, errorMessage, Toast.LENGTH_SHORT).show()
@@ -457,7 +457,7 @@ class BatchSpendActivity : SamouraiActivity() {
 
     private fun getContentFromClipboard(): String {
         val item = ActivityHelper.getFirstItemFromClipboard(this@BatchSpendActivity)
-        val content: String = if (item.text != null) item.text.toString() else ""
+        val content: String = if (item != null && item.text != null) item.text.toString() else ""
         return content
     }
 

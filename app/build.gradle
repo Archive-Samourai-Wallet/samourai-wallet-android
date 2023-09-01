@@ -85,6 +85,7 @@ android {
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/proguard/androidx-annotations.pro'
+        exclude 'META-INF/kotlinx_coroutines_core.version'
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
@@ -103,7 +104,6 @@ dependencies {
 
     def lifecycle_version = "2.5.0"
     def topl_android_version = "2.1.2"
-    def coroutines_version = '1.5.1'
 
     api fileTree(include: ['*.jar'], dir: 'libs')
     implementation('com.google.zxing:core:3.4.1') {
@@ -124,9 +124,6 @@ dependencies {
     implementation "androidx.webkit:webkit:1.5.0"
     implementation 'androidx.compose.material3:material3:1.0.0-alpha02'
     implementation 'androidx.work:work-runtime-ktx:2.7.1'
-
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     implementation 'commons-io:commons-io:2.5'
     implementation 'commons-codec:commons-codec:1.4'
