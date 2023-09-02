@@ -1,6 +1,12 @@
 package com.samourai.wallet.util;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static java.util.Objects.nonNull;
+
+import android.content.Context;
+
+import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.bip47.BIP47Util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,11 +18,20 @@ import java.util.List;
 public class BatchSendUtil {
 
     public static class BatchSend   {
+
         public String pcode = null;
         public String paynymCode = null;
         public String addr = null;
         public long amount = 0L;
         public long UUID = 0L;
+
+        public void reComputeAddressIfNeeded(final Context context) throws Exception {
+            if (isNotBlank(pcode)) {
+                if (nonNull(BIP47Meta.getInstance().getPCode4Addr(addr))) {
+                    addr = BIP47Util.getInstance(context).getDestinationAddrFromPcode(pcode);
+                }
+            }
+        }
     }
 
     private static BatchSendUtil instance = null;

@@ -1,39 +1,26 @@
 package com.samourai.wallet;
 
 import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.util.Objects.nonNull;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Point;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.CheckBox;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.TaskStackBuilder;
-import androidx.core.content.FileProvider;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
-import com.google.zxing.client.android.Contents;
-import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.hd.WALLET_INDEX;
@@ -66,10 +53,6 @@ import org.json.JSONObject;
 import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -592,18 +575,27 @@ public class TxAnimUIActivity extends AppCompatActivity {
                 if (SendParams.getInstance().getPCode() != null
                         && SendParams.getInstance().getPCode().length() > 0) {
 
-                    BIP47Meta.getInstance().getPCode4AddrLookup().put(SendParams.getInstance().getDestAddress(), SendParams.getInstance().getPCode());
-                    BIP47Meta.getInstance().incOutgoingIdx(SendParams.getInstance().getPCode());
+                    final String destAddress = SendParams.getInstance().getDestAddress();
+                    final String pcode = SendParams.getInstance().getPCode();
+                    if (nonNull(BIP47Meta.getInstance().getPCode4Addr(destAddress))) {
+                        Log.w(TAG, String.format("address %s is reuse for pcode %s", destAddress, pcode));
+                    }
 
-                    SentToFromBIP47Util.getInstance().add(SendParams.getInstance().getPCode(), strTxHash);
+                    BIP47Meta.getInstance().getPCode4AddrLookup().put(destAddress, pcode);
+                    BIP47Meta.getInstance().incOutgoingIdx(pcode);
+
+                    SentToFromBIP47Util.getInstance().add(pcode, strTxHash);
 
                     SimpleDateFormat sd = new SimpleDateFormat("dd MMM");
                     String strTS = sd.format(System.currentTimeMillis());
-                    String event = strTS + " " + TxAnimUIActivity.this.getString(R.string.sent) +
+                    final long spendAmount = SendParams.getInstance().getSpendAmount();
+                    String event = strTS + " "
+                            + TxAnimUIActivity.this.getString(R.string.sent) +
                             " " +
                             MonetaryUtil.getInstance().getBTCFormat()
-                                    .format((double) SendParams.getInstance().getSpendAmount() / 1e8) + " BTC";
-                    BIP47Meta.getInstance().setLatestEvent(SendParams.getInstance().getPCode(), event);
+                                    .format(getBtcValue(spendAmount)) +
+                            " BTC";
+                    BIP47Meta.getInstance().setLatestEvent(pcode, event);
 
                 } else if (SendParams.getInstance().getBatchSend() != null) {
 
@@ -611,7 +603,12 @@ public class TxAnimUIActivity extends AppCompatActivity {
                         String address = d.addr;
                         String pcode = d.pcode;
                         // increment counter if BIP47 spend
-                        if (pcode != null && pcode.length() > 0) {
+                        if (isNotBlank(pcode)) {
+
+                            if (nonNull(BIP47Meta.getInstance().getPCode4Addr(address))) {
+                                Log.w(TAG, String.format("address %s is reuse for pcode %s", address, pcode));
+                            }
+
                             BIP47Meta.getInstance().getPCode4AddrLookup().put(address, pcode);
                             BIP47Meta.getInstance().incOutgoingIdx(pcode);
 
@@ -619,7 +616,10 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
                             SimpleDateFormat sd = new SimpleDateFormat("dd MMM");
                             String strTS = sd.format(System.currentTimeMillis());
-                            String event = strTS + " " + TxAnimUIActivity.this.getString(R.string.sent) + " " + MonetaryUtil.getInstance().getBTCFormat().format((double) d.amount / 1e8) + " BTC";
+                            String event = strTS + " " +
+                                    TxAnimUIActivity.this.getString(R.string.sent) + " " +
+                                    MonetaryUtil.getInstance().getBTCFormat().format(getBtcValue(d.amount)) +
+                                    " BTC";
                             BIP47Meta.getInstance().setLatestEvent(pcode, event);
 
                         }
