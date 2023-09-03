@@ -2,7 +2,6 @@ package com.samourai.wallet.send.batch;
 
 import static com.samourai.wallet.bip47.BIP47Meta.STATUS_SENT_CFM;
 import static com.samourai.wallet.send.batch.InputBatchSpend.SpendDescription.createSpendDescription;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.strip;
@@ -19,9 +18,6 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.paynym.WebUtil;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
-import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.util.FormatsUtil;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -156,15 +152,15 @@ public class InputBatchSpend {
             try {
                 if (nonNull(inputAddress)) return inputAddress;
                 if (nonNull(pcode)) {
-                    final String destAddress = getDestinationAddrFromPcode(context, pcode);
+                    final String destAddress = BIP47Util.getInstance(context)
+                            .getDestinationAddrFromPcode(pcode);
                     if(isNull(paynym)) {
                         paynym = retrievePayNym(context, pcode);
                     }
                     return destAddress;
                 }
-                if (nonNull(paynym)) return getDestinationAddrFromPcode(
-                        context,
-                        retrievePaymentCode(context, paynym));
+                if (nonNull(paynym)) return BIP47Util.getInstance(context)
+                        .getDestinationAddrFromPcode(retrievePaymentCode(context, paynym));
             } catch (final Exception e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -260,26 +256,6 @@ public class InputBatchSpend {
         }
 
         return null;
-    }
-
-    public static String getDestinationAddrFromPcode(
-            final Context context,
-            final String pcodeAsString) throws Exception {
-
-        if (isBlank(pcodeAsString)) return null;
-
-        final PaymentCode pcode = new PaymentCode(pcodeAsString);
-        final PaymentAddress paymentAddress = BIP47Util.getInstance(context)
-                .getSendAddress(pcode, BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString));
-
-        if (BIP47Meta.getInstance().getSegwit(pcodeAsString)) {
-            return new SegwitAddress(
-                    paymentAddress.getSendECKey(),
-                    SamouraiWallet.getInstance().getCurrentNetworkParams()).getBech32AsString();
-        } else {
-            return paymentAddress.getSendECKey()
-                    .toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-        }
     }
 
 }

@@ -34,6 +34,7 @@ import com.samourai.wallet.TxAnimUIActivity
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.bip47.BIP47Meta
+import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
@@ -49,7 +50,6 @@ import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
-import com.samourai.wallet.send.batch.InputBatchSpend.getDestinationAddrFromPcode
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.tor.TorManager
@@ -61,6 +61,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
+import okhttp3.internal.toImmutableList
 import org.bitcoinj.core.Transaction
 import org.bouncycastle.util.encoders.Hex
 import java.io.UnsupportedEncodingException
@@ -466,7 +467,6 @@ class BatchSpendActivity : SamouraiActivity() {
             MaterialAlertDialogBuilder(this@BatchSpendActivity)
                 .setMessage(getString(R.string.confirm_import_batch_list))
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    viewModel.clearBatch(true)
                     importBatchFromJson(inputBatchSpend)
                 }.setNegativeButton(R.string.cancel) { _, _ -> }.show()
         } else {
@@ -506,6 +506,9 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     private fun applyImportBatchFromJson(inputBatchSpend: InputBatchSpend) {
+
+        viewModel.clearBatch(true)
+
         var validatedItem = 0
         var addressInvalidItem = 0
         var amountInvalidItem = 0
@@ -748,7 +751,8 @@ class BatchSpendActivity : SamouraiActivity() {
         if (FormatsUtil.getInstance().isValidPaymentCode(pcode)) {
             if (BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_SENT_CFM) {
                 try {
-                    destAddress = getDestinationAddrFromPcode(this@BatchSpendActivity, pcode)
+                    destAddress = BIP47Util.getInstance(this@BatchSpendActivity)
+                        .getDestinationAddrFromPcode(pcode)
                     strPCode = PaymentCode(pcode).toString()
                     setToAddress(BIP47Meta.getInstance().getDisplayLabel(strPCode))
                 } catch (e: java.lang.Exception) {
@@ -883,21 +887,25 @@ class BatchSpendActivity : SamouraiActivity() {
 
         var countP2WSH_P2TR = 0
         for (_data in viewModel.getBatchList()) {
+
+            _data.reComputeAddressIfNeeded(BatchSpendActivity@this)
+
             LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
             LogUtil.debug("BatchSendActivity", "output:" + _data.addr)
             LogUtil.debug("BatchSendActivity", "output:" + _data.pcode)
 
             amount += _data.amount
             if (receivers.containsKey(_data.addr)) {
+
                 val _amount = receivers[_data.addr]
                 receivers[_data.addr] = _amount!!.add(BigInteger.valueOf(_data.amount))
-            } else {
-                receivers[_data.addr] = BigInteger.valueOf(_data.amount)
 
+            } else {
+
+                receivers[_data.addr] = BigInteger.valueOf(_data.amount)
                 if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(_data.addr))    {
                     countP2WSH_P2TR++
                 }
-
             }
         }
 
@@ -1052,7 +1060,7 @@ class BatchSpendActivity : SamouraiActivity() {
                 SendParams.getInstance().setParams(
                     outpoints,
                     receivers,
-                    viewModel.getBatchList(),
+                    viewModel.getBatchList().toImmutableList(),
                     SendActivity.SPEND_SIMPLE,
                     changeAmount,
                     84,
@@ -1060,9 +1068,10 @@ class BatchSpendActivity : SamouraiActivity() {
                     "",
                     false,
                     false,
-                    _amount.toLong(),
+                    _amount,
                     _change_idx
                 )
+                viewModel.clearBatch(false)
                 val intent = Intent(this, TxAnimUIActivity::class.java)
                 startActivity(intent)
             }).setNegativeButton(R.string.no) { _, _ -> }

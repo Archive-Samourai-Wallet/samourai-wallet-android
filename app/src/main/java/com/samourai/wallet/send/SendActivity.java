@@ -65,8 +65,6 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.SendNotifTxFactory;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
-import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.cahoots.Cahoots;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
@@ -80,7 +78,6 @@ import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
 import com.samourai.wallet.ricochet.RicochetActivity;
 import com.samourai.wallet.ricochet.RicochetMeta;
-import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.batch.BatchSpendActivity;
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity;
@@ -2255,17 +2252,10 @@ public class SendActivity extends SamouraiActivity {
 
             if (BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_SENT_CFM) {
                 try {
-                    PaymentCode _pcode = new PaymentCode(pcode);
-                    PaymentAddress paymentAddress = BIP47Util.getInstance(this).getSendAddress(_pcode, BIP47Meta.getInstance().getOutgoingIdx(pcode));
 
-                    if (BIP47Meta.getInstance().getSegwit(pcode)) {
-                        SegwitAddress segwitAddress = new SegwitAddress(paymentAddress.getSendECKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                        strDestinationBTCAddress = segwitAddress.getBech32AsString();
-                    } else {
-                        strDestinationBTCAddress = paymentAddress.getSendECKey().toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-                    }
-
-                    strPCode = _pcode.toString();
+                    strDestinationBTCAddress = BIP47Util.getInstance(SendActivity.this)
+                            .getDestinationAddrFromPcode(pcode);
+                    strPCode = pcode;
                     setToAddress(BIP47Meta.getInstance().getDisplayLabel(strPCode));
                     toAddressEditText.setEnabled(false);
                     validateSpend();
