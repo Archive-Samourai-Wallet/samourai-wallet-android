@@ -93,7 +93,7 @@
         android:text="@string/close"
         android:textAllCaps="false"
         android:textSize="17sp"
-        android:fontFamily="@font/roboto_bold"
+        android:fontFamily="@font/roboto_medium"
 
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"

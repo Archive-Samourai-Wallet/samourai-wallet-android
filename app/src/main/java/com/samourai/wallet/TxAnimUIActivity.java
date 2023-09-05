@@ -637,7 +637,6 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
                 final boolean doNotSpendChangeBtnVisible = getChangeAddress() != null;
                 TxAnimUIActivity.this.runOnUiThread(() -> {
-                    Toast.makeText(TxAnimUIActivity.this, R.string.tx_sent, Toast.LENGTH_SHORT).show();
                     progressView.getOptionBtn1().setOnClickListener(view -> {
                         if (!doNotSpendChangeBtnVisible) return;
                         editChangeUtxo(hexTx, true);
