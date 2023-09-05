@@ -127,8 +127,7 @@ class ComposeFragment : Fragment() {
 
                 holder.itemView.setOnLongClickListener {
 
-                    var message = "${holder.itemView.context.getString(R.string.address)}: ${item.addr}\n" +
-                        "${holder.itemView.context.getString(R.string.amount)}: ${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC"
+                    var message = "${holder.itemView.context.getString(R.string.amount)}: ${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC"
                     if (nonNull(item.paynymCode)) {
                         message = message + "\nPayNym: ${item.paynymCode}"
                     } else if (isNotBlank(BIP47Meta.getInstance().getLabel(item.pcode))) {
