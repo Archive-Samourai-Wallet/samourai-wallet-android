@@ -964,7 +964,7 @@ class BatchSpendActivity : SamouraiActivity() {
         }
         reviewFragment.enableSendButton(true)
 
-        val changeAmount: Long = totalValueSelected - (amount + fee.toLong())
+        changeAmount = totalValueSelected - (amount + fee.toLong())
         change_idx = 0
         if (changeAmount > 0L) {
             change_idx = BIP84Util.getInstance(applicationContext).wallet.getAccount(0).change.addrIdx
