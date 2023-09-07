@@ -1,12 +1,6 @@
 package com.samourai.wallet.tools
 
 import android.widget.Toast
-import androidx.compose.animation.Animatable
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,11 +16,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -34,10 +25,16 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -98,6 +95,18 @@ fun SignSuccess() {
         LocalContext.current,
         R.drawable.animated_check_vd
     )
+    val instructionText = buildAnnotatedString {
+        withStyle(style = SpanStyle(color = Color.White.copy(alpha = 0.6f))) {
+            append("Scan the animated QR code with")
+        }
+        append(" ")
+        withStyle(style = SpanStyle(color = samouraiAccent)) {
+            append("Samourai Sentinel")
+        }
+        withStyle(style = SpanStyle(color = Color.White.copy(alpha = 0.6f))) {
+            append(" or other compatible software to broadcast this transaction.")
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,7 +115,24 @@ fun SignSuccess() {
                 title = {
                     Text(text = "Sign transaction", color = samouraiAccent)
                 },
-            )
+                actions = {
+                    IconButton(
+                        modifier = Modifier
+                            .alpha(if (loading) 0f else 1f),
+                        onClick = {
+                            if (!loading) {
+                                clipboardManager.setText(AnnotatedString(String(Hex.encode(transaction?.bitcoinSerialize()))))
+                                Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                            }
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_baseline_content_copy_24),
+                            contentDescription = "Copy"
+                        )
+                    }
+                },
+
+                )
         },
         backgroundColor = samouraiBottomSheetBackground,
     ) {
@@ -179,26 +205,37 @@ fun SignSuccess() {
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White),
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        AndroidView(
+                        Box(
                             modifier = Modifier
-                                .requiredSize(280.dp)
-                                .alpha(1f),
-                            factory = { context ->
-                                URQRView(context)
-                            }) { view ->
+                                .padding(12.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White),
+                        ) {
+                            AndroidView(
+                                modifier = Modifier
+                                    .requiredSize(280.dp)
+                                    .alpha(1f),
+                                factory = { context ->
+                                    URQRView(context)
+                                }) { view ->
                                 view.setContent(
-                                UR.fromBytes(
-                                    RegistryType.BYTES.type,
-                                    Hex.decode(String(Hex.encode(transaction?.bitcoinSerialize())))
+                                    UR.fromBytes(
+                                        RegistryType.BYTES.type,
+                                        Hex.decode(String(Hex.encode(transaction?.bitcoinSerialize())))
+                                    )
                                 )
-                            )
+                            }
                         }
+                        Text(
+                            text = instructionText,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 60.dp, vertical = 20.dp),
+                            fontFamily = FontFamily(Font(R.font.roboto_regular))
+                        )
                     }
                 }
             }
