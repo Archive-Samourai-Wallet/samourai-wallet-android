@@ -106,17 +106,6 @@ fun SignSuccess() {
                 title = {
                     Text(text = "Sign transaction", color = samouraiAccent)
                 },
-                actions = {
-                    IconButton(onClick = {
-                        clipboardManager.setText(AnnotatedString(String(Hex.encode(transaction?.bitcoinSerialize()))))
-                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_baseline_content_copy_24),
-                            contentDescription = "Copy"
-                        )
-                    }
-                },
             )
         },
         backgroundColor = samouraiBottomSheetBackground,
