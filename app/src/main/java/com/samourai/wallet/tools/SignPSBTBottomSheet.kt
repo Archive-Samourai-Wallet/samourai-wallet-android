@@ -233,7 +233,7 @@ fun SignSuccess() {
                         Text(
                             text = instructionText,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 60.dp, vertical = 20.dp),
+                            modifier = Modifier.padding(horizontal = 67.dp, vertical = 20.dp),
                             fontFamily = FontFamily(Font(R.font.roboto_regular))
                         )
                     }
