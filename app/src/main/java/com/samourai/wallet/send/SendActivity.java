@@ -6,6 +6,7 @@ import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWi
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getSatValue;
 import static org.apache.commons.lang3.StringUtils.trim;
+import static java.lang.Math.max;
 
 import android.app.Activity;
 import android.content.ClipData;
@@ -313,6 +314,11 @@ public class SendActivity extends SamouraiActivity {
 
         checkDeepLinks();
 
+        if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
+            premiumAddons.setVisibility(View.GONE);
+            addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+        }
+
     }
 
     private void setUpCompositeDisposables() {
@@ -483,7 +489,8 @@ public class SendActivity extends SamouraiActivity {
         int feeMedSliderValue = (int) (feeMed * multiplier);
 
 
-        feeSeekBar.setValueTo(feeHighSliderValue - multiplier);
+        // max formula to avoid crash when high == 0
+        feeSeekBar.setValueTo(max(feeSeekBar.getValueFrom(), feeHighSliderValue - multiplier));
 
         if (feeLow == feeMed && feeMed == feeHigh) {
             feeLow = (long) ((double) feeMed * 0.85);

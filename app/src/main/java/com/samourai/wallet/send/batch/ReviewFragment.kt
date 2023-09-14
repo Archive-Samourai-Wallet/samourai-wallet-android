@@ -82,8 +82,8 @@ class ReviewFragment : Fragment() {
         val high = feeHigh.toFloat() / 2 + feeHigh.toFloat()
         val feeHighSliderValue = (high * 10000).toInt()
         val feeMedSliderValue = (feeMed * 10000).toInt()
-        feeSeekBar.valueTo = (feeHighSliderValue - 10000).toFloat()
-        feeSeekBar.valueFrom = 1F
+        feeSeekBar.valueFrom = 1f
+        feeSeekBar.valueTo = Math.max(feeSeekBar.valueFrom, feeHighSliderValue - 10000f)
 
         feeSeekBar.setLabelFormatter {
             "${tvSelectedFeeRate.text}"

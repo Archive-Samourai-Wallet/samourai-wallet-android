@@ -23,7 +23,6 @@ import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.segwit.SegwitAddress;
-import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.PrefsUtil;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -205,7 +204,7 @@ public class BIP47Util extends BIP47UtilGeneric {
     }
 
 
-    public String getDestinationAddrFromPcode(final String pcodeAsString) throws Exception {
+    synchronized public String getDestinationAddrFromPcode(final String pcodeAsString) throws Exception {
 
         if (isBlank(pcodeAsString)) return null;
 

@@ -200,12 +200,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     progressView.setTxStatusMessage(R.string.tx_broadcast_ok);
                 });
 
-                if (PrefsUtil.getInstance(TxAnimUIActivity.this).getValue(PrefsUtil.BROADCAST_TX, true) == false) {
-                    offlineTx(hexTx, strTxHash, R.string.broadcast_off);
-                    return;
-                }
-
-                if (AppUtil.getInstance(TxAnimUIActivity.this).isOfflineMode()) {
+                if (AppUtil.getInstance(TxAnimUIActivity.this).isBroadcastDisabled()) {
                     offlineTx(hexTx, strTxHash, R.string.tx_status_details_not_sent_offline_mode);
                     return;
                 }

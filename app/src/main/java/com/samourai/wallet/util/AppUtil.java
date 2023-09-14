@@ -9,13 +9,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.samourai.wallet.MainActivity2;
-import com.samourai.wallet.R;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
@@ -31,7 +29,6 @@ import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -327,6 +324,11 @@ public class AppUtil {
         }
 
         return deletedAll;
+    }
+
+    public boolean isBroadcastDisabled() {
+        return PrefsUtil.getInstance(context).getValue(PrefsUtil.BROADCAST_TX, true) == false
+                || isOfflineMode();
     }
 
 }
