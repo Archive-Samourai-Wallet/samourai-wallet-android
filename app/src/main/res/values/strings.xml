@@ -544,6 +544,7 @@
 
     <string name="in_offline_mode">Samourai Wallet is in offline mode.</string>
 
+    <string name="broadcast_off2">Enable “Broadcast transaction” in your settings to initiate a Cahoots transaction</string>
     <string name="broadcast_off">Samourai Wallet is in Offline Mode</string>
     <string name="tx_standby">Transaction in stand-by</string>
     <string name="show_hex">Display Hex Code</string>

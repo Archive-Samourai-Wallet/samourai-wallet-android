@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,6 +32,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -124,8 +126,8 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
 //    val offlineState by AppUtil.getInstance(context).offlineStateLive().observeAsState()
 
 
-    LaunchedEffect(true) {
 
+    LaunchedEffect(true) {
         if (showParticipateTab) {
             collaborateViewModel.startListen()
             selected = 1
@@ -302,23 +304,45 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                     WrapToolsPageAnimation(
                         selected == 0
                     ) {
-                        InitiateSegment(
-                            setUpTransaction = {
-                                scope.launch {
-                                    setUpTransactionModal.animateTo(ModalBottomSheetValue.Expanded)
+                        if (PrefsUtil.getInstance(context).getValue(PrefsUtil.BROADCAST_TX, true) == true) {
+                            InitiateSegment(
+                                setUpTransaction = {
+                                    scope.launch {
+                                        setUpTransactionModal.animateTo(ModalBottomSheetValue.Expanded)
+                                    }
+                                },
+                                onCahootTypeSelection = {
+                                    scope.launch {
+                                        accountChooser.animateTo(ModalBottomSheetValue.Expanded)
+                                    }
+                                },
+                                onCollaboratorClick = {
+                                    scope.launch {
+                                        paynymChooser.show()
+                                    }
                                 }
-                            },
-                            onCahootTypeSelection = {
-                                scope.launch {
-                                    accountChooser.animateTo(ModalBottomSheetValue.Expanded)
-                                }
-                            },
-                            onCollaboratorClick = {
-                                scope.launch {
-                                    paynymChooser.show()
-                                }
-                            }
-                        )
+                            )
+                        }
+                        else {
+                            androidx.compose.material3.Text(
+                                text = stringResource(id = R.string.broadcast_off2),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .padding(
+                                        vertical = 12.dp,
+                                        horizontal = 2.dp
+                                    )
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(samouraiWarning)
+                                    .padding(
+                                        12.dp
+                                    )
+                                    .fillMaxWidth(),
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                     WrapToolsPageAnimation(visible = selected != 0) {
                         ParticipateSegment()
