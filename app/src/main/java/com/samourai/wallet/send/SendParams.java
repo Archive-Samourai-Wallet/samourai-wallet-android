@@ -62,6 +62,7 @@ public class SendParams	{
         this.outpoints = null;
         this.receivers = null;
         this.strPCode = null;
+        this.batchSend = null;
         this.SPEND_TYPE = SPEND_BOLTZMANN;
         this.changeAmount = 0L;
         this.changeType = 49;
@@ -71,13 +72,13 @@ public class SendParams	{
         this.hasPrivacyChecked = false;
         this.spendAmount = 0L;
         this.changeIdx = 0;
-        this.batchSend = null;
     }
 
     public void setParams(List<MyTransactionOutPoint> outpoints, HashMap<String, BigInteger> receivers, String strPCode, int SPEND_TYPE, long changeAmount, int changeType, int account, String strDestAddress, boolean hasPrivacyWarning, boolean hasPrivacyChecked, long spendAmount, int changeIdx) {
         this.outpoints = outpoints;
         this.receivers = receivers;
         this.strPCode = strPCode;
+        this.batchSend = null;
         this.SPEND_TYPE = SPEND_TYPE;
         this.changeAmount = changeAmount;
         this.changeType = changeType;
@@ -92,6 +93,7 @@ public class SendParams	{
     public void setParams(List<MyTransactionOutPoint> outpoints, HashMap<String, BigInteger> receivers, List<BatchSendUtil.BatchSend> batchSend, int SPEND_TYPE, long changeAmount, int changeType, int account, String strDestAddress, boolean hasPrivacyWarning, boolean hasPrivacyChecked, long spendAmount, int changeIdx) {
         this.outpoints = outpoints;
         this.receivers = receivers;
+        this.strPCode = null;
         this.batchSend = batchSend;
         this.SPEND_TYPE = SPEND_TYPE;
         this.changeAmount = changeAmount;

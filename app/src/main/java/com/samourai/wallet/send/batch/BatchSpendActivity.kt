@@ -1047,16 +1047,6 @@ class BatchSpendActivity : SamouraiActivity() {
             .setCancelable(false)
             .setPositiveButton(R.string.yes, DialogInterface.OnClickListener { dialog, whichButton ->
                 dialog.dismiss()
-                if (!PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.BROADCAST_TX, true)) {
-//                        doShowTx(hexTx, strTxHash)
-                    val dialog = QRBottomSheetDialog(
-                        qrData = hexTx,
-                        title = "",
-                        clipboardLabel = "dialogTitle"
-                    );
-                    dialog.show(supportFragmentManager, dialog.tag)
-                    return@OnClickListener
-                }
                 SendParams.getInstance().setParams(
                     outpoints,
                     receivers,
