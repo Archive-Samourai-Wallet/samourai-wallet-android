@@ -340,7 +340,6 @@ fun CollaborateScreen(collaborateActivity: CollaborateActivity?, showParticipate
                                     )
                                     .fillMaxWidth(),
                                 color = Color.White,
-                                textAlign = TextAlign.Center
                             )
                         }
                     }
