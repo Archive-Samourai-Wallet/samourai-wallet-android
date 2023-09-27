@@ -888,7 +888,7 @@ class BatchSpendActivity : SamouraiActivity() {
         var countP2WSH_P2TR = 0
         for (_data in viewModel.getBatchList()) {
 
-            _data.reComputeAddressIfNeeded(BatchSpendActivity@this)
+            _data.computeAddressIfNeeded(BatchSpendActivity@this)
 
             LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
             LogUtil.debug("BatchSendActivity", "output:" + _data.addr)

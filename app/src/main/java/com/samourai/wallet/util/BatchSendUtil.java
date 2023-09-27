@@ -25,11 +25,9 @@ public class BatchSendUtil {
         public long amount = 0L;
         public long UUID = 0L;
 
-        public void reComputeAddressIfNeeded(final Context context) throws Exception {
+        public void computeAddressIfNeeded(final Context context) throws Exception {
             if (isNotBlank(pcode)) {
-                if (nonNull(BIP47Meta.getInstance().getPCode4Addr(addr))) {
-                    addr = BIP47Util.getInstance(context).getDestinationAddrFromPcode(pcode);
-                }
+                addr = BIP47Util.getInstance(context).getDestinationAddrFromPcode(pcode);
             }
         }
     }
