@@ -1,6 +1,7 @@
 package com.samourai.wallet.send.cahoots;
 
 import static com.samourai.wallet.send.SendActivity.stubAddress;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -18,7 +19,6 @@ import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.common.base.Optional;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
@@ -28,14 +28,12 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.Cahoots;
-import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.widgets.EntropyBar;
 
-import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.text.DecimalFormat;
@@ -119,14 +117,18 @@ public class CahootReviewFragment extends Fragment {
         // increment paynym index if destination
         if (getArguments() != null) {
             if (getArguments().containsKey("typeUser")) {
-                int typeUserInt = getArguments().getInt("typeUser", -1);
-                CahootsTypeUser typeUser = CahootsTypeUser.find(typeUserInt).get();
+                final int typeUserInt = getArguments().getInt("typeUser", -1);
+                final CahootsTypeUser typeUser = CahootsTypeUser.find(typeUserInt).get();
                 if (typeUser == CahootsTypeUser.SENDER) {
                     String paynymDestination = payload.getPaynymDestination();
                     if (getArguments().containsKey("destPcode")) {
                         paynymDestination = getArguments().getString("destPcode");
                     }
-                    if (!StringUtils.isEmpty(paynymDestination)) {
+                    if (isNotBlank(paynymDestination)) {
+                        final String sendAddress = getArguments().getString("sendAddress");
+                        if (isNotBlank(sendAddress)) {
+                            BIP47Meta.getInstance().getPCode4AddrLookup().put(sendAddress, paynymDestination);
+                        }
                         BIP47Meta.getInstance().incOutgoingIdx(paynymDestination);
                     }
                 }
