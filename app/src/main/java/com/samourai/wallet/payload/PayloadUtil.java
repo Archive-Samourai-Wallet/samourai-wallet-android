@@ -197,7 +197,7 @@ public class PayloadUtil	{
         }
     }
 
-    public JSONObject getPayload() {
+    synchronized public JSONObject getPayload() {
         try {
             JSONObject wallet = new JSONObject();
 
@@ -396,7 +396,7 @@ public class PayloadUtil	{
      * @throws DecoderException
      * @throws MnemonicException.MnemonicLengthException
      */
-    public synchronized HD_Wallet restoreWalletfromJSON(JSONObject obj,boolean skipDojo) throws DecoderException, MnemonicException.MnemonicLengthException {
+    synchronized public HD_Wallet restoreWalletfromJSON(JSONObject obj,boolean skipDojo) throws DecoderException, MnemonicException.MnemonicLengthException {
 
 //        Log.i("PayloadUtil", obj.toString());
 

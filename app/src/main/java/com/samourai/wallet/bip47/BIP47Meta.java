@@ -313,15 +313,16 @@ public class BIP47Meta {
 
     public synchronized String[] getIncomingLookAhead(Context ctx)  {
 
-        Set<String> pcodes = pcodeIncomingIdxs.keySet();
-        Iterator<String> it = pcodes.iterator();
-        ArrayList<String> addrs = new ArrayList<String>();
+        final Set<String> pcodes = pcodeIncomingIdxs.keySet();
+        final Iterator<String> it = pcodes.iterator();
+        final List<String> addrs = new ArrayList<>();
+
         while(it.hasNext())   {
-            String pcode = it.next();
+            final String pcode = it.next();
             if(getArchived(pcode))    {
                 continue;
             }
-            int idx = getIncomingIdx(pcode);
+            final int idx = getIncomingIdx(pcode);
 
 //            info("APIFactory", "idx:" + idx + " , " + pcode);
 
@@ -338,16 +339,16 @@ public class BIP47Meta {
 
         }
 
-        String[] s = addrs.toArray(new String[addrs.size()]);
+        final String[] s = addrs.toArray(new String[addrs.size()]);
 
         return s;
     }
 
-    public String getPCode4Addr(String addr)  {
+    public String getPCode4Addr(final String addr)  {
         return addr2pcode.get(addr);
     }
 
-    public Integer getIdx4Addr(String addr)  {
+    public Integer getIdx4Addr(final String addr)  {
         return addr2idx.get(addr);
     }
 
@@ -359,10 +360,10 @@ public class BIP47Meta {
         return addr2idx;
     }
 
-    public void setUnspentIdx(String pcode, int idx, String addr)   {
+    public void setUnspentIdx(final String pcode, final int idx, final String addr)   {
 
         if(!pcodeUnspentIdxs.containsKey(pcode))    {
-            ConcurrentHashMap<String, Integer> addrIdx = new ConcurrentHashMap<String, Integer>();
+            ConcurrentHashMap<String, Integer> addrIdx = new ConcurrentHashMap<>();
             addrIdx.put(addr, idx);
             pcodeUnspentIdxs.put(pcode, addrIdx);
         }
@@ -371,11 +372,11 @@ public class BIP47Meta {
         }
     }
 
-    public boolean incomingExists(String pcode) {
+    public boolean incomingExists(final String pcode) {
         return pcodeIncomingIdxs.containsKey(pcode);
     }
 
-    public int getOutgoingStatus(String pcode)   {
+    public int getOutgoingStatus(final String pcode)   {
         if(!pcodeOutgoingStatus.containsKey(pcode))    {
             return STATUS_NOT_SENT;
         }
@@ -384,26 +385,20 @@ public class BIP47Meta {
         }
     }
 
-    public void setOutgoingStatus(String pcode, int status)   {
-        String _tx = pcodeOutgoingStatus.get(pcode).getLeft();
-        Pair<String,Integer> pair = Pair.of(_tx, status);
-        pcodeOutgoingStatus.put(pcode, pair);
+    synchronized public void setOutgoingStatus(final String pcode, final int status)   {
+        final String _tx = pcodeOutgoingStatus.get(pcode).getLeft();
+        pcodeOutgoingStatus.put(pcode, Pair.of(_tx, status));
     }
 
-    public void setOutgoingStatus(String pcode, String tx, int status)   {
-        Pair<String,Integer> pair = Pair.of(tx, status);
-        pcodeOutgoingStatus.put(pcode, pair);
+    public void setOutgoingStatus(final String pcode, final String tx, final int status) {
+        pcodeOutgoingStatus.put(pcode, Pair.of(tx, status));
     }
 
-    public boolean outgoingExists(String pcode) {
-        return pcodeOutgoingIdxs.containsKey(pcode);
-    }
+    public List<Pair<String, String>> getOutgoingUnconfirmed()   {
 
-    public ArrayList<Pair<String,String>> getOutgoingUnconfirmed()   {
-
-        ArrayList<Pair<String,String>> ret = new ArrayList<Pair<String,String>>();
+        final List<Pair<String, String>> ret = Lists.newArrayList();
 //        info("BIP47Meta", "key set:" + pcodeOutgoingStatus.keySet().size());
-        for(String pcode : pcodeOutgoingStatus.keySet())   {
+        for(final String pcode : pcodeOutgoingStatus.keySet())   {
 //            info("BIP47Meta", "pcode:" + pcode.toString());
 //            info("BIP47Meta", "tx:" + pcodeOutgoingStatus.get(pcode).getLeft());
 //            info("BIP47Meta", "status:" + pcodeOutgoingStatus.get(pcode).getRight());
@@ -488,11 +483,7 @@ public class BIP47Meta {
         return ret + 1;
     }
 
-    public void clearUnspent(final String pcode)    {
-        pcodeIncomingUnspent.remove(pcode);
-    }
-
-    public void remove(final String pcode)    {
+    synchronized public void remove(final String pcode)    {
         final String label = pcodeLabels.remove(pcode);
         labelsPcode.remove(label);
         pcodeRoles.remove(pcode);
@@ -557,7 +548,7 @@ public class BIP47Meta {
         }
     }
 
-    public JSONObject toJSON() {
+    synchronized public JSONObject toJSON() {
 
         final JSONObject jsonPayload = new JSONObject();
 
@@ -658,7 +649,7 @@ public class BIP47Meta {
 
             for(int i = 0; i < pcodes.length(); i++) {
 
-                JSONObject obj = pcodes.getJSONObject(i);
+                final JSONObject obj = pcodes.getJSONObject(i);
 
                 final String paymentCode = obj.getString("payment_code");
                 final String label = obj.getString("label");
