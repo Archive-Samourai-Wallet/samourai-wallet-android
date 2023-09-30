@@ -207,20 +207,7 @@ public class BIP47Util extends BIP47UtilGeneric {
     synchronized public String getDestinationAddrFromPcode(final String pcodeAsString) throws Exception {
 
         if (isBlank(pcodeAsString)) return null;
-
-        final String address = getAddress(pcodeAsString, getPaymentAddress(pcodeAsString));
-
-        if (isNull(BIP47Meta.getInstance().getPCode4Addr(address))) {
-            return address;
-        } else {
-            String candidateAddr;
-            do {
-                BIP47Meta.getInstance().incOutgoingIdx(pcodeAsString);
-                candidateAddr = getAddress(pcodeAsString, getPaymentAddress(pcodeAsString));
-            } while (nonNull(BIP47Meta.getInstance().getPCode4Addr(candidateAddr)));
-
-            return candidateAddr;
-        }
+        return getAddress(pcodeAsString, getPaymentAddress(pcodeAsString));
     }
 
     private static String getAddress(final String pcodeAsString,
