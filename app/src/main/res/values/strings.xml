@@ -112,7 +112,7 @@
     <string name="options_whirlpool_gui">Pair to Whirlpool GUI</string>
     <string name="options_whirlpool_gui2">Pair to Whirlpool GUI for continuous mixing.</string>
     <string name="options_swaps_gui">Pair to Swaps GUI</string>
-    <string name="options_swaps_gui2">Pair to Swaps GUI to swap for XMR.</string>
+    <string name="options_swaps_gui2">Pair to Swaps GUI for P2P trading.</string>
     <string name="options_postmix">Spend from post-mix Whirlpool</string>
     <string name="options_ricochet_sync">Sync Ricochet</string>
     <string name="options_ricochet_sync2">Synchronize Ricochet index.</string>
@@ -758,8 +758,8 @@
         <item>Whirlpool Segwit post-mix BIP44 change address</item>
         <item>Whirlpool Segwit post-mix BIP49 change address</item>
         <item>Whirlpool Segwit bad bank</item>
-        <item>XMR-BTC main swaps account</item>
-        <item>XMR-BTC swaps refunds</item>
+        <item>Swap account</item>
+        <item>Swap refunds</item>
     </string-array>
 
     <string name="mixing"><em>%1$s</em> : %2$s</string>
