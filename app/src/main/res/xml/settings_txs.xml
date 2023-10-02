@@ -43,20 +43,20 @@
         app:allowDividerAbove="true"
         />
 
-    <Preference
-        android:title="@string/options_whirlpool_gui"
-        android:summary="@string/options_whirlpool_gui2"
-        android:key="whirlpool_gui"
-        app:iconSpaceReserved="false"
-        app:allowDividerBelow="true"
-        app:allowDividerAbove="true"
-        />
-
     <CheckBoxPreference
         android:title="@string/options_strictoutputs"
         android:summary="@string/options_strictoutputs2"
         android:defaultValue="true"
         android:key="strictOutputs"
+        app:iconSpaceReserved="false"
+        app:allowDividerBelow="true"
+        app:allowDividerAbove="true"
+        />
+
+    <Preference
+        android:title="@string/options_whirlpool_gui"
+        android:summary="@string/options_whirlpool_gui2"
+        android:key="whirlpool_gui"
         app:iconSpaceReserved="false"
         app:allowDividerBelow="true"
         app:allowDividerAbove="true"
