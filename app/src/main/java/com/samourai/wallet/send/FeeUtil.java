@@ -125,8 +125,24 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
         return calculateFee(size, getSuggestedFee().getDefaultPerKB());
     }
 
-    public BigInteger estimatedFeeSegwit(int inputsP2PKH, int inputsP2SHP2WPKH, int inputsP2WPKH, int outputsNonTaproot, int outputsTaproot)   {
-        int size = estimatedSizeSegwit(inputsP2PKH, inputsP2SHP2WPKH, inputsP2WPKH, outputsNonTaproot, outputsTaproot, 0);
+    public BigInteger estimatedFeeSegwit(
+            final int inputsP2PKH,
+            final int inputsP2SHP2WPKH,
+            final int inputsP2WPKH,
+            final int outputsNonTaproot,
+            final int outputsTaproot)   {
+
+        final int size = estimatedSizeSegwit(
+                inputsP2PKH,
+                inputsP2SHP2WPKH,
+                inputsP2WPKH,
+                outputsNonTaproot,
+                outputsTaproot,
+                0);
+
+        if (SamouraiWallet.getInstance().isTestNet()) {
+            return calculateFee(size + 1, getSuggestedFee().getDefaultPerKB());
+        }
         return calculateFee(size, getSuggestedFee().getDefaultPerKB());
     }
 
@@ -139,10 +155,9 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
         return calculateFee(size, feePerKb);
     }
 
-    public BigInteger calculateFee(int txSize, BigInteger feePerKb)   {
-        long feePerB = toFeePerB(feePerKb);
-        long fee = calculateFee(txSize, feePerB);
-        return BigInteger.valueOf(fee);
+    public BigInteger calculateFee(final int txSize, final BigInteger feePerKb)   {
+        final long feePerB = toFeePerB(feePerKb);
+        return BigInteger.valueOf(calculateFee(txSize, feePerB));
     }
 
     public void sanitizeFee()  {

@@ -1492,8 +1492,15 @@ public class SendActivity extends SamouraiActivity {
 
                 // get smallest 1 UTXO > than spend + fee + dust
                 for (UTXO u : _utxos) {
-                    Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(u.getOutpoints()));
-                    if (u.getValue() >= (amount + SamouraiWallet.bDust.longValue() + FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 2).longValue())) {
+                    final Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(u.getOutpoints()));
+                    if (u.getValue() >= (amount +
+                            SamouraiWallet.bDust.longValue() +
+                            FeeUtil.getInstance().estimatedFeeSegwit(
+                                    outpointTypes.getLeft(),
+                                    outpointTypes.getMiddle(),
+                                    outpointTypes.getRight(),
+                                    2 - countP2WSH_P2TR,
+                                    countP2WSH_P2TR).longValue())) {
                         selectedUTXO.add(u);
                         totalValueSelected += u.getValue();
                         Log.d("SendActivity", "spend type:" + SPEND_TYPE);
@@ -1588,7 +1595,7 @@ public class SendActivity extends SamouraiActivity {
                     for (UTXO utxo : selectedUTXO) {
                         outpoints.addAll(utxo.getOutpoints());
                     }
-                    Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(outpoints));
+                    final Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(outpoints));
                     if (amount == balance) {
                         fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.getLeft(), outpointTypes.getMiddle(), outpointTypes.getRight(), 1 - countP2WSH_P2TR, countP2WSH_P2TR);
                         amount -= fee.longValue();
@@ -1687,10 +1694,11 @@ public class SendActivity extends SamouraiActivity {
 
                 if (selectedCahootsType == SelectCahootsType.type.NONE) {
                     boolean is_sat_prefs = PrefsUtil.getInstance(SendActivity.this).getValue(PrefsUtil.IS_SAT, true);
-                    if (is_sat_prefs)
+                    if (is_sat_prefs) {
                         tvTotalFee.setText(FormatsUtil.formatSats(fee.longValue()) + "s");
-                    else
+                    } else {
                         tvTotalFee.setText(FormatsUtil.formatBTC(fee.longValue()));
+                    }
                     calculateTransactionSize(_fee);
                 } else {
                     tvTotalFee.setText("__");
