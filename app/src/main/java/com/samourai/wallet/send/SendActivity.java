@@ -315,10 +315,25 @@ public class SendActivity extends SamouraiActivity {
         checkDeepLinks();
 
         if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
+            SPEND_TYPE = sendTransactionDetailsView.getStoneWallSwitch().isChecked() ? SPEND_BOLTZMANN : SPEND_SIMPLE;
             premiumAddons.setVisibility(View.GONE);
             addonsNotAvailableMessage.setVisibility(View.VISIBLE);
         }
+    }
 
+    private boolean isEnabledJoinbot() {
+        return !AppUtil.getInstance(SendActivity.this).isBroadcastDisabled() &&
+                joinbotSwitch.isChecked();
+    }
+
+    private boolean isEnabledRicochet() {
+        return !AppUtil.getInstance(SendActivity.this).isBroadcastDisabled() &&
+                ricochetHopsSwitch.isChecked();
+    }
+
+    private boolean isEnabledRicochetStaggered() {
+        return !AppUtil.getInstance(SendActivity.this).isBroadcastDisabled() &&
+                ricochetStaggeredDelivery.isChecked();
     }
 
     private void setUpCompositeDisposables() {
@@ -368,24 +383,24 @@ public class SendActivity extends SamouraiActivity {
             addonsNotAvailableMessage.setVisibility(View.VISIBLE);
             addonsNotAvailableMessage.setText(R.string.note_privacy_addons_are_not_available_for_selected_utxo_s);
             premiumAddons.setVisibility(View.GONE);
-            if (SPEND_TYPE == SPEND_RICOCHET || ricochetHopsSwitch.isChecked()) {
+            if (SPEND_TYPE == SPEND_RICOCHET || isEnabledRicochet()) {
                 autoUncheckRicochetSwitch();
             }
-            if (SPEND_TYPE == SPEND_JOINBOT || joinbotSwitch.isChecked()) {
+            if (SPEND_TYPE == SPEND_JOINBOT || isEnabledJoinbot()) {
                 autoUncheckJoinbotSwitch();
             }
         } else if (!premiumAddonsRicochetVisible) {
             addonsNotAvailableMessage.setVisibility(View.VISIBLE);
             addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
             premiumAddonsRicochet.setVisibility(View.GONE);
-            if (SPEND_TYPE == SPEND_RICOCHET || ricochetHopsSwitch.isChecked()) {
+            if (SPEND_TYPE == SPEND_RICOCHET || isEnabledRicochet()) {
                 autoUncheckRicochetSwitch();
             }
         } else if (!premiumAddonsJoinbotVisible) {
             addonsNotAvailableMessage.setVisibility(View.VISIBLE);
             addonsNotAvailableMessage.setText(R.string.note_some_privacy_addons_are_not_available_for_selected_utxo_s);
             premiumAddonsJoinbot.setVisibility(View.GONE);
-            if (SPEND_TYPE == SPEND_JOINBOT || joinbotSwitch.isChecked()) {
+            if (SPEND_TYPE == SPEND_JOINBOT || isEnabledJoinbot()) {
                 autoUncheckJoinbotSwitch();
             }
         }
@@ -450,7 +465,7 @@ public class SendActivity extends SamouraiActivity {
             ricochetTitle.setAlpha(1f);
             ricochetHopsSwitch.setAlpha(1f);
             ricochetHopsSwitch.setEnabled(true);
-            if (ricochetHopsSwitch.isChecked()) {
+            if (isEnabledRicochet()) {
                 ricochetStaggeredOptionGroup.setVisibility(View.VISIBLE);
             }
         } else {
@@ -684,6 +699,11 @@ public class SendActivity extends SamouraiActivity {
     private void setUpJoinBot() {
 
         joinbotSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+            if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
+                return;
+            }
+
             if (isChecked) {
                 strPcodeCounterParty = BIP47Meta.getMixingPartnerCode();
                 ricochetHopsSwitch.setChecked(false);
@@ -715,6 +735,11 @@ public class SendActivity extends SamouraiActivity {
 
     private void setUpRicochet() {
         ricochetHopsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+            if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
+                return;
+            }
+
             if (isChecked) {
                 joinbotSwitch.setChecked(false);
             }
@@ -736,7 +761,7 @@ public class SendActivity extends SamouraiActivity {
         });
         ricochetHopsSwitch.setChecked(PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_RICOCHET, false));
 
-        if (ricochetHopsSwitch.isChecked()) {
+        if (isEnabledRicochet()) {
             ricochetStaggeredOptionGroup.setVisibility(View.VISIBLE);
         } else {
             ricochetStaggeredOptionGroup.setVisibility(View.GONE);
@@ -745,6 +770,10 @@ public class SendActivity extends SamouraiActivity {
         ricochetStaggeredDelivery.setChecked(PrefsUtil.getInstance(this).getValue(PrefsUtil.RICOCHET_STAGGERED, false));
 
         ricochetStaggeredDelivery.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+
+            if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
+                return;
+            }
             PrefsUtil.getInstance(this).setValue(PrefsUtil.RICOCHET_STAGGERED, isChecked);
             // Handle staggered delivery option
         });
@@ -1114,7 +1143,7 @@ public class SendActivity extends SamouraiActivity {
             amountViewSwitcher.showNext();
             hideKeyboard();
             hideMenus(true);
-            sendTransactionDetailsView.showReview(ricochetHopsSwitch.isChecked());
+            sendTransactionDetailsView.showReview(isEnabledRicochet());
 
         }
     }
@@ -1288,7 +1317,7 @@ public class SendActivity extends SamouraiActivity {
                 if (BIP47Meta.getInstance().getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM) {
                     samouraiFeeViaBIP47 = true;
                 }
-                ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this).script(amount, FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(), address, RicochetMeta.defaultNbHops, strPCode, samouraiFeeViaBIP47, ricochetStaggeredDelivery.isChecked(), account);
+                ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this).script(amount, FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(), address, RicochetMeta.defaultNbHops, strPCode, samouraiFeeViaBIP47, isEnabledRicochetStaggered(), account);
                 if (ricochetJsonObj != null) {
 
                     try {
@@ -1841,7 +1870,7 @@ public class SendActivity extends SamouraiActivity {
                     .subscribe(() -> {
                         prepareSpend();
                         progressBar.setVisibility(View.INVISIBLE);
-                        ricochetSpend(ricochetStaggeredDelivery.isChecked());
+                        ricochetSpend(isEnabledRicochetStaggered());
                     }, er -> {
                         progressBar.setVisibility(View.INVISIBLE);
                         Toast.makeText(this, "Error ".concat(er.getMessage()), Toast.LENGTH_LONG).show();
@@ -1918,7 +1947,7 @@ public class SendActivity extends SamouraiActivity {
         boolean valid = true;
 
         if (amount > JOINNBOT_MAX_AMOUNT) {
-            if (joinbotSwitch.isChecked()) {
+            if (isEnabledJoinbot()) {
                 Toast.makeText(this, getString(R.string.joinbot_max_amount_reached), Toast.LENGTH_SHORT).show();
             }
             valid = false;
@@ -1930,7 +1959,7 @@ public class SendActivity extends SamouraiActivity {
                 amount,
                 preselectedUTXOs)) {
 
-            if (joinbotSwitch.isChecked()) {
+            if (isEnabledJoinbot()) {
                 Toast.makeText(this, getString(R.string.joinbot_not_possible_with_current_utxo), Toast.LENGTH_SHORT).show();
             }
             valid = false;
