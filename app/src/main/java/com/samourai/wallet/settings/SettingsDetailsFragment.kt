@@ -164,6 +164,11 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             getXPUB(84, SwapsMeta.getInstance(requireContext()).swapsRefundAccount)
             true
         }
+        val zpubSwapsAsbMainPref = findPreference("zpub_swapsasbmain") as Preference?
+        zpubSwapsAsbMainPref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            getXPUB(84, SwapsMeta.getInstance(requireContext()).swapsAsbMainAccount)
+            true
+        }
 
         val wipePref = findPreference("wipe") as Preference?
         wipePref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {

@@ -32,5 +32,8 @@ public class SwapsMeta {
     public int getSwapsRefundAccount() {
         return SwapsConst.SWAPS_REFUND_ACCOUNT;
     }
+    public int getSwapsAsbMainAccount() {
+        return SwapsConst.SWAPS_ASB_MAIN_ACCOUNT;
+    }
 
 }

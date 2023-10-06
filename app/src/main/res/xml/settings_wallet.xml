@@ -140,6 +140,15 @@
         />
 
     <Preference
+        android:title="@string/options_xpub84_swapsasbmain"
+        android:summary="@string/options_xpub84_swapsasbmain2"
+        android:key="zpub_swapsasbmain"
+        app:iconSpaceReserved="false"
+        app:allowDividerBelow="true"
+        app:allowDividerAbove="true"
+        />
+
+    <Preference
         android:title="@string/options_change_pin"
         android:summary="@string/options_change_pin2"
         android:key="change_pin"

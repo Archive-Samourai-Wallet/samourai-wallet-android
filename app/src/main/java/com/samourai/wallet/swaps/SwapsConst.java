@@ -5,4 +5,6 @@ import static com.samourai.wallet.whirlpool.WhirlpoolConst.WHIRLPOOL_BADBANK_ACC
 public class SwapsConst {
     public final static int SWAPS_MAIN_ACCOUNT = WHIRLPOOL_BADBANK_ACCOUNT - 1;
     public final static int SWAPS_REFUND_ACCOUNT = WHIRLPOOL_BADBANK_ACCOUNT - 2;
+
+    public final static int SWAPS_ASB_MAIN_ACCOUNT = WHIRLPOOL_BADBANK_ACCOUNT - 3;
 }
