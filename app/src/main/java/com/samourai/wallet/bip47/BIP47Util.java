@@ -1,5 +1,9 @@
 package com.samourai.wallet.bip47;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,7 +22,7 @@ import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.util.PrefsUtil;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -50,7 +54,7 @@ public class BIP47Util extends BIP47UtilGeneric {
     private static BIP47Util instance = null;
     private MutableLiveData<Bitmap> paynymLogo = new MutableLiveData();
 
-    public static BIP47Util getInstance(Context ctx) {
+    public static BIP47Util getInstance(final Context ctx) {
 
         context = ctx;
 
@@ -197,5 +201,36 @@ public class BIP47Util extends BIP47UtilGeneric {
                     return true;
                 }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
+    }
+
+
+    synchronized public String getDestinationAddrFromPcode(final String pcodeAsString) throws Exception {
+
+        if (isBlank(pcodeAsString)) return null;
+        return getAddress(pcodeAsString, getPaymentAddress(pcodeAsString));
+    }
+
+    private static String getAddress(final String pcodeAsString,
+                                     final PaymentAddress paymentAddress)
+            throws Exception {
+
+        if (BIP47Meta.getInstance().getSegwit(pcodeAsString)) {
+            return new SegwitAddress(
+                    paymentAddress.getSendECKey(),
+                    SamouraiWallet.getInstance().getCurrentNetworkParams()).getBech32AsString();
+
+        } else {
+            return paymentAddress.getSendECKey()
+                    .toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
+        }
+    }
+
+    private PaymentAddress getPaymentAddress(final String pcodeAsString)
+            throws NotSecp256k1Exception {
+
+        return getInstance(context)
+                .getSendAddress(
+                        new PaymentCode(pcodeAsString),
+                        BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString));
     }
 }

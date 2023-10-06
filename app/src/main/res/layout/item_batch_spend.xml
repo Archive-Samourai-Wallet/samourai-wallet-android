@@ -9,7 +9,7 @@
     <TextView
         android:id="@+id/batchItemToAddress"
         style="@style/TextAppearance.MaterialComponents.Body2"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
@@ -18,6 +18,39 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="+invertedx" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/PCodeNotConnectedGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/batchItemToAddress"
+        app:layout_constraintTop_toTopOf="@+id/batchItemToAddress"
+        android:visibility="invisible"
+        >
+
+        <ImageView
+            android:id="@+id/batchItemNotConnectedPCodeIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:src="@drawable/ic_alert_outline_red" />
+
+        <TextView
+            android:id="@+id/batchItemNotConnectedPCodeMsg"
+            style="@style/TextAppearance.MaterialComponents.Body2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            app:layout_constraintStart_toEndOf="@+id/batchItemNotConnectedPCodeIcon"
+            app:layout_constraintTop_toTopOf="@+id/batchItemNotConnectedPCodeIcon"
+            android:text="Not connected"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
     <TextView
         android:id="@+id/batchItemAmount"

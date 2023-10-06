@@ -39,12 +39,16 @@ public class WebUtil {
         return instance;
     }
 
-    public String postURL(String contentType, String authToken, String requestURL, String urlParameters) throws Exception {
+    public String postURL(
+            final String contentType,
+            final String authToken,
+            final String requestURL,
+            final String jsonBody) throws Exception {
 
         MediaType JSON
                 = MediaType.parse("application/json; charset=utf-8");
 
-        RequestBody body = RequestBody.create(JSON, urlParameters);
+        RequestBody body = RequestBody.create(JSON, jsonBody);
 
         OkHttpClient.Builder builder = com.samourai.wallet.util.WebUtil.getInstance(context).httpClientBuilder(requestURL);
 

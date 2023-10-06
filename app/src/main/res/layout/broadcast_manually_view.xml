@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/BroadcastManuallyContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:background="@color/orange_send_ui">
+
+    <ImageButton
+        android:id="@+id/leftTopImageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:src="@drawable/ic_baseline_arrow_back_24"
+        android:text=""
+        android:textAllCaps="false"
+        android:background="@null"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginLeft="24dp"
+        />
+
+    <ImageButton
+        android:id="@+id/copyAddressToClipboard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:src="@drawable/ic_content_copy_white"
+        android:text=""
+        android:textAllCaps="false"
+        android:background="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginRight="24dp"
+        />
+
+    <TextView
+        android:id="@+id/tx_progress_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginStart="24dp"
+        android:fontFamily="@font/roboto_light"
+        android:textSize="24sp"
+        android:text="@string/tx_toast_offline_read_broadcast"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/leftTopImageButton" />
+
+    <ImageView
+        android:id="@+id/tx_qr_code_view"
+        android:layout_marginTop="42dp"
+        android:layout_marginLeft="64dp"
+        android:layout_marginRight="64dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="1:1"
+        android:layout_gravity="center"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tx_progress_text" />
+
+    <CheckBox
+        android:id="@+id/do_not_spend_option_checkbox"
+        android:layout_marginTop="24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tx_toast_offline_mark_outputs_do_not_spend"
+        android:fontFamily="@font/roboto_light"
+        android:textSize="16sp"
+        android:checked="true"
+        app:layout_constraintTop_toBottomOf="@+id/tx_qr_code_view"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="16dp"
+        app:buttonTint="@color/white"/>
+
+    <Button
+        android:id="@+id/close_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_transaction_view_options"
+        android:textColor="@color/orange_send_ui"
+        android:text="@string/close"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        android:fontFamily="@font/roboto_medium"
+
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="48dp"
+        app:layout_constraintTop_toBottomOf="@+id/do_not_spend_option_checkbox"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

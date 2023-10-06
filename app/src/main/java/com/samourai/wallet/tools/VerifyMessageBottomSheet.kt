@@ -97,7 +97,7 @@ fun VerifyMessage(
                     .background(samouraiBottomSheetBackground)
             ) {
 
-                Header("Verify Message", rfc2440FormatErrorMessage)
+                Header("Verify message", rfc2440FormatErrorMessage)
 
                 Body(
                     vm,
@@ -766,7 +766,7 @@ private fun VerifyButton(
         enabled = enableButton
 
     ) {
-        Text("Verify Message")
+        Text("Verify message")
     }
 }
 

@@ -1,6 +1,12 @@
 package com.samourai.wallet.home
 
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
@@ -14,7 +20,11 @@ import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -29,7 +39,11 @@ import com.dm.zbar.android.scanner.ZBarConstants
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.gson.Gson
-import com.samourai.wallet.*
+import com.samourai.wallet.BuildConfig
+import com.samourai.wallet.R
+import com.samourai.wallet.ReceiveActivity
+import com.samourai.wallet.SamouraiActivity
+import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.APIFactory.TxMostRecentDateComparator
@@ -43,7 +57,6 @@ import com.samourai.wallet.collaborate.CollaborateActivity
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.databinding.ActivityBalanceBinding
-import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.fragments.ScanFragment
 import com.samourai.wallet.hd.HD_WalletFactory
@@ -63,6 +76,8 @@ import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.batch.BatchSpendActivity
+import com.samourai.wallet.send.batch.InputBatchSpendHelper.*
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.settings.SettingsActivity
@@ -72,7 +87,17 @@ import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
 import com.samourai.wallet.tor.TorManager
 import com.samourai.wallet.tor.TorManager.isConnected
 import com.samourai.wallet.tx.TxDetailsActivity
-import com.samourai.wallet.util.*
+import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.BlockExplorerUtil
+import com.samourai.wallet.util.CharSequenceX
+import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.MessageSignUtil
+import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.PrivKeyReader
+import com.samourai.wallet.util.TimeOutUtil
+import com.samourai.wallet.util.activity.ActivityHelper
+import com.samourai.wallet.util.askNotificationPermission
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.WhirlpoolHome
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
@@ -97,7 +122,7 @@ import org.bouncycastle.util.encoders.Hex
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
-import java.util.*
+import java.util.Collections
 
 
 open class BalanceActivity : SamouraiActivity() {
@@ -371,6 +396,12 @@ open class BalanceActivity : SamouraiActivity() {
                     delay(800)
                     WalletRefreshWorker.enqueue(applicationContext, notifTx = false, launched = false)
                 }
+            }
+        }
+
+        balanceViewModel.viewModelScope.launch {
+            withContext(Dispatchers.Main) {
+                askNotificationPermission(this@BalanceActivity)
             }
         }
     }
@@ -704,7 +735,7 @@ open class BalanceActivity : SamouraiActivity() {
             startActivity(Intent(this, NetworkDashboard::class.java))
         } // noinspection SimplifiableIfStatement
         if (id == R.id.action_support) {
-            doSupport()
+            ActivityHelper.launchSupportPageInBrowser(this, isConnected())
         } else if (id == R.id.action_utxo) {
             doUTXO()
         } else if (id == R.id.action_backup) {
@@ -916,16 +947,6 @@ open class BalanceActivity : SamouraiActivity() {
         startActivity(intent)
     }
 
-    private fun doSupport() {
-        var url = "https://samouraiwallet.com/support"
-        if (isConnected())
-            url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
-        val explorerIntent = Intent(this, ExplorerActivity::class.java)
-        explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
-        startActivity(explorerIntent)
-    }
-
-
     var utxoListResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -950,6 +971,9 @@ open class BalanceActivity : SamouraiActivity() {
             val privKeyReader = PrivKeyReader(code, params)
             try {
                 when {
+                    canParseAsBatchSpend(code) -> {
+                        launchBatchSpend(code)
+                    }
                     privKeyReader.format != null -> {
                         doPrivKey(code.trim { it <= ' ' })
                     }
@@ -964,7 +988,10 @@ open class BalanceActivity : SamouraiActivity() {
                         startActivity(cahootIntent)
                     }
                     FormatsUtil.getInstance().isPSBT(code.trim { it <= ' ' }) -> {
-                        PSBTUtil.getInstance(this@BalanceActivity).doPSBT(code.trim { it <= ' ' })
+                        ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.PSBT,
+                            bundle = Bundle().apply {
+                                putString("KEY", code)
+                            })
                     }
                     DojoUtil.getInstance(this@BalanceActivity).isValidPairingPayload(code.trim { it <= ' ' }) -> {
                         val intent = Intent(this@BalanceActivity, NetworkDashboard::class.java)
@@ -981,6 +1008,12 @@ open class BalanceActivity : SamouraiActivity() {
             } catch (e: Exception) {
             }
         }
+    }
+
+    private fun launchBatchSpend(inputBatchSpendAsJson: String) {
+        val intent = Intent(this@BalanceActivity, BatchSpendActivity::class.java)
+        intent.putExtra("inputBatchSpend", inputBatchSpendAsJson)
+        startActivity(intent)
     }
 
     private fun doSweepViaScan() {

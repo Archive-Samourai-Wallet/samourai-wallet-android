@@ -19,6 +19,8 @@ import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.databinding.BatchSpendComposeBinding
 import com.samourai.wallet.util.BatchSendUtil
 import com.samourai.wallet.util.FormatsUtil
+import org.apache.commons.lang3.StringUtils.isNotBlank
+import java.util.Objects.nonNull
 
 class ComposeFragment : Fragment() {
 
@@ -42,7 +44,7 @@ class ComposeFragment : Fragment() {
             enableReview(false)
             viewModel.getBatchListLive().observe(viewLifecycleOwner) {
                 batchListAdapter.submitList(it)
-                enableReview(it.size != 0)
+                enableReview(viewModel.isValidBatchSpend())
             }
             batchListAdapter.setOnDeleteClick {
                 viewModel.remove(it)
@@ -98,36 +100,59 @@ class ComposeFragment : Fragment() {
             data class BatchViewHolder(val v: View,
                                        val amount: TextView,
                                        val to: TextView,
-                                       val deleteButton: MaterialButton) : RecyclerView.ViewHolder(v)
+                                       val deleteButton: MaterialButton,
+                                       val needConnectionStatus: View) : RecyclerView.ViewHolder(v)
 
 
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BatchViewHolder {
                 val view = LayoutInflater.from(parent.context)
                         .inflate(R.layout.item_batch_spend, parent, false)
-                return BatchViewHolder(view, amount = view.findViewById(R.id.batchItemAmount),
-                        deleteButton = view.findViewById(R.id.batchDeleteBtn),
-                        to = view.findViewById(R.id.batchItemToAddress));
+                return BatchViewHolder(
+                    view,
+                    amount = view.findViewById(R.id.batchItemAmount),
+                    deleteButton = view.findViewById(R.id.batchDeleteBtn),
+                    to = view.findViewById(R.id.batchItemToAddress),
+                    needConnectionStatus = view.findViewById(R.id.PCodeNotConnectedGroup)
+                )
             }
 
             override fun onBindViewHolder(holder: BatchViewHolder, position: Int) {
+
                 val item = mDiffer.currentList[position]
                 holder.itemView.setOnClickListener {
                     viewOnClick?.invoke(item)
                 }
+
+                val bip47Meta = BIP47Meta.getInstance()
+
                 holder.itemView.setOnLongClickListener {
+
+                    var message = "${holder.itemView.context.getString(R.string.amount)}: ${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC"
+                    if (nonNull(item.paynymCode)) {
+                        message = message + "\nPayNym: ${item.paynymCode}"
+                    } else if (isNotBlank(BIP47Meta.getInstance().getLabel(item.pcode))) {
+                        message = message + "\nPayNym: ${BIP47Meta.getInstance().getLabel(item.pcode)}"
+                    }
+                    if (nonNull(item.pcode)) {
+                        message = message + "\n${holder.itemView.context.getString(R.string.payment_code)}: ${item.pcode}"
+                    }
                     MaterialAlertDialogBuilder(holder.itemView.context)
-                            .setTitle("Batch Item Details")
-                            .setMessage("Address: ${item.addr}\n" +
-                                    "Amount: ${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC\n" +
-                                    "PayNym: ${if (item.pcode != null) BIP47Meta.getInstance().getDisplayLabel(item.pcode) else ""}")
+                            .setTitle(R.string.batch_item_details)
+                            .setMessage(message)
                             .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
                             .show()
                     true
                 }
                 holder.amount.text = "${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC"
                 holder.to.text = item.addr
-                if (item.pcode != null) {
-                    holder.to.text = BIP47Meta.getInstance().getDisplayLabel(item.pcode);
+                if (nonNull(item.pcode)) {
+                    holder.to.text = if (nonNull(item.paynymCode)) item.paynymCode else bip47Meta.getDisplayLabel(item.pcode);
+                    holder.needConnectionStatus.visibility =
+                        if (bip47Meta.getOutgoingStatus(item.pcode) != BIP47Meta.STATUS_SENT_CFM)
+                            View.VISIBLE
+                        else View.INVISIBLE
+                } else {
+                    holder.needConnectionStatus.visibility = View.INVISIBLE
                 }
                 holder.deleteButton.setOnClickListener {
                     onDeleteClick?.invoke(item)

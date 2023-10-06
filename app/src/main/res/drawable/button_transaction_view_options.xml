@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/white" /> <!-- Remplacez "your_button_color" par la couleur souhaitée pour le bouton -->
+    <corners android:radius="12dp" /> <!-- La valeur "12dp" détermine le rayon des coins arrondis, ajustez-la selon vos préférences -->
+</shape>

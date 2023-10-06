@@ -59,6 +59,7 @@ import com.samourai.wallet.theme.SamouraiWalletTheme
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
 import com.samourai.wallet.tools.viewmodels.BroadcastHexViewModel
+import com.samourai.wallet.tools.viewmodels.SignPSBTViewModel
 import com.samourai.wallet.tools.viewmodels.SweepViewModel
 import kotlinx.coroutines.launch
 
@@ -69,7 +70,8 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
         ADDRESS_CALC,
         AUTH47,
         SIGN,
-        SWEEP
+        SWEEP,
+        PSBT
     }
 
     var behavior: BottomSheetBehavior<*>? = null
@@ -152,6 +154,7 @@ class ToolsBottomSheet : BottomSheetDialogFragment() {
                         when (toolType) {
                             ToolType.SWEEP -> SweepPrivateKeyView(parentFragmentManager, keyParameter = key)
                             ToolType.SIGN -> SignMessage()
+                            ToolType.PSBT -> SignPSBTTool(keyParameter = key)
                             ToolType.ADDRESS_CALC -> AddressCalculator(this@SingleToolBottomSheet.dialog?.window)
                             ToolType.AUTH47 -> Auth47Login(param = key, onClose = {
                                 dismiss()
@@ -174,6 +177,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     val sweepViewModel = viewModel<SweepViewModel>()
     val auth47ViewModel = viewModel<Auth47ViewModel>()
     val broadcastHexViewModel = viewModel<BroadcastHexViewModel>()
+    val signPSBTViewModel = viewModel<SignPSBTViewModel>()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
     val addressCalcBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
@@ -182,6 +186,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
     val sweepPrivateKeyBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val auth47BottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val broadcastBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val signPSBTBottomSheet = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val keyboard = LocalSoftwareKeyboardController.current
 
     //Handle BackPress
@@ -199,6 +204,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         auth47BottomSheet.hide()
                     } else if (broadcastBottomSheet.isVisible) {
                         broadcastBottomSheet.hide()
+                    } else if (signPSBTBottomSheet.isVisible) {
+                        signPSBTBottomSheet.hide()
                     } else if (sweepPrivateKeyBottomSheet.isVisible) {
                         sweepPrivateKeyBottomSheet.hide()
                     } else {
@@ -216,6 +223,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
         verifyMessageBottomSheetState.isVisible,
         auth47BottomSheet.isVisible,
         broadcastBottomSheet.isVisible,
+        signPSBTBottomSheet.isVisible,
         sweepPrivateKeyBottomSheet.isVisible,
     ) {
         val anyToolWindowIsVisible = (
@@ -224,6 +232,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 verifyMessageBottomSheetState.isVisible ||
                 auth47BottomSheet.isVisible ||
                 broadcastBottomSheet.isVisible ||
+                signPSBTBottomSheet.isVisible ||
                 sweepPrivateKeyBottomSheet.isVisible)
         toolsBottomSheet?.dialog?.setCancelable(!anyToolWindowIsVisible)
     }
@@ -251,6 +260,30 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                 }
             )
             ToolsItem(
+                title = stringResource(id = R.string.sign_transactions),
+                subTitle = stringResource(R.string.options_sign_PSBT),
+                icon = R.drawable.ic_sign_transaction,
+                onClick = {
+                    scope.launch {
+                        signPSBTViewModel.clear()
+                        toolsBottomSheet?.disableDragging()
+                            signPSBTBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
+                    }
+                }
+            )
+            ToolsItem(
+                title = stringResource(id = R.string.broadcast_transactions),
+                subTitle = stringResource(R.string.options_broadcast_hex2),
+                icon = R.drawable.ic_broadcast_transaction,
+                onClick = {
+                    scope.launch {
+                        broadcastHexViewModel.clear()
+                        toolsBottomSheet?.disableDragging()
+                        broadcastBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
+                    }
+                }
+            )
+            ToolsItem(
                 title = stringResource(id = R.string.sign_message),
                 subTitle = stringResource(R.string.sign_messages_using_your),
                 icon = R.drawable.ic_signature,
@@ -258,7 +291,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
-                        vm.clearMessage()
+                        vm.clearSignedMessage()
                         toolsBottomSheet?.disableDragging()
                         signMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
                     }
@@ -272,7 +305,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
-                        vm.clearMessage()
+                        vm.clearSignedMessage()
                         toolsBottomSheet?.disableDragging()
                         verifyMessageBottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
                     }
@@ -288,7 +321,7 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         //Load first account type to viewmodel
                         val types = context.resources.getStringArray(R.array.account_types)
                         vm.calculateAddress(types.first(), true, index = 0, context = context)
-                        vm.clearMessage()
+                        vm.clearSignedMessage()
                         addressCalcBottomSheetState.show()
                     }
                 }
@@ -301,18 +334,6 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     scope.launch {
                         toolsBottomSheet?.disableDragging()
                         auth47BottomSheet.show()
-                    }
-                }
-            )
-            ToolsItem(
-                title = stringResource(id = R.string.broadcast_transactions),
-                subTitle = stringResource(R.string.options_broadcast_hex2),
-                icon = R.drawable.ic_broadcast_transaction,
-                onClick = {
-                    scope.launch {
-                        broadcastHexViewModel.clear()
-                        toolsBottomSheet?.disableDragging()
-                        broadcastBottomSheet.animateTo(ModalBottomSheetValue.Expanded)
                     }
                 }
             )
@@ -337,6 +358,8 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                     vm.calculateAddress(types.first(), true, index = 0, context = context)
                     toolsBottomSheet?.disableDragging(disable = false)
                     keyboard?.hide()
+                    vm.clearSignedMessage()
+                    vm.clearMessage()
                 }
             }
         }
@@ -381,6 +404,16 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
             }
         }
 
+        if (signPSBTBottomSheet.currentValue != ModalBottomSheetValue.Hidden) {
+            DisposableEffect(Unit) {
+                onDispose {
+                    signPSBTViewModel.clear()
+                    toolsBottomSheet?.disableDragging(disable = false)
+                    keyboard?.hide()
+                }
+            }
+        }
+
         ModalBottomSheetLayout(
             sheetState = addressCalcBottomSheetState,
             scrimColor = Color.Black.copy(alpha = 0.7f),
@@ -403,6 +436,16 @@ fun ToolsMainView(toolsBottomSheet: ToolsBottomSheet?, parentFragmentManager: Fr
                         }
                     }
                 )
+            },
+            sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
+        ) {}
+
+        ModalBottomSheetLayout(
+            sheetState = signPSBTBottomSheet,
+            scrimColor = Color.Black.copy(alpha = 0.7f),
+            sheetBackgroundColor = samouraiBottomSheetBackground,
+            sheetContent = {
+                SignPSBTTool()
             },
             sheetShape = MaterialTheme.shapes.small.copy(topEnd = CornerSize(12.dp), topStart = CornerSize(12.dp))
         ) {}

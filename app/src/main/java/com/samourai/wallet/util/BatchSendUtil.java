@@ -1,20 +1,35 @@
 package com.samourai.wallet.util;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.util.Objects.nonNull;
+
+import android.content.Context;
+
+import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.bip47.BIP47Util;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class BatchSendUtil {
 
     public static class BatchSend   {
+
         public String pcode = null;
+        public String paynymCode = null;
         public String addr = null;
         public long amount = 0L;
         public long UUID = 0L;
+
+        public void computeAddressIfNeeded(final Context context) throws Exception {
+            if (isNotBlank(pcode)) {
+                addr = BIP47Util.getInstance(context).getDestinationAddrFromPcode(pcode);
+            }
+        }
     }
 
     private static BatchSendUtil instance = null;
@@ -51,12 +66,15 @@ public class BatchSendUtil {
 
     public JSONArray toJSON() {
 
-        JSONArray batch = new JSONArray();
+        final JSONArray batch = new JSONArray();
         try {
-            for(BatchSend send : batchSends) {
-                JSONObject obj = new JSONObject();
-                if(send.pcode != null)    {
+            for(final BatchSend send : batchSends) {
+                final JSONObject obj = new JSONObject();
+                if (nonNull(send.pcode))    {
                     obj.put("pcode", send.pcode);
+                }
+                if (nonNull(send.paynymCode))    {
+                    obj.put("paynym", send.paynymCode);
                 }
                 obj.put("addr", send.addr);
                 obj.put("amount", send.amount);
@@ -76,10 +94,13 @@ public class BatchSendUtil {
 
         try {
             for(int i = 0; i < batch.length(); i++) {
-                JSONObject send = batch.getJSONObject(i);
-                BatchSend batchSend = new BatchSend();
-                if(send.has("pcode"))    {
+                final JSONObject send = batch.getJSONObject(i);
+                final BatchSend batchSend = new BatchSend();
+                if (send.has("pcode"))    {
                     batchSend.pcode = send.getString("pcode");
+                }
+                if (send.has("paynym"))    {
+                    batchSend.paynymCode = send.getString("paynym");
                 }
                 batchSend.addr = send.getString("addr");
                 batchSend.amount = send.getLong("amount");

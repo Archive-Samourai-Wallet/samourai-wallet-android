@@ -33,6 +33,9 @@
     <color name="whirlpoolBlue">#03A9F4</color>
     <color name="whirlpoolGreen">#90ffee</color>
     <color name="transparent">#00FFFFFF</color>
+    <color name="blue_send_ui">#27c7bb</color>
+    <color name="orange_send_ui">#DB8144</color>
+    <color name="red_send_ui">#DA454F</color>
 
 
     <color name="off_black">#181818</color>

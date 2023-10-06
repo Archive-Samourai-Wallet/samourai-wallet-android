@@ -197,7 +197,7 @@ public class PayloadUtil	{
         }
     }
 
-    public JSONObject getPayload() {
+    synchronized public JSONObject getPayload() {
         try {
             JSONObject wallet = new JSONObject();
 
@@ -396,7 +396,7 @@ public class PayloadUtil	{
      * @throws DecoderException
      * @throws MnemonicException.MnemonicLengthException
      */
-    public synchronized HD_Wallet restoreWalletfromJSON(JSONObject obj,boolean skipDojo) throws DecoderException, MnemonicException.MnemonicLengthException {
+    synchronized public HD_Wallet restoreWalletfromJSON(JSONObject obj,boolean skipDojo) throws DecoderException, MnemonicException.MnemonicLengthException {
 
 //        Log.i("PayloadUtil", obj.toString());
 
@@ -509,10 +509,9 @@ public class PayloadUtil	{
                 if(meta.has("bip47")) {
                     try {
                         BIP47Meta.getInstance().fromJSON((JSONObject) meta.get("bip47"));
-                    }
-                    catch(ClassCastException cce) {
-                        JSONArray _array = (JSONArray) meta.get("bip47");
-                        JSONObject _obj = new JSONObject();
+                    } catch(ClassCastException cce) {
+                        final JSONArray _array = (JSONArray) meta.get("bip47");
+                        final JSONObject _obj = new JSONObject();
                         _obj.put("pcodes", _array);
                         BIP47Meta.getInstance().fromJSON(_obj);
                     }

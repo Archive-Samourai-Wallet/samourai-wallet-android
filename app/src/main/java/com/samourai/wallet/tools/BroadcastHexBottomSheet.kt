@@ -87,7 +87,7 @@ fun SweepSuccessView(onCloseClick: () -> Unit) {
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 title = {
-                    Text(text = "Broadcast Transaction", color = Color.White)
+                    Text(text = "Broadcast transaction", color = samouraiAccent)
                 }
             )
         },
@@ -164,7 +164,7 @@ fun SweepHexBroadcast(onCloseClick: () -> Unit) {
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 title = {
-                    Text(text = "Broadcast Transaction", color = Color.White)
+                    Text(text = "Broadcast transaction", color = samouraiAccent)
                 }
             )
         },
@@ -194,7 +194,7 @@ fun SweepHexBroadcast(onCloseClick: () -> Unit) {
                         .size(150.dp)
                         .align(Alignment.Center)
                         .clip(RoundedCornerShape(150.dp))
-                        .background(if (broadcastError != null) samouraiError else Color(0xff00D47D))
+                        .background(if (broadcastError != null) samouraiError else samouraiSuccess)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_broadcast_transaction),
@@ -263,7 +263,7 @@ fun SweepHexInputForm() {
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 title = {
-                    Text(text = "Broadcast Transaction", color = Color.White)
+                    Text(text = "Broadcast transaction", color = samouraiAccent)
                 }
             )
         },
@@ -356,8 +356,7 @@ fun SweepHexInputForm() {
                     Modifier
                         .fillMaxWidth()
                         .alpha(if (validTransaction != null) 1f else 0.5f)
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
-                        .padding(top = 1.dp),
+                        .padding(top = 3.dp),
                     enabled = validTransaction != null,
                     contentPadding = PaddingValues(vertical = 12.dp),
                     colors = ButtonDefaults.textButtonColors(

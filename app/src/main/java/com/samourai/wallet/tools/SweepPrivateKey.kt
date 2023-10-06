@@ -149,7 +149,7 @@ fun SweepBroadcast() {
                         .size(150.dp)
                         .align(Center)
                         .clip(RoundedCornerShape(150.dp))
-                        .background(if (broadcastError != null) samouraiError else Color(0xff00D47D))
+                        .background(if (broadcastError != null) samouraiError else samouraiSuccess)
                 ) {
                     Icon(
                         painter = painter,
