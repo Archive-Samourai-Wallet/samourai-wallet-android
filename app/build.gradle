@@ -10,8 +10,8 @@ android {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 197
-        versionName "0.99.98h"
+        versionCode 198
+        versionName "0.99.98i"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -43,10 +43,10 @@ android {
     productFlavors {
         production {
             applicationId 'com.samourai.wallet'
-            versionCode 197
-            versionName "0.99.98h"
+            versionCode 198
+            versionName "0.99.98i"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98h"
+            resValue "string", "version_name", "0.99.98i"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
