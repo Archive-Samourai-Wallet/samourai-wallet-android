@@ -13,7 +13,7 @@ import com.samourai.wallet.api.backend.BackendServer;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.MonetaryUtil;
 import com.samourai.wallet.util.NotificationsFactory;
 import com.samourai.wallet.util.WebUtil;
@@ -155,7 +155,7 @@ public class WebSocketHandler {
 
             try {
                 boolean testnet = SamouraiWallet.getInstance().isTestNet();
-                boolean onion = TorManager.INSTANCE.isRequired();
+                boolean onion = SamouraiTorManager.INSTANCE.isRequired();
                 String wsUrl = BackendServer.get(testnet).getBackendUrl(onion)+URL_INV;
 
                 debug("WebSocketHandler", "doInBackground(): connecting WS: "+wsUrl);

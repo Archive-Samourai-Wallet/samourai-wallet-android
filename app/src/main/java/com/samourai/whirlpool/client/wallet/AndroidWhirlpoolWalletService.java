@@ -25,7 +25,7 @@ import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.PushTx;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.exception.NotifiableException;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolServer;
@@ -95,20 +95,20 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
     }
 
     protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(Context ctx) {
-        TorManager torManager = TorManager.INSTANCE;
         boolean testnet = SamouraiWallet.getInstance().isTestNet();
         DojoUtil dojoUtil = DojoUtil.getInstance(ctx);
 
         String dojoParams = dojoUtil.getDojoParams();
         boolean useDojo = (dojoParams != null);
-        boolean onion = useDojo || torManager.isRequired();
+        final boolean torRequired = SamouraiTorManager.INSTANCE.isRequired();
+        boolean onion = useDojo || torRequired;
 
-        Log.v(TAG, "whirlpoolWalletConfig[Tor] = onion="+onion+", useDojo="+useDojo+", torManager.isRequired="+torManager.isRequired());
+        Log.v(TAG, "whirlpoolWalletConfig[Tor] = onion="+onion+", useDojo="+useDojo+", torManager.isRequired="+torRequired);
 
         String scode = WhirlpoolMeta.getInstance(ctx).getSCODE();
 
         IWhirlpoolHttpClientService httpClientService = AndroidHttpClientService.getInstance(ctx);
-        return computeWhirlpoolWalletConfig(torManager, testnet, onion, scode, httpClientService, ctx);
+        return computeWhirlpoolWalletConfig(testnet, onion, scode, httpClientService, ctx);
     }
 
     private DataSourceFactory computeDataSourceFactory(Context ctx) {
@@ -141,9 +141,9 @@ public class AndroidWhirlpoolWalletService extends WhirlpoolWalletService {
         };
     }
 
-    protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(TorManager torManager, boolean testnet, boolean onion, String scode, IWhirlpoolHttpClientService httpClientService, Context ctx) {
-        IStompClientService stompClientService = new AndroidStompClientService(torManager);
-        TorClientService torClientService = new AndroidWhirlpoolTorService(torManager);
+    protected WhirlpoolWalletConfig computeWhirlpoolWalletConfig(boolean testnet, boolean onion, String scode, IWhirlpoolHttpClientService httpClientService, Context ctx) {
+        IStompClientService stompClientService = new AndroidStompClientService();
+        TorClientService torClientService = new AndroidWhirlpoolTorService();
 
         WhirlpoolServer whirlpoolServer = testnet ? WhirlpoolServer.TESTNET : WhirlpoolServer.MAINNET;
         String serverUrl = whirlpoolServer.getServerUrl(onion);

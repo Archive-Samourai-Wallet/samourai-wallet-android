@@ -17,7 +17,7 @@ import com.samourai.wallet.bipWallet.WalletSupplier;
 import com.samourai.wallet.chain.ChainSupplier;
 import com.samourai.wallet.crypto.CryptoUtil;
 import com.samourai.wallet.send.provider.CahootsUtxoProvider;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.whirlpool.client.wallet.AndroidWalletSupplier;
 import com.samourai.whirlpool.client.wallet.data.AndroidChainSupplier;
@@ -44,7 +44,7 @@ public class AndroidSorobanWalletService extends SorobanWalletService {
             NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
             IHttpClient httpClient = AndroidHttpClient.getInstance(ctx);
             CryptoUtil cryptoUtil = CryptoUtil.getInstance(PROVIDER);
-            boolean onion = TorManager.INSTANCE.isRequired();
+            boolean onion = SamouraiTorManager.INSTANCE.isRequired();
             RpcService rpcService = new RpcService(httpClient, cryptoUtil, onion);
             WalletSupplier walletSupplier = AndroidWalletSupplier.getInstance(ctx);
             CahootsUtxoProvider cahootsUtxoProvider = AndroidCahootsUtxoProvider.getInstance(ctx);

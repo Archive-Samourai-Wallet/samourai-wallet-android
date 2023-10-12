@@ -84,8 +84,9 @@ import com.samourai.wallet.settings.SettingsActivity
 import com.samourai.wallet.stealth.StealthModeController
 import com.samourai.wallet.tools.ToolsBottomSheet
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
-import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.tor.TorManager.isConnected
+import com.samourai.wallet.tor.EnumTorState
+import com.samourai.wallet.tor.SamouraiTorManager
+import com.samourai.wallet.tor.TorState
 import com.samourai.wallet.tx.TxDetailsActivity
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.BlockExplorerUtil
@@ -107,7 +108,6 @@ import com.samourai.wallet.widgets.popUpMenu.popupMenu
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
-import io.matthewnelson.topl_service.TorServiceController
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -735,7 +735,7 @@ open class BalanceActivity : SamouraiActivity() {
             startActivity(Intent(this, NetworkDashboard::class.java))
         } // noinspection SimplifiableIfStatement
         if (id == R.id.action_support) {
-            ActivityHelper.launchSupportPageInBrowser(this, isConnected())
+            ActivityHelper.launchSupportPageInBrowser(this, SamouraiTorManager.isConnected())
         } else if (id == R.id.action_utxo) {
             doUTXO()
         } else if (id == R.id.action_backup) {
@@ -771,12 +771,12 @@ open class BalanceActivity : SamouraiActivity() {
     }
 
     private fun setUpTor() {
-        TorManager.getTorStateLiveData().observe(this) { torState: TorManager.TorState ->
-            if (torState === TorManager.TorState.ON) {
+        SamouraiTorManager.getTorStateLiveData().observe(this) { torState: TorState ->
+            if (torState.state == EnumTorState.ON) {
                 PrefsUtil.getInstance(this).setValue(PrefsUtil.ENABLE_TOR, true)
                 binding.progressBar.visibility = View.INVISIBLE
                 menuTorIcon?.setImageResource(R.drawable.tor_on)
-            } else if (torState === TorManager.TorState.WAITING) {
+            } else if (torState.state == EnumTorState.STARTING) {
                 binding.progressBar.visibility = View.VISIBLE
                 menuTorIcon?.setImageResource(R.drawable.tor_on)
             } else {
@@ -844,8 +844,8 @@ open class BalanceActivity : SamouraiActivity() {
                 doExternalBackUp()
                 // disconnect Whirlpool on app back key exit
                 if (WhirlpoolNotificationService.isRunning(applicationContext)) WhirlpoolNotificationService.stopService(applicationContext)
-                if (isConnected()) {
-                    TorServiceController.stopTor()
+                if (SamouraiTorManager.isConnected()) {
+                    SamouraiTorManager.stop()
                 }
                 TimeOutUtil.getInstance().reset()
                 if (StealthModeController.isStealthEnabled(applicationContext)) {

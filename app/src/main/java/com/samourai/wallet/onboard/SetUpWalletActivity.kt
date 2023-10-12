@@ -11,7 +11,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.observe
 import androidx.lifecycle.viewModelScope
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
@@ -25,9 +24,10 @@ import com.samourai.wallet.databinding.ActivitySetUpWalletBinding
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.payload.ExternalBackupManager
-import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.EnumTorState
+import com.samourai.wallet.tor.SamouraiTorManager
+import com.samourai.wallet.tor.TorState
 import com.samourai.wallet.util.*
-import io.matthewnelson.topl_service.TorServiceController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -59,11 +59,11 @@ class SetUpWalletActivity : AppCompatActivity() {
             ExternalBackupManager.askPermission(this);
         }
 
-        TorManager.getTorStateLiveData().observe(this) {
+        SamouraiTorManager.getTorStateLiveData().observe(this) {
             setTorState(it)
         }
 
-        setTorState(TorManager.torState)
+        setTorState(SamouraiTorManager.getTorState())
         val setUpWalletTorSwitch = binding.setUpWalletTorSwitch
         val setUpWalletContainer = binding.setUpWalletContainer
         val setUpWalletAddressInput = binding.setUpWalletAddressInput
@@ -77,7 +77,7 @@ class SetUpWalletActivity : AppCompatActivity() {
 
         setUpWalletTorSwitch.setOnClickListener {
             if (setUpWalletTorSwitch.isChecked) {
-                TorManager.startTor()
+                SamouraiTorManager.start()
             } else {
                 if (DojoUtil.getInstance(applicationContext).dojoParams != null) {
                     setUpWalletTorSwitch.isChecked = true
@@ -90,7 +90,7 @@ class SetUpWalletActivity : AppCompatActivity() {
                         .show()
                     return@setOnClickListener
                 }
-                TorServiceController.stopTor()
+                SamouraiTorManager.stop()
             }
         }
         setUpWalletViewModel.errorsLiveData.observe(this) {
@@ -190,12 +190,12 @@ class SetUpWalletActivity : AppCompatActivity() {
         setUpWalletViewModel.setApiUrl(apiUrl)
         setUpWalletViewModel.setApiKey(binding.setUpWalletApiKeyInput.text.toString())
 
-        if (TorManager.isConnected()) {
+        if (SamouraiTorManager.isConnected()) {
             setUpWalletViewModel.connectToDojo(applicationContext)
         } else {
-            TorManager.startTor()
-            TorManager.getTorStateLiveData().observe(this, Observer {
-                if (it == TorManager.TorState.ON) {
+            SamouraiTorManager.start()
+            SamouraiTorManager.getTorStateLiveData().observe(this, Observer {
+                if (it.state == EnumTorState.ON) {
                     setUpWalletViewModel.viewModelScope.launch(Dispatchers.Default) {
                         delay(600)
                         withContext(Dispatchers.Main) {
@@ -270,27 +270,33 @@ class SetUpWalletActivity : AppCompatActivity() {
         }
     }
 
-    private fun setTorState(state: TorManager.TorState) {
+    private fun setTorState(torState: TorState) {
         val onBoardingTorStatus = binding.onBoardingTorStatus
         val setUpWalletTorProgress = binding.setUpWalletTorProgress
         val setUpWalletTorSwitch = binding.setUpWalletTorSwitch
-        when (state) {
-            TorManager.TorState.WAITING -> {
+        when (torState.state) {
+            EnumTorState.STARTING -> {
                 onBoardingTorStatus.text = getString(R.string.tor_initializing)
                 onBoardingTorStatus.setTextColor(waiting)
                 makeViewTransition(setUpWalletTorProgress, setUpWalletTorSwitch)
             }
-            TorManager.TorState.ON -> {
+            EnumTorState.ON -> {
                 disableInputs(false)
                 onBoardingTorStatus.text = getString(R.string.active)
                 onBoardingTorStatus.setTextColor(activeColor)
                 setUpWalletTorSwitch.isChecked = true
                 makeViewTransition(setUpWalletTorSwitch, setUpWalletTorProgress)
             }
-            TorManager.TorState.OFF -> {
+            EnumTorState.OFF -> {
                 setUpWalletTorSwitch.isChecked = false
                 onBoardingTorStatus.text = getString(R.string.off)
                 onBoardingTorStatus.setTextColor(disabledColor)
+                makeViewTransition(setUpWalletTorSwitch, setUpWalletTorProgress)
+            }
+            EnumTorState.STOPPING -> {
+                setUpWalletTorSwitch.isChecked = false
+                onBoardingTorStatus.text = getString(R.string.off)
+                onBoardingTorStatus.setTextColor(waiting)
                 makeViewTransition(setUpWalletTorSwitch, setUpWalletTorProgress)
             }
         }

@@ -19,7 +19,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.R
 import com.samourai.wallet.databinding.ActivityExplorerBinding
-import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.EnumTorState
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.BlockExplorerUtil
 import kotlinx.coroutines.*
 
@@ -55,16 +56,16 @@ class ExplorerActivity : AppCompatActivity() {
             binding.webView.reload()
             binding.swipeRefreshLayout.isRefreshing = false;
         }
-        TorManager.getTorStateLiveData().observe(this, {
-            if (it == TorManager.TorState.ON) {
-                    CoroutineScope(Dispatchers.Default).launch {
-                        delay(800)
-                        (Dispatchers.Main){
-                           setProxy()
-                        }
+        SamouraiTorManager.getTorStateLiveData().observe(this) {
+            if (it.state == EnumTorState.ON) {
+                CoroutineScope(Dispatchers.Default).launch {
+                    delay(800)
+                    (Dispatchers.Main){
+                        setProxy()
                     }
+                }
             }
-        })
+        }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
             load()
@@ -142,7 +143,7 @@ class ExplorerActivity : AppCompatActivity() {
     private fun setProxy() {
         if (WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
             val proxyConfig = ProxyConfig.Builder()
-                .addProxyRule("SOCKS:/${TorManager.getProxy()?.address().toString()}")
+                .addProxyRule("SOCKS:/${SamouraiTorManager.getProxy()?.address().toString()}")
                 .build()
             ProxyController.getInstance().setProxyOverride(proxyConfig, {
                 load()
@@ -169,10 +170,11 @@ class ExplorerActivity : AppCompatActivity() {
                copyText(this.txId)
             }
             R.id.menu_web_tor -> {
-                val torStatus = when( TorManager.torState ){
-                    TorManager.TorState.WAITING ->  "Waiting"
-                    TorManager.TorState.ON -> "Enabled"
-                    TorManager.TorState.OFF -> "Disabled"
+                val torStatus = when( SamouraiTorManager.getTorState().state) {
+                    EnumTorState.STARTING ->  "Waiting"
+                    EnumTorState.ON -> "Enabled"
+                    EnumTorState.OFF -> "Disabled"
+                    EnumTorState.STOPPING -> "Stopping"
                 }
                 MaterialAlertDialogBuilder(this)
                     .setTitle("Tor status : $torStatus")
@@ -192,21 +194,22 @@ class ExplorerActivity : AppCompatActivity() {
     }
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.web_explorer, menu)
-        TorManager.getTorStateLiveData().observe(this) {
+        SamouraiTorManager.getTorStateLiveData().observe(this) {
             menu.findItem(R.id.menu_web_tor).icon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_tor_on)
             val icon = menu.findItem(R.id.menu_web_tor).icon
-            when (it) {
-                TorManager.TorState.WAITING -> {
+            when (it.state) {
+                EnumTorState.STARTING -> {
                     icon?.setTint(ContextCompat.getColor(applicationContext, R.color.warning_yellow))
                 }
-                TorManager.TorState.ON -> {
+                EnumTorState.STOPPING -> {
+                    icon?.setTint(ContextCompat.getColor(applicationContext, R.color.warning_yellow))
+                }
+                EnumTorState.ON -> {
                     icon?.setTint(ContextCompat.getColor(applicationContext, R.color.green_ui_2))
                 }
-                TorManager.TorState.OFF -> {
+                EnumTorState.OFF -> {
                     menu.findItem(R.id.menu_web_tor).icon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_tor_on)
                     menu.findItem(R.id.menu_web_tor).icon?.setTint(ContextCompat.getColor(applicationContext, R.color.disabledRed))
-                }
-                else -> {
                 }
             }
         }

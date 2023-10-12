@@ -8,7 +8,6 @@ import android.preference.PreferenceManager;
 
 import com.google.common.collect.Lists;
 import com.samourai.wallet.R;
-import com.samourai.wallet.RestoreSeedWalletActivity;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
@@ -27,7 +26,7 @@ import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.RBFUtil;
 import com.samourai.wallet.send.SendActivity;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.BatchSendUtil;
@@ -67,7 +66,6 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
@@ -280,7 +278,7 @@ public class PayloadUtil	{
             meta.put("ricochet", RicochetMeta.getInstance(context).toJSON());
             meta.put("cahoots", CahootsFactory.getInstance().toJSON());
             meta.put("rbfs", RBFUtil.getInstance().toJSON());
-            meta.put("tor", TorManager.INSTANCE.toJSON());
+            meta.put("tor", SamouraiTorManager.INSTANCE.toJSON());
             meta.put("blocked_utxos", BlockedUTXO.getInstance().toJSON());
             meta.put("utxo_tags", UTXOUtil.getInstance().toJSON());
             meta.put("utxo_notes", UTXOUtil.getInstance().toJSON_notes());
@@ -532,7 +530,7 @@ public class PayloadUtil	{
                     RBFUtil.getInstance().fromJSON((JSONArray) meta.get("rbfs"));
                 }
                 if(meta.has("tor")) {
-                    TorManager.INSTANCE.fromJSON((JSONObject) meta.get("tor"));
+                    SamouraiTorManager.INSTANCE.fromJSON((JSONObject) meta.get("tor"));
                 }
                 if(meta.has("blocked_utxos")) {
                     BlockedUTXO.getInstance().fromJSON((JSONObject) meta.get("blocked_utxos"));

@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
-import android.widget.Toast;
 
 import com.auth0.android.jwt.JWT;
 import com.samourai.wallet.BuildConfig;
@@ -36,7 +35,7 @@ import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.RBFUtil;
 import com.samourai.wallet.send.SuggestedFee;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.BackendApiAndroid;
@@ -79,7 +78,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.Objects;
 
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
@@ -342,7 +340,7 @@ public class APIFactory {
             if(AppUtil.getInstance(context).isOfflineMode())    {
                 return true;
             }
-            else if(!TorManager.INSTANCE.isRequired())    {
+            else if(!SamouraiTorManager.INSTANCE.isRequired())    {
                 // use POST
                 StringBuilder args = new StringBuilder();
                 args.append("apikey=");
@@ -401,7 +399,7 @@ public class APIFactory {
             if(AppUtil.getInstance(context).isOfflineMode())    {
                 response = PayloadUtil.getInstance(context).deserializeMultiAddr().toString();
             }
-            else if(!TorManager.INSTANCE.isRequired())    {
+            else if(!SamouraiTorManager.INSTANCE.isRequired())    {
                 // use POST
                 StringBuilder args = new StringBuilder();
                 args.append("active=");
@@ -457,7 +455,7 @@ public class APIFactory {
 
             String response = null;
 
-            if(!TorManager.INSTANCE.isRequired())    {
+            if(!SamouraiTorManager.INSTANCE.isRequired())    {
                 // use POST
                 StringBuilder args = new StringBuilder();
                 args.append("xpub=");
@@ -888,7 +886,7 @@ public class APIFactory {
                             break;
                     }
 
-                    if(!TorManager.INSTANCE.isRequired())    {
+                    if(!SamouraiTorManager.INSTANCE.isRequired())    {
                         StringBuilder args = new StringBuilder();
                         args.append("address=");
                         args.append(address);
@@ -2082,7 +2080,7 @@ public class APIFactory {
             if(AppUtil.getInstance(context).isOfflineMode())    {
                 response = PayloadUtil.getInstance(context).deserializeMultiAddrMix().toString();
             }
-            else if(!TorManager.INSTANCE.isRequired())    {
+            else if(!SamouraiTorManager.INSTANCE.isRequired())    {
                 // use POST
                 StringBuilder args = new StringBuilder();
                 args.append("active=");

@@ -1,22 +1,18 @@
 package com.samourai.whirlpool.client.wallet;
 
 import com.samourai.tor.client.TorClientService;
-import com.samourai.wallet.tor.TorManager;
-
-import io.matthewnelson.topl_service.TorServiceController;
+import com.samourai.wallet.tor.SamouraiTorManager;
 
 public class AndroidWhirlpoolTorService extends TorClientService {
-    private TorManager torManager;
 
-    public AndroidWhirlpoolTorService(TorManager torManager) {
+    public AndroidWhirlpoolTorService() {
         super();
-        this.torManager = torManager;
     }
 
     @Override
     public void changeIdentity() {
-        if (torManager.isRequired()) {
-            TorServiceController.newIdentity();
+        if (SamouraiTorManager.INSTANCE.isRequired()) {
+            SamouraiTorManager.newIdentity();
         }
     }
 }

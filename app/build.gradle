@@ -2,8 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
-    buildToolsVersion "30.0.3"
+    compileSdkVersion 34
+//    buildToolsVersion "30.0.3"
     useLibrary 'org.apache.http.legacy'
     flavorDimensions "versionCode"
     defaultConfig {
@@ -37,7 +37,7 @@ android {
     }
     packagingOptions {
         resources {
-            excludes += ['/META-INF/{AL2.0,LGPL2.1}', 'META-INF/DEPENDENCIES.txt', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt', 'META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/DEPENDENCIES', 'META-INF/notice.txt', 'META-INF/license.txt', 'META-INF/dependencies.txt', 'META-INF/LGPL2.1', 'META-INF/proguard/androidx-annotations.pro']
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}', 'META-INF/DEPENDENCIES.txt', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt', 'META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/DEPENDENCIES', 'META-INF/notice.txt', 'META-INF/license.txt', 'META-INF/dependencies.txt', 'META-INF/LGPL2.1', 'META-INF/proguard/androidx-annotations.pro', '/META-INF/{AL2.0,LGPL2.1}', 'META-INF/DEPENDENCIES.txt', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt', 'META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/DEPENDENCIES', 'META-INF/notice.txt', 'META-INF/license.txt', 'META-INF/dependencies.txt', 'META-INF/LGPL2.1', 'META-INF/proguard/androidx-annotations.pro', 'META-INF/kotlinx_coroutines_core.version']
         }
     }
     productFlavors {
@@ -67,30 +67,11 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
     }
-    lintOptions {
-        checkReleaseBuilds false
-        // Or, if you prefer, you can continue to check for errors in release builds,
-        // but continue the build even when errors are found:
-        abortOnError false
-    }
-    packagingOptions {
-        exclude 'META-INF/DEPENDENCIES.txt'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/dependencies.txt'
-        exclude 'META-INF/LGPL2.1'
-        exclude 'META-INF/proguard/androidx-annotations.pro'
-        exclude 'META-INF/kotlinx_coroutines_core.version'
-        resources {
-            excludes += '/META-INF/{AL2.0,LGPL2.1}'
-        }
-    }
     namespace 'com.samourai.wallet'
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }
 
 def getApiKey(key){
@@ -103,6 +84,11 @@ def getApiKey(key){
 dependencies {
 
     def lifecycle_version = "2.5.0"
+
+    // for tor dependency
+    def vTor = '4.8.6-0'
+    def vKmpTor = '1.4.4'
+    // for legacy tor depencencies
     def topl_android_version = "2.1.2"
 
     api fileTree(include: ['*.jar'], dir: 'libs')
@@ -175,8 +161,13 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
 
-    implementation "io.matthewnelson.topl-android:topl-core-base:$topl_android_version"
-    implementation "io.matthewnelson.topl-android:topl-service:$topl_android_version"
+    // tor dependency
+    implementation "io.matthewnelson.kotlin-components:kmp-tor:$vTor-$vKmpTor"
+
+    // legacy tor dependencies
+//    implementation "io.matthewnelson.topl-android:topl-core-base:$topl_android_version"
+//    implementation "io.matthewnelson.topl-android:topl-service:$topl_android_version"
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     implementation 'io.samourai.code.wallet:hummingbird-android:0.9'

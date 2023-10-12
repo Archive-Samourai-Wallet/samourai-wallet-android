@@ -1,7 +1,7 @@
 package com.samourai.wallet
 
 import android.content.Context
-import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.whirlpool.client.utils.ClientUtils
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import kotlinx.coroutines.*
@@ -52,7 +52,7 @@ class ExceptionReportHandler(context: Context) : UncaughtExceptionHandler {
                     append("\nDevice                 : ${android.os.Build.BRAND} ${android.os.Build.PRODUCT} ${android.os.Build.MODEL}")
                     append("\nDisplay                : ${android.os.Build.DISPLAY}")
                     append("\nApp Version            : ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-                    append("\nTor                    : ${TorManager.isConnected()}")
+                    append("\nTor                    : ${SamouraiTorManager.isConnected()}")
                     append("\nWhirlpool              : ${if (whirlpoolWallet == null) "Not Running" else "Running"}")
                     append("\nThread                 : [id: ${t.id}] [name :${t.name}] [state :${t.state}]")
                     append("\nMemory                 : [total :${ClientUtils.bytesToMB(total)}M] [free :${ClientUtils.bytesToMB(used)}M] [used :${ClientUtils.bytesToMB(used)}M]\n")

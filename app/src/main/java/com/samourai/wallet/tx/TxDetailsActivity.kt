@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.transition.AutoTransition
@@ -33,14 +32,13 @@ import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.boost.CPFPTask
 import com.samourai.wallet.send.boost.RBFTask
-import com.samourai.wallet.tor.TorManager.isConnected
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.DateUtil
 import com.samourai.wallet.util.FormatsUtil
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.CircleImageView
 import com.squareup.picasso.Picasso
-import io.matthewnelson.topl_service.TorServiceController
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
@@ -434,8 +432,8 @@ class TxDetailsActivity : SamouraiActivity() {
      * Opens BlockExplorer
      */
     private fun doExplorerView() {
-        if (isConnected()) {
-            TorServiceController.newIdentity()
+        if (SamouraiTorManager.isConnected()) {
+            SamouraiTorManager.newIdentity()
         }
 
         tx?.let {
