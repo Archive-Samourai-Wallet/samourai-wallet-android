@@ -16,19 +16,17 @@ import androidx.multidex.MultiDex;
 
 import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.stealth.StealthModeController;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.ConnectionChangeReceiver;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.squareup.picasso.Picasso;
 
-import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.plugins.RxJavaPlugins;
 
 public class SamouraiApplication extends Application {
 
-    public static String TOR_CHANNEL_ID = "TOR_CHANNEL";
     public static String FOREGROUND_SERVICE_CHANNEL_ID = "FOREGROUND_SERVICE_CHANNEL_ID";
     public static String WHIRLPOOL_CHANNEL = "WHIRLPOOL_CHANNEL";
     public static String WHIRLPOOL_NOTIFICATIONS = "WHIRLPOOL_NOTIFICATIONS";
@@ -67,10 +65,6 @@ public class SamouraiApplication extends Application {
         AppUtil.getInstance(getApplicationContext()).checkOfflineState();
     }
 
-    public void startService() {
-        TorServiceController.startTor();
-    }
-
     private void setUpChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel whirlpoolChannel = new NotificationChannel(
@@ -83,8 +77,8 @@ public class SamouraiApplication extends Application {
             whirlpoolChannel.setSound(null, null);
 
             NotificationChannel serviceChannel = new NotificationChannel(
-                    TOR_CHANNEL_ID,
-                    "Tor service ",
+                    getString(R.string.tor_service_notification_channel_id),
+                    getString(R.string.tor_service_notification_channel_name),
                     NotificationManager.IMPORTANCE_DEFAULT
             );
             serviceChannel.setSound(null, null);
@@ -124,15 +118,16 @@ public class SamouraiApplication extends Application {
     @Override
     public void onTerminate() {
         ExternalBackupManager.dispose();
-        TorServiceController.stopTor();
+        SamouraiTorManager.INSTANCE.stop();
         super.onTerminate();
     }
 
     private void setUpTorService() {
-        TorManager.INSTANCE.setUp(this);
+        SamouraiTorManager.INSTANCE.setUp(this);
         if(!StealthModeController.INSTANCE.isStealthEnabled(getApplicationContext())){
-            if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false) && !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE, false)) {
-                startService();
+            if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false) &&
+                    !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE, false)) {
+                SamouraiTorManager.INSTANCE.start();
             }
         }
     }

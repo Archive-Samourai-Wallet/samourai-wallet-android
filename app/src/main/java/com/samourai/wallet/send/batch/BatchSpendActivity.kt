@@ -52,7 +52,7 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.util.activity.ActivityHelper
 import com.samourai.wallet.utxos.UTXOSActivity
@@ -591,7 +591,7 @@ class BatchSpendActivity : SamouraiActivity() {
 
     private fun doSupport() {
         var url = "https://samouraiwallet.com/support"
-        if (TorManager.isConnected())
+        if (SamouraiTorManager.isConnected())
             url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
         val explorerIntent = Intent(this, ExplorerActivity::class.java)
         explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)
@@ -888,7 +888,7 @@ class BatchSpendActivity : SamouraiActivity() {
         var countP2WSH_P2TR = 0
         for (_data in viewModel.getBatchList()) {
 
-            _data.computeAddressIfNeeded(BatchSpendActivity@this)
+            _data.computeAddressIfNeeded(this)
 
             LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
             LogUtil.debug("BatchSendActivity", "output:" + _data.addr)

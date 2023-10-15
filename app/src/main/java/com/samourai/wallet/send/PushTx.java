@@ -9,10 +9,9 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.api.backend.beans.HttpException;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.WebUtil;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,7 +56,7 @@ public class PushTx implements IPushTx {
         try {
             String response = null;
 
-            if(!TorManager.INSTANCE.isRequired())    {
+            if(!SamouraiTorManager.INSTANCE.isRequired())    {
                 String _base = SamouraiWallet.getInstance().isTestNet() ? WebUtil.SAMOURAI_API2_TESTNET : WebUtil.SAMOURAI_API2;
                 debug("PushTx", strStrictVouts);
                 response = WebUtil.getInstance(context).postURL(_base + _url + "?at=" + APIFactory.getInstance(context).getAccessToken(), "tx=" + hexString + strStrictVouts);

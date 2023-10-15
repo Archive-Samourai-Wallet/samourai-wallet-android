@@ -2,17 +2,11 @@ package com.samourai.wallet.bip47.paynym;
 
 import android.content.Context;
 
-import com.samourai.wallet.BuildConfig;
-import com.samourai.wallet.tor.TorManager;
-
-import java.util.concurrent.TimeUnit;
-
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 public class WebUtil {
 

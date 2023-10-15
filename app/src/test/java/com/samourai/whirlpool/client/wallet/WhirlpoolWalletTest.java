@@ -10,7 +10,6 @@ import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.send.provider.SimpleUtxoKeyProvider;
-import com.samourai.wallet.tor.TorManager;
 import com.samourai.whirlpool.client.tx0.Tx0;
 import com.samourai.whirlpool.client.tx0.Tx0Config;
 import com.samourai.whirlpool.client.tx0.Tx0Preview;
@@ -68,7 +67,7 @@ public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
 
         // instanciate WhirlpoolWallet
         bip84w = computeBip84w(SEED_WORDS, SEED_PASSPHRASE);
-        config = whirlpoolWalletService.computeWhirlpoolWalletConfig(TorManager.INSTANCE, testnet, onion, scode, httpClientService, null);
+        config = whirlpoolWalletService.computeWhirlpoolWalletConfig(testnet, onion, scode, httpClientService, null);
 
         /*
             @Override

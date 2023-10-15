@@ -1,7 +1,7 @@
 package com.samourai.wallet.util;
 
 import com.samourai.wallet.SamouraiWallet;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 
 public class BlockExplorerUtil {
 
@@ -50,7 +50,7 @@ public class BlockExplorerUtil {
     }
 
     boolean isTorRequired(){
-        return TorManager.INSTANCE.isRequired() || TorManager.INSTANCE.isConnected();
+        return SamouraiTorManager.INSTANCE.isRequired() || SamouraiTorManager.INSTANCE.isConnected();
     }
 
 }

@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.samourai.http.client.AndroidHttpClient;
 import com.samourai.wallet.SamouraiWallet;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 
 public class AndroidXManagerClient extends XManagerClient {
     private static AndroidXManagerClient instance;
@@ -17,6 +17,6 @@ public class AndroidXManagerClient extends XManagerClient {
     }
 
     private AndroidXManagerClient(Context ctx) {
-        super(AndroidHttpClient.getInstance(ctx), SamouraiWallet.getInstance().isTestNet(), TorManager.INSTANCE.isConnected());
+        super(AndroidHttpClient.getInstance(ctx), SamouraiWallet.getInstance().isTestNet(), SamouraiTorManager.INSTANCE.isConnected());
     }
 }

@@ -1,7 +1,6 @@
 package com.samourai.stomp.client;
 
 import com.google.gson.Gson;
-import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.MessageErrorListener;
 import com.samourai.whirlpool.protocol.WhirlpoolProtocol;
 
@@ -28,12 +27,10 @@ import ua.naiksoftware.stomp.dto.StompMessage;
 public class AndroidStompClient implements IStompClient {
     private Logger log = LoggerFactory.getLogger(AndroidStompClient.class);
     private Gson gson;
-    private TorManager torManager;
     private StompClient stompClient;
 
-    public AndroidStompClient(TorManager torManager) {
+    public AndroidStompClient() {
         this.gson = new Gson();
-        this.torManager = torManager;
     }
 
     @Override
@@ -41,7 +38,7 @@ public class AndroidStompClient implements IStompClient {
         try {
             url += "/websocket"; // SockJS
             log.debug("connecting to " + url);
-            AndroidWebSocketsConnectionProvider connectionProvider = new AndroidWebSocketsConnectionProvider(url, null, torManager);
+            AndroidWebSocketsConnectionProvider connectionProvider = new AndroidWebSocketsConnectionProvider(url, null);
             stompClient = new StompClient(connectionProvider);
             stompClient.lifecycle()
                 .subscribeOn(Schedulers.io())

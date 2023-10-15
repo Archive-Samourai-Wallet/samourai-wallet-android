@@ -36,7 +36,7 @@ import com.samourai.wallet.paynym.fragments.PayNymOnBoardBottomSheet
 import com.samourai.wallet.paynym.fragments.PaynymListFragment
 import com.samourai.wallet.paynym.fragments.ShowPayNymQRBottomSheet
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
-import com.samourai.wallet.tor.TorManager.isConnected
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.widgets.ViewPager
 import io.reactivex.exceptions.UndeliverableException
@@ -261,7 +261,7 @@ class PayNymHome : SamouraiActivity() {
 
     private fun doSupport() {
         var url = "https://samouraiwallet.com/support"
-        if (isConnected())
+        if (SamouraiTorManager.isConnected())
             url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support"
         val explorerIntent = Intent(this, ExplorerActivity::class.java)
         explorerIntent.putExtra(ExplorerActivity.SUPPORT, url)

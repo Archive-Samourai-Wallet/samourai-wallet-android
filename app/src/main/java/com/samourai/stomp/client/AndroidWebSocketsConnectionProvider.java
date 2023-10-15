@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Log;
 
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
@@ -39,17 +39,14 @@ public class AndroidWebSocketsConnectionProvider extends AbstractConnectionProvi
     private boolean haveConnection;
     private TreeMap<String, String> mServerHandshakeHeaders;
 
-    private TorManager torManager;
-
     /**
      * Support UIR scheme ws://host:port/path
      *
      * @param connectHttpHeaders may be null
      */
-    public AndroidWebSocketsConnectionProvider(String uri, @Nullable Map<String, String> connectHttpHeaders, TorManager torManager) {
+    public AndroidWebSocketsConnectionProvider(String uri, @Nullable Map<String, String> connectHttpHeaders) {
         mUri = uri;
         mConnectHttpHeaders = connectHttpHeaders != null ? connectHttpHeaders : new HashMap<>();
-        this.torManager = torManager;
     }
 
     @Override
@@ -112,9 +109,9 @@ public class AndroidWebSocketsConnectionProvider extends AbstractConnectionProvi
         };
 
         // Samourai override for TOR proxy
-        if (torManager.isRequired()) {
-            Proxy proxy = torManager.getProxy();
-            Log.v("AndroidStompClient","using proxy: " + proxy.toString());
+        if (SamouraiTorManager.INSTANCE.isRequired()) {
+            Proxy proxy = SamouraiTorManager.INSTANCE.getProxy();
+            Log.v("AndroidStompClient","using proxy: " + proxy);
             mWebSocketClient.setProxy(proxy);
         }
 

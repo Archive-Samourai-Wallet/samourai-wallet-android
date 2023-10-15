@@ -15,7 +15,7 @@ import com.samourai.wallet.stealth.calculator.CalculatorActivity
 import com.samourai.wallet.stealth.notepad.NotepadActivity
 import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppActivity
 import com.samourai.wallet.stealth.vpn.VPNActivity
-import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.TimeOutUtil
 
@@ -66,8 +66,8 @@ object StealthModeController {
     }
 
     fun enableStealth(context: Context) {
-        if (TorManager.isConnected() || TorManager.torState == TorManager.TorState.WAITING) {
-            TorManager.stopTor()
+        if (SamouraiTorManager.isConnected() || SamouraiTorManager.isStarting()) {
+            SamouraiTorManager.stop()
         }
         val prefs = getStealthPreferences(context)
         val key = prefs?.getString(PREF_APP, StealthApp.CALCULATOR.getAppKey()) ?: StealthApp.CALCULATOR.getAppKey()

@@ -84,7 +84,7 @@ import com.samourai.wallet.send.batch.BatchSpendActivity;
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity;
 import com.samourai.wallet.send.cahoots.SelectCahootsType;
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
@@ -780,9 +780,8 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private Completable setUpRicochetFees() {
-        TorManager torManager = TorManager.INSTANCE;
-        IHttpClient httpClient = new AndroidHttpClient(WebUtil.getInstance(getApplicationContext()), torManager);
-        XManagerClient xManagerClient = new XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet(), torManager.isConnected());
+        IHttpClient httpClient = new AndroidHttpClient(WebUtil.getInstance(getApplicationContext()));
+        XManagerClient xManagerClient = new XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet(), SamouraiTorManager.INSTANCE.isConnected());
         if (PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_RICOCHET, false)) {
             Completable completable = Completable.fromCallable(() -> {
                 String feeAddress = xManagerClient.getAddressOrDefault(XManagerService.RICOCHET);
@@ -2040,7 +2039,7 @@ public class SendActivity extends SamouraiActivity {
                                             url += "pushtx/schedule";
                                             try {
                                                 String result = "";
-                                                if (TorManager.INSTANCE.isRequired()) {
+                                                if (SamouraiTorManager.INSTANCE.isRequired()) {
                                                     result = WebUtil.getInstance(SendActivity.this).tor_postURL(url, nLockTimeObj, null);
 
                                                 } else {
@@ -2514,7 +2513,7 @@ public class SendActivity extends SamouraiActivity {
 
     private void doSupport() {
         String url = "https://samouraiwallet.com/support";
-        if (TorManager.INSTANCE.isConnected())
+        if (SamouraiTorManager.INSTANCE.isConnected())
             url = "http://72typmu5edrjmcdkzuzmv2i4zqru7rjlrcxwtod4nu6qtfsqegngzead.onion/support";
         Intent intent = new Intent(this, ExplorerActivity.class);
         intent.putExtra(ExplorerActivity.SUPPORT, url);

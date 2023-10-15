@@ -8,7 +8,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.beans.HttpException;
 import com.samourai.wallet.network.dojo.DojoUtil;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
@@ -84,8 +84,8 @@ public class WebUtil {
         if (context == null) {
             return postURL(null, request, urlParameters, headers);
         } else {
-            Log.v("WebUtil", "Tor required status:" + TorManager.INSTANCE.isRequired());
-            if (TorManager.INSTANCE.isRequired()) {
+            Log.v("WebUtil", "Tor required status:" + SamouraiTorManager.INSTANCE.isRequired());
+            if (SamouraiTorManager.INSTANCE.isRequired()) {
                 if (urlParameters.startsWith("tx=")) {
                     HashMap<String, String> args = new HashMap<String, String>();
                     args.put("tx", urlParameters.substring(3));
@@ -236,8 +236,8 @@ public class WebUtil {
             return _getURL(URL, headers);
         } else {
             //if(TorUtil.getInstance(context).orbotIsRunning())    {
-            Log.v("WebUtil", "Tor required status:" + TorManager.INSTANCE.isRequired());
-            if (TorManager.INSTANCE.isRequired()) {
+            Log.v("WebUtil", "Tor required status:" + SamouraiTorManager.INSTANCE.isRequired());
+            if (SamouraiTorManager.INSTANCE.isRequired()) {
                 return tor_getURL(URL, headers);
             } else {
                 return _getURL(URL, headers);
@@ -435,14 +435,12 @@ public class WebUtil {
 
     }
 
-    public static String getAPIUrl(Context context){
-        if(TorManager.INSTANCE.isRequired()){
-            return   SamouraiWallet.getInstance().isTestNet() ? SAMOURAI_API2_TESTNET_TOR : SAMOURAI_API2_TOR;
-
-        }else {
-            return   SamouraiWallet.getInstance().isTestNet() ? SAMOURAI_API2_TESTNET : SAMOURAI_API2;
+    public static String getAPIUrl(Context context) {
+        if(SamouraiTorManager.INSTANCE.isRequired()) {
+            return SamouraiWallet.getInstance().isTestNet() ? SAMOURAI_API2_TESTNET_TOR : SAMOURAI_API2_TOR;
+        } else {
+            return SamouraiWallet.getInstance().isTestNet() ? SAMOURAI_API2_TESTNET : SAMOURAI_API2;
         }
-
     }
 
     public OkHttpClient.Builder httpClientBuilder(String url) throws Exception {
@@ -456,8 +454,8 @@ public class WebUtil {
                 .readTimeout(45, TimeUnit.SECONDS)
                 .callTimeout(45, TimeUnit.SECONDS);
 
-        if (TorManager.INSTANCE.isRequired()) {
-            builder.proxy(TorManager.INSTANCE.getProxy());
+        if (SamouraiTorManager.INSTANCE.isRequired()) {
+            builder.proxy(SamouraiTorManager.INSTANCE.getProxy());
             builder.connectTimeout(90, TimeUnit.SECONDS)
                     .readTimeout(90, TimeUnit.SECONDS)
                     .callTimeout(90, TimeUnit.SECONDS);

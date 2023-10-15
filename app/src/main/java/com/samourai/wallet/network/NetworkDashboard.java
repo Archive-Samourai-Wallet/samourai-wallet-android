@@ -4,17 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
-
-import androidx.constraintlayout.widget.ConstraintLayout;
-
-import com.google.android.material.snackbar.Snackbar;
-
-import androidx.transition.TransitionManager;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,30 +15,28 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
+import androidx.transition.TransitionManager;
+
 import com.dm.zbar.android.scanner.ZBarConstants;
+import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.APIFactory;
-
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
-import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.network.dojo.DojoUtil;
-
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.service.WebSocketService;
+import com.samourai.wallet.tor.EnumTorState;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AppUtil;
-import com.samourai.wallet.util.ConnectionChangeReceiver;
 import com.samourai.wallet.util.ConnectivityStatus;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.WebUtil;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
-import io.matthewnelson.topl_service.TorServiceController;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class NetworkDashboard extends SamouraiActivity {
 
@@ -109,8 +97,8 @@ public class NetworkDashboard extends SamouraiActivity {
         dataButton.setOnClickListener(view -> toggleNetwork());
 
         torRenewBtn.setOnClickListener(view -> {
-            if (TorManager.INSTANCE.isConnected()) {
-                TorServiceController.newIdentity();
+            if (SamouraiTorManager.INSTANCE.isConnected()) {
+                SamouraiTorManager.newIdentity();
             }
         });
         dojoBtn.setOnClickListener(view -> {
@@ -140,7 +128,7 @@ public class NetworkDashboard extends SamouraiActivity {
                 Toast.makeText(this, R.string.offline_mode, Toast.LENGTH_LONG).show();
                 return;
             }
-            if (TorManager.INSTANCE.isRequired()) {
+            if (SamouraiTorManager.INSTANCE.isRequired()) {
                 if (DojoUtil.getInstance(NetworkDashboard.this).getDojoParams() != null) {
                     Toast.makeText(this, R.string.cannot_disable_tor_dojo, Toast.LENGTH_LONG).show();
                     return;
@@ -159,7 +147,7 @@ public class NetworkDashboard extends SamouraiActivity {
         });
 
         setDataState();
-        setTorConnectionState(TorManager.INSTANCE.getTorState());
+        setTorConnectionState(SamouraiTorManager.INSTANCE.getTorState().getState());
 
         AppUtil.getInstance(getApplicationContext()).offlineStateLive().observe(this,aBoolean -> setDataState());
 
@@ -232,12 +220,12 @@ public class NetworkDashboard extends SamouraiActivity {
     private void setDataState() {
         if (ConnectivityStatus.hasConnectivity(getApplicationContext())) {
             setDataConnectionState(CONNECTION_STATUS.ENABLED);
-            if (TorManager.INSTANCE.isRequired() && !TorManager.INSTANCE.isConnected()) {
+            if (SamouraiTorManager.INSTANCE.isRequired() && !SamouraiTorManager.INSTANCE.isConnected()) {
                 startTor();
             }
         } else {
             setDataConnectionState(CONNECTION_STATUS.DISABLED);
-            if (TorManager.INSTANCE.isConnected()) {
+            if (SamouraiTorManager.INSTANCE.isConnected()) {
                 stopTor();
             }
             if (!AppUtil.getInstance(getApplicationContext()).isOfflineMode()) {
@@ -253,8 +241,9 @@ public class NetworkDashboard extends SamouraiActivity {
     }
 
     private void listenToTorStatus() {
-        TorManager.INSTANCE
-                .getTorStateLiveData().observe(this, this::setTorConnectionState);
+        SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(
+                this,
+                it -> setTorConnectionState(it.getState()));
     }
 
     private void setDataConnectionState(CONNECTION_STATUS enabled) {
@@ -295,9 +284,9 @@ public class NetworkDashboard extends SamouraiActivity {
 
     }
 
-    private void setTorConnectionState(TorManager.TorState enabled) {
+    private void setTorConnectionState(EnumTorState enabled) {
 
-        if (enabled == TorManager.TorState.ON) {
+        if (enabled == EnumTorState.ON) {
             torButton.setText("Disable");
             torButton.setEnabled(true);
             torConnectionIcon.setColorFilter(activeColor);
@@ -314,7 +303,7 @@ public class NetworkDashboard extends SamouraiActivity {
 
             }
 
-        } else if (enabled == TorManager.TorState.WAITING) {
+        } else if (enabled == EnumTorState.STARTING) {
             torRenewBtn.setVisibility(View.INVISIBLE);
             torButton.setText("loading...");
             torButton.setEnabled(false);
@@ -336,7 +325,7 @@ public class NetworkDashboard extends SamouraiActivity {
 
     private void startTor() {
         if (ConnectivityStatus.hasConnectivity(getApplicationContext())) {
-            TorServiceController.startTor();
+            SamouraiTorManager.INSTANCE.start();
         } else {
             Snackbar.make(torButton.getRootView(), R.string.in_offline_mode, Snackbar.LENGTH_LONG)
                     .setAction("Turn off", view -> toggleNetwork())
@@ -345,7 +334,7 @@ public class NetworkDashboard extends SamouraiActivity {
     }
 
     private void stopTor() {
-        TorServiceController.stopTor();
+        SamouraiTorManager.INSTANCE.stop();
     }
 
     @Override

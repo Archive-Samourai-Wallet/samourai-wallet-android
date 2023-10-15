@@ -20,9 +20,12 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.transition.Transition
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.samourai.wallet.*
+import com.samourai.wallet.AboutActivity
+import com.samourai.wallet.BuildConfig
+import com.samourai.wallet.PayNymCalcActivity
+import com.samourai.wallet.R
+import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.access.AccessFactory
-import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.hd.HD_WalletFactory
@@ -38,16 +41,31 @@ import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.stealth.StealthModeSettings
 import com.samourai.wallet.swaps.SwapsMeta
-import com.samourai.wallet.tor.TorManager
-import com.samourai.wallet.util.*
+import com.samourai.wallet.tor.SamouraiTorManager
+import com.samourai.wallet.util.AddressFactory
+import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.BatchSendUtil
+import com.samourai.wallet.util.CharSequenceX
+import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.QRBottomSheetDialog
+import com.samourai.wallet.util.SendAddressUtil
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
 import com.samourai.whirlpool.client.utils.DebugUtils
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
-import io.matthewnelson.topl_service.TorServiceController
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.json.JSONException
@@ -186,8 +204,8 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
                         WhirlpoolMeta.getInstance(requireContext().applicationContext).scode = null
                         WhirlpoolNotificationService.stopService(requireContext().applicationContext)
-                        if (TorManager.isConnected()) {
-                            TorServiceController.startTor()
+                        if (SamouraiTorManager.isConnected()) {
+                            SamouraiTorManager.start()
                         }
                         scope.launch {
                             AppUtil.getInstance(requireContext()).wipeApp()

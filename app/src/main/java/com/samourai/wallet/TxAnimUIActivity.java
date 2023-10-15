@@ -33,7 +33,7 @@ import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.BatchSendUtil;
@@ -443,7 +443,7 @@ public class TxAnimUIActivity extends AppCompatActivity {
             progressView.getOptionBtn1().setOnClickListener(v -> reBroadcastTx());
             progressView.getOptionBtn2().setOnClickListener(v -> launchSupportPageInBrowser(
                     TxAnimUIActivity.this,
-                    TorManager.INSTANCE.isConnected()));
+                    SamouraiTorManager.INSTANCE.isConnected()));
             progressView.getLeftTopImgBtn().setOnClickListener(view -> finish());
         });
     }

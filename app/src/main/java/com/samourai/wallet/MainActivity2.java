@@ -26,7 +26,8 @@ import com.samourai.wallet.onboard.OnBoardSlidesActivity;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.service.BackgroundManager;
 import com.samourai.wallet.service.WebSocketService;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.EnumTorState;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.ConnectivityStatus;
@@ -135,15 +136,13 @@ public class MainActivity2 extends AppCompatActivity {
 
     private void startApp() {
 
-        if (TorManager.INSTANCE.isRequired() && !AppUtil.getInstance(getApplicationContext()).isOfflineMode() && ConnectivityStatus.hasConnectivity(getApplicationContext()) && !TorManager.INSTANCE.isConnected()) {
+        if (SamouraiTorManager.INSTANCE.isRequired() && !AppUtil.getInstance(getApplicationContext()).isOfflineMode() && ConnectivityStatus.hasConnectivity(getApplicationContext()) && !SamouraiTorManager.INSTANCE.isConnected()) {
             loaderTxView.setText(getText(R.string.initializing_tor));
             progressIndicator.setIndeterminate(false);
             progressIndicator.setMax(100);
-            TorManager.INSTANCE.getTorBootstrapProgress().observe(this,integer -> {
-                progressIndicator.setProgressCompat(integer,true);
-            });
-            TorManager.INSTANCE.getTorStateLiveData().observe(this, torState -> {
-                if (torState == TorManager.TorState.ON) {
+            SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(this, torState -> {
+                progressIndicator.setProgressCompat(torState.getProgressIndicator(),true);
+                if (torState.getState() == EnumTorState.ON) {
                     initAppOnCreate();
                     progressIndicator.setVisibility(View.GONE);
                     progressIndicator.setIndeterminate(true);
@@ -200,11 +199,11 @@ public class MainActivity2 extends AppCompatActivity {
     protected void onResume() {
         if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false)
                 && !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE,false)
-                && !TorManager.INSTANCE.isConnected()) {
+                && !SamouraiTorManager.INSTANCE.isConnected()) {
 
-            ((SamouraiApplication) getApplication()).startService();
-            TorManager.INSTANCE.getTorStateLiveData().observe(this, torState -> {
-                if (torState == TorManager.TorState.ON) {
+            SamouraiTorManager.INSTANCE.start();
+            SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(this, torState -> {
+                if (torState.getState() == EnumTorState.ON) {
                     initAppOnResume();
                 }
             });

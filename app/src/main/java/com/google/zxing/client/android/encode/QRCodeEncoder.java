@@ -16,24 +16,22 @@ package com.google.zxing.client.android.encode;
  * limitations under the License.
  */
 
-import android.provider.ContactsContract;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.telephony.PhoneNumberUtils;
-import android.util.Log;
-
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Map;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
+import com.google.zxing.client.android.Contents;
 import com.google.zxing.common.BitMatrix;
 
-import com.google.zxing.client.android.Contents;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Map;
 
 public final class QRCodeEncoder {
     private static final int WHITE = 0xFFFFFFFF;

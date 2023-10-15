@@ -10,7 +10,7 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.BackendApi;
 import com.samourai.wallet.api.backend.BackendServer;
 import com.samourai.wallet.network.dojo.DojoUtil;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.SamouraiTorManager;
 
 public class BackendApiAndroid {
     private static BackendApi backendApi;
@@ -27,7 +27,7 @@ public class BackendApiAndroid {
                 backendApi = BackendApi.newBackendApiDojo(httpClient, dojoUrl, dojoApiKey);
             } else {
                 // use samourai backend
-                boolean onion = TorManager.INSTANCE.isRequired();
+                boolean onion = SamouraiTorManager.INSTANCE.isRequired();
                 String backendUrl = BackendServer.get(testnet).getBackendUrl(onion);
                 backendApi = BackendApi.newBackendApiSamourai(httpClient, backendUrl);
             }

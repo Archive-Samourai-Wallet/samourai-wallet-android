@@ -57,7 +57,7 @@ import com.samourai.wallet.send.SuggestedFee
 import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.UTXOFactory
-import com.samourai.wallet.tor.TorManager
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.AddressFactory
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.FormatsUtil
@@ -510,9 +510,8 @@ class PayNymDetailsActivity : SamouraiActivity() {
     private fun doNotifTx() {
         binding.progressBar.visibility = View.VISIBLE
         scope.launch(Dispatchers.IO) {
-            val torManager = TorManager
-            val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.WebUtil.getInstance(applicationContext), torManager)
-            val xManagerClient = XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet, torManager.isConnected())
+            val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.WebUtil.getInstance(applicationContext))
+            val xManagerClient = XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet, SamouraiTorManager.isConnected())
             val address = xManagerClient.getAddressOrDefault(XManagerService.BIP47)
             SendNotifTxFactory.getInstance().setAddress(address)
             //

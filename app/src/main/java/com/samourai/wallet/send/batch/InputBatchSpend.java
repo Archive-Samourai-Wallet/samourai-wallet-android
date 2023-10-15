@@ -6,7 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static java.util.Objects.isNull;
-import static java8.util.Objects.nonNull;
+import static java.util.Objects.nonNull;
 
 import android.content.Context;
 import android.util.Log;

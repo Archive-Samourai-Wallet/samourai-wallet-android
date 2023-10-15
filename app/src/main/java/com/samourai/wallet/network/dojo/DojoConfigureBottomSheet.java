@@ -21,10 +21,10 @@ import android.widget.Toast;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
-import com.samourai.wallet.tor.TorManager;
+import com.samourai.wallet.tor.EnumTorState;
+import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.PrefsUtil;
 
-import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -133,18 +133,18 @@ public class DojoConfigureBottomSheet extends BottomSheetDialogFragment {
         btnGroup.setVisibility(View.INVISIBLE);
         progressGroup.setVisibility(View.VISIBLE);
         dojoConnectProgress.setProgress(30);
-        if (TorManager.INSTANCE.isConnected()) {
+        if (SamouraiTorManager.INSTANCE.isConnected()) {
             dojoConnectProgress.setProgress(60);
             progressStates.setText("Tor Connected, Connecting to Dojo Node...");
             DojoUtil.getInstance(getActivity().getApplicationContext()).clear();
             doPairing(dojoParams);
         } else {
             progressStates.setText("Waiting for Tor...");
-            TorServiceController.startTor();
-            TorManager.INSTANCE.getTorStateLiveData().observe(this.getViewLifecycleOwner(),torState -> {
-                if (torState ==  TorManager.TorState.WAITING) {
+            SamouraiTorManager.INSTANCE.start();
+            SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(this.getViewLifecycleOwner(), torState -> {
+                if (torState.getState() == EnumTorState.STARTING) {
                     progressStates.setText("Waiting for Tor...");
-                } else if (torState == TorManager.TorState.ON) {
+                } else if (torState.getState() == EnumTorState.ON) {
                     PrefsUtil.getInstance(getActivity()).setValue(PrefsUtil.ENABLE_TOR, true);
                     dojoConnectProgress.setProgress(60);
                     progressStates.setText("Tor Connected, Connecting to Dojo Node...");
