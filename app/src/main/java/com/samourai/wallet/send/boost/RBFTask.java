@@ -1,5 +1,7 @@
 package com.samourai.wallet.send.boost;
 
+import static java.util.Objects.nonNull;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -47,17 +49,14 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
-import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
-import org.bouncycastle.util.encoders.DecoderException;
 import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -83,7 +82,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
     protected void onPreExecute() {
         handler = new Handler();
         utxos = APIFactory.getInstance(activity).getUtxos(true);
-        input_values = new HashMap<String, Long>();
+        input_values = new HashMap<>();
     }
 
     @Override
@@ -100,7 +99,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
         Log.d("RBF", "tx inputs:" + tx.getInputs().size());
         Log.d("RBF", "tx outputs:" + tx.getOutputs().size());
         JSONObject txObj = APIFactory.getInstance(activity).getTxInfo(params[0]);
-        if (tx != null && txObj.has("inputs") && txObj.has("outputs")) {
+        if (nonNull(txObj) && txObj.has("inputs") && txObj.has("outputs")) {
             try {
                 JSONArray inputs = txObj.getJSONArray("inputs");
                 JSONArray outputs = txObj.getJSONArray("outputs");
@@ -280,11 +279,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                     }
                     long extraChange = 0L;
                     if (selectedAmount < (_remainingFee + SamouraiWallet.bDust.longValue())) {
-                        handler.post(new Runnable() {
-                            public void run() {
-                                Toast.makeText(activity, R.string.insufficient_funds, Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        handler.post(() -> Toast.makeText(activity, R.string.insufficient_funds, Toast.LENGTH_SHORT).show());
                         return "KO";
                     } else {
                         extraChange = selectedAmount - _remainingFee;
@@ -344,11 +339,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
                     // sanity check
                     if (extraChange > 0L && !addedChangeOutput) {
-                        handler.post(new Runnable() {
-                            public void run() {
-                                Toast.makeText(activity, R.string.cannot_create_change_output, Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        handler.post(() -> Toast.makeText(activity, R.string.cannot_create_change_output, Toast.LENGTH_SHORT).show());
                         return "KO";
                     }
 
@@ -462,11 +453,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                 }
 
             } catch (final JSONException je) {
-                handler.post(new Runnable() {
-                    public void run() {
-                        Toast.makeText(activity, "rbf:" + je.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                handler.post(() -> Toast.makeText(activity, "rbf:" + je.getMessage(), Toast.LENGTH_SHORT).show());
             }
 
         } else {
@@ -490,9 +477,9 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
     private Transaction signTx(Transaction tx) {
 
-        HashMap<String, ECKey> keyBag = new HashMap<String, ECKey>();
-        HashMap<String, ECKey> keyBag49 = new HashMap<String, ECKey>();
-        HashMap<String, ECKey> keyBag84 = new HashMap<String, ECKey>();
+        HashMap<String, ECKey> keyBag = new HashMap<>();
+        HashMap<String, ECKey> keyBag49 = new HashMap<>();
+        HashMap<String, ECKey> keyBag84 = new HashMap<>();
 
         HashMap<String, String> keys = rbf.getKeyBag();
 

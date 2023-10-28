@@ -1374,7 +1374,7 @@ public class APIFactory {
 
     }
 
-    public synchronized JSONObject getTxInfo(String hash) {
+    public synchronized JSONObject getTxInfo(final String hash) {
 
         String _url = WebUtil.getAPIUrl(context);
 
@@ -1388,12 +1388,11 @@ public class APIFactory {
             url.append("&at=");
             url.append(getAccessToken());
 
-            debug("APIFactory", "url:" + url.toString());
+            debug("APIFactory", "url:" + url);
 
             String response = WebUtil.getInstance(context).getURL(url.toString());
             jsonObject = new JSONObject(response);
-        }
-        catch(Exception e) {
+        } catch(final Exception e) {
             jsonObject = null;
             e.printStackTrace();
         }
