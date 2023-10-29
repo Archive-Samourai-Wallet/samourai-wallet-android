@@ -5,9 +5,9 @@ import android.os.Vibrator;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.access.AccessFactory;
@@ -21,24 +21,22 @@ import static android.content.Context.VIBRATOR_SERVICE;
  */
 public class PinEntryView extends FrameLayout implements View.OnClickListener {
 
-
-
     public enum KeyClearTypes {
         CLEAR_ALL,
         CLEAR
     }
 
     private boolean isDisabled = false;
-    private Button ta = null;
-    private Button tb = null;
-    private Button tc = null;
-    private Button td = null;
-    private Button te = null;
-    private Button tf = null;
-    private Button tg = null;
-    private Button th = null;
-    private Button ti = null;
-    private Button tj = null;
+    private TextView ta = null;
+    private TextView tb = null;
+    private TextView tc = null;
+    private TextView td = null;
+    private TextView te = null;
+    private TextView tf = null;
+    private TextView tg = null;
+    private TextView th = null;
+    private TextView ti = null;
+    private TextView tj = null;
     private ImageButton tconfirm = null;
     private ImageButton tback = null;
     private ScrambledPin keypad = null;
@@ -48,7 +46,6 @@ public class PinEntryView extends FrameLayout implements View.OnClickListener {
     private pinClearListener clearListener = null;
     private Vibrator vibrator;
     private boolean enableHaptic = true;
-    private ConstraintLayout gridLayout;
 
     public PinEntryView(Context context) {
         super(context);
@@ -81,7 +78,6 @@ public class PinEntryView extends FrameLayout implements View.OnClickListener {
     private void initView() {
         vibrator = (Vibrator) getContext().getSystemService(VIBRATOR_SERVICE);
         View view = inflate(getContext(), R.layout.keypad_view, null);
-        gridLayout = view.findViewById(R.id.pin_entry_grid);
         ta = view.findViewById(R.id.ta);
         tb = view.findViewById(R.id.tb);
         tc = view.findViewById(R.id.tc);
@@ -96,17 +92,10 @@ public class PinEntryView extends FrameLayout implements View.OnClickListener {
         tback = view.findViewById(R.id.tback);
         tback.setOnClickListener(view1 -> {
             hapticFeedBack();
-            pinLen = pinLen--;
-
-            if (clearListener != null && !isDisabled) {
-                clearListener.onPinClear(KeyClearTypes.CLEAR);
-            }
+            removeLastPinDigit();
         });
         tback.setOnLongClickListener(view12 -> {
-            pinLen = 0;
-            if (clearListener != null  && !isDisabled) {
-                clearListener.onPinClear(KeyClearTypes.CLEAR_ALL);
-            }
+            clearPinDigits();
             hapticFeedBack();
             return false;
         });
@@ -120,12 +109,31 @@ public class PinEntryView extends FrameLayout implements View.OnClickListener {
             return;
         }
         hapticFeedBack();
+        addPinDigit(view);
+    }
+
+    synchronized private void addPinDigit(View view) {
         if (pinLen <= (AccessFactory.MAX_PIN_LENGTH -1 )) {
-            if (this.entryListener != null) {
-                if (((Button) view).getText().toString().length() < AccessFactory.MAX_PIN_LENGTH)
-                    entryListener.onPinEntered(((Button) view).getText().toString(), view);
+            if (entryListener != null) {
+                if (((TextView) view).getText().toString().length() < AccessFactory.MAX_PIN_LENGTH) {
+                    entryListener.onPinEntered(((TextView) view).getText().toString(), view);
+                }
             }
-            pinLen = pinLen++;
+            pinLen++;
+        }
+    }
+
+    synchronized private void clearPinDigits() {
+        pinLen = 0;
+        if (clearListener != null  && !isDisabled) {
+            clearListener.onPinClear(KeyClearTypes.CLEAR_ALL);
+        }
+    }
+
+    synchronized private void removeLastPinDigit() {
+        pinLen--;
+        if (clearListener != null && !isDisabled) {
+            clearListener.onPinClear(KeyClearTypes.CLEAR);
         }
     }
 
