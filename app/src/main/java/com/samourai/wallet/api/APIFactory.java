@@ -11,6 +11,8 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.auth0.android.jwt.JWT;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
@@ -1568,9 +1570,9 @@ public class APIFactory {
 
         lastRicochetReceiveIdx =  RicochetMeta.getInstance(context).getIndex();
 
-        APIFactory.getInstance(context).reset();
+        reset();
 
-        List<String> addressStrings = new ArrayList<String>();
+        List<String> addressStrings = new ArrayList<>();
         String[] s = null;
 
         try {
@@ -1656,21 +1658,21 @@ public class APIFactory {
             //
             //
             //
-            List<String> seenOutputs = new ArrayList<String>();
-            List<UTXO> _utxos = getUtxos(false);
-            for(UTXO _u : _utxos)   {
-                for(MyTransactionOutPoint _o : _u.getOutpoints())   {
+            final List<String> seenOutputs = new ArrayList<>();
+            final List<UTXO> _utxos = getUtxos(false);
+            for (final UTXO _u : _utxos)   {
+                for (final MyTransactionOutPoint _o : _u.getOutpoints())   {
                     seenOutputs.add(_o.getTxHash().toString() + "-" + _o.getTxOutputN());
                 }
             }
-            for(String _s : BlockedUTXO.getInstance().getNotDustedUTXO())   {
+            for (final String _s : ImmutableList.copyOf(BlockedUTXO.getInstance().getNotDustedUTXO())) {
 //                debug("APIFactory", "not dusted:" + _s);
                 if(!seenOutputs.contains(_s))    {
                     BlockedUTXO.getInstance().removeNotDusted(_s);
 //                    debug("APIFactory", "not dusted removed:" + _s);
                 }
             }
-            for(String _s : BlockedUTXO.getInstance().getBlockedUTXO().keySet())   {
+            for (final String _s : ImmutableList.copyOf(BlockedUTXO.getInstance().getBlockedUTXO().keySet())) {
 //                debug("APIFactory", "blocked:" + _s);
                 if(!seenOutputs.contains(_s))    {
                     BlockedUTXO.getInstance().remove(_s);
@@ -1678,11 +1680,11 @@ public class APIFactory {
                 }
             }
 
-            String strPreMix = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr();
-            String strPostMix = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).xpubstr();
+            final String strPreMix = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr();
+            final String strPostMix = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).xpubstr();
 //            String strBadBank = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).xpubstr();
 
-            JSONObject mixMultiAddrObj = getRawXPUB(new String[] {  strPreMix, strPostMix });
+            final JSONObject mixMultiAddrObj = getRawXPUB(new String[] {  strPreMix, strPostMix });
             if (mixMultiAddrObj != null)    {
                 parseMixXPUB(mixMultiAddrObj);
                 parseMixUnspentOutputs(mixMultiAddrObj.toString());
@@ -1691,15 +1693,15 @@ public class APIFactory {
             //
             //
             //
-            List<String> seenOutputsPostMix = new ArrayList<String>();
-            List<UTXO> _utxosPostMix = getUtxosPostMix(false);
-            for(UTXO _u : _utxosPostMix)   {
+            final List<String> seenOutputsPostMix = new ArrayList<String>();
+            final List<UTXO> _utxosPostMix = getUtxosPostMix(false);
+            for (final UTXO _u : _utxosPostMix)   {
                 for(MyTransactionOutPoint _o : _u.getOutpoints())   {
                     seenOutputsPostMix.add(_o.getTxHash().toString() + "-" + _o.getTxOutputN());
                 }
             }
 
-            for(String _s : UTXOUtil.getInstance().getTags().keySet())   {
+            for(String _s : ImmutableList.copyOf(UTXOUtil.getInstance().getTags().keySet())) {
                 if(!seenOutputsPostMix.contains(_s) && !seenOutputs.contains(_s))    {
                     try {
                         UTXOUtil.getInstance().remove(_s);
@@ -1710,15 +1712,15 @@ public class APIFactory {
                 }
             }
 
-            List<String> seenOutputsBadBank = new ArrayList<String>();
-            List<UTXO> _utxosBadBank = getUtxosBadBank(false);
-            for(UTXO _u : _utxosBadBank)   {
+            final List<String> seenOutputsBadBank = new ArrayList<String>();
+            final List<UTXO> _utxosBadBank = getUtxosBadBank(false);
+            for (UTXO _u : _utxosBadBank)   {
                 for(MyTransactionOutPoint _o : _u.getOutpoints())   {
                     seenOutputsBadBank.add(_o.getTxHash().toString() + "-" + _o.getTxOutputN());
                 }
             }
 
-            for(String _s : UTXOUtil.getInstance().getTags().keySet())   {
+            for (String _s : ImmutableList.copyOf(UTXOUtil.getInstance().getTags().keySet()))   {
                 if(!seenOutputsBadBank.contains(_s) && !seenOutputs.contains(_s))    {
                     try {
                         UTXOUtil.getInstance().remove(_s);
@@ -1728,7 +1730,7 @@ public class APIFactory {
                 }
             }
 
-            for(String _s : BlockedUTXO.getInstance().getNotDustedUTXOPostMix())   {
+            for (final String _s : ImmutableList.copyOf(BlockedUTXO.getInstance().getNotDustedUTXOPostMix())) {
 //                debug("APIFactory", "not dusted postmix:" + _s);
                 if(!seenOutputsPostMix.contains(_s))    {
                     BlockedUTXO.getInstance().removeNotDustedPostMix(_s);
@@ -1736,7 +1738,7 @@ public class APIFactory {
                 }
             }
 
-            for(String _s : BlockedUTXO.getInstance().getBlockedUTXOPostMix().keySet())   {
+            for (final String _s : ImmutableList.copyOf(BlockedUTXO.getInstance().getBlockedUTXOPostMix().keySet()))   {
                 debug("APIFactory", "blocked post-mix:" + _s);
                 if(!seenOutputsPostMix.contains(_s))    {
                     BlockedUTXO.getInstance().removePostMix(_s);

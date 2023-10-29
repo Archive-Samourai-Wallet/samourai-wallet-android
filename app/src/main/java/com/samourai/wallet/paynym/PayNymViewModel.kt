@@ -61,8 +61,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
 
 
     private suspend fun setPaynymPayload(jsonObject: JSONObject) = withContext(Dispatchers.IO) {
-        var array = JSONArray()
-        if (jsonObject.has("empty")) {
+        if (jsonObject.has("empty") || !jsonObject.has("codes")) {
             val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application>().applicationContext).paynymsFromBackupFile
             BIP47Meta.getInstance().addFollowings(backupFilePaynyms as java.util.ArrayList<String>?)
             sortByLabel(backupFilePaynyms);
@@ -75,7 +74,7 @@ class PayNymViewModel(application: Application) : AndroidViewModel(application) 
             val nym = Gson().fromJson(jsonObject.toString(), NymResponse::class.java);
             val backupFilePaynyms = PayloadUtil.getInstance(getApplication<Application>().applicationContext).paynymsFromBackupFile
 
-            array = jsonObject.getJSONArray("codes")
+            var array = jsonObject.getJSONArray("codes")
             if (array.getJSONObject(0).has("claimed") && array.getJSONObject(0).getBoolean("claimed")) {
                 val strNymName = jsonObject.getString("nymName")
                 viewModelScope.launch(Dispatchers.Main) {
