@@ -92,6 +92,7 @@ import java.security.NoSuchAlgorithmException
 import java.security.NoSuchProviderException
 import java.security.spec.InvalidKeySpecException
 import java.util.Collections
+import java.util.Objects.nonNull
 
 class PayNymDetailsActivity : SamouraiActivity() {
 
@@ -792,10 +793,11 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                     if (jsonObject.has("status")) {
                                         if ((jsonObject.getString("status") == "ok")) {
                                             isOK = true
+                                            APIFactory.getInstance(this@PayNymDetailsActivity).initWallet()
                                         }
                                     }
                                 } else {
-                                    throw  Exception(getString(R.string.pushtx_returns_null))
+                                    throw Exception(getString(R.string.pushtx_returns_null))
                                 }
                                 scope.launch(Dispatchers.Main) {
                                     binding.progressBar.visibility = View.INVISIBLE
@@ -833,47 +835,36 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                         setPayNym()
                                     }
                                 }
-                            } catch (je: JSONException) {
-                                throw  Exception("pushTx:" + je.message)
-                            } catch (mle: MnemonicLengthException) {
-                                throw  Exception("pushTx:" + mle.message)
-                            } catch (de: DecoderException) {
-                                throw  Exception("pushTx:" + de.message)
-                            } catch (ioe: IOException) {
-                                throw  Exception("pushTx:" + ioe.message)
-                            } catch (de: DecryptionException) {
-                                throw  Exception("pushTx:" + de.message)
+                            } catch (e: Exception) {
+                                manageException(e)
                             }
                         }
                     }
 
                     job.invokeOnCompletion {
-                        if (it != null) {
-                            binding.progressBar.visibility = View.INVISIBLE
-                            scope.launch(Dispatchers.Main) {
-                                Toast.makeText(this@PayNymDetailsActivity, it.message, Toast.LENGTH_SHORT).show()
-                            }
+                        if (nonNull(it)) {
+                            manageException(it!!)
                         }
                     }
                 }
             }.invokeOnCompletion {
-                if (it != null) {
-                    scope.launch(Dispatchers.Main) {
-                        binding.progressBar.visibility = View.INVISIBLE
-                        Toast.makeText(this@PayNymDetailsActivity, it.message, Toast.LENGTH_SHORT).show()
-                    }
+                if (nonNull(it)) {
+                    manageException(it!!)
                 }
             }
         }.invokeOnCompletion {
-            if (it != null) {
-                scope.launch(Dispatchers.Main) {
-                    binding.progressBar.visibility = View.INVISIBLE
-                    Toast.makeText(this@PayNymDetailsActivity, it.message, Toast.LENGTH_SHORT).show()
-                }
+            if (nonNull(it)) {
+                manageException(it!!)
             }
         }
+    }
 
-
+    private fun manageException(it: Throwable) {
+        scope.launch(Dispatchers.Main) {
+            Log.i(TAG, it.message, it)
+            binding.progressBar.visibility = View.INVISIBLE
+            Toast.makeText(this@PayNymDetailsActivity, it.message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     @Throws(MnemonicLengthException::class, DecryptionException::class, JSONException::class, IOException::class)
