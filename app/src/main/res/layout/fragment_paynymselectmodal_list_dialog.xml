@@ -16,6 +16,17 @@
         android:id="@+id/dialogTitle"
         android:textColor="@color/white" />
 
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/updatingProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:trackCornerRadius="5dp"
+        app:indicatorSize="2dp"
+        app:indicatorColor="@color/accent"
+        app:trackColor="@android:color/transparent"
+        android:indeterminate="true"
+        android:visibility="invisible" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"

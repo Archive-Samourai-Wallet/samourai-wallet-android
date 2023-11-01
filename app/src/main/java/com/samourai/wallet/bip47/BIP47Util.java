@@ -1,8 +1,7 @@
 package com.samourai.wallet.bip47;
 
+import static com.samourai.wallet.bip47.BIP47Meta.STATUS_SENT_CFM;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,6 +13,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.paynym.WebUtil;
 import com.samourai.wallet.bip47.rpc.AndroidSecretPointFactory;
 import com.samourai.wallet.bip47.rpc.BIP47Wallet;
@@ -25,6 +25,7 @@ import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.util.PrefsUtil;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.MnemonicException;
@@ -232,5 +233,28 @@ public class BIP47Util extends BIP47UtilGeneric {
                 .getSendAddress(
                         new PaymentCode(pcodeAsString),
                         BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString));
+    }
+
+    public int updateOutgoingStatusForNewPayNymConnections() {
+
+        final APIFactory apiFactory = APIFactory.getInstance(context);
+        final BIP47Meta bip47Meta = BIP47Meta.getInstance();
+
+        int updatedCount = 0;
+        for (final Pair<String, String> codeToTx : bip47Meta.getOutgoingUnconfirmed()) {
+            final int status = BIP47Meta.getInstance().getOutgoingStatus(codeToTx.getLeft());
+            if (status != STATUS_SENT_CFM) {
+                final int confirmations = apiFactory.getNotifTxConfirmations(codeToTx.getRight());
+                if (confirmations > 0) {
+                    BIP47Meta.getInstance().setOutgoingStatus(
+                            codeToTx.getLeft(),
+                            codeToTx.getRight(),
+                            STATUS_SENT_CFM);
+
+                    ++updatedCount;
+                }
+            }
+        }
+        return updatedCount;
     }
 }
