@@ -15,8 +15,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
@@ -27,10 +26,23 @@ import com.samourai.wallet.paynym.PayNymHome
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.util.fromJSON
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.*
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 class PaynymSelectModalFragment : BottomSheetDialogFragment() {
+
+    private val TAG = "TxAnimUIActivity"
+
     private lateinit var dialogTitle: String
     var selectListener: Listener? = null
     private var job: Job? = null
@@ -40,6 +52,9 @@ class PaynymSelectModalFragment : BottomSheetDialogFragment() {
     lateinit var emptyview: LinearLayout
     lateinit var loadingView: LinearLayout
     lateinit var dialogTitleTxt: TextView
+    lateinit var updatingProgressBar: LinearProgressIndicator
+
+    private val disposables = CompositeDisposable()
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_paynymselectmodal_list_dialog, container, false)
@@ -50,15 +65,52 @@ class PaynymSelectModalFragment : BottomSheetDialogFragment() {
         emptyview = view.findViewById(R.id.empty_paynym)
         loadingView = view.findViewById(R.id.paynym_loading)
         dialogTitleTxt = view.findViewById(R.id.dialogTitle)
+        updatingProgressBar = view.findViewById(R.id.updatingProgressBar)
         dialogTitleTxt.text = dialogTitle
         if (!loadFromNetwork) {
             paymentCodes = ArrayList(BIP47Meta.getInstance().getSortedByLabels(false, true).map {
                 PaynymModel(code = it, "", nymName = BIP47Meta.getInstance().getDisplayLabel(it))
             }.toMutableList())
             setAdapter()
+            updateAsyncLastConnectedPaymentCodes()
         }
         if (loadFromNetwork) getFromNetwork()
 
+    }
+
+    private fun updateAsyncLastConnectedPaymentCodes() {
+
+        updatingProgressBar.show()
+
+        var disposable = Single.fromCallable {
+            BIP47Util.getInstance(context).updateOutgoingStatusForNewPayNymConnections() > 0
+        }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ updated: Boolean? ->
+
+                    if (updated == true) {
+                        paymentCodes = ArrayList(BIP47Meta.getInstance().getSortedByLabels(false, true).map {
+                            PaynymModel(code = it, "", nymName = BIP47Meta.getInstance().getDisplayLabel(it))
+                        }.toMutableList())
+                        recyclerView.adapter = PaynymSelectModalAdapter()
+                        if (paymentCodes.size > 0 && recyclerView.visibility != View.VISIBLE) {
+                            recyclerView.visibility = View.VISIBLE
+                            emptyview.visibility = View.GONE
+                        }
+                    }
+                    updatingProgressBar.hide()
+                }) { throwable: Throwable ->
+                    Log.e(TAG, "issue when loading connected " + throwable.message, throwable)
+                    updatingProgressBar.hide()
+                }
+
+        disposables.add(disposable);
+    }
+
+    override fun onDestroy() {
+        disposables.dispose()
+        super.onDestroy()
     }
 
     private fun setAdapter() {
@@ -170,7 +222,7 @@ class PaynymSelectModalFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private inner class PaynymSelectModalAdapter internal constructor() : RecyclerView.Adapter<ViewHolder>() {
+    private inner class PaynymSelectModalAdapter : RecyclerView.Adapter<ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             return ViewHolder(LayoutInflater.from(parent.context), parent)
         }

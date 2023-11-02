@@ -66,22 +66,7 @@ class WalletRefreshWorker(private val context: Context, private val parameters: 
                 ex.printStackTrace()
             }
 
-            //
-            // check on outgoing payment code notification tx
-            //
-            val outgoingUnconfirmed: List<Pair<String?, String?>> = BIP47Meta.getInstance().outgoingUnconfirmed
-            //                Log.i("BalanceFragment", "outgoingUnconfirmed:" + outgoingUnconfirmed.size());
-            for (pair in outgoingUnconfirmed) {
-//                    Log.i("BalanceFragment", "outgoing payment code:" + pair.getLeft());
-//                    Log.i("BalanceFragment", "outgoing payment code tx:" + pair.getRight());
-                val confirmations = APIFactory.getInstance(context).getNotifTxConfirmations(pair.right)
-                if (confirmations > 0) {
-                    BIP47Meta.getInstance().setOutgoingStatus(pair.left, BIP47Meta.STATUS_SENT_CFM)
-                }
-                if (confirmations == -1) {
-                    BIP47Meta.getInstance().setOutgoingStatus(pair.left, BIP47Meta.STATUS_NOT_SENT)
-                }
-            }
+            loadConnectedPaynyms()
             val _intent = Intent("com.samourai.wallet.MainActivity2.RESTART_SERVICE")
             LocalBroadcastManager.getInstance(context).sendBroadcast(_intent)
         }
@@ -161,6 +146,25 @@ class WalletRefreshWorker(private val context: Context, private val parameters: 
         AppUtil.getInstance(applicationContext).setWalletLoading(false)
         val data = workDataOf();
         return Result.success(data)
+    }
+
+    private fun loadConnectedPaynyms() {
+        //
+        // check on outgoing payment code notification tx
+        //
+        val outgoingUnconfirmed: List<Pair<String?, String?>> = BIP47Meta.getInstance().outgoingUnconfirmed
+        //                Log.i("BalanceFragment", "outgoingUnconfirmed:" + outgoingUnconfirmed.size());
+        for (pair in outgoingUnconfirmed) {
+    //                    Log.i("BalanceFragment", "outgoing payment code:" + pair.getLeft());
+    //                    Log.i("BalanceFragment", "outgoing payment code tx:" + pair.getRight());
+            val confirmations = APIFactory.getInstance(context).getNotifTxConfirmations(pair.right)
+            if (confirmations > 0) {
+                BIP47Meta.getInstance().setOutgoingStatus(pair.left, BIP47Meta.STATUS_SENT_CFM)
+            }
+            if (confirmations == -1) {
+                BIP47Meta.getInstance().setOutgoingStatus(pair.left, BIP47Meta.STATUS_NOT_SENT)
+            }
+        }
     }
 
     companion object {

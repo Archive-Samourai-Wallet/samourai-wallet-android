@@ -483,6 +483,9 @@ class BatchSpendActivity : SamouraiActivity() {
         compositeDisposable.add(
 
             Observable.fromCallable {
+
+                BIP47Util.getInstance(this@BatchSpendActivity)
+                        .updateOutgoingStatusForNewPayNymConnections()
                 inputBatchSpend.spendDescriptionMap.forEach { spendDescription ->
                     spendDescription.computeAddress(this@BatchSpendActivity)
                 }
