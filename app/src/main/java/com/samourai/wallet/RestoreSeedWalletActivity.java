@@ -17,17 +17,16 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.crypto.AESUtil;
 import com.samourai.wallet.crypto.DecryptionException;
 import com.samourai.wallet.fragments.ImportWalletFragment;
 import com.samourai.wallet.fragments.PinEntryFragment;
-import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
+import com.samourai.wallet.pin.PinChooserManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
@@ -53,7 +52,7 @@ import static com.samourai.wallet.R.id.dots;
 
 
 public class RestoreSeedWalletActivity extends AppCompatActivity implements
-        PinEntryFragment.onPinEntryListener,
+        PinChooserManager.OnPinEntryListener,
         ImportWalletFragment.onRestoreDataSets {
     private ViewPager wallet_create_viewpager;
 
@@ -328,7 +327,7 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
      * @param pin
      */
     @Override
-    public void PinEntry(String pin) {
+    public void pinEntry(final String pin) {
         if (wallet_create_viewpager.getCurrentItem() == 1) {
             pinCode = pin;
             if (pinCode.length() >= AccessFactory.MIN_PIN_LENGTH && pinCode.length() <= AccessFactory.MAX_PIN_LENGTH) {
@@ -361,11 +360,13 @@ public class RestoreSeedWalletActivity extends AppCompatActivity implements
                     return ImportWalletFragment.newInstance(restoreMode);
                 }
                 case 1: {
-                    return new PinEntryFragment();
+                    return new PinEntryFragment()
+                            .setOnPinEntryListener(RestoreSeedWalletActivity.this);
                 }
                 case 2: {
                     return PinEntryFragment
-                            .newInstance(getString(R.string.pin_5_8_confirm), getString(R.string.re_enter_your_pin_code));
+                            .newInstance(getString(R.string.pin_5_8_confirm), getString(R.string.re_enter_your_pin_code))
+                            .setOnPinEntryListener(RestoreSeedWalletActivity.this);
                 }
                 default: {
                     return null;

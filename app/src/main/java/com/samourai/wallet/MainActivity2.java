@@ -24,6 +24,7 @@ import com.samourai.wallet.crypto.AESUtil;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.onboard.OnBoardSlidesActivity;
 import com.samourai.wallet.payload.PayloadUtil;
+import com.samourai.wallet.pin.PinEntryActivity;
 import com.samourai.wallet.service.BackgroundManager;
 import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.tor.EnumTorState;

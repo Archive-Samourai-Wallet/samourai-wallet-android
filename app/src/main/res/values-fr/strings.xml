@@ -464,6 +464,8 @@
     <string name="create_a_passphrase">Créer une passphrase</string>
     <string name="create_a_secure_passphrase_for_your_wallet">Créer une passphrase sécurisée pour votre portefeuille</string>
     <string name="set_pin_code">Définir un code PIN</string>
+    <string name="set_current_pin_code">Saisir le code PIN</string>
+    <string name="enter_your_current_pin_code">Saisir votre code PIN actuel</string>
     <string name="accept_disclaimer_error">Vous devez accepter la clause de non-responsabilité</string>
     <string name="import_external_wallet">Importer portefeuille externe</string>
     <string name="import_samourai_wallet">Importer sauvegarde Samourai</string>

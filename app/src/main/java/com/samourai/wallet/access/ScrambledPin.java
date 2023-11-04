@@ -24,7 +24,7 @@ public class ScrambledPin {
         positions.add(8);
         positions.add(9);
 
-        matrix = new ArrayList<SimpleImmutableEntry<Integer,Integer>>();
+        matrix = new ArrayList<>();
 
         init();
 

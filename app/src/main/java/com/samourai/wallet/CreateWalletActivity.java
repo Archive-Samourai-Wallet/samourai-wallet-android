@@ -1,5 +1,7 @@
 package com.samourai.wallet;
 
+import static com.samourai.wallet.R.id.dots;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -7,22 +9,19 @@ import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Looper;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.viewpager.widget.PagerAdapter;
-
-import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.crypto.AESUtil;
@@ -31,6 +30,7 @@ import com.samourai.wallet.fragments.PassphraseEntryFragment;
 import com.samourai.wallet.fragments.PinEntryFragment;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.payload.PayloadUtil;
+import com.samourai.wallet.pin.PinChooserManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
@@ -45,11 +45,9 @@ import org.json.JSONException;
 
 import java.io.IOException;
 
-import static com.samourai.wallet.R.id.dots;
-
 
 public class CreateWalletActivity extends AppCompatActivity implements
-        PinEntryFragment.onPinEntryListener,
+        PinChooserManager.OnPinEntryListener,
         PassphraseEntryFragment.onPassPhraseListener {
     private ViewPager wallet_create_viewpager;
 
@@ -66,11 +64,18 @@ public class CreateWalletActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!BuildConfig.FLAVOR.equals("staging")) {
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_SECURE,
+                    WindowManager.LayoutParams.FLAG_SECURE);
+        }
+
         setContentView(R.layout.activity_create_wallet);
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.window));
-        wallet_create_viewpager = (ViewPager) findViewById(R.id.wallet_create_viewpager);
-        pagerIndicatorContainer = (LinearLayout) findViewById(dots);
-        forwardButton = (LinearLayout) findViewById(R.id.wizard_forward);
+        wallet_create_viewpager = findViewById(R.id.wallet_create_viewpager);
+        pagerIndicatorContainer = findViewById(dots);
+        forwardButton = findViewById(R.id.wizard_forward);
         if (getActionBar() != null)
             getActionBar().hide();
         adapter = new PagerAdapter(getSupportFragmentManager());
@@ -153,16 +158,15 @@ public class CreateWalletActivity extends AppCompatActivity implements
                 if (pinCode.isEmpty()) {
                     setForwardButtonEnable(false);
                 }
-                if (this.getCurrentFocus() != null) {
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                }
+
+                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                        .hideSoftInputFromWindow(view.getWindowToken(), 0);
                 break;
             }
             case 1: {
                 if (pinCode.length() >= 5) {
                     wallet_create_viewpager.setCurrentItem(count + 1);
-                    setForwardButtonEnable(false);
+                    updateConfirmationUI();
                 } else {
                     Toast.makeText(this, R.string.pin_5_8, Toast.LENGTH_SHORT).show();
                 }
@@ -192,10 +196,14 @@ public class CreateWalletActivity extends AppCompatActivity implements
                     setForwardButtonEnable(true);
                 }
                 wallet_create_viewpager.setCurrentItem(0);
+                ((TextView) forwardButton.getChildAt(0)).setText(R.string.next);
+                break;
             }
             case 2: {
                 ((TextView) forwardButton.getChildAt(0)).setText(R.string.next);
                 wallet_create_viewpager.setCurrentItem(count - 1);
+                setForwardButtonEnable(true);
+                break;
             }
         }
     }
@@ -230,7 +238,7 @@ public class CreateWalletActivity extends AppCompatActivity implements
      * @param pin
      */
     @Override
-    public void PinEntry(String pin) {
+    public void pinEntry(final String pin) {
         if (wallet_create_viewpager.getCurrentItem() == 1) {
             pinCode = pin;
             if (pinCode.length() >= AccessFactory.MIN_PIN_LENGTH && pinCode.length() <= AccessFactory.MAX_PIN_LENGTH) {
@@ -240,12 +248,16 @@ public class CreateWalletActivity extends AppCompatActivity implements
             }
         } else {
             pinCodeConfirm = pin;
-            if (pinCodeConfirm.equals(pinCode)) {
-                setForwardButtonEnable(true);
-                ((TextView) forwardButton.getChildAt(0)).setText(R.string.finish);
-            } else {
-                setForwardButtonEnable(false);
-            }
+            updateConfirmationUI();
+        }
+    }
+
+    private void updateConfirmationUI() {
+        if (pinCodeConfirm.equals(pinCode)) {
+            setForwardButtonEnable(true);
+            ((TextView) forwardButton.getChildAt(0)).setText(R.string.finish);
+        } else {
+            setForwardButtonEnable(false);
         }
     }
 
@@ -265,11 +277,12 @@ public class CreateWalletActivity extends AppCompatActivity implements
                     return new PassphraseEntryFragment();
                 }
                 case 1: {
-                    return new PinEntryFragment();
+                    return new PinEntryFragment().setOnPinEntryListener(CreateWalletActivity.this);
                 }
                 case 2: {
                     return PinEntryFragment
-                            .newInstance(getString(R.string.pin_5_8_confirm), getString(R.string.re_enter_your_pin_code));
+                            .newInstance(getString(R.string.pin_5_8_confirm), getString(R.string.re_enter_your_pin_code))
+                            .setOnPinEntryListener(CreateWalletActivity.this);
                 }
                 default: {
                     return null;
@@ -315,7 +328,7 @@ public class CreateWalletActivity extends AppCompatActivity implements
     public void onBackPressed() {
         if (wallet_create_viewpager.getCurrentItem() != 0) {
             wizardNavigationBackward(null);
-        }else{
+        } else{
             super.onBackPressed();
         }
     }
@@ -330,130 +343,127 @@ public class CreateWalletActivity extends AppCompatActivity implements
      */
     private void initThread(final boolean create, final String pin, final String passphrase, final String seed) {
         toggleLoading();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        new Thread(() -> {
 
-                Looper.prepare();
+            Looper.prepare();
 
-                String guid = AccessFactory.getInstance(CreateWalletActivity.this).createGUID();
-                String hash = AccessFactory.getInstance(CreateWalletActivity.this).getHash(guid, new CharSequenceX(pin), AESUtil.DefaultPBKDF2Iterations);
-                PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.ACCESS_HASH, hash);
-                PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.ACCESS_HASH2, hash);
+            String guid = AccessFactory.getInstance(CreateWalletActivity.this).createGUID();
+            String hash = AccessFactory.getInstance(CreateWalletActivity.this).getHash(guid, new CharSequenceX(pin), AESUtil.DefaultPBKDF2Iterations);
+            PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.ACCESS_HASH, hash);
+            PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.ACCESS_HASH2, hash);
 
-                if (create) {
-
-                    try {
-                        HD_WalletFactory.getInstance(CreateWalletActivity.this).newWallet(12, passphrase);
-                    } catch (IOException ioe) {
-                        ioe.printStackTrace();
-                    } catch (MnemonicException.MnemonicLengthException mle) {
-                        mle.printStackTrace();
-                    } finally {
-                        ;
-                    }
-
-                } else if (seed == null) {
-                    ;
-                } else {
-
-                    try {
-                        HD_WalletFactory.getInstance(CreateWalletActivity.this).restoreWallet(seed, passphrase);
-                    } catch (IOException ioe) {
-                        ioe.printStackTrace();
-                    } catch (DecoderException de) {
-                        de.printStackTrace();
-                    } catch (AddressFormatException afe) {
-                        afe.printStackTrace();
-                    } catch (MnemonicException.MnemonicLengthException mle) {
-                        mle.printStackTrace();
-                    } catch (MnemonicException.MnemonicChecksumException mce) {
-                        mce.printStackTrace();
-                    } catch (MnemonicException.MnemonicWordException mwe) {
-                        mwe.printStackTrace();
-                    } finally {
-                        ;
-                    }
-
-                }
-
-                PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.SCRAMBLE_PIN, true);
+            if (create) {
 
                 try {
-
-                    String msg = null;
-
-                    if (HD_WalletFactory.getInstance(CreateWalletActivity.this).get() != null) {
-
-                        if (create) {
-                            msg = getString(R.string.wallet_created_ok);
-                        } else {
-                            msg = getString(R.string.wallet_restored_ok);
-                        }
-
-                        try {
-                            AccessFactory.getInstance(CreateWalletActivity.this).setPIN(pin);
-                            PayloadUtil.getInstance(CreateWalletActivity.this).saveWalletToJSON(new CharSequenceX(AccessFactory.getInstance(CreateWalletActivity.this).getGUID() + pin));
-
-                            if (create) {
-                                PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.WALLET_ORIGIN, "new");
-                                PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.FIRST_RUN, true);
-                            } else {
-                                PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.WALLET_ORIGIN, "restored");
-                                PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.FIRST_RUN, true);
-                            }
-
-                        } catch (JSONException je) {
-                            je.printStackTrace();
-                        } catch (IOException ioe) {
-                            ioe.printStackTrace();
-                        } catch (DecryptionException de) {
-                            de.printStackTrace();
-                        } finally {
-                            ;
-                        }
-
-                        AddressFactory.getInstance().account2xpub().put(0, HD_WalletFactory.getInstance(CreateWalletActivity.this).get().getAccount(0).xpubstr());
-                        AddressFactory.getInstance().xpub2account().put(HD_WalletFactory.getInstance(CreateWalletActivity.this).get().getAccount(0).xpubstr(), 0);
-
-                        //
-                        // backup wallet for alpha
-                        //
-                        if (create) {
-
-                            String seed = HD_WalletFactory.getInstance(CreateWalletActivity.this).get().getMnemonic();
-                            Intent intent = new Intent(CreateWalletActivity.this,  RecoveryWordsActivity.class);
-                            intent.putExtra(RecoveryWordsActivity.WORD_LIST,seed);
-                            intent.putExtra(RecoveryWordsActivity.PASSPHRASE,passphrase);
-                            startActivity(intent);
-                            finish();
-
-                        } else {
-                            AccessFactory.getInstance(CreateWalletActivity.this).setIsLoggedIn(true);
-                            TimeOutUtil.getInstance().updatePin();
-                            AppUtil.getInstance(CreateWalletActivity.this).restartApp();
-                        }
-
-                    } else {
-                        if (create) {
-                            msg = getString(R.string.wallet_created_ko);
-                        } else {
-                            msg = getString(R.string.wallet_restored_ko);
-                        }
-                    }
-
-                    Toast.makeText(CreateWalletActivity.this, msg, Toast.LENGTH_SHORT).show();
-
+                    HD_WalletFactory.getInstance(CreateWalletActivity.this).newWallet(12, passphrase);
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
                 } catch (MnemonicException.MnemonicLengthException mle) {
                     mle.printStackTrace();
                 } finally {
                     ;
                 }
-                toggleLoading();
 
-                Looper.loop();
+            } else if (seed == null) {
+                ;
+            } else {
+
+                try {
+                    HD_WalletFactory.getInstance(CreateWalletActivity.this).restoreWallet(seed, passphrase);
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                } catch (DecoderException de) {
+                    de.printStackTrace();
+                } catch (AddressFormatException afe) {
+                    afe.printStackTrace();
+                } catch (MnemonicException.MnemonicLengthException mle) {
+                    mle.printStackTrace();
+                } catch (MnemonicException.MnemonicChecksumException mce) {
+                    mce.printStackTrace();
+                } catch (MnemonicException.MnemonicWordException mwe) {
+                    mwe.printStackTrace();
+                } finally {
+                    ;
+                }
 
             }
+
+            PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.SCRAMBLE_PIN, true);
+
+            try {
+
+                String msg = null;
+
+                if (HD_WalletFactory.getInstance(CreateWalletActivity.this).get() != null) {
+
+                    if (create) {
+                        msg = getString(R.string.wallet_created_ok);
+                    } else {
+                        msg = getString(R.string.wallet_restored_ok);
+                    }
+
+                    try {
+                        AccessFactory.getInstance(CreateWalletActivity.this).setPIN(pin);
+                        PayloadUtil.getInstance(CreateWalletActivity.this).saveWalletToJSON(new CharSequenceX(AccessFactory.getInstance(CreateWalletActivity.this).getGUID() + pin));
+
+                        if (create) {
+                            PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.WALLET_ORIGIN, "new");
+                            PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.FIRST_RUN, true);
+                        } else {
+                            PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.WALLET_ORIGIN, "restored");
+                            PrefsUtil.getInstance(CreateWalletActivity.this).setValue(PrefsUtil.FIRST_RUN, true);
+                        }
+
+                    } catch (JSONException je) {
+                        je.printStackTrace();
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
+                    } catch (DecryptionException de) {
+                        de.printStackTrace();
+                    } finally {
+                        ;
+                    }
+
+                    AddressFactory.getInstance().account2xpub().put(0, HD_WalletFactory.getInstance(CreateWalletActivity.this).get().getAccount(0).xpubstr());
+                    AddressFactory.getInstance().xpub2account().put(HD_WalletFactory.getInstance(CreateWalletActivity.this).get().getAccount(0).xpubstr(), 0);
+
+                    //
+                    // backup wallet for alpha
+                    //
+                    if (create) {
+
+                        String seed1 = HD_WalletFactory.getInstance(CreateWalletActivity.this).get().getMnemonic();
+                        Intent intent = new Intent(CreateWalletActivity.this,  RecoveryWordsActivity.class);
+                        intent.putExtra(RecoveryWordsActivity.WORD_LIST, seed1);
+                        intent.putExtra(RecoveryWordsActivity.PASSPHRASE,passphrase);
+                        startActivity(intent);
+                        finish();
+
+                    } else {
+                        AccessFactory.getInstance(CreateWalletActivity.this).setIsLoggedIn(true);
+                        TimeOutUtil.getInstance().updatePin();
+                        AppUtil.getInstance(CreateWalletActivity.this).restartApp();
+                    }
+
+                } else {
+                    if (create) {
+                        msg = getString(R.string.wallet_created_ko);
+                    } else {
+                        msg = getString(R.string.wallet_restored_ko);
+                    }
+                }
+
+                Toast.makeText(CreateWalletActivity.this, msg, Toast.LENGTH_SHORT).show();
+
+            } catch (MnemonicException.MnemonicLengthException mle) {
+                mle.printStackTrace();
+            } finally {
+                ;
+            }
+            toggleLoading();
+
+            Looper.loop();
+
         }).start();
 
     }

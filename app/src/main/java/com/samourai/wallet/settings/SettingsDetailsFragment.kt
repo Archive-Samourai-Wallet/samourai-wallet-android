@@ -1,6 +1,5 @@
 package com.samourai.wallet.settings
 
-import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
@@ -9,6 +8,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -35,6 +35,8 @@ import com.samourai.wallet.payload.ExternalBackupManager
 import com.samourai.wallet.payload.ExternalBackupManager.askPermission
 import com.samourai.wallet.payload.ExternalBackupManager.hasPermissions
 import com.samourai.wallet.payload.PayloadUtil
+import com.samourai.wallet.pin.PinChangeDialog
+import com.samourai.wallet.pin.PinEntryDialog
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
@@ -276,76 +278,23 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                     .setMessage(R.string.confirm_change_pin)
                     .setCancelable(false)
                     .setPositiveButton(R.string.yes) { dialog, whichButton ->
-                        val pin = EditText(requireContext())
-                        pin.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                        MaterialAlertDialogBuilder(requireContext())
-                                .setTitle(R.string.app_name)
-                                .setMessage(R.string.pin_enter)
-                                .setView(pin)
-                                .setCancelable(false)
-                                .setPositiveButton(R.string.ok) { dialog, whichButton ->
-                                    val _pin = pin.text.toString()
-                                    if (_pin != null && _pin.length >= AccessFactory.MIN_PIN_LENGTH && _pin.length <= AccessFactory.MAX_PIN_LENGTH) {
-                                        val hash = PrefsUtil.getInstance(requireContext()).getValue(PrefsUtil.ACCESS_HASH, "")
-                                        if (AccessFactory.getInstance(requireContext()).validateHash(hash, AccessFactory.getInstance(requireContext()).guid, CharSequenceX(_pin), AESUtil.DefaultPBKDF2Iterations)) {
-                                            val pin = EditText(requireContext())
-                                            pin.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                                            AlertDialog.Builder(requireContext())
-                                                    .setTitle(R.string.app_name)
-                                                    .setMessage(R.string.pin_5_8)
-                                                    .setView(pin)
-                                                    .setCancelable(false)
-                                                    .setPositiveButton(R.string.ok) { dialog, whichButton ->
-                                                        val _pin = pin.text.toString()
-                                                        if (_pin != null && _pin.length >= AccessFactory.MIN_PIN_LENGTH && _pin.length <= AccessFactory.MAX_PIN_LENGTH) {
-                                                            val pin2 = EditText(requireContext())
-                                                            pin2.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                                                            MaterialAlertDialogBuilder(requireContext())
-                                                                    .setTitle(R.string.app_name)
-                                                                    .setMessage(R.string.pin_5_8_confirm)
-                                                                    .setView(pin2)
-                                                                    .setCancelable(false)
-                                                                    .setPositiveButton(R.string.ok) { dialog, whichButton ->
-                                                                        val _pin2 = pin2.text.toString()
-                                                                        if (_pin2 != null && _pin2 == _pin) {
-                                                                            val accessHash = PrefsUtil.getInstance(requireContext()).getValue(PrefsUtil.ACCESS_HASH, "")
-                                                                            val accessHash2 = PrefsUtil.getInstance(requireContext()).getValue(PrefsUtil.ACCESS_HASH2, "")
-                                                                            val hash = AccessFactory.getInstance(requireContext()).getHash(AccessFactory.getInstance(requireContext()).guid, CharSequenceX(_pin), AESUtil.DefaultPBKDF2Iterations)
-                                                                            PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.ACCESS_HASH, hash)
-                                                                            if (accessHash == accessHash2) {
-                                                                                PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.ACCESS_HASH2, hash)
-                                                                            }
-                                                                            AccessFactory.getInstance(requireContext()).pin = _pin2
-                                                                            try {
-                                                                                PayloadUtil.getInstance(requireContext()).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(requireContext()).guid + _pin))
-                                                                            } catch (je: JSONException) {
-                                                                                je.printStackTrace()
-                                                                            } catch (ioe: IOException) {
-                                                                                ioe.printStackTrace()
-                                                                            } catch (mle: MnemonicLengthException) {
-                                                                                mle.printStackTrace()
-                                                                            } catch (de: DecryptionException) {
-                                                                                de.printStackTrace()
-                                                                            } finally {
-                                                                                Toast.makeText(requireContext().getApplicationContext(), R.string.success_change_pin, Toast.LENGTH_SHORT).show()
-                                                                            }
-                                                                        }
-                                                                        else {
-                                                                            Toast.makeText(requireContext().getApplicationContext(), R.string.pins_not_match, Toast.LENGTH_SHORT).show()
-                                                                        }
-                                                                    }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
-                                                        }
-                                                        else {
-                                                            Toast.makeText(requireContext().getApplicationContext(), R.string.pin_length_error, Toast.LENGTH_LONG).show()
-                                                        }
-                                                    }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
-                                        } else {
-                                            Toast.makeText(requireContext().getApplicationContext(), R.string.pin_error, Toast.LENGTH_SHORT).show()
-                                        }
-                                    } else {
-                                        Toast.makeText(requireContext().getApplicationContext(), R.string.pin_error, Toast.LENGTH_SHORT).show()
+
+                        val pinEntryDialog = PinEntryDialog.create()
+                        pinEntryDialog.setOnSuccessCallback {
+                            requireActivity().runOnUiThread {
+                                pinEntryDialog.dismiss()
+                                val pinChangeDialog = PinChangeDialog.create()
+                                pinChangeDialog.setOnSuccessCallback { newPin ->
+                                    requireActivity().runOnUiThread {
+                                        pinChangeDialog.dismiss()
+                                        changeWalletPin(newPin)
                                     }
-                                }.setNegativeButton(R.string.cancel) { dialog, whichButton -> }.show()
+                                }
+                                pinChangeDialog.show(requireActivity().supportFragmentManager, pinChangeDialog.tag)
+                            }
+                        }
+                        pinEntryDialog.show(requireActivity().supportFragmentManager, pinEntryDialog.tag)
+
                     }.setNegativeButton(R.string.no) { dialog, whichButton -> }.show()
             true
         }
@@ -366,6 +315,34 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                 }
                 true
             }
+        }
+    }
+
+    private fun changeWalletPin(newPin: String?) {
+        val accessHash = PrefsUtil.getInstance(requireContext()).getValue(PrefsUtil.ACCESS_HASH, "")
+        val accessHash2 =
+            PrefsUtil.getInstance(requireContext()).getValue(PrefsUtil.ACCESS_HASH2, "")
+        val hash = AccessFactory.getInstance(requireContext()).getHash(
+            AccessFactory.getInstance(requireContext()).guid,
+            CharSequenceX(newPin),
+            AESUtil.DefaultPBKDF2Iterations
+        )
+        PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.ACCESS_HASH, hash)
+        if (accessHash == accessHash2) {
+            PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.ACCESS_HASH2, hash)
+        }
+        AccessFactory.getInstance(requireContext()).pin = newPin
+        try {
+            PayloadUtil.getInstance(requireContext())
+                .saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(requireContext()).guid + newPin))
+        } catch (e: Exception) {
+            e.printStackTrace();
+        } finally {
+            Toast.makeText(
+                requireContext().getApplicationContext(),
+                R.string.success_change_pin,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

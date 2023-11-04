@@ -150,21 +150,16 @@ public class PinEntryView extends FrameLayout implements View.OnClickListener {
 
     public void hideCheckButton() {
         tconfirm.setVisibility(GONE);
+    }
 
+    synchronized public void resetPinLen() {
+        pinLen = 0;
     }
 
     public void setConfirmClickListener(OnClickListener clickListener){
         tconfirm.setOnClickListener(clickListener);
     }
 
-    public void setSize(int size,int margin) {
-//        int dp = (int) (getResources().getDimension(size));
-//        for (int i = 0; i < gridLayout.getChildCount(); i++) {
-//            GridLayout.LayoutParams params = new GridLayout.LayoutParams(new ViewGroup.LayoutParams(dp, dp));
-//            params.setMargins(margin,margin,margin,margin);
-//            gridLayout.getChildAt(i).setLayoutParams(params);
-//        }
-    }
     public void disableHapticFeedBack(){
         enableHaptic = false;
     }
