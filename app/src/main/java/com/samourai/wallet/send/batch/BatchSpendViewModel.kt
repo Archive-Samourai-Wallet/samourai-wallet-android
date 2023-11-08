@@ -85,32 +85,59 @@ class BatchSpendViewModel() : ViewModel() {
     }
 
     fun add(batchItem: BatchSendUtil.BatchSend) {
-        viewModelScope.launch {
-            val list = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
+        val list = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
 
+        val exist = list.find { it.UUID == batchItem.UUID }
+        if (exist == null){
+            list.add(batchItem)
+        } else {
+            list[list.indexOf(exist)] = batchItem
+        }
+        list.sortByDescending { it.UUID }
+
+        list.let {
+            BatchSendUtil.getInstance().sends.clear()
+            BatchSendUtil.getInstance().sends.addAll(list)
+            batchList.postValue(list)
+        }
+    }
+
+    fun addAll(newItemsToAdd: List<BatchSendUtil.BatchSend>) {
+        val existingItems = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
+        mergeAll(newItemsToAdd, existingItems)
+    }
+
+    fun setAll(newItemsToAdd: List<BatchSendUtil.BatchSend>) {
+        mergeAll(newItemsToAdd, ArrayList())
+    }
+
+    private fun mergeAll(
+        newItemsToAdd: List<BatchSendUtil.BatchSend>,
+        list: ArrayList<BatchSendUtil.BatchSend>
+    ) {
+        for (batchItem in newItemsToAdd) {
             val exist = list.find { it.UUID == batchItem.UUID }
-            if (exist == null){
+            if (exist == null) {
                 list.add(batchItem)
             } else {
                 list[list.indexOf(exist)] = batchItem
             }
-            list.sortByDescending { it.UUID }
-
-            list.let {
-                batchList.value = list
-                BatchSendUtil.getInstance().sends.clear()
-                BatchSendUtil.getInstance().sends.addAll(list)
-            }
         }
+        list.sortByDescending { it.UUID }
 
+        list.let {
+            BatchSendUtil.getInstance().sends.clear()
+            BatchSendUtil.getInstance().sends.addAll(list)
+            batchList.postValue(list)
+        }
     }
 
     fun remove(it: BatchSendUtil.BatchSend) {
         val list = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
         list.remove(it)
-        batchList.postValue(list)
         BatchSendUtil.getInstance().sends.clear()
         BatchSendUtil.getInstance().sends.addAll(list)
+        batchList.postValue(list)
     }
 
     fun setBalance(context:Context, account:Int) {
@@ -130,15 +157,8 @@ class BatchSpendViewModel() : ViewModel() {
         }
     }
 
-    fun clearBatch(now:Boolean) {
-        if (now) {
-            viewModelScope.launch {
-                batchList.value = arrayListOf()
-                BatchSendUtil.getInstance().sends.clear()
-            }
-        } else {
-            batchList.postValue(arrayListOf())
-            BatchSendUtil.getInstance().sends.clear()
-        }
+    fun clearBatch() {
+        BatchSendUtil.getInstance().sends.clear()
+        batchList.postValue(arrayListOf())
     }
 }

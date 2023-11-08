@@ -41,7 +41,7 @@ public class BatchSendUtil {
     public static BatchSendUtil getInstance() {
 
         if(instance == null) {
-            batchSends = new ArrayList<BatchSend>();
+            batchSends = new ArrayList<>();
             instance = new BatchSendUtil();
         }
 

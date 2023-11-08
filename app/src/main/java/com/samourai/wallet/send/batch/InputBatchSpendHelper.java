@@ -47,7 +47,7 @@ public class InputBatchSpendHelper {
             }
         }
 
-        if (inputBatchSpend.getSpendDescriptionMap().isEmpty()) {
+        if (inputBatchSpend.getSpendDescriptionList().isEmpty()) {
             throw new Exception("the content does not represent batch spend");
         }
 

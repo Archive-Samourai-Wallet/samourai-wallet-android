@@ -31,7 +31,6 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.TxAnimUIActivity
-import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
@@ -43,7 +42,6 @@ import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.fragments.PaynymSelectModalFragment
 import com.samourai.wallet.fragments.PaynymSelectModalFragment.Companion.newInstance
-import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.bech32.Bech32Util
@@ -107,6 +105,21 @@ class BatchSpendActivity : SamouraiActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        prepareBatchSpendUI()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.send_menu, menu)
+        menu.findItem(R.id.action_batch).isVisible = false
+        menu.findItem(R.id.action_clear_batch).isVisible = true
+        menu.findItem(R.id.action_import_batch).isVisible = BuildConfig.FLAVOR == "staging"
+        menu.findItem(R.id.action_ricochet).isVisible = false
+        menu.findItem(R.id.action_empty_ricochet).isVisible = false
+        this.menu = menu
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    private fun prepareBatchSpendUI() {
         binding = ActivityBatchSpendBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbarBatchSend)
@@ -188,17 +201,6 @@ class BatchSpendActivity : SamouraiActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.send_menu, menu)
-        menu.findItem(R.id.action_batch).isVisible = false
-        menu.findItem(R.id.action_clear_batch).isVisible = true
-        menu.findItem(R.id.action_import_batch).isVisible = BuildConfig.FLAVOR == "staging"
-        menu.findItem(R.id.action_ricochet).isVisible = false
-        menu.findItem(R.id.action_empty_ricochet).isVisible = false
-        this.menu = menu
-        return super.onCreateOptionsMenu(menu)
-    }
-
     private fun getBtcAmountFromWidget(): Double {
         return try {
             NumberFormat.getInstance(Locale.US)
@@ -257,14 +259,6 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     override fun onDestroy() {
-        if (!compositeDisposable.isDisposed) {
-            compositeDisposable.dispose()
-        }
-        try {
-            PayloadUtil.getInstance(applicationContext)
-                .saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(applicationContext).guid + AccessFactory.getInstance(applicationContext).pin))
-        } catch (e: Exception) {
-        }
         composeJob?.let {
             if (it.isActive)
                 it.cancel()
@@ -393,7 +387,7 @@ class BatchSpendActivity : SamouraiActivity() {
             MaterialAlertDialogBuilder(this@BatchSpendActivity)
                 .setMessage(getString(R.string.confirm_batch_list_clear))
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    viewModel.clearBatch(false)
+                    viewModel.clearBatch()
                 }.setNegativeButton(R.string.cancel) { _, _ -> }.show()
             return true
         }
@@ -484,9 +478,12 @@ class BatchSpendActivity : SamouraiActivity() {
 
             Observable.fromCallable {
 
-                BIP47Util.getInstance(this@BatchSpendActivity)
+                if (isNeedsUpdateConnectedPaynyms(inputBatchSpend)) {
+                    BIP47Util.getInstance(this@BatchSpendActivity)
                         .updateOutgoingStatusForNewPayNymConnections()
-                inputBatchSpend.spendDescriptionMap.forEach { spendDescription ->
+                }
+
+                inputBatchSpend.spendDescriptionList.forEach { spendDescription ->
                     spendDescription.computeAddress(this@BatchSpendActivity)
                 }
                 true
@@ -508,9 +505,17 @@ class BatchSpendActivity : SamouraiActivity() {
         )
     }
 
-    private fun applyImportBatchFromJson(inputBatchSpend: InputBatchSpend) {
+    private fun isNeedsUpdateConnectedPaynyms(inputBatchSpend: InputBatchSpend): Boolean {
 
-        viewModel.clearBatch(true)
+        val batchList = inputBatchSpend.spendDescriptionList
+        var i = 0;
+        while (i < batchList.size && ! isANotConnectedPayNym(batchList.get(i).pcode)) {
+            ++i;
+        }
+        return i < batchList.size
+    }
+
+    private fun applyImportBatchFromJson(inputBatchSpend: InputBatchSpend) {
 
         var validatedItem = 0
         var addressInvalidItem = 0
@@ -521,7 +526,8 @@ class BatchSpendActivity : SamouraiActivity() {
             val idStart = System.currentTimeMillis();
             var offset = 0
 
-            inputBatchSpend.spendDescriptionMap.forEach { spendDescription ->
+            var newItemsToAdd = arrayListOf<BatchSendUtil.BatchSend>()
+            inputBatchSpend.spendDescriptionList.forEach { spendDescription ->
 
                 val address = spendDescription.address
                 if (nonNull(address) && spendDescription.isValidAmount) {
@@ -539,7 +545,7 @@ class BatchSpendActivity : SamouraiActivity() {
                         paynymCode = spendDescription.paynym
                         addr = address
                     }
-                    viewModel.add(batchItem)
+                    newItemsToAdd.add(batchItem)
                     ++validatedItem
                 } else if (isNull(address)) {
                     ++addressInvalidItem
@@ -547,6 +553,8 @@ class BatchSpendActivity : SamouraiActivity() {
                     ++amountInvalidItem
                 }
             }
+
+            viewModel.setAll(newItemsToAdd);
 
         } catch (e: Exception) {
             val errorMessage = getString(R.string.options_import_batch_parsing_error)
@@ -1064,7 +1072,7 @@ class BatchSpendActivity : SamouraiActivity() {
                     _amount,
                     _change_idx
                 )
-                viewModel.clearBatch(false)
+                viewModel.clearBatch()
                 val intent = Intent(this, TxAnimUIActivity::class.java)
                 startActivity(intent)
             }).setNegativeButton(R.string.no) { _, _ -> }
@@ -1091,5 +1099,10 @@ class BatchSpendActivity : SamouraiActivity() {
         }
     }
 
-
+    companion object {
+        fun isANotConnectedPayNym(pcode: String?): Boolean {
+            if (isNull(pcode)) return false;
+            return BIP47Meta.getInstance().getOutgoingStatus(pcode) != BIP47Meta.STATUS_SENT_CFM
+        }
+    }
 }

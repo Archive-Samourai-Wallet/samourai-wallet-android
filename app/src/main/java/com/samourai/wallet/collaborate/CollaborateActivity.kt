@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -32,7 +33,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -44,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.bip47.BIP47Meta
+import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
@@ -54,46 +55,71 @@ import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.AppUtil
 import com.samourai.wallet.util.PrefsUtil
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
 class CollaborateActivity : SamouraiActivity() {
+
+    private val TAG = "CollaborateActivity"
+
     private val collaborateViewModel: CollaborateViewModel by viewModels()
+    protected var compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val showParticipateTab = intent.extras?.getBoolean(SHOW_PARTICIPATE, false) ?: false
         val claimed = PrefsUtil.getInstance(applicationContext).getValue(PrefsUtil.PAYNYM_CLAIMED, false);
-        setContent {
-            SamouraiWalletTheme {
-                if (claimed) {
-                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                        CollaborateScreen(this, showParticipateTab)
-                    }
-                } else {
-                    val scope = rememberCoroutineScope()
-                    PaynymNotClaimed(
-                        onBackPressed = {
-                            onBackPressed()
-                        },
-                        onClaim = {
-                            scope.launch {
-                                withContext(Dispatchers.Main){
-                                    val intent = Intent(this@CollaborateActivity, PayNymHome::class.java)
-                                    startActivity(intent)
-                                    finish()
+        compositeDisposable.add(
+
+            Observable.fromCallable {
+                BIP47Util.getInstance(this@CollaborateActivity)
+                    .updateOutgoingStatusForNewPayNymConnections()
+                true
+            }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ success: Boolean ->
+
+                    setContent {
+                        SamouraiWalletTheme {
+                            if (claimed) {
+                                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+                                    CollaborateScreen(this, showParticipateTab)
                                 }
+                            } else {
+                                val scope = rememberCoroutineScope()
+                                PaynymNotClaimed(
+                                    onBackPressed = {
+                                        onBackPressed()
+                                    },
+                                    onClaim = {
+                                        scope.launch {
+                                            withContext(Dispatchers.Main){
+                                                val intent = Intent(this@CollaborateActivity, PayNymHome::class.java)
+                                                startActivity(intent)
+                                                finish()
+                                            }
+                                        }
+                                    }
+                                )
                             }
                         }
-                    )
+                    }
+                    if(claimed){
+                        collaborateViewModel.initWithContext(applicationContext)
+                    }
+
+                }) { error: Throwable ->
+                    Log.e(TAG, "exception on Collaborate Activity: " + error.message, error)
                 }
-            }
-        }
-        if(claimed){
-            collaborateViewModel.initWithContext(applicationContext)
-        }
+        )
+
     }
 
     companion object {
