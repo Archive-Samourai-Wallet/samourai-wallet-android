@@ -1,0 +1,116 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        tools:context="com.samourai.wallet.fragments.PassphraseEntryFragment">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingTop="14dp">
+
+            <ImageView
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginTop="2dp"
+                android:src="@drawable/ic_lock_white_24dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/pin_entry_title"
+                    style="@android:style/TextAppearance.WindowTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/set_pin_code"
+                    android:textAllCaps="true" />
+
+                <TextView
+                    android:id="@+id/pin_entry_wallet_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_locked" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progress_pin_entry"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="88dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:indeterminate="true"
+            android:progressBackgroundTint="@android:color/transparent"
+            android:visibility="invisible" />
+
+        <LinearLayout
+            android:id="@+id/pin_entry_mask_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:minHeight="26dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <com.samourai.wallet.widgets.PinEntryView
+                android:id="@+id/pinentry_view"
+                android:layout_width="320dp"
+                android:layout_height="420dp"
+                android:layout_gravity="center_horizontal|center_vertical" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/pin_entry_restore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/cardview_dark_background"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:textAlignment="center"
+                android:text="@string/restore_wallet_from_backup" />
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/pin_entry_restore_btn"
+                android:text="@string/restore"
+                android:elevation="0dp"
+                android:textColor="@color/blue_ui_2"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                app:backgroundTint="@color/transparent" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

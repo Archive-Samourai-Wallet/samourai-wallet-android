@@ -8,15 +8,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingLeft="22dp"
-        android:paddingRight="22dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
         tools:context="com.samourai.wallet.fragments.PassphraseEntryFragment">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:paddingTop="32dp">
+            android:paddingTop="22dp">
 
             <ImageView
                 android:layout_width="38dp"
@@ -51,8 +51,9 @@
             android:id="@+id/passphrase_mask_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:layout_marginBottom="26dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="14dp"
+            android:minHeight="26dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -67,7 +68,7 @@
             <com.samourai.wallet.widgets.PinEntryView
                 android:id="@+id/pin_entry_view"
                 android:layout_width="320dp"
-                android:layout_height="match_parent"
+                android:layout_height="420dp"
                 android:layout_gravity="center_horizontal|center_vertical" />
         </LinearLayout>
 
