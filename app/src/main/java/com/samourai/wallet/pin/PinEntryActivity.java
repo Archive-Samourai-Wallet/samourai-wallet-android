@@ -26,7 +26,7 @@ public class PinEntryActivity extends AppCompatActivity {
                     WindowManager.LayoutParams.FLAG_SECURE);
         }
 
-        setContentView(PinEntryManager.create(this, R.layout.activity_pinentry)
+        setContentView(PinEntryManager.create(this, R.layout.activity_pinentry, true)
                 .install(() -> onSuccess())
                 .getView());
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);

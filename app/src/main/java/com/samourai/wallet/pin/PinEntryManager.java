@@ -12,10 +12,8 @@ import android.os.Looper;
 import android.text.InputType;
 import android.transition.ChangeBounds;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -31,7 +29,6 @@ import androidx.fragment.app.FragmentActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.common.collect.Lists;
-import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.R;
 import com.samourai.wallet.RecoveryWordsActivity;
 import com.samourai.wallet.access.AccessFactory;
@@ -64,9 +61,10 @@ import io.reactivex.schedulers.Schedulers;
 
 public class PinEntryManager {
 
-    public final static int MAX_ATTEMPTS = 6;
+    private final static int MAX_ATTEMPTS = 6;
     private final FragmentActivity activity;
-    private int layoutResource;
+    private final int layoutResource;
+    private final boolean attemptToLog;
     private View viewBuilt;
 
     private ImageButton tsend = null;
@@ -95,15 +93,20 @@ public class PinEntryManager {
         void onSuccess();
     }
 
-    private PinEntryManager(final FragmentActivity activity, final int layoutResource) {
+    private PinEntryManager(final FragmentActivity activity,
+                            final int layoutResource,
+                            final boolean attemptToLog) {
+
         this.activity = activity;
         this.layoutResource = layoutResource;
+        this.attemptToLog = attemptToLog;
     }
 
     public static PinEntryManager create(final FragmentActivity activity,
-                                         final int layoutResource) {
+                                         final int layoutResource,
+                                         final boolean attemptToLog) {
 
-        return new PinEntryManager(activity, layoutResource);
+        return new PinEntryManager(activity, layoutResource, attemptToLog);
     }
 
     public View getView() {
@@ -607,19 +610,13 @@ public class PinEntryManager {
                     if (hdw == null) {
 
                         activity.runOnUiThread(() -> {
-                            failures++;
+                            incFailures();
                             PrefsUtil.getInstance(activity).setValue(PrefsUtil.ATTEMPTS, failures);
                             pinEntryMaskLayout.removeAllViews();
                             pinEntryView.hideCheckButton();
                             pinEntryView.resetPinLen();
                             setPinMaskView();
-                            if (failures < MAX_ATTEMPTS) {
-                                walletStatusTextView.setText(activity.getText(R.string.login_error) + ": " + failures + "/" + MAX_ATTEMPTS);
-                            }
-                            else {
-                                failures = 0;
-                                lockWallet();
-                            }
+                            managePinFailureCount();
                         });
 
                     }
@@ -637,19 +634,13 @@ public class PinEntryManager {
             } else {
                 activity.runOnUiThread(() -> {
                     progressBar.setVisibility(View.INVISIBLE);
-                    failures++;
+                    incFailures();
                     PrefsUtil.getInstance(activity).setValue(PrefsUtil.ATTEMPTS, failures);
                     userInput = new StringBuilder();
                     pinEntryMaskLayout.removeAllViews();
                     pinEntryView.hideCheckButton();
                     pinEntryView.resetPinLen();
-                    if (failures < MAX_ATTEMPTS) {
-                        walletStatusTextView.setText(activity.getText(R.string.login_error) + ": " + failures + "/" + MAX_ATTEMPTS);
-                    }
-                    else {
-                        failures = 0;
-                        lockWallet();
-                    }
+                    managePinFailureCount();
                 });
 
             }
@@ -662,6 +653,25 @@ public class PinEntryManager {
 
         }).start();
 
+    }
+
+    private void managePinFailureCount() {
+        if (failures < MAX_ATTEMPTS) {
+            if (failures > 0) {
+                walletStatusTextView.setText(activity.getText(R.string.login_error) + ": " + failures + "/" + MAX_ATTEMPTS);
+            } else {
+                walletStatusTextView.setText(activity.getText(R.string.invalid_pin_entered));
+            }
+        } else {
+            failures = 0;
+            lockWallet();
+        }
+    }
+
+    private void incFailures() {
+        if (attemptToLog) {
+            ++ failures;
+        }
     }
 
     private void fireOnSuccessMessage() {

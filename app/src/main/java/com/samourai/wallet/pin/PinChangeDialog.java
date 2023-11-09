@@ -28,9 +28,6 @@ public class PinChangeDialog extends BottomSheetDialogFragment
     private PinChooserManager pinChooserManager;
     private OnSuccessCallback onSuccessCallback;
 
-    private String title;
-    private String description;
-
     private String pinChosen;
     private String currentPin;
 

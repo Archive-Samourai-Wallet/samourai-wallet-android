@@ -145,6 +145,7 @@
     <string name="please_wait">Veuillez patienter…</string>
     <string name="random_key_error">Erreur : impossible de générer une clé aléatoire</string>
     <string name="login_error">Échec Login</string>
+    <string name="invalid_pin_entered">Saisie de PIN invalide</string>
     <string name="wallet_created_ok">Création du portefeuille OK.</string>
     <string name="wallet_created_ko">Erreur survenue lors de la création du portefeuille.</string>
     <string name="wallet_restored_ok">Restauration du portefeuille OK.</string>
@@ -464,7 +465,7 @@
     <string name="create_a_passphrase">Créer une passphrase</string>
     <string name="create_a_secure_passphrase_for_your_wallet">Créer une passphrase sécurisée pour votre portefeuille</string>
     <string name="set_pin_code">Définir un code PIN</string>
-    <string name="set_current_pin_code">Saisir le code PIN</string>
+    <string name="enter_pin_code">Saisir le code PIN</string>
     <string name="enter_your_current_pin_code">Saisir votre code PIN actuel</string>
     <string name="accept_disclaimer_error">Vous devez accepter la clause de non-responsabilité</string>
     <string name="import_external_wallet">Importer portefeuille externe</string>

@@ -47,8 +47,8 @@ public class PinEntryDialog extends BottomSheetDialogFragment {
         }
 
         if (isNull(pinEntryManager)) {
-            pinEntryManager = PinEntryManager.create(getActivity(), R.layout.fragment_pinentry)
-                    .setTitle(getActivity().getString(R.string.set_current_pin_code))
+            pinEntryManager = PinEntryManager.create(getActivity(), R.layout.fragment_pinentry, false)
+                    .setTitle(getActivity().getString(R.string.enter_pin_code))
                     .setDescription(getActivity().getString(R.string.enter_your_current_pin_code))
                     .install(onSuccessCallback);
         }
