@@ -171,6 +171,7 @@
     <string name="please_wait">Please wait…</string>
     <string name="random_key_error">Random key error</string>
     <string name="login_error">Login failed</string>
+    <string name="invalid_pin_entered">Invalid PIN entered</string>
     <string name="wallet_created_ok">Wallet created OK.</string>
     <string name="wallet_created_ko">Error creating wallet.</string>
     <string name="wallet_restored_ok">Wallet restored OK.</string>
@@ -459,7 +460,7 @@
     <string name="create_a_passphrase">Create a passphrase</string>
     <string name="create_a_secure_passphrase_for_your_wallet">Create a secure passphrase for your wallet</string>
     <string name="set_pin_code">Set Pin code</string>
-    <string name="set_current_pin_code">Set current Pin code</string>
+    <string name="enter_pin_code">Enter PIN code</string>
     <string name="enter_your_current_pin_code">Enter your current PIN code</string>
     <string name="accept_disclaimer_error">You need to accept disclaimer</string>
     <string name="import_external_wallet">Import external wallet</string>
