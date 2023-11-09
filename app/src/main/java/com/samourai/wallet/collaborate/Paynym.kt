@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Meta
+import com.samourai.wallet.bip47.BIP47Meta.strSamouraiDonationPCode
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.CahootsMode
 import com.samourai.wallet.cahoots.CahootsType
@@ -51,7 +52,6 @@ import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import kotlinx.coroutines.launch
-import com.samourai.wallet.bip47.BIP47Meta.strSamouraiDonationPCode
 
 
 enum class PaynymChooserType {

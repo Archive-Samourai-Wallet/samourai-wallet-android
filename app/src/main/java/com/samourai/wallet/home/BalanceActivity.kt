@@ -678,9 +678,6 @@ open class BalanceActivity : SamouraiActivity() {
             StealthModeController.enableStealth(applicationContext)
         }
         super.onDestroy()
-        if (compositeDisposable != null && !compositeDisposable.isDisposed) {
-            compositeDisposable.dispose()
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

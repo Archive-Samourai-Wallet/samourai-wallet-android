@@ -51,7 +51,7 @@ public class InputBatchSpend {
     }
 
     @NotNull
-    public List<SpendDescription> getSpendDescriptionMap() {
+    public List<SpendDescription> getSpendDescriptionList() {
         return Lists.reverse(ImmutableList.copyOf(spendDescriptionMap.values()));
     }
 

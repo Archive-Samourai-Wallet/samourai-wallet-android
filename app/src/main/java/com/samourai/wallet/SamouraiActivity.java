@@ -36,6 +36,11 @@ public class SamouraiActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (compositeDisposable.isDisposed()) {
+            compositeDisposable = new CompositeDisposable();
+        }
+
         if (getIntent().getExtras() != null && getIntent().getExtras().containsKey("_account")) {
             if (getIntent().getExtras().getInt("_account") == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
                 account = WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix();
@@ -70,7 +75,9 @@ public class SamouraiActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        compositeDisposable.dispose();
+        if (! compositeDisposable.isDisposed()) {
+            compositeDisposable.dispose();
+        }
         super.onDestroy();
     }
 
