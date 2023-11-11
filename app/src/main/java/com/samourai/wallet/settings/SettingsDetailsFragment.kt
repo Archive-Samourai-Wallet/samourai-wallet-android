@@ -73,6 +73,7 @@ import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Objects
 import java.util.concurrent.CancellationException
 
 
@@ -253,21 +254,15 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
         val cbPref5 = findPreference("scramblePin") as CheckBoxPreference?
         cbPref5!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
-            if (cbPref5.isChecked) {
-                PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.SCRAMBLE_PIN, false)
-            } else {
-                PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.SCRAMBLE_PIN, true)
-            }
+            PrefsUtil.getInstance(requireContext())
+                .setValue(PrefsUtil.SCRAMBLE_PIN, Objects.equals(newValue, true))
             true
         }
 
         val cbPref11 = findPreference("haptic") as CheckBoxPreference?
         cbPref11!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
-            if (cbPref11.isChecked) {
-                PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.HAPTIC_PIN, false)
-            } else {
-                PrefsUtil.getInstance(requireContext()).setValue(PrefsUtil.HAPTIC_PIN, true)
-            }
+            PrefsUtil.getInstance(requireContext())
+                .setValue(PrefsUtil.HAPTIC_PIN, Objects.equals(newValue, true))
             true
         }
 
