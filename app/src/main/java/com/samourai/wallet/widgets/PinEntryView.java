@@ -138,7 +138,7 @@ public class PinEntryView extends FrameLayout implements View.OnClickListener {
     }
 
     private void hapticFeedBack() {
-        if (this.enableHaptic) {
+        if (enableHaptic) {
             vibrator.vibrate(44);
         }
     }

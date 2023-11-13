@@ -14,6 +14,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.google.common.collect.Lists;
 import com.samourai.wallet.R;
+import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.widgets.PinEntryView;
 
 import java.util.List;
@@ -77,6 +78,10 @@ public class PinChooserManager {
             propagateToActivity();
             addKeyText();
         });
+
+        if (!PrefsUtil.getInstance(activity).getValue(PrefsUtil.HAPTIC_PIN, true)) {
+            entryView.disableHapticFeedBack();
+        }
 
         return this;
     }
