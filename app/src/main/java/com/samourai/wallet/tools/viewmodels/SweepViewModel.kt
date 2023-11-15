@@ -24,9 +24,9 @@ import com.samourai.wallet.send.beans.SweepPreview
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.tools.viewmodels.fidelitybonds.FidelityBondsTimelockedBipFormat
 import com.samourai.wallet.tools.viewmodels.fidelitybonds.FidelityBondsTimelockedBipFormatSupplier
-import com.samourai.wallet.util.AddressFactory
-import com.samourai.wallet.util.AppUtil
-import com.samourai.wallet.util.BackendApiAndroid
+import com.samourai.wallet.util.func.AddressFactory
+import com.samourai.wallet.util.tech.AppUtil
+import com.samourai.wallet.util.network.BackendApiAndroid
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.PrivKeyReader
 import com.samourai.wallet.util.TxUtil

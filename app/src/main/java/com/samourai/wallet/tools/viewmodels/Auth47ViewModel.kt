@@ -11,8 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.paynym.api.PayNymApiService
-import com.samourai.wallet.util.AppUtil
-import com.samourai.wallet.util.MessageSignUtil
+import com.samourai.wallet.util.tech.AppUtil
+import com.samourai.wallet.util.func.MessageSignUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

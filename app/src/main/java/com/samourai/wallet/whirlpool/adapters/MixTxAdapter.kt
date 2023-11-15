@@ -19,8 +19,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.api.Tx
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.send.BlockedUTXO
-import com.samourai.wallet.util.FormatsUtil
-import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable

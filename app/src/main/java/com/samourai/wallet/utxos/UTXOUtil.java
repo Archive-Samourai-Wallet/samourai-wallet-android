@@ -1,7 +1,7 @@
 package com.samourai.wallet.utxos;
 
 import com.samourai.wallet.SamouraiWallet;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.FormatsUtil;
 
 import org.bitcoinj.core.Address;
 import org.json.JSONArray;

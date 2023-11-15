@@ -16,7 +16,7 @@ import com.samourai.wallet.stealth.notepad.NotepadActivity
 import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppActivity
 import com.samourai.wallet.stealth.vpn.VPNActivity
 import com.samourai.wallet.tor.SamouraiTorManager
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.TimeOutUtil
 
 

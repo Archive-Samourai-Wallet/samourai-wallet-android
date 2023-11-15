@@ -11,7 +11,7 @@ import com.google.android.material.transition.MaterialSharedAxis;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.payload.ExternalBackupManager;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 
 public class SettingsActivity extends SamouraiActivity {
 

@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.func;
 
 import android.content.Context;
 import android.util.Log;
@@ -9,6 +9,7 @@ import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
+import com.samourai.wallet.util.AddressFactoryGeneric;
 
 import org.apache.commons.lang3.tuple.Pair;
 

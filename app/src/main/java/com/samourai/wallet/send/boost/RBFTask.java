@@ -36,8 +36,8 @@ import com.samourai.wallet.send.RBFUtil;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SuggestedFee;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
 
 import org.apache.commons.lang3.tuple.Triple;

@@ -37,7 +37,7 @@ import com.samourai.wallet.stealth.qrscannerapp.QRStealthAppSettings
 import com.samourai.wallet.stealth.vpn.VPNStealthAPPSettings
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
-import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.tech.LogUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

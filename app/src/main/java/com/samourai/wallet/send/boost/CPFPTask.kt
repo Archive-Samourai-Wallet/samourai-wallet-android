@@ -1,7 +1,6 @@
 package com.samourai.wallet.send.boost
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import com.samourai.wallet.R
@@ -15,18 +14,14 @@ import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.*
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.service.WebSocketService
-import com.samourai.wallet.util.AddressFactory
-import com.samourai.wallet.util.AppUtil
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.AddressFactory
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.Coin
-import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.bitcoinj.script.Script
-import org.bouncycastle.util.encoders.DecoderException
 import org.bouncycastle.util.encoders.Hex
 import org.json.JSONException
-import java.io.IOException
 import java.math.BigInteger
 import java.util.*
 

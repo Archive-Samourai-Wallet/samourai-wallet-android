@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.network;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.tor.SamouraiTorManager;

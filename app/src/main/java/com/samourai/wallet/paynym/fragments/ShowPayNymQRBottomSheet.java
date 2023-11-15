@@ -22,7 +22,7 @@ import com.google.zxing.client.android.Contents;
 import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.R;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 
 
 import java.io.File;

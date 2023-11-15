@@ -29,10 +29,10 @@ import com.samourai.wallet.service.BackgroundManager;
 import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.tor.EnumTorState;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.ConnectivityStatus;
-import com.samourai.wallet.util.LogUtil;
+import com.samourai.wallet.util.network.ConnectivityStatus;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.TimeOutUtil;
 

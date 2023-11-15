@@ -13,7 +13,7 @@ import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.paynym.models.NymResponse
 import com.samourai.wallet.util.CharSequenceX
-import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.wallet.util.PrefsUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
@@ -25,7 +25,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.bitcoinj.core.AddressFormatException
-import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 

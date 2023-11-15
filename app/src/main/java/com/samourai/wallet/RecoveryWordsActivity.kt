@@ -16,7 +16,7 @@ import com.samourai.wallet.databinding.ActivityRecoveryWordsBinding
 import com.samourai.wallet.databinding.FragmentPaperWalletInstructionsBinding
 import com.samourai.wallet.databinding.FragmentRecoveryPassphraseBinding
 import com.samourai.wallet.databinding.FragmentRecoveryWordsBinding
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.TimeOutUtil
 
 class RecoveryWordsActivity : AppCompatActivity() {

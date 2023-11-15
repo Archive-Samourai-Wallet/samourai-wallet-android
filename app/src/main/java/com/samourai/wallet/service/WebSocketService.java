@@ -11,14 +11,14 @@ import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.tech.AppUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 //import android.util.Log;
 
 // this services keeps connexion to WebSocket for realtime notifications

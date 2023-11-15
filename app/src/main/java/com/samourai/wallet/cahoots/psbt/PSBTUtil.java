@@ -1,6 +1,6 @@
 package com.samourai.wallet.cahoots.psbt;
 
-import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 
 import android.app.Activity;
 import android.app.AlertDialog;

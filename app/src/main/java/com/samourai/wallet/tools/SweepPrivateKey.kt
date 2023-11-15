@@ -49,9 +49,9 @@ import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.viewmodels.SweepViewModel
-import com.samourai.wallet.util.AddressFactory
-import com.samourai.wallet.util.AppUtil
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.AddressFactory
+import com.samourai.wallet.util.tech.AppUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrivKeyReader
 import org.bitcoinj.core.Coin
 import java.util.Calendar

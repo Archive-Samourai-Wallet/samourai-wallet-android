@@ -1,17 +1,13 @@
-package com.samourai.wallet.util;
-
-import android.content.Context;
+package com.samourai.wallet.util.func;
 
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.util.FormatsUtilGeneric;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Base58;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.utils.BtcFixedFormat;
 import org.bitcoinj.utils.BtcFormat;
-import org.bitcoinj.utils.MonetaryFormat;
 
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;

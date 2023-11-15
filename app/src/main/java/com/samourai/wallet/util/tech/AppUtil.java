@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.tech;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 
@@ -24,6 +24,12 @@ import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
+import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.TimeOutUtil;
+import com.samourai.wallet.util.func.BatchSendUtil;
+import com.samourai.wallet.util.func.SendAddressUtil;
+import com.samourai.wallet.util.func.SentToFromBIP47Util;
+import com.samourai.wallet.util.network.ConnectivityStatus;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 

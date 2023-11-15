@@ -28,7 +28,7 @@ import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.CahootsWallet;
 import com.samourai.wallet.cahoots.psbt.PSBT;
 import com.samourai.wallet.send.FeeUtil;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.QRBottomSheetDialog;
 
 public class ManualCahootsActivity extends SamouraiActivity {

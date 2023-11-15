@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.network;
 
 import android.app.Activity;
 import android.app.PendingIntent;

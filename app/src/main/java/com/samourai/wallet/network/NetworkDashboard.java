@@ -29,10 +29,10 @@ import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.tor.EnumTorState;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.AppUtil;
-import com.samourai.wallet.util.ConnectivityStatus;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.network.ConnectivityStatus;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.WebUtil;
+import com.samourai.wallet.util.network.WebUtil;
 
 import java.util.Objects;
 

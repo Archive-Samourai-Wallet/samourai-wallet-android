@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.tech;
 
 import android.text.InputFilter;
 import android.text.Spanned;

@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.func;
 
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.util.MessageSignUtilGeneric;
 
 import org.bitcoinj.core.ECKey;
 

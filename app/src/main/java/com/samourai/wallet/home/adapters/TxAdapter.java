@@ -4,7 +4,6 @@ import android.content.Context;
 import android.text.format.DateUtils;
 import android.transition.ChangeBounds;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,15 +21,10 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.api.Tx;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.send.BlockedUTXO;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
-import com.samourai.wallet.whirlpool.WhirlpoolMeta;
-import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
-import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
 import org.json.JSONObject;
 

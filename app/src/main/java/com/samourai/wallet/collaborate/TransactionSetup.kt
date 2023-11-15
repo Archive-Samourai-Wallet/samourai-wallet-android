@@ -49,8 +49,8 @@ import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.getSupportFragmentManger
-import com.samourai.wallet.util.FormatsUtil
-import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.tech.LogUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat

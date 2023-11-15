@@ -1,7 +1,6 @@
 package com.samourai.wallet.whirlpool.newPool.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +9,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.samourai.wallet.databinding.FragmentWhirlpoolReviewBinding
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.whirlpool.WhirlpoolTx0
 import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel
 import com.samourai.whirlpool.client.tx0.Tx0Preview

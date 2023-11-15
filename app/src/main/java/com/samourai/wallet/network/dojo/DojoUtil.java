@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
-import com.samourai.wallet.util.WebUtil;
+import com.samourai.wallet.util.network.WebUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;

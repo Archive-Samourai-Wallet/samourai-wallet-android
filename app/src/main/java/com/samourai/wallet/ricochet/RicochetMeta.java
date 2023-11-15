@@ -19,7 +19,7 @@ import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.util.AddressFactory;
+import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 

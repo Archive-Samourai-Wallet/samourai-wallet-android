@@ -15,7 +15,7 @@ import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.LogUtil;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.TimeOutUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 

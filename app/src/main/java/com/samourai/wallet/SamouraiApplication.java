@@ -17,9 +17,9 @@ import androidx.multidex.MultiDex;
 import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.stealth.StealthModeController;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.AppUtil;
-import com.samourai.wallet.util.ConnectionChangeReceiver;
-import com.samourai.wallet.util.LogUtil;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.network.ConnectionChangeReceiver;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.squareup.picasso.Picasso;
 

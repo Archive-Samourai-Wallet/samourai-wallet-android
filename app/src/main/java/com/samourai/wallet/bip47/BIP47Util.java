@@ -185,7 +185,7 @@ public class BIP47Util extends BIP47UtilGeneric {
         String finalUrl = url;
         return Completable.fromCallable(() -> {
                     Request.Builder rb = new Request.Builder().url(finalUrl);
-                    OkHttpClient.Builder builder = com.samourai.wallet.util.WebUtil.getInstance(context).httpClientBuilder(finalUrl);
+                    OkHttpClient.Builder builder = com.samourai.wallet.util.network.WebUtil.getInstance(context).httpClientBuilder(finalUrl);
                     OkHttpClient client = builder.build();
                     Response response = client.newCall(rb.build()).execute();
                     if (response.isSuccessful()) {

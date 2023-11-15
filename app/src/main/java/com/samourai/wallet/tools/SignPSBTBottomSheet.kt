@@ -45,7 +45,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.fragments.ScanFragment
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.viewmodels.SignPSBTViewModel
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.sparrowwallet.hummingbird.UR
 import com.sparrowwallet.hummingbird.registry.RegistryType
 import org.bouncycastle.util.encoders.Hex

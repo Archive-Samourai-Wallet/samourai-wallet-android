@@ -3,7 +3,7 @@ package com.samourai.wallet;
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 
 public class AboutActivity extends Activity {
 

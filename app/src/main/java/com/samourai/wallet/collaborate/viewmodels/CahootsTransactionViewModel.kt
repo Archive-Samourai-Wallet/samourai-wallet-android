@@ -17,7 +17,7 @@ import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

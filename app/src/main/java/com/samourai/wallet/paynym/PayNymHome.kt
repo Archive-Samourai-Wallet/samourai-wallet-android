@@ -38,6 +38,9 @@ import com.samourai.wallet.paynym.fragments.ShowPayNymQRBottomSheet
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.*
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.func.MessageSignUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.widgets.ViewPager
 import io.reactivex.exceptions.UndeliverableException
 import io.reactivex.plugins.RxJavaPlugins

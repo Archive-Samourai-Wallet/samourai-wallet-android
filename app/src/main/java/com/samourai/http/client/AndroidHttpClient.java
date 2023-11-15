@@ -3,7 +3,7 @@ package com.samourai.http.client;
 import android.content.Context;
 
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.WebUtil;
+import com.samourai.wallet.util.network.WebUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

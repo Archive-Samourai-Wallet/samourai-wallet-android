@@ -44,7 +44,7 @@ public class WebUtil {
 
         RequestBody body = RequestBody.create(JSON, jsonBody);
 
-        OkHttpClient.Builder builder = com.samourai.wallet.util.WebUtil.getInstance(context).httpClientBuilder(requestURL);
+        OkHttpClient.Builder builder = com.samourai.wallet.util.network.WebUtil.getInstance(context).httpClientBuilder(requestURL);
 
         Request.Builder rbuilder = new Request.Builder()
                 .url(requestURL)

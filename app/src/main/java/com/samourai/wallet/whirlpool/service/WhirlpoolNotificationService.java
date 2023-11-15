@@ -34,7 +34,7 @@ import io.reactivex.schedulers.Schedulers;
 import static androidx.core.app.NotificationCompat.GROUP_ALERT_SUMMARY;
 import static com.samourai.wallet.SamouraiApplication.WHIRLPOOL_CHANNEL;
 import static com.samourai.wallet.SamouraiApplication.WHIRLPOOL_NOTIFICATIONS;
-import static com.samourai.wallet.util.FormatsUtil.getBTCDecimalFormat;
+import static com.samourai.wallet.util.func.FormatsUtil.getBTCDecimalFormat;
 
 public class WhirlpoolNotificationService extends Service {
 

@@ -34,8 +34,8 @@ import com.samourai.wallet.send.boost.CPFPTask
 import com.samourai.wallet.send.boost.RBFTask
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.CharSequenceX
-import com.samourai.wallet.util.DateUtil
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.tech.DateUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.CircleImageView
 import com.squareup.picasso.Picasso

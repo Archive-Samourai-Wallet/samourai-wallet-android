@@ -11,7 +11,7 @@ import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.R;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.payload.ExternalBackupManager;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.TimeOutUtil;
 
 public class PinEntryActivity extends AppCompatActivity {

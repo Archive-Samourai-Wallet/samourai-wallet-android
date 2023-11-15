@@ -19,9 +19,9 @@ import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.CharSequenceX
-import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import kotlinx.coroutines.Dispatchers

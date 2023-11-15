@@ -11,8 +11,8 @@ import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.util.CharSequenceX
-import com.samourai.wallet.util.MessageSignUtil
-import com.samourai.wallet.util.WebUtil
+import com.samourai.wallet.util.func.MessageSignUtil
+import com.samourai.wallet.util.network.WebUtil
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.bitcoinj.crypto.MnemonicException

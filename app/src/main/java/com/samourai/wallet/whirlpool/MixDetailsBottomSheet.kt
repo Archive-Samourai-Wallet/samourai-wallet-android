@@ -1,7 +1,6 @@
 package com.samourai.wallet.whirlpool
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,7 +8,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.samourai.wallet.R
 import com.samourai.wallet.databinding.FragmentMixDetailsDialogBinding
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import io.reactivex.disposables.CompositeDisposable

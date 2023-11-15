@@ -1,6 +1,4 @@
-package com.samourai.wallet.util;
-
-import android.util.Log;
+package com.samourai.wallet.util.func;
 
 import org.json.JSONArray;
 import org.json.JSONException;

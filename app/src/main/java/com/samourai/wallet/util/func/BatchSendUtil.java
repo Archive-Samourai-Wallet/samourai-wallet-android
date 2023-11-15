@@ -1,11 +1,10 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.func;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static java.util.Objects.nonNull;
 
 import android.content.Context;
 
-import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 
 import org.json.JSONArray;

@@ -7,7 +7,7 @@ import com.samourai.wallet.bipWallet.BipWallet;
 import com.samourai.wallet.client.indexHandler.IIndexHandler;
 import com.samourai.wallet.hd.Chain;
 import com.samourai.wallet.hd.WALLET_INDEX;
-import com.samourai.wallet.util.AddressFactory;
+import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.data.walletState.WalletStateSupplier;
 

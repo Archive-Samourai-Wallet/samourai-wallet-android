@@ -14,9 +14,9 @@ import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.MonetaryUtil;
+import com.samourai.wallet.util.func.MonetaryUtil;
 import com.samourai.wallet.util.NotificationsFactory;
-import com.samourai.wallet.util.WebUtil;
+import com.samourai.wallet.util.network.WebUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,9 +36,9 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
-import static com.samourai.wallet.util.LogUtil.debug;
-import static com.samourai.wallet.util.LogUtil.error;
-import static com.samourai.wallet.util.LogUtil.info;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.error;
+import static com.samourai.wallet.util.tech.LogUtil.info;
 
 public class WebSocketHandler {
     private static final String URL_INV = "/inv";

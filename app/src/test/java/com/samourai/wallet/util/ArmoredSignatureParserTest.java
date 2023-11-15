@@ -1,5 +1,7 @@
 package com.samourai.wallet.util;
 
+import com.samourai.wallet.util.func.ArmoredSignatureParser;
+
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -8,23 +8,20 @@ import androidx.recyclerview.widget.AsyncListDiffer;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.samourai.wallet.R;
-import com.samourai.wallet.api.Tx;
 import com.samourai.wallet.whirlpool.models.PoolViewModel;
 import com.samourai.whirlpool.client.tx0.Tx0Preview;
 
 import java.util.ArrayList;
 
-import static com.samourai.wallet.util.FormatsUtil.getBTCDecimalFormat;
-import static com.samourai.wallet.util.FormatsUtil.getPoolBTCDecimalFormat;
+import static com.samourai.wallet.util.func.FormatsUtil.getBTCDecimalFormat;
+import static com.samourai.wallet.util.func.FormatsUtil.getPoolBTCDecimalFormat;
 
 public class PoolsAdapter extends RecyclerView.Adapter<PoolsAdapter.ViewHolder> {
 
