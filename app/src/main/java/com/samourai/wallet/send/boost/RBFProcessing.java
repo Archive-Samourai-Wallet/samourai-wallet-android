@@ -7,7 +7,8 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.samourai.wallet.MainActivity2;
+import androidx.core.app.TaskStackBuilder;
+
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.SamouraiWallet;
@@ -15,6 +16,7 @@ import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
+import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
@@ -115,9 +117,8 @@ public class RBFProcessing {
                                             rbf.setPrevHash(txHash);
                                             RBFUtil.getInstance().add(rbf);
 
-                                            final Intent _intent = new Intent(activity, MainActivity2.class);
-                                            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                                            activity.startActivity(_intent);
+                                            gotoBalanceHomeActivity();
+
                                             callback.onComplete("DONE");
                                         },
                                         e -> {
@@ -141,6 +142,28 @@ public class RBFProcessing {
             dlg.show();
         } else {
             callback.onException(new Exception("activity is finishing"));
+        }
+    }
+
+    private void gotoBalanceHomeActivity() {
+        if (activity.getAccount() != 0) {
+
+            final Intent balanceHome = new Intent(activity, BalanceActivity.class);
+            balanceHome.putExtra("_account", activity.getAccount());
+            balanceHome.putExtra("refresh", true);
+            final Intent parentIntent = new Intent(activity, BalanceActivity.class);
+            parentIntent.putExtra("_account", 0);
+            balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            TaskStackBuilder.create(activity)
+                    .addNextIntent(parentIntent)
+                    .addNextIntent(balanceHome)
+                    .startActivities();
+
+        } else {
+            final Intent _intent = new Intent(activity, BalanceActivity.class);
+            _intent.putExtra("refresh", true);
+            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            activity.startActivity(_intent);
         }
     }
 

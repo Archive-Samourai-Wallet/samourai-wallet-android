@@ -91,11 +91,6 @@ class TxDetailsActivity : SamouraiActivity() {
             }
         }
 
-        // sender+receiver
-        if (intent.hasExtra("_account")) {
-            account = intent.getIntExtra("_account", 0)
-        }
-
         payNymUsername = findViewById(R.id.tx_paynym_username)
         amount = findViewById(R.id.tx_amount)
         payNymAvatar = findViewById(R.id.img_paynym_avatar)
