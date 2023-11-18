@@ -635,7 +635,7 @@ open class BalanceActivity : SamouraiActivity() {
                 BIP47Util.getInstance(applicationContext).fetchBotImage()
                     .subscribe()
                     .apply {
-                        compositeDisposable.add(this)
+                        registerDisposable(this)
                         balanceViewModel.viewModelScope.launch {
                             withContext(Dispatchers.Default) {
                                 val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
@@ -868,7 +868,7 @@ open class BalanceActivity : SamouraiActivity() {
                     true
                 }.subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread()).subscribe({ t: Boolean? -> }) { throwable: Throwable? -> LogUtil.error(TAG, throwable) }
-                compositeDisposable!!.add(disposable)
+                registerDisposable(disposable)
             }
         } catch (exception: Exception) {
             LogUtil.error(TAG, exception)
@@ -908,8 +908,8 @@ open class BalanceActivity : SamouraiActivity() {
                     balanceViewModel.setBalance(balance)
                 }
             }
-        compositeDisposable!!.add(balanceDisposable)
-        compositeDisposable.add(txDisposable)
+        registerDisposable(balanceDisposable)
+        registerDisposable(txDisposable)
         //        displayBalance();
 //        txAdapter.notifyDataSetChanged();
     }
@@ -1133,7 +1133,7 @@ open class BalanceActivity : SamouraiActivity() {
                                 .setTitle(R.string.app_name)
                                 .setMessage(R.string.privkey_clipboard)
                                 .setCancelable(false)
-                                .setPositiveButton(R.string.yes) { dialog, whichButton -> clipboard.setPrimaryClip(ClipData.newPlainText("", "")) }.setNegativeButton(R.string.no) { dialog, whichButton -> }.show()
+                                .setPositiveButton(R.string.yes) { _, _ -> clipboard.setPrimaryClip(ClipData.newPlainText("", "")) }.setNegativeButton(R.string.no) { _, _ -> }.show()
                         }
                     }
                 } catch (e: Exception) {
@@ -1174,6 +1174,7 @@ open class BalanceActivity : SamouraiActivity() {
         }
         val txIntent = Intent(this, TxDetailsActivity::class.java)
         txIntent.putExtra("TX", tx.toJSON().toString())
+        txIntent.putExtra("_account", account)
         startActivity(txIntent)
     }
 
@@ -1269,7 +1270,7 @@ open class BalanceActivity : SamouraiActivity() {
         }.subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ aBoolean: Boolean? -> Log.i(TAG, "doFeaturePayNymUpdate: Feature update complete") }) { error: Throwable? -> Log.i(TAG, "doFeaturePayNymUpdate: Feature update Fail") }
-        this.compositeDisposable!!.add(disposable)
+        registerDisposable(disposable)
     }
 
     companion object {

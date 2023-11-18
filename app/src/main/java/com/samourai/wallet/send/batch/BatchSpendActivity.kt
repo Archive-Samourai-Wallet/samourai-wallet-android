@@ -204,7 +204,7 @@ class BatchSpendActivity : SamouraiActivity() {
             .subscribe({
                 viewModel.setBalance(applicationContext, account)
             }) { obj: Throwable -> obj.printStackTrace() }
-        compositeDisposable.add(disposable)
+        registerDisposable(disposable)
 
         val inputBatchSpendAsJson = intent.getStringExtra("inputBatchSpend")
         if (nonNull(inputBatchSpendAsJson)) {
@@ -485,7 +485,7 @@ class BatchSpendActivity : SamouraiActivity() {
         val loadingStatus = findViewById<ProgressBar>(R.id.batch_spend_loading_status)
         loadingStatus.visibility = View.VISIBLE
 
-        compositeDisposable.add(
+        registerDisposable(
 
             Observable.fromCallable {
 

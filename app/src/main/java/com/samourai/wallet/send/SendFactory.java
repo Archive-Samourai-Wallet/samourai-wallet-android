@@ -89,7 +89,7 @@ public class SendFactory extends SendFactoryGeneric	{
 
     public Transaction signTransaction(Transaction unsignedTx, int account)  {
 
-        HashMap<String,ECKey> keyBag = new HashMap<String,ECKey>();
+        HashMap<String,ECKey> keyBag = new HashMap<>();
 
         for (TransactionInput input : unsignedTx.getInputs()) {
 
@@ -518,7 +518,7 @@ public class SendFactory extends SendFactoryGeneric	{
         try {
             String path = APIFactory.getInstance(context).getUnspentPaths().get(address);
             debug("SendFactory", "address path:" + path);
-            if(path != null)    {
+            if(path != null) {
                 String[] s = path.split("/");
                 if(FormatsUtil.getInstance().isValidBech32(address))    {
                     debug("SendFactory", "address type:" + "bip84");
@@ -553,8 +553,7 @@ public class SendFactory extends SendFactoryGeneric	{
                         ecKey = pk.getKey();
                     }
                 }
-            }
-            else    {
+            } else {
                 debug("SendFactory", "address type:" + "bip47");
                 debug("SendFactory", "address:" + address);
                 String pcode = BIP47Meta.getInstance().getPCode4Addr(address);

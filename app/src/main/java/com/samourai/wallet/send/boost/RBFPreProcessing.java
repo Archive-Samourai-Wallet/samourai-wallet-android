@@ -3,53 +3,36 @@ package com.samourai.wallet.send.boost;
 import static java.util.Objects.nonNull;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.samourai.wallet.MainActivity2;
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
-import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.bip69.BIP69OutputComparator;
-import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.segwit.BIP49Util;
-import com.samourai.wallet.segwit.BIP84Util;
-import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.MyTransactionInput;
 import com.samourai.wallet.send.MyTransactionOutPoint;
-import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.RBFSpend;
 import com.samourai.wallet.send.RBFUtil;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SuggestedFee;
 import com.samourai.wallet.send.UTXO;
+import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.FormatsUtil;
-import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.DumpedPrivateKey;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.core.TransactionWitness;
-import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bouncycastle.util.encoders.Hex;
@@ -58,47 +41,81 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.Callable;
 
-public class RBFTask extends AsyncTask<String, Void, String> {
+public class RBFPreProcessing implements Callable<String> {
 
-    private Activity activity;
-    private List<UTXO> utxos = null;
-    private Handler handler = null;
-    private RBFSpend rbf = null;
-    private HashMap<String, Long> input_values = null;
+    private static final String TAG = RBFPreProcessing.class.getSimpleName();
+    private final SamouraiActivity activity;
+    private final String txHash;
+    private List<UTXO> utxos;
+    private RBFSpend rbf;
+    private boolean feeWarning = false;
+    private Transaction transaction;
+    private final Map<String, Long> inputValues = new HashMap<>();
+    private long remainingFee;
 
-    public RBFTask(Activity activity) {
+    public String getTxHash() {
+        return txHash;
+    }
+
+    public RBFSpend getRbf() {
+        return rbf;
+    }
+
+    public boolean isFeeWarning() {
+        return feeWarning;
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
+    }
+
+    public Map<String, Long> getInputValues() {
+        return inputValues;
+    }
+
+    public long getRemainingFee() {
+        return remainingFee;
+    }
+
+    private RBFPreProcessing(final SamouraiActivity activity, final String txHash) {
+        
         this.activity = activity;
-        Log.i("RBD", "RBFTask: ");
+        this.txHash = txHash;
+        if (activity.getAccount() == WhirlpoolMeta.getInstance(activity).getWhirlpoolPostmix()) {
+            utxos = APIFactory.getInstance(activity).getUtxosPostMix(true);
+        } else {
+            utxos = APIFactory.getInstance(activity).getUtxos(true);
+        }
+    }
+    
+    public static RBFPreProcessing create(final SamouraiActivity activity, final String txHash) {
+        return new RBFPreProcessing(activity, txHash);
+    }
+    
+    @Override
+    public String call() throws Exception {
+        return preProcessRBF();
     }
 
-    @Override
-    protected void onPreExecute() {
-        handler = new Handler();
-        utxos = APIFactory.getInstance(activity).getUtxos(true);
-        input_values = new HashMap<>();
-    }
+    private String preProcessRBF() {
 
-    @Override
-    protected String doInBackground(final String... params) {
+        Log.d("RBF", "hash:" + txHash);
 
-        Looper.prepare();
-
-        Log.d("RBF", "hash:" + params[0]);
-
-        rbf = RBFUtil.getInstance().get(params[0]);
+        rbf = RBFUtil.getInstance().get(txHash);
         Log.d("RBF", "rbf:" + rbf.toJSON().toString());
         final Transaction tx = new Transaction(SamouraiWallet.getInstance().getCurrentNetworkParams(), Hex.decode(rbf.getSerializedTx()));
         Log.d("RBF", "tx serialized:" + rbf.getSerializedTx());
         Log.d("RBF", "tx inputs:" + tx.getInputs().size());
         Log.d("RBF", "tx outputs:" + tx.getOutputs().size());
-        JSONObject txObj = APIFactory.getInstance(activity).getTxInfo(params[0]);
+        final JSONObject txObj = APIFactory.getInstance(activity).getTxInfo(txHash);
         if (nonNull(txObj) && txObj.has("inputs") && txObj.has("outputs")) {
             try {
                 JSONArray inputs = txObj.getJSONArray("inputs");
@@ -117,7 +134,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                             try {
                                 address = Bech32Util.getInstance().getAddressFromScript(scriptpubkey);
                             } catch (Exception e) {
-                                ;
+                                e.printStackTrace();
                             }
                         } else {
                             address = script.getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
@@ -138,9 +155,9 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
                 long total_inputs = 0L;
                 long total_outputs = 0L;
-                long fee = 0L;
+                long fee;
                 long total_change = 0L;
-                List<String> selfAddresses = new ArrayList<String>();
+                List<String> selfAddresses = new ArrayList<>();
 
                 for (int i = 0; i < inputs.length(); i++) {
                     JSONObject obj = inputs.getJSONObject(i);
@@ -149,7 +166,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                         if (objPrev.has("value")) {
                             total_inputs += objPrev.getLong("value");
                             String key = objPrev.getString("txid") + ":" + objPrev.getLong("vout");
-                            input_values.put(key, objPrev.getLong("value"));
+                            inputValues.put(key, objPrev.getLong("value"));
                         }
                     }
                 }
@@ -171,13 +188,12 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                     }
                 }
 
-                boolean feeWarning = false;
                 fee = total_inputs - total_outputs;
                 if (fee > estimatedFee.longValue()) {
                     feeWarning = true;
                 }
 
-                long remainingFee = (estimatedFee.longValue() > fee) ? estimatedFee.longValue() - fee : 0L;
+                remainingFee = (estimatedFee.longValue() > fee) ? estimatedFee.longValue() - fee : 0L;
 
                 Log.d("RBF", "total inputs:" + total_inputs);
                 Log.d("RBF", "total outputs:" + total_outputs);
@@ -187,7 +203,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                 Log.d("RBF", "fee warning:" + feeWarning);
                 Log.d("RBF", "remaining fee:" + remainingFee);
 
-                List<TransactionOutput> txOutputs = new ArrayList<TransactionOutput>();
+                List<TransactionOutput> txOutputs = new ArrayList<>();
                 txOutputs.addAll(tx.getOutputs());
 
                 long remainder = remainingFee;
@@ -219,7 +235,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                 //
                 // original inputs are not modified
                 //
-                List<MyTransactionInput> _inputs = new ArrayList<MyTransactionInput>();
+                List<MyTransactionInput> _inputs = new ArrayList<>();
                 List<TransactionInput> txInputs = tx.getInputs();
                 for (TransactionInput input : txInputs) {
                     MyTransactionInput _input = new MyTransactionInput(SamouraiWallet.getInstance().getCurrentNetworkParams(), null, new byte[0], input.getOutpoint(), input.getOutpoint().getHash().toString(), (int) input.getOutpoint().getIndex());
@@ -230,7 +246,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
                 Triple<Integer, Integer, Integer> outpointTypes = null;
                 if (remainder > 0L) {
-                    List<UTXO> selectedUTXO = new ArrayList<UTXO>();
+                    List<UTXO> selectedUTXO = new ArrayList<>();
                     long selectedAmount = 0L;
                     int selected = 0;
                     long _remainingFee = remainder;
@@ -279,8 +295,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                     }
                     long extraChange = 0L;
                     if (selectedAmount < (_remainingFee + SamouraiWallet.bDust.longValue())) {
-                        handler.post(() -> Toast.makeText(activity, R.string.insufficient_funds, Toast.LENGTH_SHORT).show());
-                        return "KO";
+                        return activity.getString(R.string.insufficient_funds);
                     } else {
                         extraChange = selectedAmount - _remainingFee;
                         Log.d("RBF", "extra change:" + extraChange);
@@ -293,11 +308,11 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
                         String change_address = null;
                         if (isSegwitChange) {
-                            int changeIdx = BIP49Util.getInstance(activity).getWallet().getAccount(0).getChange().getAddrIdx();
+                            int changeIdx = BIP49Util.getInstance(activity).getWallet().getAccount(activity.getAccount()).getChange().getAddrIdx();
                             change_address = BIP49Util.getInstance(activity).getAddressAt(AddressFactory.CHANGE_CHAIN, changeIdx).getAddressAsString();
                         } else {
-                            int changeIdx = HD_WalletFactory.getInstance(activity).get().getAccount(0).getChange().getAddrIdx();
-                            change_address = HD_WalletFactory.getInstance(activity).get().getAccount(0).getChange().getAddressAt(changeIdx).getAddressString();
+                            int changeIdx = HD_WalletFactory.getInstance(activity).get().getAccount(activity.getAccount()).getChange().getAddrIdx();
+                            change_address = HD_WalletFactory.getInstance(activity).get().getAccount(activity.getAccount()).getChange().getAddressAt(changeIdx).getAddressString();
                         }
 
                         Script toOutputScript = ScriptBuilder.createOutputScript(Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), change_address));
@@ -339,8 +354,7 @@ public class RBFTask extends AsyncTask<String, Void, String> {
 
                     // sanity check
                     if (extraChange > 0L && !addedChangeOutput) {
-                        handler.post(() -> Toast.makeText(activity, R.string.cannot_create_change_output, Toast.LENGTH_SHORT).show());
-                        return "KO";
+                        return activity.getString(R.string.cannot_create_change_output);
                     }
 
                     //
@@ -382,220 +396,35 @@ public class RBFTask extends AsyncTask<String, Void, String> {
                 //
                 // BIP69 sort of outputs/inputs
                 //
-                final Transaction _tx = new Transaction(SamouraiWallet.getInstance().getCurrentNetworkParams());
-                List<TransactionOutput> _txOutputs = new ArrayList<TransactionOutput>();
+                transaction = new Transaction(SamouraiWallet.getInstance().getCurrentNetworkParams());
+                List<TransactionOutput> _txOutputs = new ArrayList<>();
                 _txOutputs.addAll(txOutputs);
                 Collections.sort(_txOutputs, new BIP69OutputComparator());
                 for (TransactionOutput to : _txOutputs) {
                     // zero value outputs discarded here
                     if (to.getValue().longValue() > 0L) {
-                        _tx.addOutput(to);
+                        transaction.addOutput(to);
                     }
                 }
 
-                List<MyTransactionInput> __inputs = new ArrayList<MyTransactionInput>();
+                List<MyTransactionInput> __inputs = new ArrayList<>();
                 __inputs.addAll(_inputs);
                 Collections.sort(__inputs, new SendFactory.BIP69InputComparator());
                 for (TransactionInput input : __inputs) {
-                    _tx.addInput(input);
+                    transaction.addInput(input);
                 }
 
                 FeeUtil.getInstance().setSuggestedFee(suggestedFee);
 
-                String message = "";
-                if (feeWarning) {
-                    message += activity.getString(R.string.fee_bump_not_necessary);
-                    message += "\n\n";
-                }
-                message += activity.getString(R.string.bump_fee) + " " + Coin.valueOf(remainingFee).toPlainString() + " BTC";
-
-                AlertDialog.Builder dlg = new AlertDialog.Builder(activity)
-                        .setTitle(R.string.app_name)
-                        .setMessage(message)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-
-                                Transaction __tx = signTx(_tx);
-                                final String hexTx = new String(Hex.encode(__tx.bitcoinSerialize()));
-                                Log.d("RBF", "hex tx:" + hexTx);
-
-                                final String strTxHash = __tx.getHashAsString();
-                                Log.d("RBF", "tx hash:" + strTxHash);
-
-                                if (__tx != null) {
-
-                                    try {
-                                        PushTx.getInstance(activity).pushTx(hexTx);
-                                        handler.post(() -> {
-                                            Toast.makeText(activity, R.string.rbf_spent, Toast.LENGTH_SHORT).show();
-
-                                            RBFSpend _rbf = rbf;    // includes updated 'keyBag'
-                                            _rbf.setSerializedTx(hexTx);
-                                            _rbf.setHash(strTxHash);
-                                            _rbf.setPrevHash(params[0]);
-                                            RBFUtil.getInstance().add(_rbf);
-
-                                            Intent _intent = new Intent(activity, MainActivity2.class);
-                                            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                                            activity.startActivity(_intent);
-                                        });
-                                    } catch (final Exception de) {
-                                        handler.post(() -> Toast.makeText(activity, "pushTx:" + de.getMessage(), Toast.LENGTH_SHORT).show());
-                                    }
-
-                                }
-
-                            }
-                        }).setNegativeButton(R.string.cancel, (dialog, whichButton) -> dialog.dismiss());
-                if (!activity.isFinishing()) {
-                    dlg.show();
-                }
-
             } catch (final JSONException je) {
-                handler.post(() -> Toast.makeText(activity, "rbf:" + je.getMessage(), Toast.LENGTH_SHORT).show());
+                return "rbf:" + je.getMessage();
             }
 
         } else {
-            Toast.makeText(activity, R.string.cpfp_cannot_retrieve_tx, Toast.LENGTH_SHORT).show();
+            return activity.getString(R.string.cpfp_cannot_retrieve_tx);
         }
-
-        Looper.loop();
-
-        return "OK";
-    }
-
-    @Override
-    protected void onPostExecute(String result) {
-        ;
-    }
-
-    @Override
-    protected void onProgressUpdate(Void... values) {
-        ;
-    }
-
-    private Transaction signTx(Transaction tx) {
-
-        HashMap<String, ECKey> keyBag = new HashMap<>();
-        HashMap<String, ECKey> keyBag49 = new HashMap<>();
-        HashMap<String, ECKey> keyBag84 = new HashMap<>();
-
-        HashMap<String, String> keys = rbf.getKeyBag();
-
-        for (String outpoint : keys.keySet()) {
-
-            ECKey ecKey = null;
-
-            String[] s = keys.get(outpoint).split("/");
-            Log.i("RBF", "path length:" + s.length);
-            if (s.length == 4) {
-                if (s[3].equals("84")) {
-                    HD_Address addr = BIP84Util.getInstance(activity).getWallet().getAccount(0).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
-                    ecKey = addr.getECKey();
-                } else {
-                    HD_Address addr = BIP49Util.getInstance(activity).getWallet().getAccount(0).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
-                    ecKey = addr.getECKey();
-                }
-            } else if (s.length == 3) {
-                HD_Address hd_address = AddressFactory.getInstance(activity).get(0, Integer.parseInt(s[1]), Integer.parseInt(s[2]));
-                String strPrivKey = hd_address.getPrivateKeyString();
-                DumpedPrivateKey pk = new DumpedPrivateKey(SamouraiWallet.getInstance().getCurrentNetworkParams(), strPrivKey);
-                ecKey = pk.getKey();
-            } else if (s.length == 2) {
-                try {
-                    PaymentAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(s[0]), Integer.parseInt(s[1]));
-                    ecKey = address.getReceiveECKey();
-                } catch (Exception e) {
-                    ;
-                }
-            } else {
-                ;
-            }
-
-            Log.i("RBF", "outpoint:" + outpoint);
-            Log.i("RBF", "path:" + keys.get(outpoint));
-//                Log.i("RBF", "ECKey address from ECKey:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-
-            if (ecKey != null) {
-                if (s.length == 4) {
-                    if (s[3].equals("84")) {
-                        keyBag84.put(outpoint, ecKey);
-                    } else {
-                        keyBag49.put(outpoint, ecKey);
-                    }
-                } else {
-                    keyBag.put(outpoint, ecKey);
-                }
-            } else {
-                throw new RuntimeException("ECKey error: cannot process private key");
-//                    Log.i("ECKey error", "cannot process private key");
-            }
-
-        }
-
-        try {
-            List<TransactionInput> inputs = tx.getInputs();
-            for (int i = 0; i < inputs.size(); i++) {
-
-                ECKey ecKey = null;
-                String address = null;
-                if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
-                    if (keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
-                        ecKey = keyBag84.get(inputs.get(i).getOutpoint().toString());
-                        SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                        address = segwitAddress.getBech32AsString();
-                    } else {
-                        ecKey = keyBag49.get(inputs.get(i).getOutpoint().toString());
-                        SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                        address = segwitAddress.getAddressAsString();
-                    }
-                } else {
-                    ecKey = keyBag.get(inputs.get(i).getOutpoint().toString());
-                    address = ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-                }
-                Log.d("RBF", "pubKey:" + Hex.toHexString(ecKey.getPubKey()));
-                Log.d("RBF", "address:" + address);
-
-                if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
-
-                    final SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                    Script scriptPubKey = segwitAddress.segwitOutputScript();
-                    final Script redeemScript = segwitAddress.segwitRedeemScript();
-                    System.out.println("redeem script:" + Hex.toHexString(redeemScript.getProgram()));
-                    final Script scriptCode = redeemScript.scriptCode();
-                    System.out.println("script code:" + Hex.toHexString(scriptCode.getProgram()));
-
-                    TransactionSignature sig = tx.calculateWitnessSignature(i, ecKey, scriptCode, Coin.valueOf(input_values.get(inputs.get(i).getOutpoint().toString())), Transaction.SigHash.ALL, false);
-                    final TransactionWitness witness = new TransactionWitness(2);
-                    witness.setPush(0, sig.encodeToBitcoin());
-                    witness.setPush(1, ecKey.getPubKey());
-                    tx.setWitness(i, witness);
-
-                    if (!FormatsUtil.getInstance().isValidBech32(address) && Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
-                        final ScriptBuilder sigScript = new ScriptBuilder();
-                        sigScript.data(redeemScript.getProgram());
-                        tx.getInput(i).setScriptSig(sigScript.build());
-                        tx.getInput(i).getScriptSig().correctlySpends(tx, i, scriptPubKey, Coin.valueOf(input_values.get(inputs.get(i).getOutpoint().toString())), Script.ALL_VERIFY_FLAGS);
-                    }
-
-                } else {
-                    Log.i("RBF", "sign outpoint:" + inputs.get(i).getOutpoint().toString());
-                    Log.i("RBF", "ECKey address from keyBag:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-
-                    Log.i("RBF", "script:" + ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())));
-                    Log.i("RBF", "script:" + Hex.toHexString(ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram()));
-                    TransactionSignature sig = tx.calculateSignature(i, ecKey, ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram(), Transaction.SigHash.ALL, false);
-                    tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(sig, ecKey));
-                }
-
-            }
-        }
-        catch(NoSuchAlgorithmException nsae) {
-            return null;
-        }
-
-        return tx;
+        
+        return null;
     }
 
 }

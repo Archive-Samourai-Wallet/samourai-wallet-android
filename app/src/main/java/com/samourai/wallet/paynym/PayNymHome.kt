@@ -150,7 +150,7 @@ class PayNymHome : SamouraiActivity() {
             BIP47Util.getInstance(applicationContext).fetchBotImage()
                 .subscribe()
                 .apply {
-                    compositeDisposable.add(this)
+                    registerDisposable(this)
                     payNymViewModel.viewModelScope.launch {
                         withContext(Dispatchers.IO) {
                             val bitmap = BitmapFactory.decodeFile(BIP47Util.getInstance(applicationContext).avatarImage().path)
