@@ -281,7 +281,7 @@ class TxDetailsActivity : SamouraiActivity() {
     private fun CPFBoost() {
         progressBar?.visibility = View.VISIBLE
        CoroutineScope(Dispatchers.IO).launch {
-            val cpfp = CPFPTask(applicationContext, tx!!.hash)
+            val cpfp = CPFPTask(this@TxDetailsActivity, tx!!.hash)
             try {
                 val message = cpfp.checkCPFP()
                 withContext(Dispatchers.Main) {

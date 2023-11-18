@@ -1,9 +1,9 @@
 package com.samourai.wallet.send.boost
 
-import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.samourai.wallet.R
+import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.hd.HD_WalletFactory
@@ -29,21 +29,21 @@ import java.util.*
  * samourai-wallet-android
  *
  */
-class CPFPTask(private val context: Context, private val hash: String) {
+class CPFPTask(private val activity: SamouraiActivity, private val hash: String) {
 
     class CPFPException(message: String) : Exception(message)
 
     private var addr: String = ""
     val outPoints: MutableList<MyTransactionOutPoint> = ArrayList()
     val receivers = HashMap<String, BigInteger>()
-    val utxos = APIFactory.getInstance(context).getUtxos(true)
+    val utxos = APIFactory.getInstance(activity).getUtxos(true)
 
 
     /**
      * Validates and prepares CPFP tx
      */
     fun checkCPFP(): String {
-        val txObj = APIFactory.getInstance(context).getTxInfo(hash)
+        val txObj = APIFactory.getInstance(activity).getTxInfo(hash)
         if (txObj.has("inputs") && txObj.has("outputs")) {
             val suggestedFee = FeeUtil.getInstance().suggestedFee
             try {
@@ -123,7 +123,7 @@ class CPFPTask(private val context: Context, private val hash: String) {
                     var selected = utxo.outpoints.size
                     val remainingFee = if (estimatedFee.toLong() > fee) estimatedFee.toLong() - fee else 0L
                     Log.d("CPFPTask", "remaining fee:$remainingFee")
-                    addr  = if (PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true)) {
+                    addr  = if (PrefsUtil.getInstance(activity).getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true)) {
                         utxo.outpoints[0].address
                     } else {
                         outputs.getJSONObject(0).getString("address")
@@ -137,7 +137,7 @@ class CPFPTask(private val context: Context, private val hash: String) {
                     } else {
                         walletIndex = WALLET_INDEX.BIP44_RECEIVE;
                     }
-                    val ownReceiveAddr = AddressFactory.getInstance(context).getAddressAndIncrement(walletIndex).right
+                    val ownReceiveAddr = AddressFactory.getInstance(activity).getAddressAndIncrement(walletIndex).right
 
                     Log.d("CPFPTask", "receive address:$ownReceiveAddr")
                     var totalAmount = utxo.value
@@ -166,7 +166,7 @@ class CPFPTask(private val context: Context, private val hash: String) {
                         }
                         if (totalAmount < cpfpFee.toLong() + remainingFee + SamouraiWallet.bDust.toLong()) {
                             FeeUtil.getInstance().suggestedFee = suggestedFee
-                            throw CPFPException(context.getString(R.string.insufficient_funds))
+                            throw CPFPException(activity.getString(R.string.insufficient_funds))
                         }
                     }
                     cpfpFee = cpfpFee.add(BigInteger.valueOf(remainingFee))
@@ -184,39 +184,39 @@ class CPFPTask(private val context: Context, private val hash: String) {
                     Log.d("CPFPTask", "amount after fee:$amount")
                     if (amount < SamouraiWallet.bDust.toLong()) {
                         Log.d("CPFPTask", "dust output")
-                        Toast.makeText(context, R.string.cannot_output_dust, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(activity, R.string.cannot_output_dust, Toast.LENGTH_SHORT).show()
                     }
                     receivers[ownReceiveAddr] = BigInteger.valueOf(amount)
                     var message = ""
                     if (feeWarning) {
-                        message += context.getString(R.string.fee_bump_not_necessary)
+                        message += activity.getString(R.string.fee_bump_not_necessary)
                         message += "\n\n"
                     }
                     Log.i("remainingFee", remainingFee.toString())
-                    message += context.getString(R.string.bump_fee).toString() + " " + Coin.valueOf(cpfpFee.toLong()).toPlainString() + " BTC"
+                    message += activity.getString(R.string.bump_fee).toString() + " " + Coin.valueOf(cpfpFee.toLong()).toPlainString() + " BTC"
                     return message;
                 } else {
-                    throw CPFPException(context.getString(R.string.cannot_create_cpfp))
+                    throw CPFPException(activity.getString(R.string.cannot_create_cpfp))
                 }
             } catch (je: JSONException) {
                 throw CPFPException("cpfp:" + je.message)
             }
         } else {
-            throw CPFPException(context.getString(R.string.cpfp_cannot_retrieve_tx))
+            throw CPFPException(activity.getString(R.string.cpfp_cannot_retrieve_tx))
         }
     }
 
     public fun doCPFP(): Boolean {
-        WebSocketService.restartService(context)
-        var tx = SendFactory.getInstance(context).makeTransaction(outPoints, receivers)
+        WebSocketService.restartService(activity)
+        var tx = SendFactory.getInstance(activity).makeTransaction(outPoints, receivers)
         if (tx != null) {
-            tx = SendFactory.getInstance(context).signTransaction(tx, 0)
+            tx = SendFactory.getInstance(activity).signTransaction(tx, activity.account)
             val hexTx = String(Hex.encode(tx.bitcoinSerialize()))
             Log.d("CPFPTask", hexTx)
             val strTxHash = tx.hashAsString
             Log.d("CPFPTask", strTxHash)
             try {
-                PushTx.getInstance(context).pushTx(hexTx)
+                PushTx.getInstance(activity).pushTx(hexTx)
                 return true
             } catch (e: Exception) {
                 // reset receive index upon tx fail
@@ -233,16 +233,16 @@ class CPFPTask(private val context: Context, private val hash: String) {
         try {
             when {
                 Bech32Util.getInstance().isBech32Script(addr) -> {
-                    val prevIdx = BIP84Util.getInstance(context).wallet.getAccount(0).receive.addrIdx - 1
-                    BIP84Util.getInstance(context).wallet.getAccount(0).receive.addrIdx = prevIdx
+                    val prevIdx = BIP84Util.getInstance(activity).wallet.getAccount(activity.account).receive.addrIdx - 1
+                    BIP84Util.getInstance(activity).wallet.getAccount(activity.account).receive.addrIdx = prevIdx
                 }
                 Address.fromBase58(SamouraiWallet.getInstance().currentNetworkParams, addr).isP2SHAddress -> {
-                    val prevIdx = BIP49Util.getInstance(context).wallet.getAccount(0).receive.addrIdx - 1
-                    BIP49Util.getInstance(context).wallet.getAccount(0).receive.addrIdx = prevIdx
+                    val prevIdx = BIP49Util.getInstance(activity).wallet.getAccount(activity.account).receive.addrIdx - 1
+                    BIP49Util.getInstance(activity).wallet.getAccount(activity.account).receive.addrIdx = prevIdx
                 }
                 else -> {
-                    val prevIdx = HD_WalletFactory.getInstance(context).get().getAccount(0).receive.addrIdx - 1
-                    HD_WalletFactory.getInstance(context).get().getAccount(0).receive.addrIdx = prevIdx
+                    val prevIdx = HD_WalletFactory.getInstance(activity).get().getAccount(activity.account).receive.addrIdx - 1
+                    HD_WalletFactory.getInstance(activity).get().getAccount(activity.account).receive.addrIdx = prevIdx
                 }
             }
         } catch (ex:Exception) {
