@@ -26,6 +26,7 @@ import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
@@ -89,7 +90,7 @@ public class RBFPreProcessing implements Callable<String> {
         
         this.activity = activity;
         this.txHash = txHash;
-        if (activity.getAccount() == WhirlpoolMeta.getInstance(activity).getWhirlpoolPostmix()) {
+        if (activity.getAccount() == SamouraiAccountIndex.POSTMIX) {
             utxos = APIFactory.getInstance(activity).getUtxosPostMix(true);
         } else {
             utxos = APIFactory.getInstance(activity).getUtxos(true);

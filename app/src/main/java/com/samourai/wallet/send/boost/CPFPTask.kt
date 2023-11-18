@@ -17,6 +17,7 @@ import com.samourai.wallet.service.WebSocketService
 import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.Coin
 import org.bitcoinj.script.Script
@@ -36,7 +37,9 @@ class CPFPTask(private val activity: SamouraiActivity, private val hash: String)
     private var addr: String = ""
     val outPoints: MutableList<MyTransactionOutPoint> = ArrayList()
     val receivers = HashMap<String, BigInteger>()
-    val utxos = APIFactory.getInstance(activity).getUtxos(true)
+    val utxos = if (activity.account == SamouraiAccountIndex.POSTMIX)
+        APIFactory.getInstance(activity).getUtxosPostMix(true) else
+            APIFactory.getInstance(activity).getUtxos(true)
 
 
     /**
