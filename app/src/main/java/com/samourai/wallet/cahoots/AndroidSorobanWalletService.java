@@ -18,7 +18,7 @@ import com.samourai.wallet.chain.ChainSupplier;
 import com.samourai.wallet.crypto.CryptoUtil;
 import com.samourai.wallet.send.provider.CahootsUtxoProvider;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.whirlpool.client.wallet.AndroidWalletSupplier;
 import com.samourai.whirlpool.client.wallet.data.AndroidChainSupplier;
 

@@ -58,12 +58,12 @@ import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.UTXOFactory
 import com.samourai.wallet.tor.SamouraiTorManager
-import com.samourai.wallet.util.AddressFactory
+import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.CharSequenceX
-import com.samourai.wallet.util.FormatsUtil
-import com.samourai.wallet.util.MonetaryUtil
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.func.MonetaryUtil
 import com.samourai.wallet.util.PrefsUtil
-import com.samourai.wallet.util.SentToFromBIP47Util
+import com.samourai.wallet.util.func.SentToFromBIP47Util
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.xmanager.client.XManagerClient
@@ -511,7 +511,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
     private fun doNotifTx() {
         binding.progressBar.visibility = View.VISIBLE
         scope.launch(Dispatchers.IO) {
-            val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.WebUtil.getInstance(applicationContext))
+            val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.network.WebUtil.getInstance(applicationContext))
             val xManagerClient = XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet, SamouraiTorManager.isConnected())
             val address = xManagerClient.getAddressOrDefault(XManagerService.BIP47)
             SendNotifTxFactory.getInstance().setAddress(address)
@@ -740,7 +740,8 @@ class PayNymDetailsActivity : SamouraiActivity() {
             receivers[if (SamouraiWallet.getInstance().isTestNet) SendNotifTxFactory.getInstance().TESTNET_SAMOURAI_NOTIF_TX_FEE_ADDRESS else SendNotifTxFactory.getInstance().SAMOURAI_NOTIF_TX_FEE_ADDRESS] = SendNotifTxFactory._bSWFee
             val change = totalValueSelected - (amount + fee.toLong())
             if (change > 0L) {
-                val change_address = BIP84Util.getInstance(this@PayNymDetailsActivity).getAddressAt(AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(this@PayNymDetailsActivity).wallet.getAccount(0).change.addrIdx).bech32AsString
+                val change_address = BIP84Util.getInstance(this@PayNymDetailsActivity).getAddressAt(
+                    AddressFactory.CHANGE_CHAIN, BIP84Util.getInstance(this@PayNymDetailsActivity).wallet.getAccount(0).change.addrIdx).bech32AsString
                 receivers[change_address] = BigInteger.valueOf(change)
             }
             Log.d("PayNymDetailsActivity", "outpoints:" + outpoints.size)

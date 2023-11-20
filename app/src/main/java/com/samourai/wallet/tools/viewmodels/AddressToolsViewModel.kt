@@ -15,9 +15,9 @@ import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.SegwitAddress
 import com.samourai.wallet.swaps.SwapsMeta
-import com.samourai.wallet.util.AddressFactory
-import com.samourai.wallet.util.FormatsUtil
-import com.samourai.wallet.util.MessageSignUtil
+import com.samourai.wallet.util.func.AddressFactory
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.func.MessageSignUtil
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

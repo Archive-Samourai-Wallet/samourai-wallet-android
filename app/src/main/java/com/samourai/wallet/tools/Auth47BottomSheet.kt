@@ -18,7 +18,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -62,7 +61,7 @@ import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.paynym.PayNymHome
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.PrefsUtil
 
 

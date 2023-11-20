@@ -1,4 +1,4 @@
-package com.samourai.wallet.util
+package com.samourai.wallet.util.tech
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder

@@ -1,6 +1,6 @@
 package com.samourai.wallet.bip47;
 
-import static com.samourai.wallet.util.LogUtil.info;
+import static com.samourai.wallet.util.tech.LogUtil.info;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;

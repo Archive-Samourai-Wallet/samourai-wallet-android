@@ -1,9 +1,11 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.network;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
+
+import com.samourai.wallet.util.PrefsUtil;
 
 public class ConnectivityStatus {
 

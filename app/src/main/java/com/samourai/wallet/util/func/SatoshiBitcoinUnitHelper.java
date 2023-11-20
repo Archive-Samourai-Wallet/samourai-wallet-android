@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.func;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;

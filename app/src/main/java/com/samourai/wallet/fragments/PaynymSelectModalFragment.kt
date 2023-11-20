@@ -24,7 +24,7 @@ import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.PayNymHome
 import com.samourai.wallet.paynym.api.PayNymApiService
-import com.samourai.wallet.util.fromJSON
+import com.samourai.wallet.util.tech.fromJSON
 import com.squareup.picasso.Picasso
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers

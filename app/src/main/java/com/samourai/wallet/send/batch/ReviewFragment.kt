@@ -13,7 +13,7 @@ import com.google.android.material.slider.Slider
 import com.samourai.wallet.R
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.SuggestedFee
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import java.math.BigInteger
 import java.text.DecimalFormat

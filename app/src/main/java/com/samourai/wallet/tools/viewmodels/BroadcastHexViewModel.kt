@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.send.PushTx
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

@@ -30,7 +30,7 @@ import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.theme.samouraiAccent
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.samourai.wallet.tools.WrapToolsPageAnimation
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers

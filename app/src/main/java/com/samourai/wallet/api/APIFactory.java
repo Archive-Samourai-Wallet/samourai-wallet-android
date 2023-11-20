@@ -12,7 +12,6 @@ import android.util.Pair;
 
 import com.auth0.android.jwt.JWT;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
@@ -38,13 +37,13 @@ import com.samourai.wallet.send.RBFUtil;
 import com.samourai.wallet.send.SuggestedFee;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.AppUtil;
-import com.samourai.wallet.util.BackendApiAndroid;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.network.BackendApiAndroid;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.SentToFromBIP47Util;
-import com.samourai.wallet.util.WebUtil;
+import com.samourai.wallet.util.func.SentToFromBIP47Util;
+import com.samourai.wallet.util.network.WebUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
@@ -84,9 +83,9 @@ import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
 
-import static com.samourai.wallet.util.LogUtil.debug;
-import static com.samourai.wallet.util.LogUtil.info;
-import static com.samourai.wallet.util.WebUtil.SAMOURAI_API2;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.info;
+import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2;
 
 public class APIFactory {
 

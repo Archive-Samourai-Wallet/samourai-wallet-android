@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.network;
 
 import android.content.Context;
 
@@ -11,6 +11,7 @@ import com.samourai.wallet.api.backend.BackendApi;
 import com.samourai.wallet.api.backend.BackendServer;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.tor.SamouraiTorManager;
+import com.samourai.wallet.util.network.WebUtil;
 
 public class BackendApiAndroid {
     private static BackendApi backendApi;

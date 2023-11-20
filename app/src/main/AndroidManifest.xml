@@ -307,7 +307,7 @@
 
         <receiver android:name=".whirlpool.service.WhirlpoolBroadCastReceiver" />
         <receiver
-            android:name=".util.ConnectionChangeReceiver"
+            android:name=".util.network.ConnectionChangeReceiver"
             android:exported="true"
             android:label="NetworkChangeReceiver">
             <intent-filter>

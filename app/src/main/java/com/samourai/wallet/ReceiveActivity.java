@@ -1,6 +1,6 @@
 package com.samourai.wallet;
 
-import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.createDecimalFormat;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.createDecimalFormat;
 import static java.lang.Long.parseLong;
 
 import android.app.AlertDialog;
@@ -49,12 +49,12 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.explorer.ExplorerActivity;
 import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.AppUtil;
-import com.samourai.wallet.util.DecimalDigitsInputFilter;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.tech.DecimalDigitsInputFilter;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.SatoshiBitcoinUnitHelper;
+import com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.Address;

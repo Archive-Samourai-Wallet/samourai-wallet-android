@@ -1,4 +1,4 @@
-package com.samourai.wallet.util
+package com.samourai.wallet.util.tech
 
 import android.Manifest
 import android.content.pm.PackageManager

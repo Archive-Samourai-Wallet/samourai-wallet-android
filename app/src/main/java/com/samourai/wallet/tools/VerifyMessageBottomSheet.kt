@@ -40,7 +40,7 @@ import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.samourai.wallet.theme.samouraiError
 import com.samourai.wallet.theme.samouraiSuccess
 import com.samourai.wallet.theme.samouraiTextFieldBg
-import com.samourai.wallet.util.ArmoredSignatureParser
+import com.samourai.wallet.util.func.ArmoredSignatureParser
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils.length
 

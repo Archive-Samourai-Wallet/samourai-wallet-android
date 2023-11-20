@@ -1,7 +1,9 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.network;
 
 import android.content.Context;
 import android.telephony.TelephonyManager;
+
+import com.samourai.wallet.util.PrefsUtil;
 
 public class SIMUtil {
 

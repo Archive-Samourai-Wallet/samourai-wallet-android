@@ -28,6 +28,7 @@ import com.samourai.wallet.tor.EnumTorState
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.tor.TorState
 import com.samourai.wallet.util.*
+import com.samourai.wallet.util.tech.askNotificationPermission
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

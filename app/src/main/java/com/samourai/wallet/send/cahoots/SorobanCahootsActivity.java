@@ -14,7 +14,7 @@ import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.send.FeeUtil;
-import com.samourai.wallet.util.AppUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 
 import org.spongycastle.util.encoders.Hex;
 

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 
 public class BlockedUTXO {
 

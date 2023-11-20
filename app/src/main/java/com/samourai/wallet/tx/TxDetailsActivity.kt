@@ -4,10 +4,10 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.DialogInterface
 import android.content.Intent
-import android.os.AsyncTask
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.transition.TransitionManager
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -31,11 +31,14 @@ import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.boost.CPFPTask
-import com.samourai.wallet.send.boost.RBFTask
+import com.samourai.wallet.send.boost.RBFPreProcessing
+import com.samourai.wallet.send.boost.RBFProcessing
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.CharSequenceX
-import com.samourai.wallet.util.DateUtil
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.tech.DateUtil
+import com.samourai.wallet.util.tech.SimpleCallback
+import com.samourai.wallet.util.tech.SimpleTaskRunner
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.CircleImageView
 import com.squareup.picasso.Picasso
@@ -44,14 +47,16 @@ import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
+import org.bitcoinj.core.Coin
 import org.bitcoinj.crypto.MnemonicException.MnemonicLengthException
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Objects.isNull
+import java.util.concurrent.atomic.AtomicBoolean
 
 class TxDetailsActivity : SamouraiActivity() {
     private var payNymAvatar: CircleImageView? = null
@@ -67,12 +72,11 @@ class TxDetailsActivity : SamouraiActivity() {
     private var BTCDisplayAmount: String? = null
     private var SatDisplayAmount: String? = null
     private var paynymDisplayName: String? = null
-    private var rbfTask: RBFTask? = null
+    private val rbfBoostUnderProcessing = AtomicBoolean()
     private var progressBar: ProgressBar? = null
     private var deleteButton: ImageView? = null
     private var addNote: TextView? = null
     private var notesTextView: TextView? = null
-    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +90,7 @@ class TxDetailsActivity : SamouraiActivity() {
                 e.printStackTrace()
             }
         }
+
         payNymUsername = findViewById(R.id.tx_paynym_username)
         amount = findViewById(R.id.tx_amount)
         payNymAvatar = findViewById(R.id.img_paynym_avatar)
@@ -193,7 +198,7 @@ class TxDetailsActivity : SamouraiActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe()
-        compositeDisposable.add(disposable)
+        registerDisposable(disposable)
     }
 
     private fun refundOrPayAgain() {
@@ -271,7 +276,7 @@ class TxDetailsActivity : SamouraiActivity() {
     private fun CPFBoost() {
         progressBar?.visibility = View.VISIBLE
        CoroutineScope(Dispatchers.IO).launch {
-            val cpfp = CPFPTask(applicationContext, tx!!.hash)
+            val cpfp = CPFPTask(this@TxDetailsActivity, tx!!.hash)
             try {
                 val message = cpfp.checkCPFP()
                 withContext(Dispatchers.Main) {
@@ -341,9 +346,70 @@ class TxDetailsActivity : SamouraiActivity() {
     }
 
     private fun RBFBoost() {
-        if (rbfTask == null || rbfTask!!.status == AsyncTask.Status.FINISHED) {
-            rbfTask = RBFTask(this)
-            rbfTask!!.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, tx!!.hash)
+
+        if (rbfBoostUnderProcessing.compareAndSet(false, true)) {
+            progressBar?.visibility = View.VISIBLE
+            bottomButton!!.isEnabled = false;
+            val rbfPreProcessing = RBFPreProcessing.create(this, tx!!.hash)
+            val simpleTaskRunner = SimpleTaskRunner.create()
+            simpleTaskRunner.executeAsync(
+                rbfPreProcessing,
+                object :
+                    SimpleCallback<String?> {
+                    override fun onComplete(result: String?) {
+
+                        if (isNull(result)) {
+
+                            var message = ""
+                            if (rbfPreProcessing.isFeeWarning) {
+                                message += this@TxDetailsActivity.getString(R.string.fee_bump_not_necessary)
+                                message += "\n\n"
+                            }
+                            message += this@TxDetailsActivity.getString(R.string.bump_fee) + " " + Coin.valueOf(
+                                rbfPreProcessing.remainingFee
+                            ).toPlainString() + " BTC"
+
+                            val rbfProcessing = RBFProcessing.create(
+                                rbfPreProcessing.rbf,
+                                rbfPreProcessing.txHash,
+                                rbfPreProcessing.transaction,
+                                rbfPreProcessing.inputValues,
+                                message,
+                                this@TxDetailsActivity)
+
+                            rbfProcessing!!.process(object : SimpleCallback<String?> {
+                                override fun onComplete(result: String?) {
+                                    rbfBoostUnderProcessing.set(false)
+                                    progressBar?.visibility = View.GONE
+                                    bottomButton!!.isEnabled = true;
+                                }
+                                override fun onException(t: Throwable) {
+                                    rbfBoostUnderProcessing.set(false)
+                                    progressBar?.visibility = View.GONE
+                                    bottomButton!!.isEnabled = true;
+                                }
+                            })
+
+                        } else {
+                            rbfBoostUnderProcessing.set(false)
+                            progressBar?.visibility = View.GONE
+                            bottomButton!!.isEnabled = true;
+                            Log.e(TAG, result!!)
+                            Toast.makeText(this@TxDetailsActivity, result, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onException(e: Throwable) {
+                        Log.e(TAG, "exception on pre-processing RBF: " + e.message, e)
+                        rbfBoostUnderProcessing.set(false)
+                        progressBar?.visibility = View.GONE
+                        bottomButton!!.isEnabled = true;
+                        Toast.makeText(this@TxDetailsActivity, "exception on pre-processing RBF", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        } else {
+            Log.i(TAG, "a RBF boost request is in processing")
+            Toast.makeText(this@TxDetailsActivity, "a RBF boost request is in processing", Toast.LENGTH_SHORT).show()
         }
     }
 

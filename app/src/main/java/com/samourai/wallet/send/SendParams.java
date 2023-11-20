@@ -2,7 +2,7 @@ package com.samourai.wallet.send;
 
 import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
 import static com.samourai.wallet.send.SendActivity.SPEND_SIMPLE;
-import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 
 import android.content.Context;
 
@@ -13,8 +13,8 @@ import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.BatchSendUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
 import org.bitcoinj.core.Address;

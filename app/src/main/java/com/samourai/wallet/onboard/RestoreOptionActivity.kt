@@ -1,6 +1,5 @@
 package com.samourai.wallet.onboard
 
-import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -22,12 +21,11 @@ import com.samourai.wallet.databinding.ActivityRestoreOptionBinding
 import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.payload.ExternalBackupManager
 import com.samourai.wallet.payload.PayloadUtil
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.CharSequenceX
 import com.samourai.wallet.util.PrefsUtil
 import kotlinx.coroutines.*
 import org.json.JSONObject
-import java.io.*
 
 
 class RestoreOptionActivity : AppCompatActivity() {

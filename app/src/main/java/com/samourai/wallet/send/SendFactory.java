@@ -17,11 +17,10 @@ import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
-import com.samourai.wallet.segwit.bech32.Bech32Segwit;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.exceptions.SignTxException;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.FormatsUtilGeneric;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
@@ -48,7 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
-import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 
 //import android.util.Log;
 
@@ -90,7 +89,7 @@ public class SendFactory extends SendFactoryGeneric	{
 
     public Transaction signTransaction(Transaction unsignedTx, int account)  {
 
-        HashMap<String,ECKey> keyBag = new HashMap<String,ECKey>();
+        HashMap<String,ECKey> keyBag = new HashMap<>();
 
         for (TransactionInput input : unsignedTx.getInputs()) {
 
@@ -519,7 +518,7 @@ public class SendFactory extends SendFactoryGeneric	{
         try {
             String path = APIFactory.getInstance(context).getUnspentPaths().get(address);
             debug("SendFactory", "address path:" + path);
-            if(path != null)    {
+            if(path != null) {
                 String[] s = path.split("/");
                 if(FormatsUtil.getInstance().isValidBech32(address))    {
                     debug("SendFactory", "address type:" + "bip84");
@@ -554,8 +553,7 @@ public class SendFactory extends SendFactoryGeneric	{
                         ecKey = pk.getKey();
                     }
                 }
-            }
-            else    {
+            } else {
                 debug("SendFactory", "address type:" + "bip47");
                 debug("SendFactory", "address:" + address);
                 String pcode = BIP47Meta.getInstance().getPCode4Addr(address);

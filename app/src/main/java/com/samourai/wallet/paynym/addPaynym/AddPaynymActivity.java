@@ -22,7 +22,7 @@ import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.FormatsUtil;
 
 import org.bitcoinj.core.AddressFormatException;
 

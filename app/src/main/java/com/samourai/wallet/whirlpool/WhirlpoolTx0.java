@@ -17,7 +17,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 import static com.samourai.wallet.whirlpool.WhirlpoolMeta.WHIRLPOOL_FEE_RATE_POOL_DENOMINATION;
 
 public class WhirlpoolTx0 {

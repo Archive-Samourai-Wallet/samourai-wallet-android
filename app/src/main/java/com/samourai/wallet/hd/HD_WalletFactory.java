@@ -9,8 +9,8 @@ import com.samourai.wallet.bip47.rpc.BIP47Wallet;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.service.WebSocketService;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.FormatsUtil;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;

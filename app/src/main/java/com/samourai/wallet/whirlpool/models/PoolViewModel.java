@@ -1,8 +1,6 @@
 package com.samourai.wallet.whirlpool.models;
 
-import android.util.Log;
-
-import com.samourai.wallet.util.LogUtil;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolTx0;
 import com.samourai.whirlpool.client.tx0.Tx0Preview;

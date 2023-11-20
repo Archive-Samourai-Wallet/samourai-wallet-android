@@ -15,7 +15,7 @@ import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.LogUtil;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.TimeOutUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
@@ -31,7 +31,7 @@ public class SamouraiActivity extends AppCompatActivity {
 
     protected int account = 0;
     private boolean switchThemes = false;
-    protected CompositeDisposable compositeDisposable = new CompositeDisposable();
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private static final String TAG = "SamouraiActivity";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,7 +69,11 @@ public class SamouraiActivity extends AppCompatActivity {
                 },throwable -> {
                     LogUtil.error(TAG,throwable);
                 });
-        compositeDisposable.add(disposable);
+        registerDisposable(disposable);
+    }
+
+    public boolean registerDisposable(Disposable disposable) {
+        return compositeDisposable.add(disposable);
     }
 
 
@@ -111,4 +115,7 @@ public class SamouraiActivity extends AppCompatActivity {
         }
     }
 
+    public int getAccount() {
+        return account;
+    }
 }

@@ -5,13 +5,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.hd.HD_WalletFactory
-import com.samourai.wallet.util.BatchSendUtil
+import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.whirlpool.WhirlpoolConst
-import kotlinx.coroutines.launch
 
 class BatchSpendViewModel() : ViewModel() {
 

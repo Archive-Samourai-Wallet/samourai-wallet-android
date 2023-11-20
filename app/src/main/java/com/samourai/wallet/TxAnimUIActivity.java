@@ -1,7 +1,7 @@
 package com.samourai.wallet;
 
-import static com.samourai.wallet.util.LogUtil.debug;
-import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static java.util.Objects.nonNull;
@@ -34,13 +34,13 @@ import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.AppUtil;
-import com.samourai.wallet.util.BatchSendUtil;
-import com.samourai.wallet.util.MonetaryUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.func.BatchSendUtil;
+import com.samourai.wallet.util.func.MonetaryUtil;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.SendAddressUtil;
-import com.samourai.wallet.util.SentToFromBIP47Util;
+import com.samourai.wallet.util.func.SendAddressUtil;
+import com.samourai.wallet.util.func.SentToFromBIP47Util;
 import com.samourai.wallet.util.view.ViewHelper;
 import com.samourai.wallet.widgets.TransactionProgressView;
 
@@ -546,10 +546,10 @@ public class TxAnimUIActivity extends AppCompatActivity {
                             if (Bech32Util.getInstance().isBech32Script(Hex.toHexString(out.getScriptBytes())) && !SendParams.getInstance().getDestAddress().equals(Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(out.getScriptBytes())))) {
                                 rbf.addChangeAddr(Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(out.getScriptBytes())));
                                 debug("SendActivity", "added change output:" + Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(out.getScriptBytes())));
-                            } else if (SendParams.getInstance().getChangeType() == 44 && !SendParams.getInstance().getDestAddress().equals(out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString())) {
+                            } else if (SendParams.getInstance().getChangeType() == 44 && nonNull(out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams())) && !SendParams.getInstance().getDestAddress().equals(out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString())) {
                                 rbf.addChangeAddr(out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
                                 debug("SendActivity", "added change output:" + out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                            } else if (SendParams.getInstance().getChangeType() != 44 && !SendParams.getInstance().getDestAddress().equals(out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString())) {
+                            } else if (SendParams.getInstance().getChangeType() != 44 && nonNull(out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams())) && !SendParams.getInstance().getDestAddress().equals(out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString())) {
                                 rbf.addChangeAddr(out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
                                 debug("SendActivity", "added change output:" + out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
                             }

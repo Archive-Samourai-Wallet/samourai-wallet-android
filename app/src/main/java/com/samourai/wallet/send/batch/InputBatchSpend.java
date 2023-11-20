@@ -18,7 +18,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.paynym.WebUtil;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.FormatsUtil;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;

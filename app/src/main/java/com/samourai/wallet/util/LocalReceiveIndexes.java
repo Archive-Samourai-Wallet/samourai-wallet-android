@@ -3,6 +3,7 @@ package com.samourai.wallet.util;
 import android.content.Context;
 
 import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.util.func.AddressFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;

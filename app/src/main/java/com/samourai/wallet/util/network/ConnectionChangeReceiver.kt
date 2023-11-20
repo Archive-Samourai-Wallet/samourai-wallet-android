@@ -1,9 +1,9 @@
-package com.samourai.wallet.util
+package com.samourai.wallet.util.network
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
-import android.net.NetworkCapabilities
+import com.samourai.wallet.util.tech.AppUtil
 
 class ConnectionChangeReceiver(context: Context) {
 

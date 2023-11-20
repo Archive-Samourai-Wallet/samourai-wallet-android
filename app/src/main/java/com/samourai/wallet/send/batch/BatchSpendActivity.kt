@@ -53,6 +53,12 @@ import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.util.activity.ActivityHelper
+import com.samourai.wallet.util.func.AddressFactory
+import com.samourai.wallet.util.func.BatchSendUtil
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper
+import com.samourai.wallet.util.tech.DecimalDigitsInputFilter
+import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.WhirlpoolConst
 import io.reactivex.Observable
@@ -135,7 +141,12 @@ class BatchSpendActivity : SamouraiActivity() {
         toAddressEditText.addTextChangedListener(addressWatcher)
         btcEditText.addTextChangedListener(btcWatcher)
 
-        btcEditText.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8, 8))
+        btcEditText.filters = arrayOf<InputFilter>(
+            DecimalDigitsInputFilter(
+                8,
+                8
+            )
+        )
 
         listenBalance()
 
@@ -193,7 +204,7 @@ class BatchSpendActivity : SamouraiActivity() {
             .subscribe({
                 viewModel.setBalance(applicationContext, account)
             }) { obj: Throwable -> obj.printStackTrace() }
-        compositeDisposable.add(disposable)
+        registerDisposable(disposable)
 
         val inputBatchSpendAsJson = intent.getStringExtra("inputBatchSpend")
         if (nonNull(inputBatchSpendAsJson)) {
@@ -474,7 +485,7 @@ class BatchSpendActivity : SamouraiActivity() {
         val loadingStatus = findViewById<ProgressBar>(R.id.batch_spend_loading_status)
         loadingStatus.visibility = View.VISIBLE
 
-        compositeDisposable.add(
+        registerDisposable(
 
             Observable.fromCallable {
 
@@ -979,7 +990,8 @@ class BatchSpendActivity : SamouraiActivity() {
         change_idx = 0
         if (changeAmount > 0L) {
             change_idx = BIP84Util.getInstance(applicationContext).wallet.getAccount(0).change.addrIdx
-            change_address = BIP84Util.getInstance(applicationContext).getAddressAt(AddressFactory.CHANGE_CHAIN, change_idx).bech32AsString
+            change_address = BIP84Util.getInstance(applicationContext).getAddressAt(
+                AddressFactory.CHANGE_CHAIN, change_idx).bech32AsString
             receivers[change_address!!] = BigInteger.valueOf(changeAmount!!)
             LogUtil.debug("BatchSendActivity", "change output:$changeAmount")
             LogUtil.debug("BatchSendActivity", "change output:$change_address")

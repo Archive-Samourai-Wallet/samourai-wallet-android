@@ -5,7 +5,7 @@ import android.content.Context;
 import com.google.common.collect.Lists;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
-import com.samourai.wallet.util.FormatsUtil;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
  import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 

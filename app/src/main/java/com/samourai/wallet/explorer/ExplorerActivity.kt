@@ -21,7 +21,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.databinding.ActivityExplorerBinding
 import com.samourai.wallet.tor.EnumTorState
 import com.samourai.wallet.tor.SamouraiTorManager
-import com.samourai.wallet.util.BlockExplorerUtil
+import com.samourai.wallet.util.network.BlockExplorerUtil
 import kotlinx.coroutines.*
 
 

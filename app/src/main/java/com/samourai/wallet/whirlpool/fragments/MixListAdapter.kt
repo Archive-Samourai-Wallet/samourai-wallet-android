@@ -10,8 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.samourai.wallet.R
 import com.samourai.wallet.databinding.ItemMixUtxoBinding
-import com.samourai.wallet.util.FormatsUtil
-import com.samourai.wallet.util.LogUtil
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus

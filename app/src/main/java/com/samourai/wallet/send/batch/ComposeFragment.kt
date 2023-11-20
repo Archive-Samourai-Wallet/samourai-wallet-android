@@ -19,9 +19,9 @@ import com.samourai.wallet.R
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.databinding.BatchSpendComposeBinding
-import com.samourai.wallet.util.BatchSendUtil
-import com.samourai.wallet.util.FormatsUtil
-import com.samourai.wallet.util.WalletUtil
+import com.samourai.wallet.util.func.BatchSendUtil
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.func.WalletUtil
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable

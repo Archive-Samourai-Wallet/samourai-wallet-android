@@ -53,7 +53,7 @@ import com.samourai.wallet.paynym.PayNymHome
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.WrapToolsPageAnimation
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.PrefsUtil
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers

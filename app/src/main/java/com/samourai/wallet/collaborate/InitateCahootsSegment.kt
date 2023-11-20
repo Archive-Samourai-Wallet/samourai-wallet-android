@@ -1,6 +1,5 @@
 package com.samourai.wallet.collaborate
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,7 +24,7 @@ import com.samourai.wallet.theme.SamouraiWalletTheme
 import com.samourai.wallet.theme.samouraiError
 import com.samourai.wallet.theme.samouraiSuccess
 import com.samourai.wallet.theme.samouraiTextSecondary
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 
 

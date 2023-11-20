@@ -3,7 +3,6 @@ package com.samourai.wallet.whirlpool
 import android.app.Activity
 import android.content.*
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
@@ -30,8 +29,8 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
-import com.samourai.wallet.util.AppUtil
-import com.samourai.wallet.util.FormatsUtil
+import com.samourai.wallet.util.tech.AppUtil
+import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.utxos.PreSelectUtil
 import com.samourai.wallet.utxos.UTXOSActivity

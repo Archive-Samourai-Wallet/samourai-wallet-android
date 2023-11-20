@@ -1,4 +1,4 @@
-package com.samourai.wallet.util;
+package com.samourai.wallet.util.network;
 
 import android.content.Context;
 import android.util.Log;
@@ -35,7 +35,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 
-import static com.samourai.wallet.util.LogUtil.info;
+import static com.samourai.wallet.util.tech.LogUtil.info;
 
 //import android.util.Log;
 

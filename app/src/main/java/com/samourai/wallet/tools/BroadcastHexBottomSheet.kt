@@ -36,7 +36,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.viewmodels.BroadcastHexViewModel
-import com.samourai.wallet.util.AppUtil
+import com.samourai.wallet.util.tech.AppUtil
 
 
 @Composable

@@ -1,6 +1,6 @@
 package com.samourai.wallet.send;
 
-import static com.samourai.wallet.util.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 
 import android.content.Context;
 
@@ -10,7 +10,7 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.api.backend.beans.HttpException;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.WebUtil;
+import com.samourai.wallet.util.network.WebUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;

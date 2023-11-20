@@ -8,37 +8,24 @@ import androidx.lifecycle.MutableLiveData;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.Tx;
-import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.crypto.DecryptionException;
-import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.payload.PayloadUtil;
-import com.samourai.wallet.segwit.BIP49Util;
-import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
-import com.samourai.wallet.send.RBFUtil;
-import com.samourai.wallet.util.AddressFactory;
-import com.samourai.wallet.util.FormatsUtil;
-import com.samourai.wallet.util.LogUtil;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.SentToFromBIP47Util;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
-import org.bitcoinj.crypto.MnemonicException;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.Observable;
