@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import static com.samourai.wallet.util.tech.LogUtil.debug;
@@ -69,7 +70,7 @@ public class SendFactory extends SendFactoryGeneric	{
         return instance;
     }
 
-    public Transaction makeTransaction(final List<MyTransactionOutPoint> unspent, final HashMap<String, BigInteger> receivers) {
+    public Transaction makeTransaction(final List<MyTransactionOutPoint> unspent, final Map<String, BigInteger> receivers) {
 
         Transaction tx = null;
 
@@ -515,8 +516,8 @@ public class SendFactory extends SendFactoryGeneric	{
 
         ECKey ecKey = null;
 
+        String path = APIFactory.getInstance(context).getUnspentPaths().get(address);
         try {
-            String path = APIFactory.getInstance(context).getUnspentPaths().get(address);
             debug("SendFactory", "address path:" + path);
             if(path != null) {
                 String[] s = path.split("/");
@@ -531,20 +532,18 @@ public class SendFactory extends SendFactoryGeneric	{
                         debug("SendFactory", "address type:" + "post-mix p2sh");
                         HD_Address addr = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
                         ecKey = addr.getECKey();
-                    }
-                    else    {
+                    } else {
                         debug("SendFactory", "address type:" + "bip49");
-                        HD_Address addr = BIP49Util.getInstance(context).getWallet().getAccount(0).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
+                        HD_Address addr =  BIP49Util.getInstance(context).getWallet().getAccount(0).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
                         ecKey = addr.getECKey();
                     }
                 }
-                else    {
+                else {
                     if(account == WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix())    {
                         debug("SendFactory", "address type:" + "post-mix p2pkh");
                         HD_Address hd_addr = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
                         ecKey = hd_addr.getECKey();
-                    }
-                    else    {
+                    } else {
                         debug("SendFactory", "address type:" + "bip44");
                         int account_no = APIFactory.getInstance(context).getUnspentAccounts().get(address);
                         HD_Address hd_address = AddressFactory.getInstance(context).get(account_no, Integer.parseInt(s[1]), Integer.parseInt(s[2]));

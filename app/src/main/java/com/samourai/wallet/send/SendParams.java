@@ -16,6 +16,7 @@ import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
@@ -227,7 +228,7 @@ public class SendParams	{
 
         if (changeAmount <= 0l) return null;
         if (spendType != SPEND_SIMPLE && (forTxBuilding || spendType != SPEND_BOLTZMANN)) return null;
-        if (account == WhirlpoolMeta.getInstance(ctx).getWhirlpoolPostmix()) {
+        if (account == SamouraiAccountIndex.POSTMIX) {
             if (changeType == 44) {
                 final HD_Address hd_addr = BIP84Util.getInstance(ctx).getWallet()
                         .getAccount(WhirlpoolMeta.getInstance(ctx)

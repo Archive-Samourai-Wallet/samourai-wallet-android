@@ -6,11 +6,12 @@ import org.json.JSONObject;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.Map;
 
 public class RBFUtil {
 
     private static RBFUtil instance = null;
-    private static HashMap<String,RBFSpend> rbfs = null;
+    private static Map<String, RBFSpend> rbfs = null;
 
     private RBFUtil() { ; }
 
@@ -18,7 +19,7 @@ public class RBFUtil {
 
         if(instance == null) {
             instance = new RBFUtil();
-            rbfs = new HashMap<String,RBFSpend>();
+            rbfs = new HashMap<>();
         }
 
         return instance;

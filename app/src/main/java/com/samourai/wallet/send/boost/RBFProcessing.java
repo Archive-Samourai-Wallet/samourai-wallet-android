@@ -15,6 +15,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
+import com.samourai.wallet.bipFormat.BIP_FORMAT;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.segwit.BIP49Util;
@@ -23,14 +24,19 @@ import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.RBFSpend;
 import com.samourai.wallet.send.RBFUtil;
+import com.samourai.wallet.send.SendFactory;
+import com.samourai.wallet.send.SendFactoryGeneric;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.tech.SimpleCallback;
+import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DumpedPrivateKey;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionWitness;
@@ -41,7 +47,6 @@ import org.bouncycastle.util.encoders.Hex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +64,7 @@ public class RBFProcessing {
     private String txHash;
     private Transaction transaction;
     private Map<String, Long> inputValues;
+    private Map<String, String> extraInputs;
     private String message;
     private SamouraiActivity activity;
 
@@ -66,6 +72,7 @@ public class RBFProcessing {
                           @NotNull String txHash,
                           @NotNull Transaction transaction,
                           @NotNull Map<String, Long> inputValues,
+                          @NotNull Map<String, String> extraInputs,
                           @NotNull String message,
                           @NotNull SamouraiActivity activity) {
 
@@ -73,6 +80,7 @@ public class RBFProcessing {
         this.txHash = txHash;
         this.transaction = transaction;
         this.inputValues = inputValues;
+        this.extraInputs = extraInputs;
         this.message = message;
         this.activity = activity;
     }
@@ -82,10 +90,11 @@ public class RBFProcessing {
             @NotNull String txHash,
             @NotNull Transaction transaction,
             @NotNull Map<String, Long> inputValues,
+            @NotNull Map<String, String> extraInputs,
             @NotNull String message,
             @NotNull SamouraiActivity activity
     ) {
-        return new RBFProcessing(rbf, txHash, transaction, inputValues, message, activity);
+        return new RBFProcessing(rbf, txHash, transaction, inputValues, extraInputs, message, activity);
     }
 
     public void process(final SimpleCallback<String> callback) {
@@ -96,7 +105,7 @@ public class RBFProcessing {
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok, (dialog, whichButton) -> {
 
-                    final Transaction __tx = signTx(transaction, inputValues);
+                    final Transaction __tx = signTx(transaction);
                     if (nonNull(__tx)) {
 
                         final String hexTx = new String(Hex.encode(__tx.bitcoinSerialize()));
@@ -167,127 +176,228 @@ public class RBFProcessing {
         }
     }
 
-    private Transaction signTx(final Transaction tx,
-                               final Map<String, Long> inputValues) {
+    private Transaction signTx(final Transaction tx) {
 
-        final Map<String, ECKey> keyBag = new HashMap<>();
+
+        final Map<String, ECKey> keyBagLegacy = new HashMap<>();
         final Map<String, ECKey> keyBag49 = new HashMap<>();
         final Map<String, ECKey> keyBag84 = new HashMap<>();
+        final Map<String, ECKey> keyBagExtra = new HashMap<>();
 
-        final Map<String, String> keys = rbf.getKeyBag();
+        loadKeyBags(keyBagLegacy, keyBag49, keyBag84, keyBagExtra);
 
-        for (final String outpoint : keys.keySet()) {
-
-            ECKey ecKey = null;
-
-            String[] s = keys.get(outpoint).split("/");
-            Log.i("RBF", "path length:" + s.length);
-            if (s.length == 4) {
-                if (s[3].equals("84")) {
-                    HD_Address addr = BIP84Util.getInstance(activity).getWallet().getAccount(activity.getAccount()).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
-                    ecKey = addr.getECKey();
-                } else {
-                    HD_Address addr = BIP49Util.getInstance(activity).getWallet().getAccount(activity.getAccount()).getChain(Integer.parseInt(s[1])).getAddressAt(Integer.parseInt(s[2]));
-                    ecKey = addr.getECKey();
-                }
-            } else if (s.length == 3) {
-                HD_Address hd_address = AddressFactory.getInstance(activity).get(activity.getAccount(), Integer.parseInt(s[1]), Integer.parseInt(s[2]));
-                String strPrivKey = hd_address.getPrivateKeyString();
-                DumpedPrivateKey pk = DumpedPrivateKey.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), strPrivKey);
-                ecKey = pk.getKey();
-            } else if (s.length == 2) {
-                try {
-                    PaymentAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(s[0]), Integer.parseInt(s[1]));
-                    ecKey = address.getReceiveECKey();
-                } catch (Exception e) {
-                    ;
-                }
-            } else {
-                ;
-            }
-
-            Log.i("RBF", "outpoint:" + outpoint);
-            Log.i("RBF", "path:" + keys.get(outpoint));
-//                Log.i("RBF", "ECKey address from ECKey:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-
-            if (ecKey != null) {
-                if (s.length == 4) {
-                    if (s[3].equals("84")) {
-                        keyBag84.put(outpoint, ecKey);
-                    } else {
-                        keyBag49.put(outpoint, ecKey);
-                    }
-                } else {
-                    keyBag.put(outpoint, ecKey);
-                }
-            } else {
-                throw new RuntimeException("ECKey error: cannot process private key");
-//                    Log.i("ECKey error", "cannot process private key");
-            }
-
-        }
+        final NetworkParameters networkParams = SamouraiWallet.getInstance().getCurrentNetworkParams();
 
         try {
-            List<TransactionInput> inputs = tx.getInputs();
+
+            final List<TransactionInput> inputs = tx.getInputs();
+
             for (int i = 0; i < inputs.size(); i++) {
 
-                ECKey ecKey ;
-                String address;
-                if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
-                    if (keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
-                        ecKey = keyBag84.get(inputs.get(i).getOutpoint().toString());
-                        SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                        address = segwitAddress.getBech32AsString();
-                    } else {
-                        ecKey = keyBag49.get(inputs.get(i).getOutpoint().toString());
-                        SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
-                        address = segwitAddress.getAddressAsString();
-                    }
-                } else {
-                    ecKey = keyBag.get(inputs.get(i).getOutpoint().toString());
-                    address = ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
+                ECKey ecKey = null;
+                String address = null;
+                final String key = inputs.get(i).getOutpoint().toString();
+
+                if (keyBag84.containsKey(key)) {
+                    ecKey = keyBag84.get(key);
+                    final SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), networkParams);
+                    address = segwitAddress.getBech32AsString();
+                } else if (keyBag49.containsKey(key)) {
+                    ecKey = keyBag49.get(key);
+                    final SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), networkParams);
+                    address = segwitAddress.getAddressAsString();
+                } else if (keyBagLegacy.containsKey(key)) {
+                    ecKey = keyBagLegacy.get(key);
+                    address = ecKey.toAddress(networkParams).toString();
+                } else if (keyBagExtra.containsKey(key)) {
+                    ecKey = keyBagExtra.get(key);
+                    address = ecKey.toAddress(networkParams).toString();
                 }
+
                 Log.d("RBF", "pubKey:" + Hex.toHexString(ecKey.getPubKey()));
                 Log.d("RBF", "address:" + address);
 
-                if (inputs.get(i).getValue() != null || keyBag49.containsKey(inputs.get(i).getOutpoint().toString()) || keyBag84.containsKey(inputs.get(i).getOutpoint().toString())) {
+                if (keyBag49.containsKey(key) || keyBag84.containsKey(key)) {
 
-                    final SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
+                    final SegwitAddress segwitAddress = new SegwitAddress(ecKey.getPubKey(), networkParams);
                     Script scriptPubKey = segwitAddress.segwitOutputScript();
                     final Script redeemScript = segwitAddress.segwitRedeemScript();
                     System.out.println("redeem script:" + Hex.toHexString(redeemScript.getProgram()));
                     final Script scriptCode = redeemScript.scriptCode();
                     System.out.println("script code:" + Hex.toHexString(scriptCode.getProgram()));
 
-                    TransactionSignature sig = tx.calculateWitnessSignature(i, ecKey, scriptCode, Coin.valueOf(inputValues.get(inputs.get(i).getOutpoint().toString())), Transaction.SigHash.ALL, false);
+                    final TransactionSignature sig = tx.calculateWitnessSignature(
+                            i,
+                            ecKey,
+                            scriptCode,
+                            Coin.valueOf(inputValues.get(key)),
+                            Transaction.SigHash.ALL,
+                            false);
+
                     final TransactionWitness witness = new TransactionWitness(2);
                     witness.setPush(0, sig.encodeToBitcoin());
                     witness.setPush(1, ecKey.getPubKey());
                     tx.setWitness(i, witness);
 
-                    if (!FormatsUtil.getInstance().isValidBech32(address) && Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
+                    if (!FormatsUtil.getInstance().isValidBech32(address) &&
+                            Address.fromBase58(networkParams, address).isP2SHAddress()) {
                         final ScriptBuilder sigScript = new ScriptBuilder();
                         sigScript.data(redeemScript.getProgram());
                         tx.getInput(i).setScriptSig(sigScript.build());
-                        tx.getInput(i).getScriptSig().correctlySpends(tx, i, scriptPubKey, Coin.valueOf(inputValues.get(inputs.get(i).getOutpoint().toString())), Script.ALL_VERIFY_FLAGS);
+                        tx.getInput(i).getScriptSig().correctlySpends(
+                                tx,
+                                i,
+                                scriptPubKey,
+                                Coin.valueOf(inputValues.get(key)),
+                                Script.ALL_VERIFY_FLAGS);
                     }
 
-                } else {
-                    Log.i("RBF", "sign outpoint:" + inputs.get(i).getOutpoint().toString());
-                    Log.i("RBF", "ECKey address from keyBag:" + ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
+                } else if (keyBagExtra.containsKey(key)) {
+                    SendFactoryGeneric.getInstance().signInput(ecKey, tx, i, BIP_FORMAT.PROVIDER);
+                }
+                else {
+                    Log.i("RBF", "sign outpoint:" + key);
+                    Log.i("RBF", "ECKey address from keyBag:" + ecKey.toAddress(networkParams).toString());
 
-                    Log.i("RBF", "script:" + ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())));
-                    Log.i("RBF", "script:" + Hex.toHexString(ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram()));
-                    TransactionSignature sig = tx.calculateSignature(i, ecKey, ScriptBuilder.createOutputScript(ecKey.toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())).getProgram(), Transaction.SigHash.ALL, false);
+                    Log.i("RBF", "script:" + ScriptBuilder.createOutputScript(ecKey.toAddress(networkParams)));
+                    Log.i("RBF", "script:" + Hex.toHexString(ScriptBuilder.createOutputScript(ecKey.toAddress(networkParams)).getProgram()));
+                    final TransactionSignature sig = tx.calculateSignature(
+                            i,
+                            ecKey,
+                            ScriptBuilder.createOutputScript(ecKey.toAddress(networkParams)).getProgram(),
+                            Transaction.SigHash.ALL,
+                            false);
+
                     tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(sig, ecKey));
                 }
 
             }
-        }
-        catch(NoSuchAlgorithmException nsae) {
+        } catch(Exception e) {
             return null;
         }
 
         return tx;
+    }
+
+    private void loadKeyBags(final Map<String, ECKey> keyBagLegacy,
+                             final Map<String, ECKey> keyBag49,
+                             final Map<String, ECKey> keyBag84,
+                             final Map<String, ECKey> keyBagExtra) {
+
+        final Map<String, String> keys = rbf.getKeyBag();
+
+        for (final Map.Entry<String, String> keyByOutpoint : keys.entrySet()) {
+
+            final String key = keyByOutpoint.getValue();
+            final String outpoint = keyByOutpoint.getKey();
+
+            final String[] path = key.split("/");
+            Log.i("RBF", "path length:" + path.length);
+            final ECKey ecKey = getECKey(path, activity.getAccount(), outpoint);
+
+            Log.i("RBF", "outpoint:" + outpoint);
+            Log.i("RBF", "path:" + key);
+
+            if (nonNull(ecKey)) {
+                if (extraInputs.containsKey(outpoint)) {
+                    keyBagExtra.put(outpoint, ecKey);
+                } else if (activity.getAccount() == SamouraiAccountIndex.POSTMIX) {
+                    if (path.length == 4) {
+                        if (path[3].equals("84")) {
+                            keyBag84.put(outpoint, ecKey);
+                        } else {
+                            keyBag49.put(outpoint, ecKey);
+                        }
+                    } else {
+                        keyBagLegacy.put(outpoint, ecKey);
+                    }
+
+                } else {
+                    if (path.length == 4) {
+                        if (path[3].equals("84")) {
+                            keyBag84.put(outpoint, ecKey);
+                        } else {
+                            keyBag49.put(outpoint, ecKey);
+                        }
+                    } else {
+                        keyBagLegacy.put(outpoint, ecKey);
+                    }
+                }
+
+            } else {
+                throw new RuntimeException("ECKey error: cannot process private key");
+            }
+        }
+    }
+
+    private ECKey getECKey(final String[] keyParts,
+                           final int account,
+                           final String outpoint) {
+
+        if (extraInputs.containsKey(outpoint)) {
+            return SendFactory.getPrivKey(extraInputs.get(outpoint), account);
+        }
+
+        if (account == SamouraiAccountIndex.POSTMIX) {
+            return getEcKeyForPostMixAccount(keyParts);
+        } else {
+            return getEcKey(keyParts);
+        }
+    }
+
+    private ECKey getEcKeyForPostMixAccount(final String[] keyParts) {
+        ECKey ecKey  = null;
+        if (keyParts.length == 4) {
+            if (keyParts[3].equals("84")) {
+                final HD_Address addr = BIP84Util.getInstance(activity).getWallet().getAccount(activity.getAccount()).getChain(Integer.parseInt(keyParts[1])).getAddressAt(Integer.parseInt(keyParts[2]));
+                ecKey = addr.getECKey();
+            } else {
+                final HD_Address addr = BIP84Util.getInstance(activity).getWallet().getAccount(WhirlpoolMeta.getInstance(activity).getWhirlpoolPostmix()).getChain(Integer.parseInt(keyParts[1])).getAddressAt(Integer.parseInt(keyParts[2]));
+                ecKey = addr.getECKey();
+            }
+        } else if (keyParts.length == 3) {
+            final HD_Address hd_addr = BIP84Util.getInstance(activity).getWallet().getAccount(activity.getAccount()).getChain(Integer.parseInt(keyParts[1])).getAddressAt(Integer.parseInt(keyParts[2]));
+            ecKey = hd_addr.getECKey();
+        } else if (keyParts.length == 2) {
+            try {
+                final PaymentAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(keyParts[0]), Integer.parseInt(keyParts[1]));
+                ecKey = address.getReceiveECKey();
+            } catch (Exception e) {
+                ;
+            }
+        } else {
+            ;
+        }
+        return ecKey;
+
+    }
+
+    private ECKey getEcKey(final String[] keyParts) {
+        ECKey ecKey  = null;
+        if (keyParts.length == 4) {
+            if (keyParts[3].equals("84")) {
+                final HD_Address addr = BIP84Util.getInstance(activity).getWallet().getAccount(activity.getAccount()).getChain(Integer.parseInt(keyParts[1])).getAddressAt(Integer.parseInt(keyParts[2]));
+                ecKey = addr.getECKey();
+            } else {
+                final HD_Address addr = BIP49Util.getInstance(activity).getWallet().getAccount(activity.getAccount()).getChain(Integer.parseInt(keyParts[1])).getAddressAt(Integer.parseInt(keyParts[2]));
+                ecKey = addr.getECKey();
+            }
+        } else if (keyParts.length == 3) {
+            final HD_Address hd_address = AddressFactory.getInstance(activity).get(activity.getAccount(), Integer.parseInt(keyParts[1]), Integer.parseInt(keyParts[2]));
+            final String strPrivKey = hd_address.getPrivateKeyString();
+            final NetworkParameters networkParams = SamouraiWallet.getInstance().getCurrentNetworkParams();
+            final DumpedPrivateKey pk = DumpedPrivateKey.fromBase58(networkParams, strPrivKey);
+            ecKey = pk.getKey();
+        } else if (keyParts.length == 2) {
+            try {
+                final PaymentAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(keyParts[0]), Integer.parseInt(keyParts[1]));
+                ecKey = address.getReceiveECKey();
+            } catch (Exception e) {
+                ;
+            }
+        } else {
+            ;
+        }
+        return ecKey;
     }
 }

@@ -1,25 +1,22 @@
 package com.samourai.wallet.paynym.paynymDetails;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.Tx;
 import com.samourai.wallet.tx.TxDetailsActivity;
 
 import org.bitcoinj.core.Coin;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -27,9 +24,9 @@ import java.util.TimeZone;
 public class PaynymTxListAdapter extends RecyclerView.Adapter<PaynymTxListAdapter.ViewHolder> {
 
     private List<Tx> txList;
-    private Activity context;
+    private SamouraiActivity context;
 
-    public PaynymTxListAdapter(List<Tx> txList, Activity context) {
+    public PaynymTxListAdapter(List<Tx> txList, SamouraiActivity context) {
         this.txList = txList;
         this.context = context;
     }
@@ -68,6 +65,7 @@ public class PaynymTxListAdapter extends RecyclerView.Adapter<PaynymTxListAdapte
         holder.amount.getRootView().setOnClickListener(view -> {
             Intent txIntent = new Intent(context, TxDetailsActivity.class);
             txIntent.putExtra("TX", tx.toJSON().toString());
+            txIntent.putExtra("_account", context.getAccount());
             context.startActivity(txIntent);
         });
     }

@@ -209,7 +209,7 @@ class CPFPTask(private val activity: SamouraiActivity, private val hash: String)
         }
     }
 
-    public fun doCPFP(): Boolean {
+    fun doCPFP(): Boolean {
         WebSocketService.restartService(activity)
         var tx = SendFactory.getInstance(activity).makeTransaction(outPoints, receivers)
         if (tx != null) {
