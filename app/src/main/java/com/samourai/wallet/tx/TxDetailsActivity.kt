@@ -13,11 +13,11 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.samourai.wallet.MainActivity2
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.access.AccessFactory
@@ -27,6 +27,7 @@ import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.explorer.ExplorerActivity
+import com.samourai.wallet.home.BalanceActivity
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.send.RBFUtil
 import com.samourai.wallet.send.SendActivity
@@ -335,9 +336,24 @@ class TxDetailsActivity : SamouraiActivity() {
                     } else {
                         bottomButton?.visibility = View.GONE
                         Toast.makeText(this@TxDetailsActivity, R.string.cpfp_spent, Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this@TxDetailsActivity, MainActivity2::class.java)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        this@TxDetailsActivity.startActivity(intent)
+                        if (getAccount() != 0) {
+                            val balanceHome = Intent(this@TxDetailsActivity, BalanceActivity::class.java)
+                            balanceHome.putExtra("_account", getAccount())
+                            balanceHome.putExtra("refresh", true)
+                            val parentIntent = Intent(this@TxDetailsActivity, BalanceActivity::class.java)
+                            parentIntent.putExtra("_account", 0)
+                            balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            TaskStackBuilder.create(this@TxDetailsActivity)
+                                .addNextIntent(parentIntent)
+                                .addNextIntent(balanceHome)
+                                .startActivities()
+                        } else {
+                            this@TxDetailsActivity.startActivity(Intent(this@TxDetailsActivity, BalanceActivity::class.java).apply {
+                                putExtra("refresh", true)
+                                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            })
+                        }
+
                     }
                 }
             }
@@ -374,6 +390,7 @@ class TxDetailsActivity : SamouraiActivity() {
                                 rbfPreProcessing.txHash,
                                 rbfPreProcessing.transaction,
                                 rbfPreProcessing.inputValues,
+                                rbfPreProcessing.extraInputs,
                                 message,
                                 this@TxDetailsActivity)
 
