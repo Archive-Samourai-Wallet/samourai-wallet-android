@@ -278,9 +278,8 @@ open class BalanceActivity : SamouraiActivity() {
             binding.fabMenu.toggle(true)
         }
         binding.sendFab.setOnClickListener(View.OnClickListener { view: View? ->
-            val intent = Intent(this@BalanceActivity, SendActivity::class.java)
+            val intent = Intent(this@BalanceActivity, AccountSelectionActivity::class.java)
             intent.putExtra("via_menu", true)
-            intent.putExtra("_account", account)
             startActivity(intent)
             binding.fabMenu.toggle(true)
         })
@@ -996,9 +995,8 @@ open class BalanceActivity : SamouraiActivity() {
                         startActivity(intent)
                     }
                     else -> {
-                        val intent = Intent(this@BalanceActivity, SendActivity::class.java)
+                        val intent = Intent(this@BalanceActivity, AccountSelectionActivity::class.java)
                         intent.putExtra("uri", code.trim { it <= ' ' })
-                        intent.putExtra("_account", account)
                         startActivity(intent)
                     }
                 }

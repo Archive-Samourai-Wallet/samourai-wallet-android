@@ -190,7 +190,9 @@ fun TransactionPreview(onClick: () -> Unit) {
             title = "Account",
             showSubSection = false,
             onClick = onClick,
-            showSubSectionText = if (account == SamouraiAccountIndex.DEPOSIT) "Deposit account" else "Postmix account",
+            showSubSectionText =
+            if (account == SamouraiAccountIndex.DEPOSIT) stringResource(id = R.string.deposit_account)
+            else stringResource(id = R.string.postmix_account),
         )
         Divider()
         if (!(cahootType?.cahootsType == CahootsType.STOWAWAY && cahootType?.cahootsMode == CahootsMode.MANUAL)) {

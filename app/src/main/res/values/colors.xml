@@ -22,6 +22,7 @@
     <color name="tx_broadcast_offline_bg">#d8b77d</color>
 
     <color name="white">#FAFAFA</color>
+    <color name="samouraiWindow">#FF343434</color>
     <color name="blue_semi_transparent_pressed">#5C738FFE</color>
     <color name="grey_accent">#6e7689</color>
     <color name="windowDark">#343434</color>

@@ -1012,4 +1012,8 @@
     <string name="clipboard_item_inconsistent">Inconsistent item found in clipboard</string>
     <string name="Amount">Amount</string>
     <string name="batch_item_details">Batch Item Details</string>
+
+    <string name="select_spending_account">Select spending account</string>
+    <string name="deposit_account">Deposit account</string>
+    <string name="postmix_account">Postmix account</string>
 </resources>
