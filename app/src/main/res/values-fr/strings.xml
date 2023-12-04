@@ -1110,5 +1110,10 @@
     <string name="clipboard_item_inconsistent">Élément incohérent trouvé dans le Presse-papiers</string>
     <string name="Amount">Montant</string>
     <string name="batch_item_details">Détails d\'une dépense du lot</string>
+
+    <string name="select_spending_account">Choisir un compte de dépense</string>
+    <string name="deposit_account">Compte dépôt</string>
+    <string name="postmix_account">Compte postmix</string>
+
 </resources>
 

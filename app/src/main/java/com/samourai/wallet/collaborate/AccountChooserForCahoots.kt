@@ -99,7 +99,7 @@ fun ChooseAccount() {
                     Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "")
                 },
                 text = {
-                    Text(text = "Deposit account", style = MaterialTheme.typography.subtitle2)
+                    Text(text = stringResource(id = R.string.deposit_account), style = MaterialTheme.typography.subtitle2)
                 },
                 secondaryText = {
                     Text(text = "$balanceDeposit · $depositUtxos UTXOs", style = MaterialTheme.typography.caption)
@@ -117,7 +117,7 @@ fun ChooseAccount() {
                     Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "")
                 },
                 text = {
-                    Text(text = "Postmix account", style = MaterialTheme.typography.subtitle2)
+                    Text(text = stringResource(id = R.string.postmix_account), style = MaterialTheme.typography.subtitle2)
                 },
                 secondaryText = {
                     Text(text = "$balancePostMix · $postMixUtxos UTXOs", style = MaterialTheme.typography.caption)

@@ -107,7 +107,7 @@ fun ParticipateSegment() {
                         })
                     },
                     text = {
-                        Text(text = "Deposit account")
+                        Text(text = stringResource(id = R.string.deposit_account))
                     },
                     secondaryText = {
                         Text(text = "$balanceDeposit · $depositUtxos UTXOs")
@@ -124,7 +124,7 @@ fun ParticipateSegment() {
                         })
                     },
                     text = {
-                        Text(text = "Postmix account")
+                        Text(text = stringResource(id = R.string.postmix_account))
                     },
                     secondaryText = {
                         Text(text = "$balancePostMix · $postMixUtxos UTXOs")
