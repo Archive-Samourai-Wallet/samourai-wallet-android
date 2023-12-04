@@ -503,7 +503,7 @@ open class BalanceActivity : SamouraiActivity() {
                 }
             }
             if (balanceViewModel.balance.value != null) bundle.putLong("balance", balanceViewModel.balance.value!!)
-            val intent = Intent(this, SendActivity::class.java)
+            val intent = Intent(this, AccountSelectionActivity::class.java)
             intent.putExtra("_account", account)
             intent.putExtras(bundle)
             startActivity(intent)
@@ -815,7 +815,7 @@ open class BalanceActivity : SamouraiActivity() {
                         intent.putExtra("params", strResult.trim { it <= ' ' })
                         startActivity(intent)
                     } else {
-                        val intent = Intent(this@BalanceActivity, SendActivity::class.java)
+                        val intent = Intent(this@BalanceActivity, AccountSelectionActivity::class.java)
                         intent.putExtra("uri", strResult.trim { it <= ' ' })
                         intent.putExtra("_account", account)
                         startActivity(intent)
@@ -1034,7 +1034,7 @@ open class BalanceActivity : SamouraiActivity() {
                         Toast.makeText(this@BalanceActivity, "Samourai Dojo full node coming soon.", Toast.LENGTH_SHORT).show()
                     }
                     else -> {
-                        val intent = Intent(this@BalanceActivity, SendActivity::class.java)
+                        val intent = Intent(this@BalanceActivity, AccountSelectionActivity::class.java)
                         intent.putExtra("uri", code.trim { it <= ' ' })
                         intent.putExtra("_account", account)
                         startActivity(intent)

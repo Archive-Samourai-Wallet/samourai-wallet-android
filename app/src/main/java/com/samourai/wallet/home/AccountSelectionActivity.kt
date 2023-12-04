@@ -154,12 +154,11 @@ fun ComposeActivityContent(activity: SamouraiActivity?) {
 
                         val intent = Intent(context, SendActivity::class.java)
                         if (nonNull(currentIntent)) {
-                            if (currentIntent!!.hasExtra("uri")) {
-                                intent.putExtra("uri", currentIntent!!.getStringExtra("uri"))
-                            }
                             intent.putExtra(
                                 "via_menu",
-                                currentIntent!!.getBooleanExtra("via_menu", false))
+                                currentIntent!!.getBooleanExtra("via_menu", false)
+                            )
+                            currentIntent.extras?.let { intent.putExtras(it) }
                         }
 
                         if (isPostmixAccount) {
