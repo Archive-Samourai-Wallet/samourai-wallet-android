@@ -755,21 +755,26 @@ public class PayloadUtil	{
 
     }
 
-    private synchronized JSONObject deserialize(CharSequenceX password, boolean useBackup) throws IOException, JSONException {
+    private JSONObject deserialize(CharSequenceX password, boolean useBackup) throws IOException, JSONException {
 
-        File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
-        File file = new File(dir, useBackup ? strBackupFilename : strFilename);
+        final StringBuilder sb = new StringBuilder();
+        final String child = useBackup ? strBackupFilename : strFilename;
+
+        synchronized (child) {
+
+            File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
+            File file = new File(dir, child);
 //        Log.i("PayloadUtil", "wallet file exists: " + file.exists());
-        StringBuilder sb = new StringBuilder();
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"));
-        String str = null;
+            BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"));
+            String str = null;
 
-        while((str = in.readLine()) != null) {
-            sb.append(str);
+            while((str = in.readLine()) != null) {
+                sb.append(str);
+            }
+
+            in.close();
         }
-
-        in.close();
 
         JSONObject jsonObj = null;
         try {
@@ -819,58 +824,61 @@ public class PayloadUtil	{
         return node;
     }
 
-    private synchronized void serializeAux(JSONObject jsonobj, CharSequenceX password, String filename) throws Exception {
+    private void serializeAux(JSONObject jsonobj, CharSequenceX password, String filename) throws Exception {
 
-        File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
-        File newfile = new File(dir, filename);
-        newfile.setWritable(true, true);
+        synchronized (filename) {
+            File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
+            File newfile = new File(dir, filename);
+            newfile.setWritable(true, true);
 
-        newfile.createNewFile();
+            newfile.createNewFile();
 
-        String data = null;
-        String jsonstr = jsonobj.toString(4);
-        if(password != null) {
-            try {
-                data = AESUtil.encryptSHA256(jsonstr, password);
-            } catch (Exception e) {
-                throw new Exception(e);
+            String data = null;
+            String jsonstr = jsonobj.toString(4);
+            if(password != null) {
+                try {
+                    data = AESUtil.encryptSHA256(jsonstr, password);
+                } catch (Exception e) {
+                    throw new Exception(e);
+                }
             }
-        }
-        else {
-            data = jsonstr;
-        }
+            else {
+                data = jsonstr;
+            }
 
-        JSONObject jsonObj = putPayload(data, false);
-        if(jsonObj != null)    {
-            Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newfile), "UTF-8"));
-            try {
-                out.write(jsonObj.toString());
-            } finally {
-                out.close();
+            JSONObject jsonObj = putPayload(data, false);
+            if(jsonObj != null)    {
+                Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newfile), "UTF-8"));
+                try {
+                    out.write(jsonObj.toString());
+                } finally {
+                    out.close();
+                }
             }
         }
     }
 
-    private synchronized JSONObject deserializeAux(CharSequenceX password, String filename) throws IOException, JSONException {
+    private JSONObject deserializeAux(CharSequenceX password, String filename) throws IOException, JSONException {
 
-        File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
-        File file = new File(dir, filename);
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
+        synchronized (filename) {
+            File dir = context.getDir(dataDir, Context.MODE_PRIVATE);
+            File file = new File(dir, filename);
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"));
-        String str = null;
+            final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"));
+            String str = null;
 
-        while((str = in.readLine()) != null) {
-            sb.append(str);
+            while((str = in.readLine()) != null) {
+                sb.append(str);
+            }
+
+            in.close();
         }
-
-        in.close();
 
         JSONObject jsonObj = null;
         try {
             jsonObj = new JSONObject(sb.toString());
-        }
-        catch(JSONException je)   {
+        } catch(JSONException je)   {
             ;
         }
         String payload = null;

@@ -5,13 +5,13 @@ import android.os.Looper;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SimpleTaskRunner {
 
     public static final String TAG = SimpleTaskRunner.class.getSimpleName();
-    private final Executor executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private SimpleTaskRunner() {}
@@ -27,7 +27,7 @@ public class SimpleTaskRunner {
     public <T> void executeAsync(final Callable<T> callable, final SimpleCallback<T> simpleCallback) {
         Objects.requireNonNull(callable);
         Objects.requireNonNull(simpleCallback);
-        executor.execute(() -> {
+        executor.submit(() -> {
             final T result;
             try {
                 result = callable.call();

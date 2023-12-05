@@ -95,6 +95,7 @@ import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper;
 import com.samourai.wallet.util.func.SendAddressUtil;
 import com.samourai.wallet.util.network.WebUtil;
+import com.samourai.wallet.util.tech.SimpleTaskRunner;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.UTXOSActivity;
 import com.samourai.wallet.utxos.models.UTXOCoin;
@@ -140,6 +141,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 
 public class SendActivity extends SamouraiActivity {
@@ -337,7 +340,8 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void setUpCompositeDisposables() {
-        Disposable disposable = APIFactory.getInstance(getApplicationContext())
+
+        final Disposable disposable = APIFactory.getInstance(getApplicationContext())
                 .walletBalanceObserver
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -346,7 +350,8 @@ public class SendActivity extends SamouraiActivity {
 
 
         // Update fee
-        Disposable feeDisposable = Observable.fromCallable(() -> APIFactory.getInstance(getApplicationContext()).getDynamicFees())
+        final Disposable feeDisposable = Observable.fromCallable(() -> APIFactory
+                        .getInstance(getApplicationContext()).getDynamicFees())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(t -> setUpFee(), Throwable::printStackTrace);
