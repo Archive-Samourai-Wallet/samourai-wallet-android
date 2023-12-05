@@ -1016,4 +1016,7 @@
     <string name="select_spending_account">Select spending account</string>
     <string name="deposit_account">Deposit account</string>
     <string name="postmix_account">Postmix account</string>
+
+    <string name="wallet_loading_wait">Wallet loading, please wait</string>
+
 </resources>

@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
@@ -206,6 +207,8 @@ fun ComposeActivityContent(model: AccountSelectionModel, activity: SamouraiActiv
 @Composable
 fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onItemClick: () -> Unit) {
 
+    val context = LocalContext.current;
+
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
     )
@@ -221,7 +224,13 @@ fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onIt
             .height(100.dp)
             .padding(vertical = 16.dp)
             .background(if (disabled) Color.Gray.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(12.dp))
-            .clickable(enabled = !disabled) { if (!disabled) onItemClick.invoke() },
+            .clickable
+            {
+                if (!disabled)
+                    onItemClick.invoke()
+                else
+                    Toast.makeText(context, R.string.wallet_loading_wait, Toast.LENGTH_SHORT).show()
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column (

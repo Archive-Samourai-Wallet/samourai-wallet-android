@@ -1115,5 +1115,7 @@
     <string name="deposit_account">Compte dépôt</string>
     <string name="postmix_account">Compte postmix</string>
 
+    <string name="wallet_loading_wait">Chargement du portefeuille, veuillez patienter</string>
+
 </resources>
 
