@@ -21,6 +21,9 @@ import org.json.JSONObject
 import java.net.URI
 
 
+const val STATE_CHALLENGE_VALID = "challenge valid"
+const val STATE_CHALLENGE_NOT_VALID = "challenge not valid"
+
 class Auth47ViewModel : ViewModel() {
 
     companion object {
@@ -41,6 +44,7 @@ class Auth47ViewModel : ViewModel() {
     private val authCallbackDomain = MutableLiveData("")
     private val resourceHost = MutableLiveData("")
     private val page = MutableLiveData(0)
+    private val challengeState = MutableLiveData("")
 
     val errorsLive: LiveData<String?> get() = errors
     val authCallbackDomainLive: LiveData<String> get() = authCallbackDomain
@@ -49,18 +53,24 @@ class Auth47ViewModel : ViewModel() {
     val loadingLive: LiveData<Boolean> get() = loading
     val authSuccessLive: LiveData<Boolean> get() = authSuccess
     val pageLive: LiveData<Int> get() = page
+    val challengeStateLive: LiveData<String> get() = challengeState
 
 
     fun setChallengeValue(authChallengeEdit: String) {
         authChallenge.postValue(authChallengeEdit)
+        challengeState.postValue("")
         viewModelScope.launch {
             try {
                 val isValid = validateChallenge(authChallengeEdit)
                 if (isValid) {
                     page.postValue(1)
+                    challengeState.postValue(STATE_CHALLENGE_VALID);
+                } else {
+                    challengeState.postValue(STATE_CHALLENGE_NOT_VALID)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                challengeState.postValue(STATE_CHALLENGE_NOT_VALID)
             }
         }
     }
