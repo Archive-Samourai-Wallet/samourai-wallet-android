@@ -85,9 +85,12 @@ class AccountSelectionActivity : SamouraiActivity() {
 @Composable
 fun ComposeActivityContent(model: AccountSelectionModel, activity: SamouraiActivity?) {
 
-    val depositBalance by model.depositBalance.observeAsState(0L)
-    val postmixBalance by model.postmixBalance.observeAsState(0L)
-    val loading by model.loading.observeAsState(false)
+    val depositBalance by model.depositBalance.observeAsState(BalanceUtil.getBalance(SamouraiAccountIndex.DEPOSIT, activity))
+    val postmixBalance by model.postmixBalance.observeAsState(BalanceUtil.getBalance(SamouraiAccountIndex.POSTMIX, activity))
+    val loading by model.loading.observeAsState(
+        nonNull(AppUtil.getInstance(activity).walletLoading.value) &&
+                AppUtil.getInstance(activity).walletLoading.value == true
+    )
 
     val context = LocalContext.current
     val items = listOf(
@@ -210,13 +213,15 @@ fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onIt
         Font(R.font.roboto_light, FontWeight.Normal)
     )
 
+    val disabled = loading && balance == 0L
+
     Row (
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
             .padding(vertical = 16.dp)
-            .background(if (loading) Color.Gray.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(12.dp))
-            .clickable(enabled = !loading) { if (!loading) onItemClick.invoke() },
+            .background(if (disabled) Color.Gray.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(12.dp))
+            .clickable(enabled = !disabled) { if (!disabled) onItemClick.invoke() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column (
