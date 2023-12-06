@@ -1,6 +1,8 @@
 package com.samourai.wallet.tools
 
+import android.app.Activity
 import android.content.Intent
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -61,14 +63,17 @@ import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.paynym.PayNymHome
 import com.samourai.wallet.theme.*
 import com.samourai.wallet.tools.viewmodels.Auth47ViewModel
+import com.samourai.wallet.tools.viewmodels.STATE_CHALLENGE_NOT_VALID
 import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.activity.ActivityHelper
 
 
 @Composable
 fun Auth47Login(param: String? = null, onClose: () -> Unit) {
     val vm = viewModel<Auth47ViewModel>()
     val page by vm.pageLive.observeAsState(0)
+    val challengeErrorState by vm.challengeStateLive.observeAsState("");
     val authChallenge by vm.authChallengeLive.observeAsState("")
     var showAuth47Details by remember { mutableStateOf(false) }
     val context = LocalContext.current;
@@ -79,6 +84,10 @@ fun Auth47Login(param: String? = null, onClose: () -> Unit) {
         if (param != null) {
             vm.setChallengeValue(param)
         }
+    }
+
+    if (STATE_CHALLENGE_NOT_VALID.equals(challengeErrorState)) {
+        Toast.makeText(context, "challenge not valid", Toast.LENGTH_SHORT).show()
     }
 
     Scaffold(
@@ -230,20 +239,47 @@ fun Auth47Form(onClose: (() -> Unit)? = null) {
                     .fillMaxWidth(),
                 value = authChallengeEdit,
                 trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            if (supportFragmentManager != null) {
-                                val cameraFragmentBottomSheet = CameraFragmentBottomSheet()
-                                cameraFragmentBottomSheet.show(supportFragmentManager, cameraFragmentBottomSheet.tag)
-                                cameraFragmentBottomSheet.setQrCodeScanListener {
-                                    cameraFragmentBottomSheet.dismiss()
-                                    authChallengeEdit = it
-                                    vm.setChallengeValue(it)
+
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val content = getContentFromClipboard(activity = context as Activity)
+                                if (! "".equals(content)) {
+                                    authChallengeEdit = content
+                                    vm.setChallengeValue(content)
+                                } else {
+                                    Toast.makeText(context, "challenge not valid", Toast.LENGTH_SHORT).show()
                                 }
                             }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_content_paste),
+                                contentDescription = "paste"
+                            )
                         }
-                    ) {
-                        Icon(painter = painterResource(id = R.drawable.ic_crop_free_white_24dp), contentDescription = "scan")
+
+                        IconButton(
+                            onClick = {
+                                if (supportFragmentManager != null) {
+                                    val cameraFragmentBottomSheet = CameraFragmentBottomSheet()
+                                    cameraFragmentBottomSheet.show(supportFragmentManager, cameraFragmentBottomSheet.tag)
+                                    cameraFragmentBottomSheet.setQrCodeScanListener {
+                                        cameraFragmentBottomSheet.dismiss()
+                                        authChallengeEdit = it
+                                        vm.setChallengeValue(it)
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_crop_free_white_24dp),
+                                contentDescription = "scan"
+                            )
+                        }
                     }
                 },
                 textStyle = TextStyle(fontSize = 12.sp),
@@ -298,6 +334,12 @@ fun Auth47Form(onClose: (() -> Unit)? = null) {
     }
 }
 
+private fun getContentFromClipboard(activity: Activity): String {
+    val item = ActivityHelper.getFirstItemFromClipboard(activity)
+    val content: String = if (item != null && item.text != null) item.text.toString() else ""
+    return content
+}
+
 @Composable
 fun Auth47Authentication() {
     val vm = viewModel<Auth47ViewModel>()
@@ -345,7 +387,11 @@ fun Auth47Authentication() {
                     if (success) Box(
                         modifier = Modifier
                             .size(104.dp)
-                            .border(color = Color.White, shape = RoundedCornerShape(100), width = 2.dp)
+                            .border(
+                                color = Color.White,
+                                shape = RoundedCornerShape(100),
+                                width = 2.dp
+                            )
                             .clip(RoundedCornerShape(100)),
                     ) {
                         Icon(
