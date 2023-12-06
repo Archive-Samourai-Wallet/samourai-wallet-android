@@ -1,10 +1,12 @@
 package com.samourai.wallet.home
 
+import android.app.Application
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,12 +21,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.IconButton
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +40,8 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
@@ -45,11 +51,14 @@ import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.BalanceUtil
 import com.samourai.wallet.util.func.FormatsUtil.formatBTC
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import org.apache.commons.lang3.StringUtils
 import java.util.Objects.nonNull
 
 class AccountSelectionActivity : SamouraiActivity() {
+
+    private val accountSelectionModel: AccountSelectionModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,18 +69,29 @@ class AccountSelectionActivity : SamouraiActivity() {
             window.statusBarColor = getColor(R.color.samouraiWindow)
         }
 
+        AppUtil.getInstance(applicationContext).walletLoading.observe(this) {
+            accountSelectionModel.setLoading(it)
+            if (!it) {
+                accountSelectionModel.setDepositBalance(BalanceUtil.getBalance(SamouraiAccountIndex.DEPOSIT, this));
+                accountSelectionModel.setPostmixBalance(BalanceUtil.getBalance(SamouraiAccountIndex.POSTMIX, this));
+            }
+        }
+
         setContent {
-            ComposeActivityContent(activity = this)
+            ComposeActivityContent(model = accountSelectionModel, activity = this)
         }
     }
 }
 
 @Composable
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
-fun ComposeActivityContent(activity: SamouraiActivity?) {
+fun ComposeActivityContent(model: AccountSelectionModel, activity: SamouraiActivity?) {
 
-    var depositBalance = BalanceUtil.getBalance(SamouraiAccountIndex.DEPOSIT, activity)
-    var postmixBalance = BalanceUtil.getBalance(SamouraiAccountIndex.POSTMIX, activity)
+    val depositBalance by model.depositBalance.observeAsState(BalanceUtil.getBalance(SamouraiAccountIndex.DEPOSIT, activity))
+    val postmixBalance by model.postmixBalance.observeAsState(BalanceUtil.getBalance(SamouraiAccountIndex.POSTMIX, activity))
+    val loading by model.loading.observeAsState(
+        nonNull(AppUtil.getInstance(activity).walletLoading.value) &&
+                AppUtil.getInstance(activity).walletLoading.value == true
+    )
 
     val context = LocalContext.current
     val items = listOf(
@@ -140,6 +160,14 @@ fun ComposeActivityContent(activity: SamouraiActivity?) {
                 }
             }
 
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally),
+                backgroundColor = Color.Transparent,
+                color = if (loading) Color.White else Color.Transparent
+            )
+
             Column(
                 modifier = Modifier
                     .weight(0.90f)
@@ -148,9 +176,9 @@ fun ComposeActivityContent(activity: SamouraiActivity?) {
                 items.forEach { item ->
                     val isPostmixAccount = item.first == SamouraiAccountIndex.POSTMIX;
                     val balance =
-                        if (isPostmixAccount) BalanceUtil.getBalance(SamouraiAccountIndex.POSTMIX, activity)
-                        else BalanceUtil.getBalance(SamouraiAccountIndex.DEPOSIT, activity);
-                    itemRow(item = item, balance = balance) {
+                        if (isPostmixAccount) postmixBalance
+                        else depositBalance
+                    itemRow(item = item, balance = balance, loading = loading) {
 
                         val intent = Intent(context, SendActivity::class.java)
                         if (nonNull(currentIntent)) {
@@ -177,8 +205,9 @@ fun ComposeActivityContent(activity: SamouraiActivity?) {
 
 
 @Composable
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
-fun itemRow(item: Triple<Int, Int, Color>, balance: Long, onItemClick: () -> Unit) {
+fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onItemClick: () -> Unit) {
+
+    val context = LocalContext.current;
 
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
@@ -187,13 +216,21 @@ fun itemRow(item: Triple<Int, Int, Color>, balance: Long, onItemClick: () -> Uni
         Font(R.font.roboto_light, FontWeight.Normal)
     )
 
+    val disabled = loading && balance == 0L
+
     Row (
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
             .padding(vertical = 16.dp)
-            .background(Color.Transparent)
-            .clickable { onItemClick.invoke() },
+            .background(if (disabled) Color.Gray.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(12.dp))
+            .clickable
+            {
+                if (!disabled)
+                    onItemClick.invoke()
+                else
+                    Toast.makeText(context, R.string.wallet_loading_wait, Toast.LENGTH_SHORT).show()
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column (
@@ -271,6 +308,15 @@ fun getAccountName(account: Int): String {
 
 @Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
-    ComposeActivityContent(null)
+fun DefaultPreview(
+    @PreviewParameter(MyModelPreviewProvider::class) accountSelectionModel: AccountSelectionModel
+) {
+    ComposeActivityContent(accountSelectionModel, null)
 }
+
+class MyModelPreviewProvider : PreviewParameterProvider<AccountSelectionModel> {
+    override val values: Sequence<AccountSelectionModel>
+        get() = sequenceOf(AccountSelectionModel(TestApplication()))
+}
+
+class TestApplication : Application()

@@ -314,11 +314,11 @@ public class APIFactory {
 
     }
 
-    public synchronized boolean APITokenRequired()  {
+    public boolean APITokenRequired()  {
         return DojoUtil.getInstance(context).getDojoParams() == null ? false : true;
     }
 
-    public synchronized boolean getToken(boolean setupDojo, boolean reauth401) {
+    public boolean getToken(boolean setupDojo, boolean reauth401) {
 
         if(!APITokenRequired())    {
             return true;
@@ -373,13 +373,11 @@ public class APIFactory {
                 }else{
                     return  false;
                 }
-            }
-            catch(JSONException je) {
+            } catch(JSONException je) {
                 je.printStackTrace();
                 return false;
             }
-        }
-        catch(Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -1401,7 +1399,7 @@ public class APIFactory {
         return jsonObject;
     }
 
-    public synchronized JSONObject getDynamicFees() throws Exception {
+    public JSONObject getDynamicFees() throws Exception {
 
         final String _url =  WebUtil.getAPIUrl(context);
         final String response;
@@ -1416,7 +1414,7 @@ public class APIFactory {
         return jsonObject;
     }
 
-    private synchronized void parseDynamicFees_bitcoind(JSONObject payload) throws JSONException  {
+    private void parseDynamicFees_bitcoind(JSONObject payload) throws JSONException  {
         JSONObject jsonObject  = new JSONObject();
         if(payload ==null){
             return;
@@ -1435,7 +1433,7 @@ public class APIFactory {
             if(payload.getJSONObject("info").has("fees")){
                 jsonObject =  payload.getJSONObject("info").getJSONObject("fees");
              }
-        }else if(payload.has("2")){
+        } else if(payload.has("2")){
             jsonObject= payload;
         }
         info("APIFactory", "Dynamic fees:" + jsonObject.toString(2));
@@ -1445,7 +1443,7 @@ public class APIFactory {
             //
             // bitcoind
             //
-            List<SuggestedFee> suggestedFees = new ArrayList<SuggestedFee>();
+            final List<SuggestedFee> suggestedFees = new ArrayList<SuggestedFee>();
 
             if(jsonObject.has("2"))    {
                 long fee = jsonObject.getInt("2");

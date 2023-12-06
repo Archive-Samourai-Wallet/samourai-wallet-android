@@ -216,40 +216,42 @@ open class BalanceActivity : SamouraiActivity() {
                         }
                     }
                 }
-                withContext(Dispatchers.Main) {
-                    utxoWarnings.forEach {
-                        val hash = it.hash.toString()
-                        val idx = it.txOutputN
-                        val amount = it.value.longValue()
-                        var message: String? = this@BalanceActivity.getString(R.string.dusting_attempt)
-                        message += "\n\n"
-                        message += this@BalanceActivity.getString(R.string.dusting_attempt_amount)
-                        message += " "
-                        message += FormatsUtil.formatBTC(amount)
-                        message += this@BalanceActivity.getString(R.string.dusting_attempt_id)
-                        message += " "
-                        message += "$hash-$idx"
-                        val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
-                            .setTitle(R.string.dusting_tx)
-                            .setMessage(message)
-                            .setCancelable(false)
-                            .setPositiveButton(R.string.dusting_attempt_mark_unspendable) { dialog, whichButton ->
-                                if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
-                                    BlockedUTXO.getInstance().addPostMix(hash, idx, amount)
-                                } else {
-                                    BlockedUTXO.getInstance().add(hash, idx, amount)
+                if(! utxoWarnings.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        utxoWarnings.forEach {
+                            val hash = it.hash.toString()
+                            val idx = it.txOutputN
+                            val amount = it.value.longValue()
+                            var message: String? = this@BalanceActivity.getString(R.string.dusting_attempt)
+                            message += "\n\n"
+                            message += this@BalanceActivity.getString(R.string.dusting_attempt_amount)
+                            message += " "
+                            message += FormatsUtil.formatBTC(amount)
+                            message += this@BalanceActivity.getString(R.string.dusting_attempt_id)
+                            message += " "
+                            message += "$hash-$idx"
+                            val dlg = MaterialAlertDialogBuilder(this@BalanceActivity)
+                                .setTitle(R.string.dusting_tx)
+                                .setMessage(message)
+                                .setCancelable(false)
+                                .setPositiveButton(R.string.dusting_attempt_mark_unspendable) { dialog, whichButton ->
+                                    if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
+                                        BlockedUTXO.getInstance().addPostMix(hash, idx, amount)
+                                    } else {
+                                        BlockedUTXO.getInstance().add(hash, idx, amount)
+                                    }
+                                    saveState()
+                                }.setNegativeButton(R.string.dusting_attempt_ignore) { dialog, whichButton ->
+                                    if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
+                                        BlockedUTXO.getInstance().addNotDustedPostMix(hash, idx)
+                                    } else {
+                                        BlockedUTXO.getInstance().addNotDusted(hash, idx)
+                                    }
+                                    saveState()
                                 }
-                                saveState()
-                            }.setNegativeButton(R.string.dusting_attempt_ignore) { dialog, whichButton ->
-                                if (account == WhirlpoolMeta.getInstance(this@BalanceActivity).whirlpoolPostmix) {
-                                    BlockedUTXO.getInstance().addNotDustedPostMix(hash, idx)
-                                } else {
-                                    BlockedUTXO.getInstance().addNotDusted(hash, idx)
-                                }
-                                saveState()
+                            if (!isFinishing) {
+                                dlg.show()
                             }
-                        if (!isFinishing) {
-                            dlg.show()
                         }
                     }
                 }
