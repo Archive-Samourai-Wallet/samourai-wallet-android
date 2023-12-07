@@ -15,10 +15,11 @@ import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.tor.EnumTorState
 import com.samourai.wallet.tor.SamouraiTorManager
-import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.func.MessageSignUtil
+import com.samourai.wallet.util.tech.AppUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -129,10 +130,11 @@ class Auth47ViewModel : ViewModel() {
                 if (it.state == EnumTorState.ON) {
                     if (authStarted.compareAndSet(false, true)) {
                         viewModelScope.launch {
-                            withContext(Dispatchers.Main) {
-                                startAuth(!starting, activity)
+                            withContext(Dispatchers.IO) {
+                                // needs to let extra time to Tor for the first init to avoid retry
+                                delay(2000L)
                             }
-                        }
+                        }.invokeOnCompletion { startAuth(!starting, activity) }
                     }
                 }
             }
@@ -175,7 +177,7 @@ class Auth47ViewModel : ViewModel() {
         } catch (error: Exception) {
             if (retryCount > 0) {
                 Log.i(TAG, String.format("callAuth failed : will recall it (remaining retryCount:%s)", retryCount))
-                Thread.sleep(retryPause);
+                delay(retryPause)
                 callAuth(activity = activity, torWasDisabled = torWasDisabled, retryCount = retryCount-1, retryPause)
             } else {
                 errors.postValue("Error ${error.message}")
