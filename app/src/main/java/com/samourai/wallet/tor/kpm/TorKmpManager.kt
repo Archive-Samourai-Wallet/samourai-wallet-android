@@ -9,10 +9,25 @@ import com.samourai.wallet.tor.EnumTorState
 import com.samourai.wallet.tor.TorState
 import io.matthewnelson.kmp.tor.KmpTorLoaderAndroid
 import io.matthewnelson.kmp.tor.TorConfigProviderAndroid
-import io.matthewnelson.kmp.tor.common.address.*
+import io.matthewnelson.kmp.tor.common.address.OnionAddress
+import io.matthewnelson.kmp.tor.common.address.Port
+import io.matthewnelson.kmp.tor.common.address.PortProxy
 import io.matthewnelson.kmp.tor.controller.common.config.TorConfig
-import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Option.*
-import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.*
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Option.AorDorPort
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Option.AorTorF
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Option.FileSystemDir
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Option.FileSystemFile
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Option.Time
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Option.TorF
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.ClientOnionAuthDir
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.ConnectionPadding
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.ConnectionPaddingReduced
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.DataDirectory
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.DormantCanceledByStartup
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.DormantClientTimeout
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.HiddenService
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.Ports
+import io.matthewnelson.kmp.tor.controller.common.config.TorConfig.Setting.UnixSockets
 import io.matthewnelson.kmp.tor.controller.common.control.usecase.TorControlInfoGet
 import io.matthewnelson.kmp.tor.controller.common.control.usecase.TorControlSignal
 import io.matthewnelson.kmp.tor.controller.common.events.TorEvent
@@ -25,7 +40,12 @@ import io.matthewnelson.kmp.tor.manager.common.state.isOff
 import io.matthewnelson.kmp.tor.manager.common.state.isOn
 import io.matthewnelson.kmp.tor.manager.common.state.isStarting
 import io.matthewnelson.kmp.tor.manager.common.state.isStopping
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.net.InetSocketAddress
 import java.net.Proxy
 
@@ -267,7 +287,9 @@ class TorKmpManager(application : Application) {
                     torState.state = EnumTorState.STOPPING
                     liveTorState.state = EnumTorState.STOPPING
                 }
-                torStateLiveData.postValue(liveTorState)
+                GlobalScope.launch(Dispatchers.Main) {
+                    torStateLiveData.postValue(liveTorState)
+                }
             }
             addLine(event.toString())
             super.onEvent(event)
