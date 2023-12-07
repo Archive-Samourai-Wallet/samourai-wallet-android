@@ -3,14 +3,18 @@ package com.samourai.wallet.tools.viewmodels
 import android.content.Context
 import android.net.Uri
 import android.net.UrlQuerySanitizer
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.R
+import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.paynym.api.PayNymApiService
+import com.samourai.wallet.tor.EnumTorState
+import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.util.func.MessageSignUtil
 import kotlinx.coroutines.CancellationException
@@ -19,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URI
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 const val STATE_CHALLENGE_VALID = "challenge valid"
@@ -104,39 +109,82 @@ class Auth47ViewModel : ViewModel() {
     }
 
     //start auth process by signing challenge and sending to callback url with signature
-    fun initiateAuthentication(context: Context) {
-        if (AppUtil.getInstance(context).isOfflineMode) {
-            Toast.makeText(context, R.string.in_offline_mode, Toast.LENGTH_SHORT).show()
+    fun initiateAuthentication(activity: SamouraiActivity) {
+        if (AppUtil.getInstance(activity).isOfflineMode) {
+            Toast.makeText(activity, R.string.in_offline_mode, Toast.LENGTH_SHORT).show()
             return
         }
 
         loading.postValue(true)
         authSuccess.postValue(false)
         errors.postValue(null)
+
+
+        if (SamouraiTorManager.isConnected()) {
+            startAuth(false, activity)
+        } else {
+            val starting = SamouraiTorManager.isStarting();
+            val authStarted = AtomicBoolean(false);
+            SamouraiTorManager.getTorStateLiveData().observe(activity) { it ->
+                if (it.state == EnumTorState.ON) {
+                    if (authStarted.compareAndSet(false, true)) {
+                        viewModelScope.launch {
+                            withContext(Dispatchers.Main) {
+                                startAuth(!starting, activity)
+                            }
+                        }
+                    }
+                }
+            }
+            SamouraiTorManager.start()
+        }
+    }
+
+    private fun startAuth(torWasDisabled: Boolean, activity: SamouraiActivity) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                try {
-                    val pcode = BIP47Util.getInstance(context).paymentCode.toString();
-                    val originalChallenge = authChallenge.value
-                    val uri = Uri.parse(originalChallenge)
-                    val callback = uri.getQueryParameter("c") ?: return@withContext
-                    val challengePayload = signChallenge(originalChallenge, context)
-                    //TODO: srbn support
-                    val response = PayNymApiService.getInstance(pcode, context).auth47(callback, challengePayload)
-                    val body = response.body?.string() ?: "";
-                    if (response.isSuccessful) {
-                        authSuccess.postValue(true)
-                    } else {
-                        throw  Exception(body)
-                    }
-
-                } catch (error: Exception) {
-                    errors.postValue("Error ${error.message}")
-                    throw  CancellationException(error.message)
-                }
+                callAuth(activity, torWasDisabled, 4, 1_500L)
             }
         }.invokeOnCompletion {
             loading.postValue(false)
+        }
+    }
+
+    private suspend fun callAuth(
+        activity: SamouraiActivity,
+        torWasDisabled: Boolean,
+        retryCount : Int,
+        retryPause : Long,
+    ) {
+        try {
+            val pcode = BIP47Util.getInstance(activity).paymentCode.toString();
+            val originalChallenge = authChallenge.value
+            val uri = Uri.parse(originalChallenge)
+            val callback = uri.getQueryParameter("c") ?: return
+            val challengePayload = signChallenge(originalChallenge, activity)
+            //TODO: srbn support
+            val response = PayNymApiService.getInstance(pcode, activity)
+                .auth47(callback, challengePayload)
+            val body = response.body?.string() ?: "";
+            if (response.isSuccessful) {
+                authSuccess.postValue(true)
+            } else {
+                throw Exception(body)
+            }
+
+        } catch (error: Exception) {
+            if (retryCount > 0) {
+                Log.i(TAG, String.format("callAuth failed : will recall it (remaining retryCount:%s)", retryCount))
+                Thread.sleep(retryPause);
+                callAuth(activity = activity, torWasDisabled = torWasDisabled, retryCount = retryCount-1, retryPause)
+            } else {
+                errors.postValue("Error ${error.message}")
+                throw CancellationException(error.message)
+            }
+        } finally {
+            if (torWasDisabled) {
+                SamouraiTorManager.stop()
+            }
         }
     }
 

@@ -55,6 +55,7 @@ import androidx.compose.ui.zIndex
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samourai.wallet.R
+import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.paynym.WebUtil
@@ -347,11 +348,12 @@ fun Auth47Authentication() {
     val loading by vm.loadingLive.observeAsState(true)
     val error by vm.errorsLive.observeAsState(null)
     val success by vm.authSuccessLive.observeAsState(false)
-    val context = LocalContext.current.applicationContext
-    val avatar by BIP47Util.getInstance(context).payNymLogoLive.observeAsState(null);
+    val context = LocalContext.current
+    val appContext = LocalContext.current.applicationContext
+    val avatar by BIP47Util.getInstance(appContext).payNymLogoLive.observeAsState(null);
 
     LaunchedEffect(key1 = true) {
-        val pcode = BIP47Util.getInstance(context).paymentCode.toString();
+        val pcode = BIP47Util.getInstance(appContext).paymentCode.toString();
         if (avatar == null) {
             paynymUrl = "${WebUtil.PAYNYM_API}${pcode}/avatar"
         }
@@ -465,7 +467,7 @@ fun Auth47Authentication() {
         AnimatedVisibility(visible = !loading && !success) {
             Button(
                 onClick = {
-                    vm.initiateAuthentication(context)
+                    vm.initiateAuthentication(context as SamouraiActivity)
                 },
                 Modifier
                     .fillMaxWidth()
