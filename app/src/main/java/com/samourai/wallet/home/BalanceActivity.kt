@@ -778,6 +778,9 @@ open class BalanceActivity : SamouraiActivity() {
                 binding.progressBar.visibility = View.VISIBLE
                 menuTorIcon?.setImageResource(R.drawable.tor_on)
             } else {
+                if (torState.state == EnumTorState.OFF) {
+                    PrefsUtil.getInstance(this).setValue(PrefsUtil.ENABLE_TOR, false)
+                }
                 binding.progressBar.visibility = View.INVISIBLE
                 menuTorIcon?.setImageResource(R.drawable.tor_off)
             }
