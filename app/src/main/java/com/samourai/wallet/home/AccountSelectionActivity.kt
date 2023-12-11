@@ -89,7 +89,8 @@ fun ComposeActivityContent(model: AccountSelectionModel, activity: SamouraiActiv
     val depositBalance by model.depositBalance.observeAsState(BalanceUtil.getBalance(SamouraiAccountIndex.DEPOSIT, activity))
     val postmixBalance by model.postmixBalance.observeAsState(BalanceUtil.getBalance(SamouraiAccountIndex.POSTMIX, activity))
     val loading by model.loading.observeAsState(
-        nonNull(AppUtil.getInstance(activity).walletLoading.value) &&
+        nonNull(activity) &&
+                nonNull(AppUtil.getInstance(activity).walletLoading.value) &&
                 AppUtil.getInstance(activity).walletLoading.value == true
     )
 
@@ -213,7 +214,7 @@ fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onIt
         Font(R.font.roboto_medium, FontWeight.Bold)
     )
     val robotoMediumNormalFont = FontFamily(
-        Font(R.font.roboto_light, FontWeight.Normal)
+        Font(R.font.roboto_mono, FontWeight.Normal)
     )
 
     val disabled = loading && balance == 0L
@@ -223,7 +224,7 @@ fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onIt
             .fillMaxWidth()
             .height(100.dp)
             .padding(vertical = 16.dp)
-            .background(if (disabled) Color.Gray.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(12.dp))
+            //.background(if (disabled) Color.Gray.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(12.dp))
             .clickable
             {
                 if (!disabled)
