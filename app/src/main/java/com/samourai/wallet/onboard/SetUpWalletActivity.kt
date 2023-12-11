@@ -56,7 +56,9 @@ class SetUpWalletActivity : AppCompatActivity() {
         waiting = ContextCompat.getColor(this, R.color.warning_yellow)
 
 
-        if (PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.AUTO_BACKUP, true) && !ExternalBackupManager.hasPermissions()) {
+        if (PrefsUtil.getInstance(applicationContext).setValue(PrefsUtil.AUTO_BACKUP, true) &&
+            !ExternalBackupManager.hasPermissions()) {
+
             ExternalBackupManager.askPermission(this);
         }
 
@@ -280,6 +282,7 @@ class SetUpWalletActivity : AppCompatActivity() {
                 onBoardingTorStatus.text = getString(R.string.tor_initializing)
                 onBoardingTorStatus.setTextColor(waiting)
                 makeViewTransition(setUpWalletTorProgress, setUpWalletTorSwitch)
+                setUpWalletTorSwitch.isChecked = true
             }
             EnumTorState.ON -> {
                 disableInputs(false)
