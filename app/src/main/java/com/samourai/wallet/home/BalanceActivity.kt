@@ -106,6 +106,7 @@ import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.wallet.widgets.popUpMenu.popupMenu
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex.POSTMIX
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import io.reactivex.Observable
@@ -280,8 +281,18 @@ open class BalanceActivity : SamouraiActivity() {
             binding.fabMenu.toggle(true)
         }
         binding.sendFab.setOnClickListener(View.OnClickListener { view: View? ->
-            val intent = Intent(this@BalanceActivity, AccountSelectionActivity::class.java)
+
+            val isPostmixAccount = account == POSTMIX
+
+            val activityType =
+                if (isPostmixAccount) SendActivity::class.java
+                else AccountSelectionActivity::class.java
+
+            val intent = Intent(this@BalanceActivity, activityType)
             intent.putExtra("via_menu", true)
+            if (isPostmixAccount) {
+                intent.putExtra("_account", account)
+            }
             startActivity(intent)
             binding.fabMenu.toggle(true)
         })
@@ -1000,8 +1011,18 @@ open class BalanceActivity : SamouraiActivity() {
                         startActivity(intent)
                     }
                     else -> {
-                        val intent = Intent(this@BalanceActivity, AccountSelectionActivity::class.java)
+
+                        val isPostmixAccount = account == POSTMIX
+
+                        val activityType =
+                            if (isPostmixAccount) SendActivity::class.java
+                            else AccountSelectionActivity::class.java
+
+                        val intent = Intent(this@BalanceActivity, activityType)
                         intent.putExtra("uri", code.trim { it <= ' ' })
+                        if (isPostmixAccount) {
+                            intent.putExtra("_account", account)
+                        }
                         startActivity(intent)
                     }
                 }

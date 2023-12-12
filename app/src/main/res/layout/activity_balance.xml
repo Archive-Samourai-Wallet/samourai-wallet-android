@@ -21,6 +21,7 @@
             android:id="@+id/toolbar_layout"
             android:layout_width="match_parent"
             android:layout_height="210dp"
+            app:title="0.000000000 BTC"
             app:contentScrim="?attr/statusBarBackground"
             android:fitsSystemWindows="true"
             app:expandedTitleGravity="center_horizontal|center"
