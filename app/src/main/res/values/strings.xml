@@ -1019,4 +1019,8 @@
 
     <string name="wallet_loading_wait">Wallet loading, please wait</string>
 
+    <string name="no_messaging_app_installed">No messaging app is installed</string>
+    <string name="copy_content">Copy content</string>
+    <string name="email_content_copied">Email content copied to clipboard</string>
+
 </resources>

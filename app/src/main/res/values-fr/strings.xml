@@ -1117,5 +1117,9 @@
 
     <string name="wallet_loading_wait">Chargement du portefeuille, veuillez patienter</string>
 
+    <string name="no_messaging_app_installed">Aucune application de messagerie n\'est installée</string>
+    <string name="copy_content">Copier le contenu</string>
+    <string name="email_content_copied">Contenu de l\'e-mail copié dans le presse-papiers</string>
+
 </resources>
 
