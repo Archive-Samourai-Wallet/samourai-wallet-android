@@ -1,5 +1,7 @@
 package com.samourai.wallet.ricochet;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -28,8 +30,12 @@ import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.send.PushTx;
+import com.samourai.wallet.utxos.UTXOUtil;
 
+import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.MnemonicException;
+import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,11 +55,16 @@ public class RicochetActivity extends Activity {
     private final static long SLEEP_DELAY = 10L * 1000L;
 
     private boolean broadcastOK = false;
+    private String txNote = StringUtils.EMPTY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ricochet);
+
+        if (getIntent().hasExtra("tx_note")) {
+            txNote = getIntent().getStringExtra("tx_note");
+        }
 
         if(RicochetMeta.getInstance(RicochetActivity.this).size() > 0)    {
 
@@ -111,10 +122,17 @@ public class RicochetActivity extends Activity {
 
             try {
 
-                PayloadUtil.getInstance(RicochetActivity.this).saveWalletToJSON(new CharSequenceX(AccessFactory.getInstance(RicochetActivity.this).getGUID() + AccessFactory.getInstance(RicochetActivity.this).getPIN()));
+                final String password = AccessFactory.getInstance(
+                        RicochetActivity.this).getGUID() +
+                        AccessFactory.getInstance(RicochetActivity.this).getPIN();
 
-                final Iterator<JSONObject> itr = RicochetMeta.getInstance(RicochetActivity.this).getIterator();
-                while(itr.hasNext()){
+                PayloadUtil.getInstance(RicochetActivity.this)
+                        .saveWalletToJSON(new CharSequenceX(password));
+
+                final Iterator<JSONObject> itr = RicochetMeta.getInstance(RicochetActivity.this)
+                        .getIterator();
+
+                while(itr.hasNext()) {
 
                     boolean hasConfirmation = false;
                     boolean txSeen = false;
@@ -171,9 +189,9 @@ public class RicochetActivity extends Activity {
                             dests[i] = dest;
                         }
 
-                        if(txs.length >= 5 && dests.length >= 5)    {
+                        if(txs.length >= 5 && dests.length >= 5) {
 
-                            boolean isOK = false;
+                            boolean isOK;
                             int i = 0;
                             while(i < txs.length)   {
 
@@ -191,7 +209,17 @@ public class RicochetActivity extends Activity {
                                     strProgressMessage = RicochetActivity.this.getText(R.string.ricochet_hopping).toString() + " " + dests[i];
                                     publishProgress();
 
-                                    if(i == (txs.length - 1))    {
+                                    if (i == 0) {
+
+                                        final Transaction tx = new Transaction(
+                                                SamouraiWallet.getInstance().getCurrentNetworkParams(),
+                                                Hex.decode(txs[i].trim()));
+
+                                        if (isNotBlank(txNote)) {
+                                            UTXOUtil.getInstance().addNote(tx.getHashAsString(), txNote);
+                                        }
+
+                                    } else if (i == (txs.length - 1))    {
 
                                         broadcastOK = true;
 
@@ -273,7 +301,7 @@ public class RicochetActivity extends Activity {
                 progress.dismiss();
             }
 
-            if(broadcastOK)    {
+            if(broadcastOK) {
                 AlertDialog.Builder dlg = new AlertDialog.Builder(RicochetActivity.this)
                         .setTitle(R.string.app_name)
                         .setMessage(R.string.ricochet_broadcast)
@@ -290,8 +318,7 @@ public class RicochetActivity extends Activity {
                 if(!isFinishing())    {
                     dlg.show();
                 }
-            }
-            else    {
+            } else {
                 AlertDialog.Builder dlg = new AlertDialog.Builder(RicochetActivity.this)
                         .setTitle(R.string.app_name)
                         .setMessage(R.string.ricochet_not_broadcast_replay)

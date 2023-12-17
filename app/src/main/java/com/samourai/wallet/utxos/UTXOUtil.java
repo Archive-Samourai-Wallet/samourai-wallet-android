@@ -207,11 +207,15 @@ public class UTXOUtil {
 
         try {
             for(int i = 0; i < utxos.length(); i++) {
-                JSONArray note = (JSONArray)utxos.get(i);
-                utxoNotes.put((String)note.get(0), (String)note.get(1));
+                final JSONArray note = (JSONArray)utxos.get(i);
+                final String txHash = (String) note.get(0);
+                final Object rawNoteContent = note.get(1);
+                // check type because null value is encapsulated into JSONObject
+                utxoNotes.put(
+                        txHash,
+                        (rawNoteContent instanceof String) ? (String)rawNoteContent : null);
             }
-        }
-        catch(JSONException ex) {
+        } catch(final JSONException ex) {
             throw new RuntimeException(ex);
         }
     }

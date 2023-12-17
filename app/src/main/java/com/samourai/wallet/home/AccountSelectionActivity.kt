@@ -48,6 +48,7 @@ import androidx.core.content.ContextCompat.startActivity
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.theme.samouraiBlueButton
 import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.BalanceUtil
 import com.samourai.wallet.util.func.FormatsUtil.formatBTC
@@ -97,7 +98,7 @@ fun ComposeActivityContent(model: AccountSelectionModel, activity: SamouraiActiv
     val context = LocalContext.current
     val items = listOf(
         Triple(SamouraiAccountIndex.DEPOSIT, R.drawable.ic_deposit_account, Color(110, 118, 137)),
-        Triple(SamouraiAccountIndex.POSTMIX, R.drawable.ic_postmix_account, Color(59, 105, 244)))
+        Triple(SamouraiAccountIndex.POSTMIX, R.drawable.ic_postmix_account, samouraiBlueButton))
 
     val currentIntent: Intent? = if (nonNull(activity)) activity!!.intent else null;
     val robotoMediumBoldFont = FontFamily(
@@ -213,7 +214,7 @@ fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onIt
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
     )
-    val robotoMediumNormalFont = FontFamily(
+    val robotoMonoNormalFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Normal)
     )
 
@@ -274,7 +275,7 @@ fun itemRow(item: Triple<Int, Int, Color>, balance: Long, loading: Boolean, onIt
                 Text(
                     text = formatBTC(balance),
                     color = Color(184, 184, 184),
-                    fontFamily = robotoMediumNormalFont
+                    fontFamily = robotoMonoNormalFont
                 )
             }
 

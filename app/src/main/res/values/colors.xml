@@ -25,18 +25,21 @@
     <color name="samouraiWindow">#FF343434</color>
     <color name="blue_semi_transparent_pressed">#5C738FFE</color>
     <color name="grey_accent">#6e7689</color>
+    <color name="light_grey_accent">#FF3D3D3D</color>
     <color name="windowDark">#343434</color>
     <color name="blue_ui_2">#1561CB</color>
     <color name="txt_grey">#C7CAD1</color>
 
     <color name="cyan_ui_2">#58b9b8</color>
     <color name="green_ui_2">#0ecf96</color>
+    <color name="gray_ui_2">#575757</color>
     <color name="whirlpoolBlue">#03A9F4</color>
     <color name="whirlpoolGreen">#90ffee</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="blue_send_ui">#27c7bb</color>
     <color name="orange_send_ui">#DB8144</color>
     <color name="red_send_ui">#DA454F</color>
+    <color name="samourai_blue">#FF3b69f4</color>
 
 
     <color name="off_black">#181818</color>

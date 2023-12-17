@@ -18,13 +18,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.TaskStackBuilder;
-
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.hd.WALLET_INDEX;
-import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.RBFSpend;
@@ -34,6 +30,7 @@ import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.SamouraiTorManager;
+import com.samourai.wallet.util.activity.ActivityHelper;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.func.BatchSendUtil;
@@ -42,6 +39,7 @@ import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.SendAddressUtil;
 import com.samourai.wallet.util.func.SentToFromBIP47Util;
 import com.samourai.wallet.util.view.ViewHelper;
+import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.widgets.TransactionProgressView;
 
 import org.bitcoinj.core.Address;
@@ -64,7 +62,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class TxAnimUIActivity extends AppCompatActivity {
+public class TxAnimUIActivity extends SamouraiActivity {
 
     private static final String TAG = "TxAnimUIActivity";
     public static final int BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS = 1200;
@@ -99,7 +97,10 @@ public class TxAnimUIActivity extends AppCompatActivity {
         progressView.getmArcProgress().setVisibility(View.VISIBLE);
         progressView.getmArcProgress().startArc1(arcdelay);
         progressView.getmCheckMark().setImageDrawable(null);
-        progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+        progressView.getLeftTopImgBtn().setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+                this,
+                SendParams.getInstance().getAccount()));
+
         progressView.getOptionBtn2().setOnClickListener(view -> {});
 
         // make tx
@@ -272,7 +273,10 @@ public class TxAnimUIActivity extends AppCompatActivity {
                             }
 
                             progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
-                            progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+                            progressView.getLeftTopImgBtn()
+                                    .setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+                                            this,
+                                            SendParams.getInstance().getAccount()));
 
                             if (lock) {
                                 Toast.makeText(
@@ -306,7 +310,10 @@ public class TxAnimUIActivity extends AppCompatActivity {
                         ).show();
 
                         progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
-                        progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+                        progressView.getLeftTopImgBtn()
+                                .setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+                                        this,
+                                        SendParams.getInstance().getAccount()));
                         if (lock) {
                             progressView.showSuccessSentTxOptions(false, R.string.tx_option_change_spendable);
                         } else {
@@ -527,6 +534,8 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
             if (isOK) {
 
+                UTXOUtil.getInstance().addNote(_tx.getHashAsString(), SendParams.getInstance().getNote());
+
                 txSuccess.set(true);
 
                 if (SendParams.getInstance().getChangeAmount() > 0l
@@ -638,7 +647,10 @@ public class TxAnimUIActivity extends AppCompatActivity {
                     });
                     progressView.getOptionBtn2().setOnClickListener(view -> {});
                     progressView.showSuccessSentTxOptions(doNotSpendChangeBtnVisible, R.string.tx_option_change_do_not_spend);
-                    progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity());
+                    progressView.getLeftTopImgBtn()
+                            .setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+                                    this,
+                                    SendParams.getInstance().getAccount()));
                 });
             } else {
 
@@ -665,34 +677,11 @@ public class TxAnimUIActivity extends AppCompatActivity {
 
     }
 
-    private void gotoBalanceHomeActivity() {
-        if (SendParams.getInstance().getAccount() != 0) {
-
-            final Intent balanceHome = new Intent(this, BalanceActivity.class);
-            balanceHome.putExtra("_account", SendParams.getInstance().getAccount());
-            balanceHome.putExtra("refresh", true);
-            final Intent parentIntent = new Intent(this, BalanceActivity.class);
-            parentIntent.putExtra("_account", 0);
-            balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            TaskStackBuilder.create(getApplicationContext())
-                    .addNextIntent(parentIntent)
-                    .addNextIntent(balanceHome)
-                    .startActivities();
-
-        } else {
-            final Intent _intent = new Intent(TxAnimUIActivity.this, BalanceActivity.class);
-            _intent.putExtra("refresh", true);
-            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(_intent);
-        }
-        finish();
-    }
-
     @Override
     public void onBackPressed() {
         if(! activityInProgress()) {
             if (txSuccess.get()) {
-                gotoBalanceHomeActivity();
+                ActivityHelper.gotoBalanceHomeActivity(this, SendParams.getInstance().getAccount());
             } else {
                 finish();
             }

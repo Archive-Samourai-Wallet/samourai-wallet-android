@@ -148,7 +148,7 @@ public class SendFactory extends SendFactoryGeneric	{
         return super.signTransaction(transaction, keyBag);
     }
 
-    public Pair<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>> boltzmann(List<UTXO> utxos, List<UTXO> utxosBis, BigInteger spendAmount, String address, int account) {
+    public Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> boltzmann(List<UTXO> utxos, List<UTXO> utxosBis, BigInteger spendAmount, String address, int account) {
 
         Triple<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>, ArrayList<UTXO>> set0 = boltzmannSet(utxos, spendAmount, address, null, account, null);
         if(set0 == null)    {
@@ -188,7 +188,7 @@ public class SendFactory extends SendFactoryGeneric	{
             return null;
         }
 
-        Pair<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>> ret = Pair.of(new ArrayList<MyTransactionOutPoint>(), new ArrayList<TransactionOutput>());
+        Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> ret = Pair.of(new ArrayList<>(), new ArrayList<>());
 
         ret.getLeft().addAll(set0.getLeft());
         ret.getLeft().addAll(set1.getLeft());
@@ -198,7 +198,7 @@ public class SendFactory extends SendFactoryGeneric	{
         return ret;
     }
 
-    public Triple<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>, ArrayList<UTXO>> boltzmannSet(List<UTXO> utxos, BigInteger spendAmount, String address, List<MyTransactionOutPoint> firstPassOutpoints, int account, List<TransactionOutput> outputs0) {
+    public static Triple<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>, ArrayList<UTXO>> boltzmannSet(List<UTXO> utxos, BigInteger spendAmount, String address, List<MyTransactionOutPoint> firstPassOutpoints, int account, List<TransactionOutput> outputs0) {
 
         if(utxos == null || utxos.size() == 0)    {
             return null;
@@ -256,7 +256,7 @@ public class SendFactory extends SendFactoryGeneric	{
 
         Triple<Integer,Integer,Integer> firstPassOutpointTypes = null;
         if(firstPassOutpoints != null)    {
-            firstPassOutpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(firstPassOutpoints));
+            firstPassOutpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector<>(firstPassOutpoints));
         }
         else    {
             firstPassOutpointTypes = Triple.of(0, 0, 0);
@@ -275,17 +275,17 @@ public class SendFactory extends SendFactoryGeneric	{
             return null;
         }
 
-        List<MyTransactionOutPoint> selectedOutpoints = new ArrayList<MyTransactionOutPoint>();
+        List<MyTransactionOutPoint> selectedOutpoints = new ArrayList<>();
         BigInteger selectedValue = BigInteger.ZERO;
         BigInteger biFee = BigInteger.ZERO;
-        List<TransactionOutput> txOutputs = new ArrayList<TransactionOutput>();
-        TransactionOutput txSpendOutput = null;
-        TransactionOutput txChangeOutput = null;
-        Script outputScript = null;
-        String changeAddress = null;
-        HashMap<String,MyTransactionOutPoint> seenOutpoints = new HashMap<String,MyTransactionOutPoint>();
-        List<MyTransactionOutPoint> recycleOutPoints = new ArrayList<MyTransactionOutPoint>();
-        List<UTXO> recycleUTXOs = new ArrayList<UTXO>();
+        List<TransactionOutput> txOutputs = new ArrayList<>();
+        TransactionOutput txSpendOutput;
+        TransactionOutput txChangeOutput;
+        Script outputScript;
+        String changeAddress;
+        HashMap<String,MyTransactionOutPoint> seenOutpoints = new HashMap<>();
+        List<MyTransactionOutPoint> recycleOutPoints = new ArrayList<>();
+        List<UTXO> recycleUTXOs = new ArrayList<>();
 
         BigInteger bDust = firstPassOutpoints == null ? BigInteger.ZERO : SamouraiWallet.bDust;
 
@@ -338,7 +338,7 @@ public class SendFactory extends SendFactoryGeneric	{
             }
 
             if(firstPassOutpoints != null)    {
-                Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(selectedOutpoints));
+                Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<>(selectedOutpoints));
                 biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2WSH_P2TR, countP2WSH_P2TR);
             }
 
@@ -352,14 +352,14 @@ public class SendFactory extends SendFactoryGeneric	{
             return null;
         }
 
-        List<MyTransactionOutPoint> _selectedOutpoints = new ArrayList<MyTransactionOutPoint>();
+        List<MyTransactionOutPoint> _selectedOutpoints = new ArrayList<>();
         Collections.sort(selectedOutpoints, new UTXO.OutpointComparator());
         long _value = 0L;
         for(MyTransactionOutPoint op : selectedOutpoints)   {
             _selectedOutpoints.add(op);
             _value += op.getValue().longValue();
             if(firstPassOutpoints != null)    {
-                Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(_selectedOutpoints));
+                Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<>(_selectedOutpoints));
                 biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2WSH_P2TR, countP2WSH_P2TR);
             }
             if(_value > spendAmount.add(biFee).add(bDust).longValue())    {
@@ -379,7 +379,7 @@ public class SendFactory extends SendFactoryGeneric	{
         BigInteger changeDue = selectedValue.subtract(spendAmount);
 
         if(firstPassOutpoints != null)    {
-            Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<MyTransactionOutPoint>(selectedOutpoints));
+            Triple<Integer,Integer,Integer> outputTypes = FeeUtil.getInstance().getOutpointCount(new Vector<>(selectedOutpoints));
             biFee = FeeUtil.getInstance().estimatedFeeSegwit(firstPassOutpointTypes.getLeft() + outputTypes.getLeft(), firstPassOutpointTypes.getMiddle() + outputTypes.getMiddle(), firstPassOutpointTypes.getRight() + outputTypes.getRight(), 4 - countP2WSH_P2TR, countP2WSH_P2TR);
             debug("SendFactory", "biFee:" + biFee.toString());
             if(biFee.mod(BigInteger.valueOf(2L)).compareTo(BigInteger.ZERO) != 0)    {
@@ -470,7 +470,7 @@ public class SendFactory extends SendFactoryGeneric	{
 
     }
 
-    private String getChangeAddress(int type, int account)    {
+    private static String getChangeAddress(int type, int account)    {
 
         boolean useLikeType = PrefsUtil.getInstance(context).getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true);
         if (DojoUtil.getInstance(context).getDojoParams() != null && !DojoUtil.getInstance(context).isLikeType()) {

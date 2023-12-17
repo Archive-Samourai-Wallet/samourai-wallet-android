@@ -2,6 +2,7 @@ package com.samourai.wallet.send.cahoots;
 
 import static com.samourai.wallet.send.SendActivity.stubAddress;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.util.Objects.nonNull;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -32,6 +33,7 @@ import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
+import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.widgets.EntropyBar;
 
 import org.bitcoinj.core.TransactionOutput;
@@ -64,8 +66,8 @@ public class CahootReviewFragment extends Fragment {
     private Callable onBroadcast;
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    public static CahootReviewFragment newInstance(Intent intent) {
-        CahootReviewFragment fragment = new CahootReviewFragment();
+    public static CahootReviewFragment newInstance(final Intent intent) {
+        final CahootReviewFragment fragment = new CahootReviewFragment();
         fragment.setArguments(intent.getExtras());
         return fragment;
     }
@@ -115,7 +117,9 @@ public class CahootReviewFragment extends Fragment {
 
     private void onSuccessfulBroadcast() {
         // increment paynym index if destination
-        if (getArguments() != null) {
+
+        if (nonNull(getArguments())) {
+
             if (getArguments().containsKey("typeUser")) {
                 final int typeUserInt = getArguments().getInt("typeUser", -1);
                 final CahootsTypeUser typeUser = CahootsTypeUser.find(typeUserInt).get();

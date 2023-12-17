@@ -32,7 +32,6 @@ import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.QRBottomSheetDialog;
 
 public class ManualCahootsActivity extends SamouraiActivity {
-    private static final String TAG = "ManualCahootsActivity";
 
     private ManualCahootsUi cahootsUi;
     private CahootsContext cahootsContext;
@@ -46,19 +45,30 @@ public class ManualCahootsActivity extends SamouraiActivity {
         return intent;
     }
 
-    public static Intent createIntentSender(Context ctx,
-                                            int account,
-                                            CahootsType type,
-                                            long fees,
-                                            long amount,
-                                            String address,
-                                            String destinationPcode) {
+    public static Intent createIntentSender(
+            final Context ctx,
+            final int account,
+            final CahootsType type,
+            final long fees,
+            final long amount,
+            final String address,
+            final String destinationPcode,
+            final String txNote
+    ) {
 
-        Intent intent = ManualCahootsUi.createIntent(ctx, ManualCahootsActivity.class, account, type, CahootsTypeUser.SENDER);
+        final Intent intent = ManualCahootsUi.createIntent(
+                ctx,
+                ManualCahootsActivity.class,
+                account,
+                type,
+                CahootsTypeUser.SENDER);
+
         intent.putExtra("sendAmount", amount);
         intent.putExtra("fees", fees);
         intent.putExtra("sendAddress", address);
-        if(destinationPcode != null){
+        intent.putExtra("tx_note", txNote);
+
+        if(destinationPcode != null) {
             intent.putExtra("destPcode", destinationPcode);
         }
         return intent;

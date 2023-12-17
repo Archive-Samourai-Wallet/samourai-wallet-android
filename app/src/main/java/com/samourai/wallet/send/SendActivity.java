@@ -5,8 +5,11 @@ import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_
 import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
 import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getSatValue;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static java.lang.Math.max;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 import android.app.Activity;
 import android.content.ClipData;
@@ -24,6 +27,7 @@ import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +36,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -50,11 +55,6 @@ import com.google.android.material.slider.Slider;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Splitter;
-import com.samourai.boltzmann.beans.BoltzmannSettings;
-import com.samourai.boltzmann.beans.Txos;
-import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
-import com.samourai.boltzmann.processor.TxProcessor;
-import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.http.client.AndroidHttpClient;
 import com.samourai.http.client.IHttpClient;
 import com.samourai.wallet.R;
@@ -84,18 +84,20 @@ import com.samourai.wallet.send.batch.BatchSpendActivity;
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity;
 import com.samourai.wallet.send.cahoots.SelectCahootsType;
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
+import com.samourai.wallet.send.review.ReviewTxActivity;
+import com.samourai.wallet.send.review.ReviewTxModel;
+import com.samourai.wallet.send.review.SpendJoinbotTxBroadcaster;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.func.AddressFactory;
-import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.tech.DecimalDigitsInputFilter;
-import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.FormatsUtilGeneric;
 import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper;
 import com.samourai.wallet.util.func.SendAddressUtil;
 import com.samourai.wallet.util.network.WebUtil;
-import com.samourai.wallet.util.tech.SimpleTaskRunner;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.tech.DecimalDigitsInputFilter;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.UTXOSActivity;
 import com.samourai.wallet.utxos.models.UTXOCoin;
@@ -141,8 +143,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 
 
 public class SendActivity extends SamouraiActivity {
@@ -150,7 +150,6 @@ public class SendActivity extends SamouraiActivity {
     private final static int SCAN_QR = 2012;
     private final static int RICOCHET = 2013;
     private static final String TAG = "SendActivity";
-    public static final long JOINNBOT_MAX_AMOUNT = 125_000_000L;
 
     private SendTransactionDetailsView sendTransactionDetailsView;
     private ViewSwitcher amountViewSwitcher;
@@ -158,7 +157,8 @@ public class SendActivity extends SamouraiActivity {
     private TextView tvMaxAmount, tvReviewSpendAmount, tvReviewSpendAmountInSats, tvTotalFee,
             tvToAddress, tvEstimatedBlockWait, tvSelectedFeeRate, tvSelectedFeeRateLayman,
             ricochetTitle, ricochetDesc, satbText, joinbotTitle, joinbotDesc;
-    private MaterialButton btnReview, btnSend;
+    private ImageButton btnReview;
+    private MaterialButton btnSend;
     private SwitchCompat joinbotSwitch, ricochetHopsSwitch, ricochetStaggeredDelivery;
     private ViewGroup totalMinerFeeLayout;
     private Slider feeSeekBar;
@@ -171,7 +171,7 @@ public class SendActivity extends SamouraiActivity {
     private Disposable entropyDisposable = null;
 
     private final static int FEE_LOW = 0;
-    private final static int FEE_NORMAL = 1;
+    public final static int FEE_NORMAL = 1;
     private final static int FEE_PRIORITY = 2;
     private final static int FEE_CUSTOM = 3;
     private int FEE_TYPE = FEE_LOW;
@@ -274,6 +274,7 @@ public class SendActivity extends SamouraiActivity {
         btcEditText.addTextChangedListener(BTCWatcher);
         btcEditText.setFilters(new InputFilter[]{new DecimalDigitsInputFilter(8, 8)});
         satEditText.addTextChangedListener(satWatcher);
+        satEditText.setOnEditorActionListener(satKeyboardListener);
         toAddressEditText.addTextChangedListener(AddressWatcher);
 
         btnReview.setOnClickListener(v -> reviewTransactionSafely());
@@ -486,9 +487,9 @@ public class SendActivity extends SamouraiActivity {
     private void enableReviewButton(boolean enable) {
         btnReview.setEnabled(enable);
         if (enable) {
-            btnReview.setBackgroundColor(getResources().getColor(R.color.blue_ui_2));
+            btnReview.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
         } else {
-            btnReview.setBackgroundColor(getResources().getColor(R.color.disabled_grey));
+            btnReview.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.disabled_grey));
         }
     }
 
@@ -1080,6 +1081,27 @@ public class SendActivity extends SamouraiActivity {
         return "";
     }
 
+    private void reviewTransaction() {
+        setUpBoltzman();
+        if (validateSpend()) {
+            final Intent intent = new Intent(SendActivity.this, ReviewTxActivity.class);
+            intent.putExtra("_account", account);
+            intent.putExtra("sendAmount", getSatValue(getBtcAmountFromWidget()));
+            intent.putExtra("sendAddress", nonNull(strDestinationBTCAddress) ? strDestinationBTCAddress : getToAddress());
+            if (nonNull(strDestinationBTCAddress)) {
+                intent.putExtra("sendAddressLabel", getToAddress());
+            }
+            intent.putExtra("sendType", SPEND_TYPE);
+            intent.putExtra("ricochetStaggeredDelivery", ricochetStaggeredDelivery.isChecked());
+
+            if (getIntent().hasExtra("preselected")) {
+                intent.putExtra("preselected", getIntent().getStringExtra("preselected"));
+            }
+
+            startActivity(intent);
+        }
+    }
+
     private void reviewTransactionSafely() {
 
         if (! checkValidForJoinbot()) {
@@ -1130,25 +1152,6 @@ public class SendActivity extends SamouraiActivity {
                     .doubleValue();
         } catch (Exception e) {
             return 0d;
-        }
-    }
-
-    private void reviewTransaction() {
-        setUpBoltzman();
-        if (validateSpend() && prepareSpend()) {
-            tvReviewSpendAmount.setText(FormatsUtil.formatBTC(amount));
-            try {
-                final Long satValue = getSatValue(getBtcAmountFromWidget());
-                tvReviewSpendAmountInSats.setText(formattedSatValue(satValue).concat(" sats"));
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            amountViewSwitcher.showNext();
-            hideKeyboard();
-            hideMenus(true);
-            sendTransactionDetailsView.showReview(isEnabledRicochet());
-
         }
     }
 
@@ -1310,7 +1313,7 @@ public class SendActivity extends SamouraiActivity {
                 ;
             }
 
-            org.apache.commons.lang3.tuple.Pair<ArrayList<MyTransactionOutPoint>, ArrayList<TransactionOutput>> pair = null;
+            org.apache.commons.lang3.tuple.Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = null;
             if (SPEND_TYPE == SPEND_RICOCHET) {
                 if (AppUtil.getInstance(getApplicationContext()).isOfflineMode()) {
                     Toast.makeText(getApplicationContext(), "You won't able to compose ricochet when you're on offline mode", Toast.LENGTH_SHORT).show();
@@ -1321,7 +1324,15 @@ public class SendActivity extends SamouraiActivity {
                 if (BIP47Meta.getInstance().getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM) {
                     samouraiFeeViaBIP47 = true;
                 }
-                ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this).script(amount, FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(), address, RicochetMeta.defaultNbHops, strPCode, samouraiFeeViaBIP47, isEnabledRicochetStaggered(), account);
+                ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this)
+                        .script(amount,
+                                FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(),
+                                address,
+                                RicochetMeta.defaultNbHops,
+                                strPCode,
+                                samouraiFeeViaBIP47,
+                                isEnabledRicochetStaggered(),
+                                account);
                 if (ricochetJsonObj != null) {
 
                     try {
@@ -1560,7 +1571,7 @@ public class SendActivity extends SamouraiActivity {
 
                 for (MyTransactionOutPoint outpoint : pair.getLeft()) {
                     UTXO u = new UTXO();
-                    List<MyTransactionOutPoint> outs = new ArrayList<MyTransactionOutPoint>();
+                    List<MyTransactionOutPoint> outs = new ArrayList<>();
                     outs.add(outpoint);
                     u.setOutpoints(outs);
                     totalValueSelected += u.getValue();
@@ -1710,7 +1721,7 @@ public class SendActivity extends SamouraiActivity {
 
                 if (amount + fee.longValue() > balance) {
                     btnSend.setEnabled(false);
-                    btnReview.setBackgroundColor(getResources().getColor(R.color.disabled_grey));
+                    btnReview.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.disabled_grey));
                     btnSend.setText(R.string.send);
                     feeSeekBar.setEnabled(false);
                     MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(SendActivity.this)
@@ -1754,7 +1765,7 @@ public class SendActivity extends SamouraiActivity {
 
                         if(entropyDisposable == null || entropyDisposable.isDisposed()) {
                             Log.d("SendActivity", "Creating new observable...");
-                            entropyDisposable = CalculateEntropy(selectedUTXO, receivers)
+                            entropyDisposable = ReviewTxModel.calculateEntropy(selectedUTXO, receivers)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.computation())
                                     .doOnSuccess(txProcessorResult -> {
@@ -1814,7 +1825,7 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private String getParticipantLabel() {
-        if (Objects.nonNull(strPcodeCounterParty)) {
+        if (nonNull(strPcodeCounterParty)) {
             return BIP47Meta.getInstance().getDisplayLabel(strPcodeCounterParty);
         }
         return null;
@@ -1852,7 +1863,8 @@ public class SendActivity extends SamouraiActivity {
                     Math.round(feeds/1000d),
                     amount,
                     address,
-                    strPCode);
+                    strPCode,
+                    EMPTY);
             startActivity(intent);
             return;
         }
@@ -1869,7 +1881,8 @@ public class SendActivity extends SamouraiActivity {
                     Math.round(feeds/1000d),
                     address,
                     strPcodeCounterParty,
-                    strPCode);
+                    strPCode,
+                    EMPTY);
 
             startActivity(intent);
             return;
@@ -1958,7 +1971,7 @@ public class SendActivity extends SamouraiActivity {
 
         boolean valid = true;
 
-        if (amount > JOINNBOT_MAX_AMOUNT) {
+        if (amount > SpendJoinbotTxBroadcaster.JOINNBOT_MAX_AMOUNT) {
             if (isEnabledJoinbot()) {
                 Toast.makeText(this, getString(R.string.joinbot_max_amount_reached), Toast.LENGTH_SHORT).show();
             }
@@ -2586,29 +2599,17 @@ public class SendActivity extends SamouraiActivity {
 
     }
 
-    private Single<TxProcessorResult> CalculateEntropy(ArrayList<UTXO> selectedUTXO, HashMap<String, BigInteger> receivers) {
-        return Single.create(emitter -> {
-
-            Map<String, Long> inputs = new HashMap<>();
-            Map<String, Long> outputs = new HashMap<>();
-
-            for (Map.Entry<String, BigInteger> mapEntry : receivers.entrySet()) {
-                String toAddress = mapEntry.getKey();
-                BigInteger value = mapEntry.getValue();
-                outputs.put(toAddress, value.longValue());
+    private TextView.OnEditorActionListener satKeyboardListener = new TextView.OnEditorActionListener() {
+        @Override
+        public boolean onEditorAction(final TextView v, final int actionId, final KeyEvent event) {
+            if (isNull(event)) return false;
+            if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                hideKeyboard();
+                return true;
             }
-
-            for (int i = 0; i < selectedUTXO.size(); i++) {
-                inputs.put(stubAddress[i], selectedUTXO.get(i).getValue());
-            }
-
-            TxProcessor txProcessor = new TxProcessor(BoltzmannSettings.MAX_DURATION_DEFAULT, BoltzmannSettings.MAX_TXOS_DEFAULT);
-            Txos txos = new Txos(inputs, outputs);
-            TxProcessorResult result = txProcessor.processTx(txos, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY, TxosLinkerOptionEnum.MERGE_INPUTS);
-            emitter.onSuccess(result);
-        });
-
-    }
+            return false;
+        }
+    };
 
 }
 
