@@ -1,9 +1,13 @@
 package com.samourai.wallet.settings
 
+import android.app.AlertDialog
 import android.app.ProgressDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -73,6 +77,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.util.Objects
+import java.util.Objects.nonNull
 import java.util.concurrent.CancellationException
 
 
@@ -660,28 +665,99 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
     }
 
     private fun doSendBackup() {
+
         try {
+
             val jsonObject = PayloadUtil.getInstance(requireContext()).payload
+
             jsonObject.getJSONObject("wallet").remove("seed")
             jsonObject.getJSONObject("wallet").remove("passphrase")
-            jsonObject.getJSONObject("meta").remove("pin")
-            jsonObject.getJSONObject("meta").remove("pin2")
-            if (jsonObject.has("meta") && jsonObject.getJSONObject("meta").has("trusted_node")) {
-                jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("password")
-                jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("node")
-                jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("port")
-                jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("user")
+
+            if (jsonObject.has("meta")) {
+
+                if (jsonObject.getJSONObject("meta").has("pin")) {
+                    jsonObject.getJSONObject("meta").remove("pin")
+                }
+                if (jsonObject.getJSONObject("meta").has("pin2")) {
+                    jsonObject.getJSONObject("meta").remove("pin2")
+                }
+
+                if (jsonObject.getJSONObject("meta").has("trusted_node")) {
+                    if (jsonObject.getJSONObject("meta").getJSONObject("trusted_node").has("password")) {
+                        jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("password")
+                    }
+                    if (jsonObject.getJSONObject("meta").getJSONObject("trusted_node").has("node")) {
+                        jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("node")
+                    }
+                    if (jsonObject.getJSONObject("meta").getJSONObject("trusted_node").has("port")) {
+                        jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("port")
+                    }
+                    if (jsonObject.getJSONObject("meta").getJSONObject("trusted_node").has("user")) {
+                        jsonObject.getJSONObject("meta").getJSONObject("trusted_node").remove("user")
+                    }
+                }
             }
-            val email = Intent(Intent.ACTION_SEND)
-            email.putExtra(Intent.EXTRA_EMAIL, arrayOf("help@samourai.support"))
-            email.putExtra(Intent.EXTRA_SUBJECT, "Samourai Wallet support backup")
-            email.putExtra(Intent.EXTRA_TEXT, jsonObject.toString())
-            email.type = "message/rfc822"
-            startActivity(Intent.createChooser(email, requireContext().getText(R.string.choose_email_client)))
-        } catch (je: JSONException) {
-            je.printStackTrace()
+
+            if (displayMailToSend(jsonObject, "message/rfc822")) return
+            if (displayMailToSend(jsonObject, "text/plain")) return
+            if (displayMailToSendTo(jsonObject)) return
+            displayInAlertDialog(jsonObject);
+
+        } catch (e: Exception) {
+            e.printStackTrace()
             Toast.makeText(requireContext(), R.string.error_reading_payload, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun displayInAlertDialog(jsonObject: JSONObject) {
+
+        val emailAddress = "help@samourai.support"
+        val emailSubject = "Samourai Wallet support backup"
+        val emailBody = jsonObject.toString()
+
+        val emailContent = "Email : $emailAddress\n\nSubjet : $emailSubject\n\nBody : $emailBody"
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(requireContext().getText(R.string.no_messaging_app_installed))
+            .setMessage(emailContent)
+            .setPositiveButton(requireContext().getText(R.string.copy_content)) { _, _ ->
+                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("mail content", emailContent)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(requireContext(), requireContext().getText(R.string.email_content_copied), Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton("Cancel") { _, _ -> }
+            .show()
+    }
+
+    private fun displayMailToSend(jsonObject: JSONObject, type:String) : Boolean {
+        val email = Intent(Intent.ACTION_SEND)
+        email.putExtra(Intent.EXTRA_EMAIL, arrayOf("help@samourai.support"))
+        email.putExtra(Intent.EXTRA_SUBJECT, "Samourai Wallet support backup")
+        email.putExtra(Intent.EXTRA_TEXT, jsonObject.toString())
+        email.type = type
+
+        val chooser =
+            Intent.createChooser(email, requireContext().getText(R.string.choose_email_client))
+
+        if (nonNull(email.resolveActivity(requireContext().packageManager))) {
+            startActivity(chooser)
+            return true
+        }
+        return false
+    }
+
+    private fun displayMailToSendTo(jsonObject: JSONObject) : Boolean {
+        val email = Intent(Intent.ACTION_SENDTO)
+        email.data = Uri.parse("mailto:help@samourai.support")
+        email.putExtra(Intent.EXTRA_SUBJECT, "Samourai Wallet support backup")
+        email.putExtra(Intent.EXTRA_TEXT, jsonObject.toString())
+
+        if (email.resolveActivity(requireContext().packageManager) != null) {
+            startActivity(email)
+            return true
+        }
+        return false
     }
 
     private fun doIndexes() {
