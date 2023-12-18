@@ -83,8 +83,7 @@
                     android:id="@+id/premium_addons_joinbot"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layout_constraintTop_toBottomOf="@+id/textView6"
-                    app:layout_constraintStart_toStartOf="parent">
+                    app:layout_constraintTop_toBottomOf="@+id/textView6">
 
                     <TextView
                         android:id="@+id/joinbot_title"
@@ -131,11 +130,10 @@
                         android:id="@+id/joinbot_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
                         android:layout_marginEnd="16dp"
                         app:layout_constraintBottom_toBottomOf="@+id/joinbot_desc"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@+id/joinbot_desc" />
+                        app:layout_constraintTop_toTopOf="@+id/joinbot_limit" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
