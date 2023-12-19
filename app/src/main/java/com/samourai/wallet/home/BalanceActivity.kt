@@ -63,6 +63,7 @@ import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.home.adapters.TxAdapter
 import com.samourai.wallet.network.NetworkDashboard
 import com.samourai.wallet.network.dojo.DojoUtil
+import com.samourai.wallet.pairing.PairingMenuActivity
 import com.samourai.wallet.payload.ExternalBackupManager.askPermission
 import com.samourai.wallet.payload.ExternalBackupManager.hasPermissions
 import com.samourai.wallet.payload.ExternalBackupManager.onActivityResult
@@ -464,6 +465,16 @@ open class BalanceActivity : SamouraiActivity() {
                     hasNestedItems
                     callback = {
                         ToolsBottomSheet.showTools(supportFragmentManager)
+                    }
+                }
+                item {
+                    label = "Pairing"
+                    icon = R.drawable.ic_action_refresh
+                    iconSize = 18
+                    hasNestedItems
+                    callback = {
+                        val intent = Intent(this@BalanceActivity, PairingMenuActivity::class.java)
+                        startActivity(intent)
                     }
                 }
 
