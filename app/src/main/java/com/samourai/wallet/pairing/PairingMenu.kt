@@ -38,7 +38,7 @@ class PairingMenuActivity : SamouraiActivity() {
         val watchOnlyPayload = generateSentinelPayload(randomWords)
         val fullWalletPayload = generateFullWalletPayload(passsphrase ?: randomWords)
 
-        var selectedPayload: JSONObject? = null
+        var selectedPayload: String? = null
         var selectedPassword = passsphrase
         var selectedType = ""
 
@@ -102,12 +102,16 @@ class PairingMenuActivity : SamouraiActivity() {
         return ""
     }
 
-    private fun generateSentinelPayload(oneTimePassword: String): JSONObject? {
-        val fullWalletPayload = PayloadUtil.getInstance(applicationContext).payload
-        return fullWalletPayload
+    private fun generateSentinelPayload(oneTimePassword: String): String? {
+        val decrypted = PayloadUtil.getInstance(applicationContext).sentinelPairingPayload
+        return AESUtil.encrypt(
+            decrypted.toString(),
+            CharSequenceX(oneTimePassword),
+            AESUtil.DefaultPBKDF2Iterations
+        )
     }
 
-    private fun generateFullWalletPayload(password: String): JSONObject? {
+    private fun generateFullWalletPayload(password: String): String {
         val pairingObj = JSONObject()
         val jsonObj = JSONObject()
         val dojoObj = JSONObject()
@@ -148,6 +152,6 @@ class PairingMenuActivity : SamouraiActivity() {
             }
         } catch (_: Exception) {}
 
-        return pairingObj;
+        return pairingObj.toString()
     }
 }

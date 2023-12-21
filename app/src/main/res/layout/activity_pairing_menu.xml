@@ -141,7 +141,7 @@
                 android:layout_width="225dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
-                android:text="Only includes public keys. For use with Sentinel Whatch Only wallet app."
+                android:text="Only includes public keys. For use with Sentinel Watch Only wallet app."
                 android:textSize="12sp" /> <!-- Adjusted margin to align with option text -->
 
         </LinearLayout>
