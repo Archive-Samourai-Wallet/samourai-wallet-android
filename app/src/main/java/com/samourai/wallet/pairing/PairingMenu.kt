@@ -3,6 +3,7 @@ package com.samourai.wallet.pairing
 import android.os.Bundle
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
@@ -104,11 +105,17 @@ class PairingMenuActivity : SamouraiActivity() {
 
     private fun generateSentinelPayload(oneTimePassword: String): String? {
         val decrypted = PayloadUtil.getInstance(applicationContext).sentinelPairingPayload
-        return AESUtil.encrypt(
+        val encrypted = AESUtil.encrypt(
             decrypted.toString(),
             CharSequenceX(oneTimePassword),
             AESUtil.DefaultPBKDF2Iterations
         )
+        val json = JSONObject()
+        json.put("version", BuildConfig.VERSION_CODE)
+        json.put("external", "SW export")
+        json.put("payload", encrypted)
+
+        return json.toString()
     }
 
     private fun generateFullWalletPayload(password: String): String {

@@ -50,15 +50,13 @@ public class ShowPairingPayload extends BottomSheetDialogFragment {
         if (passphrase != null && passphrase.equals("Your BIP39 Passphrase"))
             passwordText.setTextColor(getResources().getColor(R.color.white));
 
-        copyBtn.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                ClipboardManager cm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clipData = android.content.ClipData
-                        .newPlainText("Pairing Payload", pairingPayload);
-                if (cm != null) {
-                    cm.setPrimaryClip(clipData);
-                    Toast.makeText(getActivity().getApplicationContext(), getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show();
-                }
+        copyBtn.setOnClickListener(v -> {
+            ClipboardManager cm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clipData = ClipData
+                    .newPlainText("Pairing Payload", pairingPayload);
+            if (cm != null) {
+                cm.setPrimaryClip(clipData);
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show();
             }
         });
 
