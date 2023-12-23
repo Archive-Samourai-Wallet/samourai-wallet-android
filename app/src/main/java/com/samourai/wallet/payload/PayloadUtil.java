@@ -195,6 +195,47 @@ public class PayloadUtil	{
         }
     }
 
+
+    synchronized public JSONObject getSentinelPairingPayload() {
+        try {
+            JSONObject wallet = new JSONObject();
+
+            wallet.put("fingerprint", Hex.toHexString(HD_WalletFactory.getInstance(context).getFingerprint()));
+
+            JSONArray accts = new JSONArray();
+            accts.put(HD_WalletFactory.getInstance(context).get().getAccount(0).toJSON(44));
+            wallet.put("accounts", accts);
+
+            JSONArray bip49_account = new JSONArray();
+            bip49_account.put(BIP49Util.getInstance(context).getWallet().getAccount(0).toJSON(49));
+            wallet.put("bip49_accounts", bip49_account);
+
+            JSONArray bip84_account = new JSONArray();
+            bip84_account.put(BIP84Util.getInstance(context).getWallet().getAccount(0).toJSON(84));
+            wallet.put("bip84_accounts", bip84_account);
+
+            JSONArray whirlpool_account = new JSONArray();
+            JSONObject preObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).toJSON(84);
+            preObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.PREMIX_RECEIVE));
+            preObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.PREMIX_CHANGE));
+            whirlpool_account.put(preObj);
+            JSONObject postObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).toJSON(84);
+            postObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.POSTMIX_RECEIVE));
+            postObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.POSTMIX_CHANGE));
+            whirlpool_account.put(postObj);
+            JSONObject badbankObj = BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).toJSON(84);
+            badbankObj.put("receiveIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.BADBANK_RECEIVE));
+            badbankObj.put("changeIdx", AddressFactory.getInstance(context).getIndex(WALLET_INDEX.BADBANK_CHANGE));
+            whirlpool_account.put(badbankObj);
+            wallet.put("whirlpool_account", whirlpool_account);
+
+            JSONObject obj = new JSONObject();
+            obj.put("wallet", wallet);
+
+            return obj;
+        } catch (Exception ignored){}
+        return null;
+    }
     synchronized public JSONObject getPayload() {
         try {
             JSONObject wallet = new JSONObject();

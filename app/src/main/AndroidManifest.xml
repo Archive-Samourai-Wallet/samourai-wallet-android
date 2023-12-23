@@ -147,6 +147,10 @@
             android:exported="true"
             android:theme="@style/Theme.Samourai.Material" />
         <activity
+            android:name=".pairing.PairingMenuActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Samourai.Material" />
+        <activity
             android:name=".MainActivity2"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
