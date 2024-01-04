@@ -76,10 +76,6 @@ Includes Tor bundled in-app.
 
 MainNet/TestNet selection is displayed when sideloading a new installation. To switch networks, make a backup of your current wallet, uninstall/reinstall (sideload) and select desired network.
 
-### OpenDime:
-
-Plug in your OpenDime using the appropriate OTG (On-The-Go) USB cable and Samourai can be used to view address and balance, validate the private key, and sweep balance to your wallet.
-
 ### License:
 
 [GNU General Public License 3](https://github.com/Samourai-Wallet/samourai-wallet-android/blob/master/LICENSE)
