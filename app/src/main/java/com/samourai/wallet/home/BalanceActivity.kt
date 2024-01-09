@@ -467,9 +467,11 @@ open class BalanceActivity : SamouraiActivity() {
                         ToolsBottomSheet.showTools(supportFragmentManager)
                     }
                 }
+            }
+            section {
                 item {
                     label = "Pairing"
-                    icon = R.drawable.ic_action_refresh
+                    icon = R.drawable.pairing_icon
                     iconSize = 18
                     hasNestedItems
                     callback = {
@@ -477,9 +479,6 @@ open class BalanceActivity : SamouraiActivity() {
                         startActivity(intent)
                     }
                 }
-
-            }
-            section {
                 item {
                     label = getString(R.string.action_settings)
                     icon = R.drawable.ic_cog

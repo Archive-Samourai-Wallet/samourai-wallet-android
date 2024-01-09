@@ -34,7 +34,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="18dp"
-            android:src="@drawable/ic_message_alert_white" />
+            android:src="@drawable/eye_off" />
 
         <LinearLayout
             android:layout_width="269dp"
