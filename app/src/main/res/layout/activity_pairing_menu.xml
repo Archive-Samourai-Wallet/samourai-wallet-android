@@ -64,7 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="New pairing code"
-            android:textSize="18sp"
+            android:layout_marginTop="6dp"
             android:layout_marginBottom="8dp"/>
 
         <ImageButton
@@ -105,16 +105,18 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Full Wallet"/>
+                    android:text="Full wallet"
+                    android:textColor="@color/white"/>
 
             </LinearLayout>
 
             <TextView
-                android:layout_width="238dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="58dp"
+                android:layout_marginEnd="20dp"
                 android:text="Includes public and private keys. For use with Whirlpool CLI, Whirlpool Desktop and Swaps App"
-                android:textSize="12sp" /> <!-- Adjusted margin to align with option text -->
+                android:textColor="@color/disabled_white"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -133,29 +135,33 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Watch only wallet" />
+                    android:text="Watch only wallet"
+                    android:textColor="@color/white"/>
+
 
             </LinearLayout>
 
             <TextView
-                android:layout_width="225dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
-                android:text="Only includes public keys. For use with Sentinel Watch Only wallet app."
-                android:textSize="12sp" /> <!-- Adjusted margin to align with option text -->
+                android:layout_marginStart="58dp"
+                android:layout_marginEnd="20dp"
+                android:text="Only includes public keys. For use with Sentinel Watch Only wallet app"
+                android:textColor="@color/disabled_white"/>
 
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/generateCodeButton"
-            android:layout_width="216dp"
-            android:layout_height="71dp"
+            android:layout_width="313dp"
+            android:layout_height="63dp"
             android:layout_alignParentBottom="true"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="25dp"
             android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="49dp"
             android:backgroundTint="@color/light_blue_600"
-            android:text="Generate Code"
+            android:text="Generate code"
+            android:textAllCaps="false"
             android:textColor="#ffffff" />
     </RelativeLayout>
 </RelativeLayout>
