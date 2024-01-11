@@ -50,9 +50,12 @@ Samourai Wallet APKs that you produce yourself using Android Studio or that you 
 3. display the differences between the two file lists: `diff -qr output_folder output_folder_unsigned`
 
 4. The resulting output will look something like this:
-`Only in output_folder/META-INF: MANIFEST.MF`
-`Only in output_folder/META-INF: CERT.RSA`
-`Only in output_folder/META-INF: CERT.SF`
+
+		Only in output_folder/META-INF: MANIFEST.MF  
+		
+		Only in output_folder/META-INF: CERT.RSA  
+		
+		Only in output_folder/META-INF: CERT.SF
 
 5. Remove the listed files from the signed APK: 
 `zip -d sw-signed.apk "META-INF/MANIFEST.MF" "META-INF/CERT.SF" "META-INF/CERT.RSA"`
