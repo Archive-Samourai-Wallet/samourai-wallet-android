@@ -64,9 +64,6 @@ Samourai Wallet APKs that you produce yourself using Android Studio or that you 
 
 ### Test reproducibility
 
-Building unsigned production APK
-
-Upon success of **Remove signatures** step 6 above, calculate the SHA-256 hash of the signaturer-stripped APK: `shasum -a 256 sw-signed.apk`
+Upon success of **Remove signatures** step 6 above, calculate the SHA-256 hash of the signaturer-stripped APK: `shasum -a 256 sw-signed.apk` Note that the `zip -d` command will not modify the file name.
 
 The calculated hash should match the hash value saved in **Building unsigned production APK** step 3 above.
-
