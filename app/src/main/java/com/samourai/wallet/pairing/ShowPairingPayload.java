@@ -47,7 +47,7 @@ public class ShowPairingPayload extends BottomSheetDialogFragment {
             pwdTypeText.setText("Login password");
         }
 
-        if (passphrase != null && passphrase.equals("Your BIP39 Passphrase"))
+        if (passphrase != null && passphrase.equals("your BIP39 Passphrase"))
             passwordText.setTextColor(getResources().getColor(R.color.white));
 
         copyBtn.setOnClickListener(v -> {
@@ -71,7 +71,7 @@ public class ShowPairingPayload extends BottomSheetDialogFragment {
     private Observable<Bitmap> generateQRCode(String uri) {
         return Observable.fromCallable(() -> {
             Bitmap bitmap = null;
-            QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(uri, null, Contents.Type.TEXT, BarcodeFormat.QR_CODE.toString(), 500);
+            QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(uri, null, Contents.Type.TEXT, BarcodeFormat.QR_CODE.toString(), 1000);
             try {
                 bitmap = qrCodeEncoder.encodeAsBitmap();
             } catch (WriterException e) {

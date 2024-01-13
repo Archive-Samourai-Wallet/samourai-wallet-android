@@ -26,6 +26,7 @@ class PairingMenuActivity : SamouraiActivity() {
         setSupportActionBar(findViewById(R.id.toolbar_settings))
         if (supportActionBar != null) {
             supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+            supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_close_white_24dp)
         }
         title = "Pairing code"
 
@@ -50,7 +51,7 @@ class PairingMenuActivity : SamouraiActivity() {
                 selectedType = "full"
                 watchOnlySwitch.isChecked = false
                 selectedPayload = fullWalletPayload
-                selectedPassword = if (passsphrase != null) "Your BIP39 Passphrase" else randomWords
+                selectedPassword = if (passsphrase != null) "your BIP39 Passphrase" else randomWords
                 generateCodeBtn.alpha = 1f
             }
             else
