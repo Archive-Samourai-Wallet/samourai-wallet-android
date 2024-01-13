@@ -10,7 +10,7 @@ Verify that the integrity of the downloaded binary file by following [these inst
 
 ### Version information
 
-These instructions are valid for Samourai Wallet APKs v0.99.98i.
+These instructions are valid for Samourai Wallet APKs v0.99.98j.
 
 ### Environment
 
@@ -45,7 +45,7 @@ Samourai Wallet APKs that you produce yourself using Android Studio or that you 
 
 1. list files contained in your unsigned build: `apktool d -o output_folder_unsigned app/build/outputs/apk/production/release/app-production-release-unsigned.apk`
 
-2. list files contained in your signed build: `apktool d -o output_folder app/build/outputs/apk/production/release/sw-signed.apk`
+2. list files contained in your signed build: `apktool d -o output_folder/sw-signed.apk`
 
 3. display the differences between the two file lists: `diff -qr output_folder output_folder_unsigned`
 
