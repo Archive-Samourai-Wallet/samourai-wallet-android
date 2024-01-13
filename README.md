@@ -8,6 +8,10 @@
 
 Import as Android Studio project. Should build "as is". PGP signed tagged releases correspond to builds that were issued via Google Play.
 
+### Reproducible builds:
+
+For reproducibly building Samourai Wallet, see our [step-by-step instructions](ReproducibleBuilds.md).
+
 ### BIP44:
 
 Samourai implementation based on [original BIP](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki), extends [bitcoinj](https://bitcoinj.github.io/).
