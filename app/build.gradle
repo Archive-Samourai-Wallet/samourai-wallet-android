@@ -2,16 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 34
-//    buildToolsVersion "30.0.3"
+    compileSdk 34
     useLibrary 'org.apache.http.legacy'
     flavorDimensions "versionCode"
     defaultConfig {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdk 33
         versionCode 198
-        versionName "0.99.98i"
+        versionName '0.99.98i'
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
