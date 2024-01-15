@@ -1,8 +1,5 @@
 package com.samourai.wallet.pairing;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.android.Contents;
@@ -50,15 +48,18 @@ public class ShowPairingPayload extends BottomSheetDialogFragment {
         if (passphrase != null && passphrase.equals("your BIP39 Passphrase"))
             passwordText.setTextColor(getResources().getColor(R.color.white));
 
-        copyBtn.setOnClickListener(v -> {
-            ClipboardManager cm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clipData = ClipData
-                    .newPlainText("Pairing Payload", pairingPayload);
-            if (cm != null) {
-                cm.setPrimaryClip(clipData);
-                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show();
-            }
-        });
+        copyBtn.setOnClickListener((event) -> new MaterialAlertDialogBuilder(getContext())
+                .setTitle(R.string.app_name)
+                .setMessage(R.string.pairing_payload_to_clipboard)
+                .setCancelable(false)
+                .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
+                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                    android.content.ClipData clip = null;
+                    clip = android.content.ClipData.newPlainText("pairing_payload", pairingPayload);
+                    clipboard.setPrimaryClip(clip);
+                    Toast.makeText(getContext(), R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show();
+                }).setNegativeButton(R.string.no, (dialog, whichButton) -> {
+                }).show());
 
         Disposable disposable = generateQRCode(pairingPayload).subscribe(pairingQR::setImageBitmap);
         disposables.add(disposable);
