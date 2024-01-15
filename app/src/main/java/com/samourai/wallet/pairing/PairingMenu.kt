@@ -96,7 +96,7 @@ class PairingMenuActivity : SamouraiActivity() {
                 line = reader.readLine()
             }
 
-            return wordsList.shuffled(Random()).take(4).joinToString("-")
+            return wordsList.shuffled(Random()).take(3).joinToString("-")
         } catch (e: Exception) {
             e.printStackTrace()
         }
