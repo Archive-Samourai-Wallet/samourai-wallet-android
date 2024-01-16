@@ -51,7 +51,7 @@ class PairingMenuActivity : SamouraiActivity() {
                 selectedType = "full"
                 watchOnlySwitch.isChecked = false
                 selectedPayload = fullWalletPayload
-                selectedPassword = if (passsphrase != null) "your BIP39 Passphrase" else randomWords
+                selectedPassword = if (passsphrase.isNullOrEmpty()) randomWords else "your BIP39 Passphrase"
                 generateCodeBtn.alpha = 1f
             }
             else
@@ -96,7 +96,7 @@ class PairingMenuActivity : SamouraiActivity() {
                 line = reader.readLine()
             }
 
-            return wordsList.shuffled(Random()).take(4).joinToString("-")
+            return wordsList.shuffled(Random()).take(3).joinToString("-")
         } catch (e: Exception) {
             e.printStackTrace()
         }
