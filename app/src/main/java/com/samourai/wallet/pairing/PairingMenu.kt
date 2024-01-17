@@ -112,7 +112,6 @@ class PairingMenuActivity : SamouraiActivity() {
             AESUtil.DefaultPBKDF2Iterations
         )
         val json = JSONObject()
-        json.put("version", BuildConfig.VERSION_CODE)
         json.put("external", "SW export")
         json.put("payload", encrypted)
 

@@ -198,28 +198,24 @@ public class PayloadUtil	{
 
     synchronized public JSONObject getSentinelPairingPayload() {
         try {
-            JSONObject wallet = new JSONObject();
+            JSONArray watchOnly = new JSONArray();
 
-            wallet.put("fingerprint", Hex.toHexString(HD_WalletFactory.getInstance(context).getFingerprint()));
+            watchOnly.put(Hex.toHexString(HD_WalletFactory.getInstance(context).getFingerprint()));
 
-            JSONArray xpubsJSONArray = new JSONArray();
+            watchOnly.put(HD_WalletFactory.getInstance(context).get().getAccount(0).xpubstr());
 
-            xpubsJSONArray.put(HD_WalletFactory.getInstance(context).get().getAccount(0).xpubstr());
+            watchOnly.put(BIP49Util.getInstance(context).getWallet().getAccount(0).ypubstr());
 
-            xpubsJSONArray.put(BIP49Util.getInstance(context).getWallet().getAccount(0).ypubstr());
+            watchOnly.put(BIP84Util.getInstance(context).getWallet().getAccount(0).zpubstr());
 
-            xpubsJSONArray.put(BIP84Util.getInstance(context).getWallet().getAccount(0).zpubstr());
+            watchOnly.put(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).zpubstr());
 
-            xpubsJSONArray.put(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).zpubstr());
+            watchOnly.put(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).zpubstr());
 
-            xpubsJSONArray.put(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).zpubstr());
-
-            xpubsJSONArray.put(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).zpubstr());
-
-            wallet.put("xpubs", xpubsJSONArray);
+            watchOnly.put(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).zpubstr());
 
             JSONObject obj = new JSONObject();
-            obj.put("watch-only", wallet);
+            obj.put("watch-only", watchOnly);
 
             return obj;
         } catch (Exception ignored){}
