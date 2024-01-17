@@ -80,7 +80,7 @@ MainNet/TestNet selection is displayed when sideloading a new installation. To s
 
 ### License:
 
-[GNU General Public License 3](https://github.com/Samourai-Wallet/samourai-wallet-android/blob/master/LICENSE)
+[GNU General Public License 3](https://code.samourai.io/wallet/samourai-wallet-android/-/blob/master/LICENSE)
 
 ### Contributing:
 
