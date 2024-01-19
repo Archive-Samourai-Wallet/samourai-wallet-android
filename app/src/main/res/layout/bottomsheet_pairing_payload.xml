@@ -70,9 +70,9 @@
 
         <ImageView
             android:id="@+id/qr_pairing_code"
-            android:layout_width="350dp"
-            android:layout_height="350dp"
-            android:layout_marginTop="32dp"
+            android:layout_width="360dp"
+            android:layout_height="360dp"
+            android:layout_marginTop="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.527"
             app:layout_constraintStart_toStartOf="parent"
