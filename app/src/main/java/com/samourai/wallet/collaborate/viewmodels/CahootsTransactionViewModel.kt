@@ -293,12 +293,23 @@ class CahootsTransactionViewModel : ViewModel() {
         val feePerKb = if (customFee.value != null) customFee.value!!
         else MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), feeRange.value!!.toFloat()).coerceAtLeast(1000f).div(1000.0).toLong()
         if (CahootsMode.MANUAL == type.cahootsMode) {
+
             var destinationPcode: String? = null;
             if (FormatsUtil.getInstance().isValidPaymentCode(destinationAddress.value)) {
                 destinationPcode = destinationAddress.value
             }
+
             // Cahoots manual
-            val intent = ManualCahootsActivity.createIntentSender(context, account, type.cahootsType, feePerKb, amountInSats.toLong(), address, destinationPcode)
+            val intent = ManualCahootsActivity.createIntentSender(
+                context,
+                account,
+                type.cahootsType,
+                feePerKb,
+                amountInSats.toLong(),
+                address,
+                destinationPcode,
+                null)
+
             context.startActivity(intent)
             return
         }
@@ -308,7 +319,17 @@ class CahootsTransactionViewModel : ViewModel() {
                 destinationPcode = destinationAddress.value
             }
             // Cahoots online
-            val intent = SorobanCahootsActivity.createIntentSender(context, account, type.cahootsType, amountInSats.toLong(), feePerKb, address, collaboratorPcode.value,destinationPcode)
+            val intent = SorobanCahootsActivity.createIntentSender(
+                context,
+                account,
+                type.cahootsType,
+                amountInSats.toLong(),
+                feePerKb,
+                address,
+                collaboratorPcode.value,
+                destinationPcode,
+                null)
+
             context.startActivity(intent)
             return
         }

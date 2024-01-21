@@ -27,7 +27,7 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
     public static FeeUtil getInstance() {
 
         if(instance == null)    {
-            estimatedFees = new ArrayList<SuggestedFee>();
+            estimatedFees = new ArrayList<>();
             highFee = new SuggestedFee();
             suggestedFee = new SuggestedFee();
             lowFee = new SuggestedFee();

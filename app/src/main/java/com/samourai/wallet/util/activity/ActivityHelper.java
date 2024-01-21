@@ -14,9 +14,12 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.TaskStackBuilder;
 
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.explorer.ExplorerActivity;
+import com.samourai.wallet.home.BalanceActivity;
 
 public class ActivityHelper {
 
@@ -68,5 +71,32 @@ public class ActivityHelper {
             Toast.makeText(activity, R.string.clipboard_item_inconsistent, Toast.LENGTH_SHORT).show();
             return null;
         }
+    }
+
+    public static void gotoBalanceHomeActivity(final SamouraiActivity currentActivity,
+                                               final int account) {
+
+        if (account != 0) {
+
+            final Intent balanceHome = new Intent(currentActivity, BalanceActivity.class);
+            balanceHome.putExtra("_account", account);
+            balanceHome.putExtra("refresh", true);
+            final Intent parentIntent = new Intent(currentActivity, BalanceActivity.class);
+            parentIntent.putExtra("_account", 0);
+            balanceHome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            TaskStackBuilder.create(currentActivity.getApplicationContext())
+                    .addNextIntent(parentIntent)
+                    .addNextIntent(balanceHome)
+                    .startActivities();
+
+        } else {
+            final Intent _intent = new Intent(currentActivity, BalanceActivity.class);
+            _intent.putExtra("refresh", true);
+            _intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK |
+                    Intent.FLAG_ACTIVITY_NEW_TASK |
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            currentActivity.startActivity(_intent);
+        }
+        currentActivity.finish();
     }
 }

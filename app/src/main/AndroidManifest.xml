@@ -234,8 +234,11 @@
             android:theme="@style/Theme.Samourai.Material" />
         <activity
             android:name=".home.AccountSelectionActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/Theme.Samourai.Material" />
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+        <activity
+            android:name=".send.review.ReviewTxActivity"
+            android:theme="@style/Theme.Samourai.Material"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity
             android:name=".ReceiveActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
