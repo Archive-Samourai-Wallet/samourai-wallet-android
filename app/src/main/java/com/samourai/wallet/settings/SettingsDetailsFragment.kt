@@ -945,9 +945,19 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
         val pairingObj = JSONObject()
         val jsonObj = JSONObject()
+        val dojoObj = JSONObject()
         try {
+            if (DojoUtil.getInstance(requireContext()).dojoParams != null) {
+                val params = DojoUtil.getInstance(requireContext()).dojoParams
+                val url = DojoUtil.getInstance(requireContext()).getUrl(params)
+                val apiKey = DojoUtil.getInstance(requireContext()).getApiKey(params)
+                if (url != null && apiKey != null && url.isNotEmpty() && apiKey.isNotEmpty()) {
+                    dojoObj.put("apikey", apiKey)
+                    dojoObj.put("url", url)
+                }
+            }
             jsonObj.put("type", "swaps.gui")
-            jsonObj.put("version", "1.0.0")
+            jsonObj.put("version", "1.0.1")
             jsonObj.put("network", if (SamouraiWallet.getInstance().isTestNet) "testnet" else "mainnet")
             val mnemonic = HD_WalletFactory.getInstance(requireContext()).get().mnemonic
             if (SamouraiWallet.getInstance().hasPassphrase(requireContext())) {
@@ -955,6 +965,12 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                 jsonObj.put("passphrase", true)
                 jsonObj.put("mnemonic", encrypted)
                 pairingObj.put("pairing", jsonObj)
+                if (dojoObj.has("url") && dojoObj.has("apikey")) {
+                    val apiKey = dojoObj.getString("apikey")
+                    val encryptedApiKey = AESUtil.encrypt(apiKey, CharSequenceX(HD_WalletFactory.getInstance(requireContext()).get().passphrase))
+                    dojoObj.put("apikey", encryptedApiKey)
+                    pairingObj.put("dojo", dojoObj)
+                }
                 showQR(pairingObj)
             } else {
 
@@ -971,6 +987,12 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
                         val encrypted = AESUtil.encrypt(mnemonic, CharSequenceX(pw), AESUtil.DefaultPBKDF2Iterations)
                         jsonObj.put("passphrase", false)
                         jsonObj.put("mnemonic", encrypted)
+                        if (dojoObj.has("url") && dojoObj.has("apikey")) {
+                            val apiKey = dojoObj.getString("apikey")
+                            val encryptedApiKey = AESUtil.encrypt(apiKey, CharSequenceX(pw))
+                            dojoObj.put("apikey", encryptedApiKey)
+                            pairingObj.put("dojo", dojoObj)
+                        }
                         pairingObj.put("pairing", jsonObj)
                         showQR(pairingObj)
                     }else{
