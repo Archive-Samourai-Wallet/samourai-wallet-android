@@ -1,5 +1,6 @@
 package com.samourai.wallet.send.review;
 
+import static com.samourai.wallet.send.review.EnumSendType.SPEND_SIMPLE;
 import static java.util.Objects.nonNull;
 
 import android.content.Intent;
@@ -51,7 +52,7 @@ public class SpendSimpleTxBroadcaster {
         }
 
         final String strCannotDoBoltzmann;
-        if (model.isPostmixAccount()) {
+        if (model.isPostmixAccount() && model.getSendType() == SPEND_SIMPLE) {
             strCannotDoBoltzmann = activity.getString(R.string.boltzmann_cannot) + "\n\n";
         } else {
             strCannotDoBoltzmann = "";

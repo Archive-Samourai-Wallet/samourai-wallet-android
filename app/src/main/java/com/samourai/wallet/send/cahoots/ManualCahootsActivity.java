@@ -13,6 +13,10 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.samourai.soroban.cahoots.CahootsContext;
 import com.samourai.soroban.cahoots.ManualCahootsMessage;
@@ -30,6 +34,8 @@ import com.samourai.wallet.cahoots.psbt.PSBT;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.QRBottomSheetDialog;
+import com.samourai.wallet.widgets.CahootsCircleProgress;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 public class ManualCahootsActivity extends SamouraiActivity {
 
@@ -79,8 +85,21 @@ public class ManualCahootsActivity extends SamouraiActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manual_cahoots);
         setSupportActionBar(findViewById(R.id.toolbar));
-        if (getSupportActionBar() != null)
+        if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        final int account = getIntent().getIntExtra("_account", 0);
+
+        if (account == SamouraiAccountIndex.POSTMIX) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.postmix_spending_blue_color));
+            final AppBarLayout viewById = findViewById(R.id.appBarLayout2);
+            viewById.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.postmix_spending_blue_color));
+            final Toolbar toolbar = findViewById(R.id.toolbar);
+            toolbar.setBackgroundColor(getResources().getColor(R.color.postmix_spending_blue_color));
+            final CahootsCircleProgress stepView = findViewById(R.id.step_view);
+            stepView.setBackgroundColor(getResources().getColor(R.color.postmix_spending_blue_color));
+        }
 
         try {
             ManualCahootsStepFragment.CahootsFragmentListener listener = new ManualCahootsStepFragment.CahootsFragmentListener() {

@@ -48,7 +48,7 @@ import androidx.core.content.ContextCompat.startActivity
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.send.SendActivity
-import com.samourai.wallet.theme.samouraiBlueButton
+import com.samourai.wallet.theme.samouraiPostmixSpendBlueButton
 import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.BalanceUtil
 import com.samourai.wallet.util.func.FormatsUtil.formatBTC
@@ -98,7 +98,7 @@ fun ComposeActivityContent(model: AccountSelectionModel, activity: SamouraiActiv
     val context = LocalContext.current
     val items = listOf(
         Triple(SamouraiAccountIndex.DEPOSIT, R.drawable.ic_deposit_account, Color(110, 118, 137)),
-        Triple(SamouraiAccountIndex.POSTMIX, R.drawable.ic_postmix_account, samouraiBlueButton))
+        Triple(SamouraiAccountIndex.POSTMIX, R.drawable.ic_postmix_account, samouraiPostmixSpendBlueButton))
 
     val currentIntent: Intent? = if (nonNull(activity)) activity!!.intent else null;
     val robotoMediumBoldFont = FontFamily(

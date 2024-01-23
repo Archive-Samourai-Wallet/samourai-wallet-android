@@ -1,11 +1,11 @@
 package com.samourai.wallet.send.review;
 
+import androidx.annotation.NonNull;
+
+import com.google.common.collect.ImmutableMap;
 import com.samourai.wallet.SamouraiActivity;
 
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public enum EnumSendType {
     SPEND_SIMPLE(0) {
@@ -46,9 +46,16 @@ public enum EnumSendType {
     },
     ;
 
-    private static final Map<Integer, EnumSendType> CACHE_TYPE_TO_ENUM =
-            Stream.of(EnumSendType.values())
-                    .collect(Collectors.toMap(EnumSendType::getType, Function.identity()));
+    private static final Map<Integer, EnumSendType> CACHE_TYPE_TO_ENUM = createCacheTypeToEnum();
+
+    @NonNull
+    private static Map<Integer, EnumSendType> createCacheTypeToEnum() {
+        final ImmutableMap.Builder<Integer, EnumSendType> mapBuilder = ImmutableMap.builder();
+        for (final EnumSendType sendType : EnumSendType.values()) {
+            mapBuilder.put(sendType.getType(), sendType);
+        }
+        return mapBuilder.build();
+    }
 
     private final int type;
 

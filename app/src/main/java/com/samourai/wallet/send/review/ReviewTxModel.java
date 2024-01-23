@@ -6,6 +6,8 @@ import static com.samourai.wallet.send.review.EnumSendType.SPEND_JOINBOT;
 import static com.samourai.wallet.send.review.EnumSendType.SPEND_RICOCHET;
 import static com.samourai.wallet.send.review.EnumSendType.SPEND_SIMPLE;
 import static com.samourai.wallet.send.review.EnumSendType.valueOf;
+import static com.samourai.wallet.util.tech.ThreadHelper.pauseMillis;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.util.Objects.isNull;
@@ -20,6 +22,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -50,6 +53,7 @@ import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.tech.SimpleCallback;
 import com.samourai.wallet.util.tech.SimpleTaskRunner;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
@@ -57,32 +61,34 @@ import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.ThreadUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bouncycastle.util.encoders.Hex;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import kotlin.Unit;
 
 public class ReviewTxModel extends AndroidViewModel {
 
@@ -166,8 +172,10 @@ public class ReviewTxModel extends AndroidViewModel {
         }
     }
 
-    private static final String TAG = "BIP47Meta";
+    private static final String TAG = "ReviewTxModel";
     public static final String MINER = "miner";
+
+    public static final String MISSING_ADDRESS = "missing address";
 
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
@@ -179,14 +187,13 @@ public class ReviewTxModel extends AndroidViewModel {
     private long amount = 0l;
     private List<UTXOCoin> preselectedUTXOs;
     private EnumSendType type = SPEND_SIMPLE;
+    private EnumSendType sendType = SPEND_SIMPLE;
+    private MutableLiveData<EnumSendType> impliedSendType;
     private boolean ricochetStaggeredDelivery;
     private Long _balance = null;
     private TxData txData = TxData.create(getApplication());
     private SelectCahootsType.type selectedCahootsType = SelectCahootsType.type.NONE;
     private MutableLiveData<EntropyInfo> entropy = null;
-
-    private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> _pair = null;
-
     private MutableLiveData<Map<String, Long>> _fees = null;
     private MutableLiveData<Long> _feeAggregated = null;
     private MutableLiveData<Long> _feeLowRate;
@@ -195,9 +202,10 @@ public class ReviewTxModel extends AndroidViewModel {
     private MutableLiveData<Long> minerFeeRates = null;
     private MutableLiveData<EnumTransactionPriority> transactionPriority = new MutableLiveData<>(EnumTransactionPriority.NORMAL);
     private MutableLiveData<String> txNote = new MutableLiveData<>(StringUtils.EMPTY);
-
-    private final ConcurrentLinkedDeque<Long> computeFeeValuesSynchronizer = new ConcurrentLinkedDeque<>();
-
+    private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> _pair;
+    private List<UTXO> shuffledUtxosP2PKH;
+    private List<UTXO> shuffledUtxosP2SH_P2WPKH;
+    private List<UTXO> shuffledUtxosP2WPKH;
 
     public ReviewTxModel(@NonNull Application application) {
         super(application);
@@ -222,41 +230,108 @@ public class ReviewTxModel extends AndroidViewModel {
     public LiveData<EntropyInfo> getEntropy() {
         if (isNull(entropy)) {
             entropy = new MutableLiveData<>(EntropyInfo.create());
-            try {
-                buildBoltzmannTxData();
-                final Disposable entropyDisposable = ReviewTxModel.calculateEntropy(txData.getSelectedUTXO(), txData.getReceivers())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.computation())
-                        .doOnSuccess(txProcessorResult -> {
-                            entropy.postValue(EntropyInfo.create()
-                                    .setEntropy(txProcessorResult.getEntropy())
-                                    .setInterpretations(txProcessorResult.getNbCmbn()));
-                        })
-                        .doOnError(throwable -> {
-                            entropy.postValue(EntropyInfo.create());
-                            throwable.printStackTrace();
-                        })
-                        .subscribe();
-                compositeDisposable.add(entropyDisposable);
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.e(TAG, e.getMessage());
+            if (computeSendType() == SPEND_BOLTZMANN) {
+                computeEntropyAsync();
             }
         }
         return entropy;
     }
 
-    public void setMinerFeeRates(final long value) {
+    private void computeEntropyAsync() {
+        try {
+            buildBoltzmannTxData();
+            final Disposable entropyDisposable = reactiveCalculateEntropy(txData.getSelectedUTXO(), txData.getReceivers())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.computation())
+                    .doOnSuccess(txProcessorResult -> {
+                        entropy.postValue(EntropyInfo.create()
+                                .setEntropy(txProcessorResult.getEntropy())
+                                .setInterpretations(txProcessorResult.getNbCmbn()));
+                    })
+                    .doOnError(throwable -> {
+                        entropy.postValue(EntropyInfo.create());
+                        throwable.printStackTrace();
+                    })
+                    .subscribe();
+            compositeDisposable.add(entropyDisposable);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
+        }
+    }
 
-        final SuggestedFee suggestedFee = new SuggestedFee();
-        suggestedFee.setDefaultPerKB(BigInteger.valueOf(value * 1000l));
-        FeeUtil.getInstance().setSuggestedFee(suggestedFee);
+    private final AtomicBoolean minerFeeRatesAndComputationThreadStarted = new AtomicBoolean();
+    private final AtomicLong minerFeeRatesThreadCache = new AtomicLong();
 
+    public void setMinerFeeRatesAndComputeFees(final long value) {
+        if (minerFeeRatesThreadCache.getAndSet(value) != value) {
+            recomputeOnUpdateFees(value);
+        }
+    }
+
+    public void setMinerFeeRatesAndComputeFeesAsync(final long value) {
+        minerFeeRatesThreadCache.set(value);
+        if (minerFeeRatesAndComputationThreadStarted.get()) return;
+        SimpleTaskRunner.create().executeAsync(new Callable<Long>() {
+            @Override
+            public Long call() throws Exception {
+                if (minerFeeRatesAndComputationThreadStarted.compareAndSet(false, true)) {
+
+                    // pause in order to skip a lot of intermediate computations
+                    // to be responsive on touch when using slider for example
+                    pauseMillis(50L);
+
+                    minerFeeRatesAndComputationThreadStarted.set(false);
+
+                    // to be more responsive on touch, here it is better to use the param value
+                    // given in method than minerFeeRatesThreadCache.
+                    // This will reduce the number of intermediate calls of recomputeFees()
+                    // on onComplete method
+                    return value;
+                }
+                return null;
+            }
+        }, new SimpleCallback<Long>() {
+            @Override
+            public void onComplete(final Long sessionFeeRates) {
+                if (isNull(sessionFeeRates)) return;
+                if (minerFeeRatesThreadCache.get() == sessionFeeRates.longValue()) {
+                    recomputeOnUpdateFees(value);
+                } else {
+                    setMinerFeeRatesAndComputeFeesAsync(minerFeeRatesThreadCache.get());
+                }
+            }
+
+            @Override
+            public void onException(final Throwable t) {
+                final String msg = "on SimpleTaskRunner of setMinerFeeRatesAndComputeFeesAsync : " +
+                        t.getMessage();
+                Log.e(TAG, msg, t);
+            }
+        });
+    }
+
+    synchronized private void recomputeOnUpdateFees(long value) {
+        setMinerFeeRates(value);
+        setSuggestedFee(value);
+        setTransactionPriority(value);
+        txData.restoreChangeIndexes(getApplication());
+        _pair = null;
+        recomputeFees(value);
+        if (getSendType() == SPEND_BOLTZMANN) {
+            computeEntropyAsync();
+        }
+    }
+
+    private void setMinerFeeRates(long value) {
         if (isNull(minerFeeRates)) {
             minerFeeRates = new MutableLiveData<>(value);
         } else {
             minerFeeRates.postValue(value);
         }
+    }
+
+    private void setTransactionPriority(long value) {
         if (value >= getFeeHighRate().getValue()) {
             transactionPriority.postValue(EnumTransactionPriority.NEXT_BLOCK);
         } else if (value <= getFeeLowRate().getValue()) {
@@ -264,14 +339,17 @@ public class ReviewTxModel extends AndroidViewModel {
         } else {
             transactionPriority.postValue(EnumTransactionPriority.NORMAL);
         }
+    }
 
-        _pair = null;
-        if (computeFeeValuesSynchronizer.isEmpty()) {
-            computeFeeValuesSynchronizer.addLast(value);
-            computeFeeValuesAsync();
-        } else {
-            computeFeeValuesSynchronizer.addLast(value);
-        }
+    private static void setSuggestedFee(long value) {
+        final SuggestedFee suggestedFee = new SuggestedFee();
+        suggestedFee.setDefaultPerKB(BigInteger.valueOf(value * 1000l));
+        FeeUtil.getInstance().setSuggestedFee(suggestedFee);
+    }
+
+    private void recomputeFees(long value) {
+        impliedSendType.postValue(computeSendType());
+        computeFeeValues();
     }
 
     public MutableLiveData<EnumTransactionPriority> getTransactionPriority() {
@@ -335,7 +413,7 @@ public class ReviewTxModel extends AndroidViewModel {
             countP2WSH_P2TR = 1;
         }
 
-        final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = computeStonewallPair();
+        final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = getStonewallPair();
 
         long totalValueSelected = 0L;
         for (final MyTransactionOutPoint outpoint : pair.getLeft()) {
@@ -404,20 +482,40 @@ public class ReviewTxModel extends AndroidViewModel {
         return selectedCahootsType;
     }
 
-    private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> computeStonewallPair() {
-        if (isNull(_pair)) { // should be computed once because this bloc is not reentrant
-            final Pair<List<UTXO>, List<UTXO>> utxo1AndUtxo2 = getUtxo1AndUtxo2();
-            final List<UTXO> _utxos1 = utxo1AndUtxo2.getLeft();
-            final List<UTXO> _utxos2 = utxo1AndUtxo2.getRight();
-
-            // boltzmann spend (STONEWALL)
-            _pair = SendFactory.getInstance(getApplication())
-                    .boltzmann(_utxos1, _utxos2, BigInteger.valueOf(amount), address, account);
+    private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> getStonewallPair() {
+        if (isNull(_pair)) {
+            _pair = computeStonewallPair();
         }
         return _pair;
     }
 
+    private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> computeStonewallPair() {
+        final Pair<List<UTXO>, List<UTXO>> utxo1AndUtxo2 = getUtxo1AndUtxo2();
+        final List<UTXO> _utxos1 = utxo1AndUtxo2.getLeft();
+        final List<UTXO> _utxos2 = utxo1AndUtxo2.getRight();
+
+        // boltzmann spend (STONEWALL)
+        return SendFactory.getInstance(getApplication())
+                .boltzmann(_utxos1, _utxos2, BigInteger.valueOf(amount), address, account);
+    }
+
+    public MutableLiveData<EnumSendType> getImpliedSendType() {
+        if (isNull(impliedSendType)) {
+            impliedSendType = new MutableLiveData<>(computeSendType());
+        }
+        return impliedSendType;
+    }
+
     public EnumSendType getSendType() {
+        return sendType;
+    }
+
+    private EnumSendType computeSendType() {
+        sendType = processSendType();
+        return sendType;
+    }
+
+    private EnumSendType processSendType() {
         switch (type) {
             case SPEND_SIMPLE:
             case SPEND_BOLTZMANN:
@@ -456,23 +554,11 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     public String getAddressLabel() {
-        return addressLabel;
+        return defaultIfBlank(addressLabel, defaultIfBlank(address, MISSING_ADDRESS));
     }
 
     public long getAmount() {
         return amount;
-    }
-
-    private void computeFeeValuesAsync() {
-        SimpleTaskRunner.create().executeAsync(() -> computeFeeValuesSync());
-    }
-
-    private void computeFeeValuesSync() {
-        if (!computeFeeValuesSynchronizer.isEmpty()) {
-            computeFeeValuesSynchronizer.clear();
-            computeFeeValues();
-            computeFeeValuesAsync();
-        }
     }
 
     private void computeFeeValues() {
@@ -513,7 +599,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
     private Map<String, Long> getBoltzmannFees() {
 
-        final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = computeStonewallPair();
+        final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = getStonewallPair();
 
         long inputAmount = 0L;
         for (final MyTransactionOutPoint outpoint : pair.getLeft()) {
@@ -567,7 +653,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
             Log.d("SendActivity", "boltzmann spend");
 
-            final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = computeStonewallPair();
+            final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = getStonewallPair();
 
             if (isNull(pair)) {
                 txData.restoreChangeIndexes(getApplication());
@@ -621,28 +707,43 @@ public class ReviewTxModel extends AndroidViewModel {
         }
     }
 
-    private List<UTXO> getUtxosP2PKH() {
-        if (CollectionUtils.isEmpty(preselectedUTXOs) && isPostmixAccount()) {
-            return Lists.newArrayList();
-        } else {
-            return new ArrayList<>(APIFactory.getInstance(getApplication()).getUtxosP2PKH(true));
-        }
+    private static <T> List<T> shuffleCopy(final List<T> list) {
+        final List<T> copy = Lists.newArrayList(list);
+        Collections.shuffle(copy);
+        return ImmutableList.copyOf(copy);
     }
 
-    private List<UTXO> getUtxosP2SH_P2WPKH() {
-        if (CollectionUtils.isEmpty(preselectedUTXOs) && isPostmixAccount()) {
-            return Lists.newArrayList();
-        } else {
-            return new ArrayList<>(APIFactory.getInstance(getApplication()).getUtxosP2SH_P2WPKH(true));
+    private List<UTXO> getShuffledUtxosP2PKH() {
+        if (isNull(shuffledUtxosP2PKH)) {
+            if (CollectionUtils.isEmpty(preselectedUTXOs) && isPostmixAccount()) {
+                shuffledUtxosP2PKH = ImmutableList.of();
+            } else {
+                shuffledUtxosP2PKH = shuffleCopy(APIFactory.getInstance(getApplication()).getUtxosP2PKH(true));
+            }
         }
+        return shuffledUtxosP2PKH;
+
+    }
+    private List<UTXO> getShuffledUtxosP2SH_P2WPKH() {
+        if (isNull(shuffledUtxosP2SH_P2WPKH)) {
+            if (CollectionUtils.isEmpty(preselectedUTXOs) && isPostmixAccount()) {
+                shuffledUtxosP2SH_P2WPKH = ImmutableList.of();
+            } else {
+                shuffledUtxosP2SH_P2WPKH = shuffleCopy(APIFactory.getInstance(getApplication()).getUtxosP2SH_P2WPKH(true));
+            }
+        }
+        return shuffledUtxosP2SH_P2WPKH;
     }
 
-    private List<UTXO> getUtxosP2WPKH() {
-        if (CollectionUtils.isEmpty(preselectedUTXOs) && isPostmixAccount()) {
-            return new ArrayList<>(APIFactory.getInstance(getApplication()).getUtxosPostMix(true));
-        } else {
-            return new ArrayList<>(APIFactory.getInstance(getApplication()).getUtxosP2WPKH(true));
+    private List<UTXO> getShuffledUtxosP2WPKH() {
+        if (isNull(shuffledUtxosP2WPKH)) {
+            if (CollectionUtils.isEmpty(preselectedUTXOs) && isPostmixAccount()) {
+                shuffledUtxosP2WPKH = shuffleCopy(APIFactory.getInstance(getApplication()).getUtxosPostMix(true));
+            } else {
+                shuffledUtxosP2WPKH = shuffleCopy(APIFactory.getInstance(getApplication()).getUtxosP2WPKH(true));
+            }
         }
+        return shuffledUtxosP2WPKH;
     }
 
     private Map<String, Long> getSimpleFees() {
@@ -910,9 +1011,12 @@ public class ReviewTxModel extends AndroidViewModel {
 
     private Pair<List<UTXO>, List<UTXO>> getUtxo1AndUtxo2() {
 
-        final List<UTXO> utxosP2WPKH = getUtxosP2WPKH();
-        final List<UTXO> utxosP2SH_P2WPKH = getUtxosP2SH_P2WPKH();
-        final List<UTXO> utxosP2PKH = getUtxosP2PKH();
+        // due to random operation in this method, it is preferable to use a cache
+        // to compute pair result after amending tx fee rates
+
+        final List<UTXO> utxosP2WPKH = Lists.newArrayList(getShuffledUtxosP2WPKH());
+        final List<UTXO> utxosP2SH_P2WPKH = Lists.newArrayList(getShuffledUtxosP2SH_P2WPKH());
+        final List<UTXO> utxosP2PKH = Lists.newArrayList(getShuffledUtxosP2PKH());
 
         long valueP2WPKH = UTXOFactory.getInstance().getTotalP2WPKH();
         long valueP2SH_P2WPKH = UTXOFactory.getInstance().getTotalP2SH_P2WPKH();
@@ -973,7 +1077,7 @@ public class ReviewTxModel extends AndroidViewModel {
             ;
         }
 
-        if (_utxos1 == null || _utxos1.size() == 0) {
+        if (CollectionUtils.isEmpty(_utxos1)) {
             if (valueP2SH_P2WPKH > neededAmount) {
                 Log.d("SendActivity", "set 1 P2SH_P2WPKH");
                 _utxos1 = utxosP2SH_P2WPKH;
@@ -992,7 +1096,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
         }
 
-        if (_utxos1 != null && _utxos1.size() > 0) {
+        if (CollectionUtils.isNotEmpty(_utxos1)) {
             if (!selectedP2SH_P2WPKH && valueP2SH_P2WPKH > neededAmount) {
                 Log.d("SendActivity", "set 2 P2SH_P2WPKH");
                 _utxos2 = utxosP2SH_P2WPKH;
@@ -1009,10 +1113,6 @@ public class ReviewTxModel extends AndroidViewModel {
             } else {
                 ;
             }
-        }
-        Collections.shuffle(_utxos1);
-        if (CollectionUtils.isNotEmpty(_utxos2)) {
-            Collections.shuffle(_utxos2);
         }
         return Pair.of(_utxos1, _utxos2);
     }
@@ -1060,38 +1160,43 @@ public class ReviewTxModel extends AndroidViewModel {
         return _balance;
     }
 
-    public static Single<TxProcessorResult> calculateEntropy(
+    public static Single<TxProcessorResult> reactiveCalculateEntropy(
             final List<UTXO> selectedUTXO,
             final Map<String, BigInteger> receivers) {
 
         return Single.create(emitter -> {
-
-            final Map<String, Long> inputs = new HashMap<>();
-            final Map<String, Long> outputs = new HashMap<>();
-
-            for (final Map.Entry<String, BigInteger> mapEntry : receivers.entrySet()) {
-                String toAddress = mapEntry.getKey();
-                BigInteger value = mapEntry.getValue();
-                outputs.put(toAddress, value.longValue());
-            }
-
-            for (int i = 0; i < selectedUTXO.size(); i++) {
-                inputs.put(SendActivity.stubAddress[i], selectedUTXO.get(i).getValue());
-            }
-
-            final TxProcessor txProcessor = new TxProcessor(
-                    BoltzmannSettings.MAX_DURATION_DEFAULT,
-                    BoltzmannSettings.MAX_TXOS_DEFAULT);
-            final Txos txos = new Txos(inputs, outputs);
-            final TxProcessorResult result = txProcessor.processTx(
-                    txos,
-                    0.005f,
-                    TxosLinkerOptionEnum.PRECHECK,
-                    TxosLinkerOptionEnum.LINKABILITY,
-                    TxosLinkerOptionEnum.MERGE_INPUTS);
-
-            emitter.onSuccess(result);
+            emitter.onSuccess(calculateEntropy(selectedUTXO, receivers));
         });
+    }
+
+    private static TxProcessorResult calculateEntropy(
+            final List<UTXO> selectedUTXO,
+            final Map<String, BigInteger> receivers) {
+
+        final Map<String, Long> inputs = new HashMap<>();
+        final Map<String, Long> outputs = new HashMap<>();
+
+        for (final Map.Entry<String, BigInteger> mapEntry : receivers.entrySet()) {
+            String toAddress = mapEntry.getKey();
+            BigInteger value = mapEntry.getValue();
+            outputs.put(toAddress, value.longValue());
+        }
+
+        for (int i = 0; i < selectedUTXO.size(); i++) {
+            inputs.put(SendActivity.stubAddress[i], selectedUTXO.get(i).getValue());
+        }
+
+        final TxProcessor txProcessor = new TxProcessor(
+                BoltzmannSettings.MAX_DURATION_DEFAULT,
+                BoltzmannSettings.MAX_TXOS_DEFAULT);
+        final Txos txos = new Txos(inputs, outputs);
+        final TxProcessorResult result = txProcessor.processTx(
+                txos,
+                0.005f,
+                TxosLinkerOptionEnum.PRECHECK,
+                TxosLinkerOptionEnum.LINKABILITY,
+                TxosLinkerOptionEnum.MERGE_INPUTS);
+        return result;
     }
 
     public boolean isEnabledRicochetStaggered() {
@@ -1144,9 +1249,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
         if (isNull(_feeMedRate)) {
             _feeMedRate = new MutableLiveData<>(feeMed / 1000l);
-            final SuggestedFee suggestedFee = new SuggestedFee();
-            suggestedFee.setDefaultPerKB(BigInteger.valueOf(_feeMedRate.getValue() * 1000l));
-            FeeUtil.getInstance().setSuggestedFee(suggestedFee);
+            setSuggestedFee(_feeMedRate.getValue());
         } else {
             _feeMedRate.setValue(feeMed / 1000l);
         }

@@ -1,5 +1,6 @@
 package com.samourai.wallet;
 
+import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
 import static com.samourai.wallet.util.tech.LogUtil.debug;
 import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
@@ -15,7 +16,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.samourai.wallet.api.APIFactory;
@@ -81,9 +84,14 @@ public class TxAnimUIActivity extends SamouraiActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tx_anim_ui);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         getWindow().setStatusBarColor(getResources().getColor(R.color.blue_send_ui));
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            final Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setNavigationBarColor(getResources().getColor(R.color.blue_send_ui));
+        }
 
         progressView = findViewById(R.id.transactionProgressView);
         progressView.getMainView().setBackgroundColor(getResources().getColor(R.color.blue_send_ui));
@@ -97,7 +105,7 @@ public class TxAnimUIActivity extends SamouraiActivity {
         progressView.getmArcProgress().setVisibility(View.VISIBLE);
         progressView.getmArcProgress().startArc1(arcdelay);
         progressView.getmCheckMark().setImageDrawable(null);
-        progressView.getLeftTopImgBtn().setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+        progressView.getLeftTopImgBtn().setOnClickListener(view -> gotoBalanceHomeActivity(
                 this,
                 SendParams.getInstance().getAccount()));
 
@@ -274,7 +282,7 @@ public class TxAnimUIActivity extends SamouraiActivity {
 
                             progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
                             progressView.getLeftTopImgBtn()
-                                    .setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+                                    .setOnClickListener(view -> gotoBalanceHomeActivity(
                                             this,
                                             SendParams.getInstance().getAccount()));
 
@@ -311,7 +319,7 @@ public class TxAnimUIActivity extends SamouraiActivity {
 
                         progressView.getOptionProgressBar().setVisibility(View.INVISIBLE);
                         progressView.getLeftTopImgBtn()
-                                .setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+                                .setOnClickListener(view -> gotoBalanceHomeActivity(
                                         this,
                                         SendParams.getInstance().getAccount()));
                         if (lock) {
@@ -648,7 +656,7 @@ public class TxAnimUIActivity extends SamouraiActivity {
                     progressView.getOptionBtn2().setOnClickListener(view -> {});
                     progressView.showSuccessSentTxOptions(doNotSpendChangeBtnVisible, R.string.tx_option_change_do_not_spend);
                     progressView.getLeftTopImgBtn()
-                            .setOnClickListener(view -> ActivityHelper.gotoBalanceHomeActivity(
+                            .setOnClickListener(view -> gotoBalanceHomeActivity(
                                     this,
                                     SendParams.getInstance().getAccount()));
                 });
@@ -681,7 +689,7 @@ public class TxAnimUIActivity extends SamouraiActivity {
     public void onBackPressed() {
         if(! activityInProgress()) {
             if (txSuccess.get()) {
-                ActivityHelper.gotoBalanceHomeActivity(this, SendParams.getInstance().getAccount());
+                gotoBalanceHomeActivity(this, SendParams.getInstance().getAccount());
             } else {
                 finish();
             }
