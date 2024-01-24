@@ -1,6 +1,10 @@
 package com.samourai.wallet;
 
 
+import static com.samourai.wallet.util.tech.ThreadHelper.pauseMillis;
+
+import static java.lang.String.format;
+
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -10,6 +14,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.multidex.MultiDex;
@@ -21,11 +26,14 @@ import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.network.ConnectionChangeReceiver;
 import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.tech.SimpleTaskRunner;
 import com.squareup.picasso.Picasso;
 
 import io.reactivex.plugins.RxJavaPlugins;
 
 public class SamouraiApplication extends Application {
+
+    private static final String TAG = "SamouraiApplication";
 
     public static String FOREGROUND_SERVICE_CHANNEL_ID = "FOREGROUND_SERVICE_CHANNEL_ID";
     public static String WHIRLPOOL_CHANNEL = "WHIRLPOOL_CHANNEL";
@@ -124,12 +132,43 @@ public class SamouraiApplication extends Application {
 
     private void setUpTorService() {
         SamouraiTorManager.INSTANCE.setUp(this);
-        if(!StealthModeController.INSTANCE.isStealthEnabled(getApplicationContext())){
-            if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false) &&
-                    !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE, false)) {
-                SamouraiTorManager.INSTANCE.start();
+        startTorIfRequired();
+    }
+
+    private void startTorIfRequired() {
+        if(!StealthModeController.INSTANCE.isStealthEnabled(getApplicationContext())) {
+            Log.i(TAG, "mode Stealth is disabled");
+            if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false)) {
+                Log.i(TAG, "TOR option is enabled");
+                if (!PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE, false)) {
+                    Log.i(TAG, "OFFLINE option is disabled => will try to start TOR");
+                    tryStart(5);
+                } else {
+                    Log.i(TAG, "OFFLINE option is enabled => will not start TOR");
+                }
+            } else {
+                Log.i(TAG, "TOR option is disabled => will not start TOR");
             }
+        } else {
+            Log.i(TAG, "mode Stealth option is enabled => will not start TOR");
         }
+    }
+
+    private void tryStart(final int tryCount) {
+        if (tryCount == 0) {
+            Log.e(TAG, format("Cannot succeeded to start Tor after %s attempt", tryCount));
+            return;
+        }
+        Log.i(TAG, format("will try to start tor (remaining %s try)", tryCount));
+        SimpleTaskRunner.create().executeAsync(() -> {
+            SamouraiTorManager.INSTANCE.start();
+            pauseMillis(3_000L);
+            if (! SamouraiTorManager.INSTANCE.isConnected()) {
+                tryStart(tryCount-1);
+            } else {
+                Log.i(TAG, "Tor is started");
+            }
+        });
     }
 
 }

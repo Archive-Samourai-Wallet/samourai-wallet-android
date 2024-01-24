@@ -126,7 +126,7 @@ class Auth47ViewModel : ViewModel() {
         } else {
             val starting = SamouraiTorManager.isStarting();
             val authStarted = AtomicBoolean(false);
-            SamouraiTorManager.getTorStateLiveData().observe(activity) { it ->
+            SamouraiTorManager.getTorStateLiveData().observe(activity) {
                 if (it.state == EnumTorState.ON) {
                     if (authStarted.compareAndSet(false, true)) {
                         viewModelScope.launch {
