@@ -23,16 +23,20 @@ import com.dm.zbar.android.scanner.ZBarConstants;
 import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
+import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
 import com.samourai.wallet.network.dojo.DojoUtil;
+import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.tor.EnumTorState;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.tech.AppUtil;
-import com.samourai.wallet.util.network.ConnectivityStatus;
+import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.network.ConnectivityStatus;
 import com.samourai.wallet.util.network.WebUtil;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.tech.SimpleTaskRunner;
 
 import java.util.Objects;
 
@@ -94,7 +98,10 @@ public class NetworkDashboard extends SamouraiActivity {
         setDojoConnectionState(CONNECTION_STATUS.CONFIGURE);
         listenToTorStatus();
 
-        dataButton.setOnClickListener(view -> toggleNetwork());
+        dataButton.setOnClickListener(view -> {
+            toggleNetwork();
+            saveWalletAsync();
+        });
 
         torRenewBtn.setOnClickListener(view -> {
             if (SamouraiTorManager.INSTANCE.isConnected()) {
@@ -144,6 +151,7 @@ public class NetworkDashboard extends SamouraiActivity {
 
                 WebSocketService.restartService(NetworkDashboard.this);
             }
+            saveWalletAsync();
         });
 
         setDataState();
@@ -170,6 +178,19 @@ public class NetworkDashboard extends SamouraiActivity {
             enableDojoConfigure(strPairingParams);
         }
 
+    }
+
+    private void saveWalletAsync() {
+        SimpleTaskRunner.create().executeAsync(() -> {
+            try {
+                final String token = AccessFactory.getInstance(NetworkDashboard.this).getGUID() +
+                        AccessFactory.getInstance(NetworkDashboard.this).getPIN();
+                PayloadUtil.getInstance(NetworkDashboard.this)
+                        .saveWalletToJSON(new CharSequenceX(token));
+            } catch (final Exception e) {
+                Log.e(TAG, "issue when saving wallet");
+            }
+        });
     }
 
     @Override
