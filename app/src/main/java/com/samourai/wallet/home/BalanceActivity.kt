@@ -78,7 +78,7 @@ import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.batch.BatchSpendActivity
-import com.samourai.wallet.send.batch.InputBatchSpendHelper.*
+import com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.settings.SettingsActivity
@@ -89,16 +89,16 @@ import com.samourai.wallet.tor.EnumTorState
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.tor.TorState
 import com.samourai.wallet.tx.TxDetailsActivity
-import com.samourai.wallet.util.tech.AppUtil
-import com.samourai.wallet.util.network.BlockExplorerUtil
 import com.samourai.wallet.util.CharSequenceX
-import com.samourai.wallet.util.func.FormatsUtil
-import com.samourai.wallet.util.tech.LogUtil
-import com.samourai.wallet.util.func.MessageSignUtil
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.PrivKeyReader
 import com.samourai.wallet.util.TimeOutUtil
 import com.samourai.wallet.util.activity.ActivityHelper
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.func.MessageSignUtil
+import com.samourai.wallet.util.network.BlockExplorerUtil
+import com.samourai.wallet.util.tech.AppUtil
+import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.wallet.util.tech.askNotificationPermission
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.WhirlpoolHome
@@ -134,6 +134,7 @@ open class BalanceActivity : SamouraiActivity() {
     private lateinit var binding: ActivityBalanceBinding
     private var menu: Menu? = null
     private val menuTorIcon: ImageView? = null
+    private var executeQuitAppProcessStarted = false;
 
     private var receiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -593,6 +594,7 @@ open class BalanceActivity : SamouraiActivity() {
 
     public override fun onResume() {
         super.onResume()
+        executeQuitAppProcessStarted = false;
 
 //        IntentFilter filter = new IntentFilter(ACTION_INTENT);
 //        LocalBroadcastManager.getInstance(BalanceActivity.this).registerReceiver(receiver, filter);
@@ -799,7 +801,7 @@ open class BalanceActivity : SamouraiActivity() {
                 binding.progressBar.visibility = View.VISIBLE
                 menuTorIcon?.setImageResource(R.drawable.tor_on)
             } else {
-                if (torState.state == EnumTorState.OFF) {
+                if (torState.state == EnumTorState.OFF && !executeQuitAppProcessStarted) {
                     PrefsUtil.getInstance(this).setValue(PrefsUtil.ENABLE_TOR, false)
                 }
                 binding.progressBar.visibility = View.INVISIBLE
@@ -863,19 +865,7 @@ open class BalanceActivity : SamouraiActivity() {
             builder.setMessage(R.string.ask_you_sure_exit)
             val alert = builder.create()
             alert.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.yes)) { dialog: DialogInterface?, id: Int ->
-                doExternalBackUp()
-                // disconnect Whirlpool on app back key exit
-                if (WhirlpoolNotificationService.isRunning(applicationContext)) WhirlpoolNotificationService.stopService(applicationContext)
-                if (SamouraiTorManager.isConnected()) {
-                    SamouraiTorManager.stop()
-                }
-                TimeOutUtil.getInstance().reset()
-                if (StealthModeController.isStealthEnabled(applicationContext)) {
-                    StealthModeController.enableStealth(applicationContext)
-                }
-                finishAffinity()
-                finish()
-                super.onBackPressed()
+                executeQuitAppProcesses()
             }
             alert.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.no)) { dialog: DialogInterface, id: Int -> dialog.dismiss() }
             alert.show()
@@ -883,7 +873,6 @@ open class BalanceActivity : SamouraiActivity() {
             super.onBackPressed()
         }
     }
-
 
     private fun doExternalBackUp() {
         try {
@@ -898,6 +887,55 @@ open class BalanceActivity : SamouraiActivity() {
         } catch (exception: Exception) {
             LogUtil.error(TAG, exception)
         }
+    }
+
+    private fun executeQuitAppProcesses() {
+
+        executeQuitAppProcessStarted = true;
+
+        try {
+            if (hasPermissions() &&
+                PrefsUtil.getInstance(application).getValue(PrefsUtil.AUTO_BACKUP, false)) {
+
+                val disposable = Observable.fromCallable {
+                    PayloadUtil.getInstance(this@BalanceActivity)
+                        .saveWalletToJSON(CharSequenceX(
+                            AccessFactory.getInstance(this@BalanceActivity).guid +
+                                AccessFactory.getInstance(this@BalanceActivity).pin))
+                    true
+                }.subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({ t: Boolean? ->
+                        stopingServices()
+                    }) { throwable: Throwable? ->
+                        LogUtil.error(TAG, throwable)
+                        stopingServices()
+                    }
+                registerDisposable(disposable)
+            } else {
+                stopingServices()
+            }
+        } catch (exception: Exception) {
+            LogUtil.error(TAG, exception)
+            stopingServices()
+        }
+    }
+
+    private fun stopingServices() {
+        if (SamouraiTorManager.isConnected()) {
+            SamouraiTorManager.stop()
+        }
+        if (WhirlpoolNotificationService.isRunning(applicationContext)) {
+            WhirlpoolNotificationService.stopService(applicationContext)
+        }
+        TimeOutUtil.getInstance().reset()
+        if (StealthModeController.isStealthEnabled(applicationContext)) {
+            StealthModeController.enableStealth(applicationContext)
+        }
+        // disconnect Whirlpool on app back key exit
+        finishAffinity()
+        finish()
+        super.onBackPressed()
     }
 
     private fun updateDisplay(fromRefreshService: Boolean) {
