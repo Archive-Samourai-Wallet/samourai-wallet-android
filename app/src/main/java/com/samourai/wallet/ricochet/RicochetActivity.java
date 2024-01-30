@@ -1,8 +1,8 @@
 package com.samourai.wallet.ricochet;
 
+import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -14,10 +14,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
-//import android.util.Log;
 
-import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
@@ -27,23 +26,24 @@ import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_WalletFactory;
+import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.payload.PayloadUtil;
-import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.send.PushTx;
+import com.samourai.wallet.util.CharSequenceX;
+import com.samourai.wallet.util.activity.ActivityHelper;
 import com.samourai.wallet.utxos.UTXOUtil;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.crypto.MnemonicException;
 import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Iterator;
 
-public class RicochetActivity extends Activity {
+public class RicochetActivity extends SamouraiActivity {
 
     private String strPCode = null;
     private boolean samouraiFeeViaBIP47 = false;
@@ -56,6 +56,7 @@ public class RicochetActivity extends Activity {
 
     private boolean broadcastOK = false;
     private String txNote = StringUtils.EMPTY;
+    private int account = SamouraiAccountIndex.DEPOSIT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,9 @@ public class RicochetActivity extends Activity {
 
         if (getIntent().hasExtra("tx_note")) {
             txNote = getIntent().getStringExtra("tx_note");
+        }
+        if (getIntent().hasExtra("_account")) {
+            account = getIntent().getIntExtra("_account", SamouraiAccountIndex.DEPOSIT);
         }
 
         if(RicochetMeta.getInstance(RicochetActivity.this).size() > 0)    {
@@ -306,14 +310,8 @@ public class RicochetActivity extends Activity {
                         .setTitle(R.string.app_name)
                         .setMessage(R.string.ricochet_broadcast)
                         .setCancelable(false)
-                        .setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-
-                                Intent intent = new Intent(RicochetActivity.this, BalanceActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                                startActivity(intent);
-
-                            }
+                        .setPositiveButton(R.string.close, (dialog, whichButton) -> {
+                            gotoBalanceHomeActivity(RicochetActivity.this, account);
                         });
                 if(!isFinishing())    {
                     dlg.show();

@@ -17,6 +17,9 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -68,7 +71,7 @@ fun ReviewTxFeeManager(model: ReviewTxModel) {
 @Composable
 fun Body(model: ReviewTxModel) {
 
-    val sliderValue by model.minerFeeRates.observeAsState()
+    var sliderPosition by remember { mutableStateOf(model.minerFeeRates.value!!.toFloat()) }
 
     val transactionPriority by model.transactionPriority.observeAsState()
 
@@ -103,7 +106,11 @@ fun Body(model: ReviewTxModel) {
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ){
             Button(
-                onClick = { model.setMinerFeeRates(model.feeLowRate.value!!)},
+                onClick = {
+                    val feeRate = model.feeLowRate.value!!
+                    sliderPosition = feeRate.toFloat()
+                    model.setMinerFeeRatesAndComputeFees(feeRate)
+                          },
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
@@ -115,7 +122,11 @@ fun Body(model: ReviewTxModel) {
                 Text(text = "Low")
             }
             Button(
-                onClick = { model.setMinerFeeRates(model.feeMedRate.value!!) },
+                onClick = {
+                    val feeRate = model.feeMedRate.value!!
+                    sliderPosition = feeRate.toFloat()
+                    model.setMinerFeeRatesAndComputeFees(feeRate)
+                          },
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
@@ -127,7 +138,11 @@ fun Body(model: ReviewTxModel) {
                 Text(text = "Normal")
             }
             Button(
-                onClick = { model.setMinerFeeRates(model.feeHighRate.value!!) },
+                onClick = {
+                    val feeRate = model.feeHighRate.value!!
+                    sliderPosition = feeRate.toFloat()
+                    model.setMinerFeeRatesAndComputeFees(feeRate)
+                          },
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
@@ -148,7 +163,7 @@ fun Body(model: ReviewTxModel) {
             Slider(
                 modifier = Modifier
                     .weight(0.77f),
-                value = sliderValue!!.toFloat(),
+                value = sliderPosition,
                 valueRange = 1f..maxSatByKB,
                 colors = SliderDefaults.colors(
                     thumbColor = colorGreenUI2,
@@ -158,7 +173,8 @@ fun Body(model: ReviewTxModel) {
                     inactiveTickColor = colorGrayUI2
                 ),
                 onValueChange = {
-                    model.setMinerFeeRates(it.toLong())
+                    sliderPosition = it
+                    model.setMinerFeeRatesAndComputeFeesAsync(it.toLong())
                 }
             )
             Column (
@@ -174,7 +190,7 @@ fun Body(model: ReviewTxModel) {
                     fontFamily = robotoMediumBoldFont
                 )
                 Text(
-                    text = sliderValue.toString() + " sat/b",
+                    text = sliderPosition.toLong().toString() + " sat/vB",
                     color = textColorGray,
                     fontSize = 12.sp,
                     fontFamily = robotoMediumBoldFont

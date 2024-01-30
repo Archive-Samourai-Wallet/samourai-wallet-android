@@ -9,6 +9,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.appbar.AppBarLayout;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
@@ -20,6 +24,8 @@ import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
+import com.samourai.wallet.widgets.CahootsCircleProgress;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.spongycastle.util.encoders.Hex;
 
@@ -87,11 +93,23 @@ public class SorobanCahootsActivity extends SamouraiActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_manual_cahoots);
         setSupportActionBar(findViewById(R.id.toolbar));
+
+        final int account = getIntent().getIntExtra("_account", 0);
+
+        if (account == SamouraiAccountIndex.POSTMIX) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.postmix_spending_blue_color));
+            final AppBarLayout viewById = findViewById(R.id.appBarLayout2);
+            viewById.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.postmix_spending_blue_color));
+            final Toolbar toolbar = findViewById(R.id.toolbar);
+            toolbar.setBackgroundColor(getResources().getColor(R.color.postmix_spending_blue_color));
+            final CahootsCircleProgress stepView = findViewById(R.id.step_view);
+            stepView.setBackgroundColor(getResources().getColor(R.color.postmix_spending_blue_color));
+        }
 
         if (getIntent().hasExtra("tx_note")) {
             txNote = getIntent().getStringExtra("tx_note");

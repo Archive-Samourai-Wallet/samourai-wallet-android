@@ -220,8 +220,8 @@ public class SendActivity extends SamouraiActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //Switch themes based on accounts (blue theme for whirlpool account)
-        setSwitchThemes(true);
         super.onCreate(savedInstanceState);
+        setupThemes();
         setContentView(R.layout.activity_send);
         setSupportActionBar(findViewById(R.id.toolbar_send));
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
@@ -322,6 +322,12 @@ public class SendActivity extends SamouraiActivity {
             SPEND_TYPE = sendTransactionDetailsView.getStoneWallSwitch().isChecked() ? SPEND_BOLTZMANN : SPEND_SIMPLE;
             premiumAddons.setVisibility(View.GONE);
             addonsNotAvailableMessage.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void setupThemes() {
+        if (account == WhirlpoolMeta.getInstance(getApplication()).getWhirlpoolPostmix()) {
+            setTheme(R.style.Theme_Samourai_Postmix_Spend_Material);
         }
     }
 
@@ -706,6 +712,8 @@ public class SendActivity extends SamouraiActivity {
 
         joinbotSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
+            hideKeyboard();
+
             if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
                 return;
             }
@@ -742,6 +750,8 @@ public class SendActivity extends SamouraiActivity {
     private void setUpRicochet() {
         ricochetHopsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
+            hideKeyboard();
+
             if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
                 return;
             }
@@ -776,6 +786,8 @@ public class SendActivity extends SamouraiActivity {
         ricochetStaggeredDelivery.setChecked(PrefsUtil.getInstance(this).getValue(PrefsUtil.RICOCHET_STAGGERED, false));
 
         ricochetStaggeredDelivery.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+
+            hideKeyboard();
 
             if (AppUtil.getInstance(SendActivity.this).isBroadcastDisabled()) {
                 return;
@@ -1156,7 +1168,7 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void hideKeyboard() {
-        InputMethodManager imm = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        final InputMethodManager imm = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
         if (imm != null) {
             imm.hideSoftInputFromWindow(amountViewSwitcher.getWindowToken(), 0);
         }
@@ -1765,7 +1777,7 @@ public class SendActivity extends SamouraiActivity {
 
                         if(entropyDisposable == null || entropyDisposable.isDisposed()) {
                             Log.d("SendActivity", "Creating new observable...");
-                            entropyDisposable = ReviewTxModel.calculateEntropy(selectedUTXO, receivers)
+                            entropyDisposable = ReviewTxModel.reactiveCalculateEntropy(selectedUTXO, receivers)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.computation())
                                     .doOnSuccess(txProcessorResult -> {

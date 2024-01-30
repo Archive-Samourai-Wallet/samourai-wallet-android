@@ -3,8 +3,10 @@ package com.samourai.wallet.send.review
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,23 +19,31 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Divider
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -50,12 +60,14 @@ import com.samourai.wallet.home.TestApplication
 import com.samourai.wallet.send.review.ReviewTxActivity.Companion.TAG
 import com.samourai.wallet.theme.samouraiBlueButton
 import com.samourai.wallet.theme.samouraiLightGreyAccent
+import com.samourai.wallet.theme.samouraiPostmixSpendBlueButton
 import com.samourai.wallet.theme.samouraiSlateGreyAccent
 import com.samourai.wallet.theme.samouraiSuccess
-import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.view.rememberImeState
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
-import org.apache.commons.lang3.StringUtils.defaultIfBlank
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils.isBlank
 import java.lang.String.format
 import java.text.DecimalFormat
@@ -65,7 +77,7 @@ import java.util.Objects.nonNull
 class ReviewTxActivity : SamouraiActivity() {
 
     companion object {
-        public const val TAG = "ReviewTxActivity"
+        const val TAG = "ReviewTxActivity"
     }
 
     private val reviewTxModel: ReviewTxModel by viewModels()
@@ -109,39 +121,37 @@ class ReviewTxActivity : SamouraiActivity() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
-    Surface(
-        color = samouraiWindow
+
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
     ) {
+        ReviewTxActivityContentHeader(activity = activity)
+        ReviewTxActivityContentDestination(model = model, activity = activity)
+        ReviewTxActivityContentFees(model = model, activity = activity)
+        ReviewTxActivityContentTransaction(model = model)
         Column (
             modifier = Modifier
-                .fillMaxSize()
+                .padding(top = 24.dp)
+                .weight(1f),
         ) {
-            ReviewTxActivityContentHeader(activity = activity)
-            ReviewTxActivityContentDestination(activity = activity)
-            ReviewTxActivityContentFees(model = model, activity = activity)
-            ReviewTxActivityContentTransaction(model = model)
-            Column (
-                modifier = Modifier
-                    .padding(top = 24.dp)
-                    .weight(1f),
-            ) {
-                ReviewTxActivityContentSendNote(model = model)
-            }
-            ReviewTxActivityContentSendButton(model = model, activity = activity)
-            Box (
-                modifier = Modifier
-                    .height(50.dp)
-            ) {}
+            ReviewTxActivityContentSendNote(model = model)
         }
+        ReviewTxActivityContentSendButton(model = model, activity = activity)
+        Box (
+            modifier = Modifier
+                .height(50.dp)
+        ) {}
     }
 }
 
 @Composable
 fun ReviewTxActivityContentHeader(activity: SamouraiActivity?) {
     val account = if (nonNull(activity)) activity!!.getIntent().extras!!.getInt("_account") else 0
-    val backgroundColor = if (account == SamouraiAccountIndex.POSTMIX) samouraiBlueButton else samouraiSlateGreyAccent
+    val backgroundColor = if (account == SamouraiAccountIndex.POSTMIX) samouraiPostmixSpendBlueButton else samouraiSlateGreyAccent
     Row (
         modifier = Modifier
             .fillMaxWidth()
@@ -157,9 +167,8 @@ fun ReviewTxActivityContentHeader(activity: SamouraiActivity?) {
     }
 }
 
-
 @Composable
-fun ReviewTxActivityContentDestination(activity: SamouraiActivity?) {
+fun ReviewTxActivityContentDestination(model: ReviewTxModel, activity: SamouraiActivity?) {
 
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
@@ -171,9 +180,6 @@ fun ReviewTxActivityContentDestination(activity: SamouraiActivity?) {
         Font(R.font.roboto_mono, FontWeight.Bold)
     )
     val textColorGray = Color(184, 184, 184)
-
-    val amount = if (nonNull(activity)) activity!!.intent.getLongExtra("sendAmount", 0L) else 0L
-    val address = if (nonNull(activity)) defaultIfBlank( activity!!.intent.getStringExtra("sendAddressLabel"), "missing address")!! else "missing address"
 
     Box (
         modifier = Modifier
@@ -198,7 +204,7 @@ fun ReviewTxActivityContentDestination(activity: SamouraiActivity?) {
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 18.dp)
                 ) {
                     Column {
                         Text(
@@ -214,7 +220,7 @@ fun ReviewTxActivityContentDestination(activity: SamouraiActivity?) {
                         horizontalAlignment = Alignment.End
                     ) {
                         Text(
-                            text = FormatsUtil.formatBTC(amount),
+                            text = FormatsUtil.formatBTC(model.amount),
                             color = Color.White,
                             fontSize = 14.sp,
                             fontFamily = robotoMonoBoldFont
@@ -223,14 +229,13 @@ fun ReviewTxActivityContentDestination(activity: SamouraiActivity?) {
                 }
                 Row (
                     modifier = Modifier
-                        .padding(top = 12.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Column (
                     ) {
                         Text(
-                            text = address,
+                            text = model.addressLabel,
                             color = textColorGray,
                             fontSize = 14.sp,
                             fontFamily = robotoMonoNormalFont
@@ -283,7 +288,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel, activity: SamouraiActivit
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 18.dp)
                 ) {
                     Column {
                         Text(
@@ -308,7 +313,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel, activity: SamouraiActivit
                 }
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 18.dp)
                 ) {
                     Row {
                         Text(
@@ -319,7 +324,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel, activity: SamouraiActivit
                         )
                         Spacer(modifier = Modifier.size(18.dp))
                         Text(
-                            text = format("%s sat/b", feeRate),
+                            text = format("%s sat/vB", feeRate),
                             color = textColorGray,
                             fontSize = 12.sp,
                             fontFamily = robotoItalicBoldFont
@@ -347,13 +352,13 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel, activity: SamouraiActivit
                         val values = fees!!.get(name);
                         Row (
                             modifier = Modifier
-                                .padding(bottom = 12.dp)
+                                .padding(bottom = 18.dp)
                         ) {
                             Row {
                                 Text(
                                     text = name,
                                     color = textColorGray,
-                                    fontSize = 14.sp,
+                                    fontSize = 12.sp,
                                     fontFamily = robotoMediumBoldFont
                                 )
                             }
@@ -367,14 +372,17 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel, activity: SamouraiActivit
                                 Text(
                                     text = FormatsUtil.formatBTC(values),
                                     color = textColorGray,
-                                    fontSize = 14.sp,
+                                    fontSize = 12.sp,
                                     fontFamily = robotoMonoBoldFont
                                 )
                             }
                         }
                     }
                 }
-                Row {
+                Row (
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                ) {
                     Column (
                         modifier = Modifier
                             .weight(1f),
@@ -420,7 +428,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel) {
     )
     val textColorGray = Color(184, 184, 184)
 
-    val sendTypeDesc = toSendTypeDesc(model.sendType)
+    val impliedSendType = model.impliedSendType.observeAsState()
 
     val entropy by model.entropy.observeAsState()
 
@@ -450,7 +458,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel) {
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 18.dp)
                 ) {
                     Column {
                         Text(
@@ -463,7 +471,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel) {
                 }
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 18.dp)
                 ) {
                     Column {
                         Text(
@@ -480,14 +488,14 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel) {
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = sendTypeDesc,
+                            text = toSendTypeDesc(impliedSendType.value!!),
                             color = textColorGray,
                             fontSize = 12.sp,
                             fontFamily = robotoMediumNormalFont
                         )
                     }
                 }
-                if (model.sendType == EnumSendType.SPEND_BOLTZMANN) {
+                if (impliedSendType.value == EnumSendType.SPEND_BOLTZMANN) {
                     Row (
                         modifier = Modifier
                             .padding(bottom = 12.dp)
@@ -543,8 +551,11 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel) {
                         }
                     }
                 }
-                if (sendTypesHavingPreview.contains(model.sendType)) {
-                    Row {
+                if (sendTypesHavingPreview.contains(impliedSendType.value)) {
+                    Row (
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                    ) {
                         Column (
                             modifier = Modifier
                                 .weight(1f),
@@ -575,6 +586,7 @@ fun toSendTypeDesc(sendType: EnumSendType): String {
     return sendTypeDesc
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
 
@@ -586,7 +598,19 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
     )
     val textColorDarkGray = Color(95, 95, 95)
 
-    val note by model.txNote.observeAsState()
+    var fieldNote by remember { mutableStateOf(model.txNote.value!!) }
+
+    val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val viewRequester = remember { BringIntoViewRequester() }
+    val imeState = rememberImeState()
+
+    LaunchedEffect(key1 = imeState.value) {
+        if (! imeState.value) {
+            focusManager.clearFocus(true)
+        }
+    }
 
     Box (
         modifier = Modifier
@@ -619,24 +643,40 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
                             Text(
                                 modifier = Modifier
                                     .padding(start = 6.dp),
-                                text = if (isBlank(note!!)) "Add a note to this transaction" else "",
+                                text = if (isBlank(fieldNote)) "Add a note to this transaction" else "",
                                 color = textColorDarkGray,
                                 fontSize = 14.sp,
                                 fontFamily = robotoItalicNormalFont
                             )
                             BasicTextField(
-                                value = note!!,
-                                onValueChange = { model.setTxNote(it) },
+                                value = fieldNote,
+                                onValueChange = {
+                                    fieldNote = it
+                                    model.setTxNote(it)
+                                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(start = 6.dp),
+                                    .padding(start = 6.dp)
+                                    .onFocusChanged { focusState ->
+                                        if (focusState.isFocused) {
+                                            var tryDone = 0
+                                            val pauseMs = 30L
+                                            coroutineScope.launch {
+                                                while (tryDone < 4) {
+                                                    delay(pauseMs * (tryDone+1))
+                                                    viewRequester.bringIntoView()
+                                                    ++tryDone;
+                                                }
+                                            }
+                                        }
+                                    },
                                 textStyle = LocalTextStyle.current.copy(
-                                    color = textColorDarkGray,
+                                    color = Color.White,
                                     fontSize = 14.sp,
                                     fontFamily = robotoMediumNormalFont
                                 ),
                                 cursorBrush = SolidColor(Color.White),
-                                singleLine = true
+                                singleLine = true,
                             )
                         }
                         Divider(
@@ -646,6 +686,11 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
                                 .fillMaxWidth()
                                 .padding(top = 6.dp)
                         )
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .bringIntoViewRequester(viewRequester),
+                        ) {}
                     }
                 }
             }
@@ -656,12 +701,14 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
 @Composable
 fun ReviewTxActivityContentSendButton(model: ReviewTxModel, activity: SamouraiActivity?) {
 
+    val impliedSendType = model.impliedSendType.observeAsState()
+
     val onClick: () -> Unit = {
         try {
             model.sendType.broadcastTx(model, activity)
         } catch (e : Exception) {
             Log.e(TAG, e.message, e)
-            //todo
+            Toast.makeText(activity, format("issue when broadcasting %s transaction", model.sendType.type), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -674,7 +721,7 @@ fun ReviewTxActivityContentSendButton(model: ReviewTxModel, activity: SamouraiAc
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            if (model.sendType == EnumSendType.SPEND_JOINBOT) {
+            if (impliedSendType.value == EnumSendType.SPEND_JOINBOT) {
                 IconButton(
                     onClick = onClick,
                     modifier = Modifier

@@ -206,7 +206,7 @@ public class SendFactory extends SendFactoryGeneric	{
 
         List<String> seenPreviousSetHash = null;
         if(firstPassOutpoints != null)    {
-            seenPreviousSetHash = new ArrayList<String>();
+            seenPreviousSetHash = new ArrayList<>();
 
             for(MyTransactionOutPoint outpoint : firstPassOutpoints)   {
                 seenPreviousSetHash.add(outpoint.getTxHash().toString());

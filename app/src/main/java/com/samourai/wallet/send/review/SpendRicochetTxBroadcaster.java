@@ -65,6 +65,7 @@ public class SpendRicochetTxBroadcaster {
                     RicochetMeta.getInstance(activity).add(model.getRicochetJsonObj());
                     final Intent intent = new Intent(activity, RicochetActivity.class);
                     intent.putExtra("tx_note", defaultString(model.getTxNote().getValue()));
+                    intent.putExtra("_account", model.getAccount());
                     activity.startActivityForResult(intent, RICOCHET);
                 }).setNegativeButton(R.string.no, (dialog, whichButton) -> dialog.dismiss());
         if (!activity.isFinishing()) {

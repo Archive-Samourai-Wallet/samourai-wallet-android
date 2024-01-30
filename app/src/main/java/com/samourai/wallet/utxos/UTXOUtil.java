@@ -1,5 +1,8 @@
 package com.samourai.wallet.utxos;
 
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.util.func.FormatsUtil;
 
@@ -95,17 +98,15 @@ public class UTXOUtil {
     }
 
     public void addNote(String hash, String note) {
-        utxoNotes.put(hash, note);
+        if (isNotBlank(note)) {
+            utxoNotes.put(hash, note);
+        }
     }
 
     public String getNote(String hash) {
-        if(utxoNotes.containsKey(hash))  {
-            return utxoNotes.get(hash);
-        }
-        else    {
-            return null;
-        }
-
+        return utxoNotes.containsKey(hash)
+                ? defaultIfBlank(utxoNotes.get(hash), null)
+                : null;
     }
 
     public HashMap<String,String> getNotes() {
