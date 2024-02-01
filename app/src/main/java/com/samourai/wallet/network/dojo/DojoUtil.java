@@ -124,7 +124,7 @@ public class DojoUtil {
             return  false;
         }
 
-        // version 1.11.x
+        // version 1.11.x and above
         String[] s = dojoVersion.split("\\.");
         try {
             if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
@@ -149,13 +149,88 @@ public class DojoUtil {
             return  false;
         }
 
-        // version 1.13.x
-        String[] s = dojoVersion.split(".");
+        // version 1.13.x and above
+        String[] s = dojoVersion.split("\\.");
         try {
             if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
                 return true;
             }
             else if(s.length >= 2 && Integer.parseInt(s[0]) == 1 && Integer.parseInt(s[1]) >= 13){
+                return true;
+            }
+            else    {
+                return false;
+            }
+        }
+        catch(NumberFormatException nfe)    {
+            return false;
+        }
+
+    }
+
+    public boolean isBasicFeeOnly()  {
+
+        if(dojoParams == null || dojoVersion == null)      {
+            return  false;
+        }
+
+        // version <1.21.x
+        String[] s = dojoVersion.split("\\.");
+        try {
+            if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
+                return false;
+            }
+            else if(s.length >= 2 && Integer.parseInt(s[0]) == 1 && Integer.parseInt(s[1]) < 21){
+                return true;
+            }
+            else    {
+                return false;
+            }
+        }
+        catch(NumberFormatException nfe)    {
+            return false;
+        }
+
+    }
+
+    public boolean isDollarFeeV1Only()  {
+
+        if(dojoParams == null || dojoVersion == null)      {
+            return  false;
+        }
+
+        // version 1.21.x or 1.22.x
+        String[] s = dojoVersion.split("\\.");
+        try {
+            if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
+                return false;
+            }
+            else if(s.length >= 2 && Integer.parseInt(s[0]) == 1 && (Integer.parseInt(s[1]) == 21 || Integer.parseInt(s[1]) == 22)){
+                return true;
+            }
+            else    {
+                return false;
+            }
+        }
+        catch(NumberFormatException nfe)    {
+            return false;
+        }
+
+    }
+
+    public boolean isDollarFeeV2()  {
+
+        if(dojoParams == null || dojoVersion == null)      {
+            return  false;
+        }
+
+        // version 1.23.x and above
+        String[] s = dojoVersion.split("\\.");
+        try {
+            if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
+                return true;
+            }
+            else if(s.length >= 2 && Integer.parseInt(s[0]) == 1 && Integer.parseInt(s[1]) >= 23){
                 return true;
             }
             else    {
