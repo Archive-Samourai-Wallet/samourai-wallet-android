@@ -1,10 +1,13 @@
 package com.samourai.wallet.util.func;
 
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 import android.content.Context;
 
+import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 
 import org.json.JSONArray;
@@ -28,6 +31,13 @@ public class BatchSendUtil {
             if (isNotBlank(pcode)) {
                 addr = BIP47Util.getInstance(context).getDestinationAddrFromPcode(pcode);
             }
+        }
+
+        public String captionDestination() {
+            if (isNull(pcode)) return addr;
+            if (nonNull(paynymCode)) return paynymCode;
+            final BIP47Meta bip47Meta = BIP47Meta.getInstance();
+            return defaultIfBlank(bip47Meta.getDisplayLabel(pcode), pcode);
         }
     }
 

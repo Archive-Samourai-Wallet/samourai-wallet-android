@@ -148,7 +148,8 @@ public class SendParams	{
                           boolean hasPrivacyWarning,
                           boolean hasPrivacyChecked,
                           long spendAmount,
-                          int changeIdx) {
+                          int changeIdx,
+                          String note) {
 
         this.outpoints = outpoints;
         this.receivers = receivers;
@@ -163,6 +164,7 @@ public class SendParams	{
         this.hasPrivacyChecked = hasPrivacyChecked;
         this.spendAmount = spendAmount;
         this.changeIdx = changeIdx;
+        this.note = defaultIfBlank(note, StringUtils.EMPTY);
     }
 
     public List<MyTransactionOutPoint> getOutpoints()   {

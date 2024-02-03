@@ -87,11 +87,7 @@ public class TxAnimUIActivity extends SamouraiActivity {
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         getWindow().setStatusBarColor(getResources().getColor(R.color.blue_send_ui));
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            final Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setNavigationBarColor(getResources().getColor(R.color.blue_send_ui));
-        }
+        setNavigationBarColor(getResources().getColor(R.color.blue_send_ui));
 
         progressView = findViewById(R.id.transactionProgressView);
         progressView.getMainView().setBackgroundColor(getResources().getColor(R.color.blue_send_ui));
@@ -453,6 +449,14 @@ public class TxAnimUIActivity extends SamouraiActivity {
                     getResources().getColor(R.color.red_send_ui),
                     BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
 
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                ViewHelper.animateChangeColor(
+                        animation ->  getWindow().setNavigationBarColor((int) animation.getAnimatedValue()),
+                        getResources().getColor(R.color.blue_send_ui),
+                        getResources().getColor(R.color.red_send_ui),
+                        BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
+            }
+
             progressView.reset();
             progressView.showFailedTxOptions(resIdDetails);
             progressView.getOptionBtn1().setOnClickListener(v -> reBroadcastTx());
@@ -470,6 +474,14 @@ public class TxAnimUIActivity extends SamouraiActivity {
             getResources().getColor(R.color.red_send_ui),
             getResources().getColor(R.color.blue_send_ui),
             BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            ViewHelper.animateChangeColor(
+                    animation ->  getWindow().setNavigationBarColor((int) animation.getAnimatedValue()),
+                    getResources().getColor(R.color.red_send_ui),
+                    getResources().getColor(R.color.blue_send_ui),
+                    BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
+        }
 
         progressView.setBackgroundColorForOnlineMode(
                 BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS,
@@ -492,6 +504,14 @@ public class TxAnimUIActivity extends SamouraiActivity {
                     getResources().getColor(R.color.blue_send_ui),
                     getResources().getColor(R.color.orange_send_ui),
                     BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                ViewHelper.animateChangeColor(
+                        animation ->  getWindow().setNavigationBarColor((int) animation.getAnimatedValue()),
+                        getResources().getColor(R.color.blue_send_ui),
+                        getResources().getColor(R.color.orange_send_ui),
+                        BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
+            }
 
             progressView.reset();
             progressView.showOfflineTxOptions(resIdDetails);

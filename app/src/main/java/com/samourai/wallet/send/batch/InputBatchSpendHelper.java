@@ -33,7 +33,7 @@ public class InputBatchSpendHelper {
 
                 final JSONObject dest = (JSONObject) array.get(i);
                 String strDestination = null;
-                long amount = 0l;
+                long amount = 0L;
 
                 if(dest.has("dest")) {
                     strDestination = dest.getString("dest");

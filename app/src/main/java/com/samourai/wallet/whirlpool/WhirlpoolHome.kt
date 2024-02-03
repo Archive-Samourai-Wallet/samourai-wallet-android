@@ -1,7 +1,11 @@
 package com.samourai.wallet.whirlpool
 
 import android.app.Activity
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -29,9 +33,9 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
-import com.samourai.wallet.util.tech.AppUtil
-import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.tech.AppUtil
 import com.samourai.wallet.utxos.PreSelectUtil
 import com.samourai.wallet.utxos.UTXOSActivity
 import com.samourai.wallet.whirlpool.fragments.SectionsPagerAdapter
@@ -45,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Objects.nonNull
 
 class WhirlpoolHome : SamouraiActivity() {
 
@@ -108,9 +113,9 @@ class WhirlpoolHome : SamouraiActivity() {
                 val postmix = APIFactory.getInstance(applicationContext).allPostMixTxs.size == 0
                 val premix = APIFactory.getInstance(applicationContext).premixXpubTxs.isEmpty()
                 var hasMixUtxos = false;
-                if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
+                if (nonNull( AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet())) {
                     hasMixUtxos =
-                        AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get().utxoSupplier.findUtxos(
+                        AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet().utxoSupplier.findUtxos(
                             WhirlpoolAccount.PREMIX,
                             WhirlpoolAccount.POSTMIX
                         ).isEmpty()
@@ -235,7 +240,7 @@ class WhirlpoolHome : SamouraiActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == NEWPOOL_REQ_CODE && resultCode == Activity.RESULT_OK) {
-            if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
+            if (nonNull(AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet())) {
                 initPager()
                 checkOnboardStatus()
                 WalletRefreshWorker.enqueue(applicationContext, launched = false, notifTx = false)

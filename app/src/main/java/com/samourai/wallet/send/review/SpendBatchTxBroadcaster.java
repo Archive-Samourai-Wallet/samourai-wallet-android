@@ -1,48 +1,47 @@
 package com.samourai.wallet.send.review;
 
 import static com.samourai.wallet.send.review.EnumSendType.SPEND_SIMPLE;
+import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 
 import android.content.Intent;
-import android.widget.CheckBox;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.TxAnimUIActivity;
-import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.send.MyTransactionOutPoint;
-import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.util.func.FormatsUtil;
-import com.samourai.wallet.util.func.SendAddressUtil;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigInteger;
 import java.util.List;
 
-public class SpendSimpleTxBroadcaster {
+public class SpendBatchTxBroadcaster {
 
     private final ReviewTxModel model;
     private final SamouraiActivity activity;
 
-    private SpendSimpleTxBroadcaster(final ReviewTxModel model,
-                                     final SamouraiActivity activity) {
+    private SpendBatchTxBroadcaster(final ReviewTxModel model,
+                                    final SamouraiActivity activity) {
 
         this.model = model;
         this.activity = activity;
     }
 
-    public static SpendSimpleTxBroadcaster create(final ReviewTxModel model,
-                                                  final SamouraiActivity activity) {
+    public static SpendBatchTxBroadcaster create(final ReviewTxModel model,
+                                                 final SamouraiActivity activity) {
 
-        return new SpendSimpleTxBroadcaster(model, activity);
+        return new SpendBatchTxBroadcaster(model, activity);
     }
 
-    public SpendSimpleTxBroadcaster broadcast() {
+    public SpendBatchTxBroadcaster broadcast() {
 
         final List<MyTransactionOutPoint> outPoints = Lists.newArrayList();
         for (final UTXO u : model.getTxData().getSelectedUTXO()) {
@@ -52,7 +51,7 @@ public class SpendSimpleTxBroadcaster {
         final String changeAddress = SendParams.generateChangeAddress(
                 activity,
                 model.getTxData().getChange(),
-                model.getSendType().getType(),
+                SPEND_SIMPLE.getType(),
                 model.getAccount(),
                 model.getChangeType(),
                 getChangeIndex(),
@@ -67,22 +66,21 @@ public class SpendSimpleTxBroadcaster {
         SendParams.getInstance().setParams(
                 outPoints,
                 model.getTxData().getReceivers(),
-                BIP47Meta.getInstance().getPcodeFromLabel(model.getAddressLabel()),
-                model.getSendType().getType(),
+                ImmutableList.copyOf(BatchSendUtil.getInstance().getSends()),
+                SPEND_SIMPLE.getType(),
                 model.getTxData().getChange(),
                 model.getChangeType(),
                 model.getAccount(),
-                model.getAddress(),
-                SendAddressUtil.getInstance().get(model.getAddress()) == 1,
+                StringUtils.EMPTY,
+                false,
                 false,
                 model.getAmount(),
                 getChangeIndex(),
                 model.getTxNote().getValue()
         );
 
+        BatchSendUtil.getInstance().getSends().clear();
         activity.startActivity(new Intent(activity, TxAnimUIActivity.class));
-
-
         return this;
     }
 

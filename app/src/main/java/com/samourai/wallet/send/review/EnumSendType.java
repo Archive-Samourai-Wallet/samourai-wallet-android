@@ -8,7 +8,7 @@ import com.samourai.wallet.SamouraiActivity;
 import java.util.Map;
 
 public enum EnumSendType {
-    SPEND_SIMPLE(0) {
+    SPEND_SIMPLE(0, "Simple") {
         @Override
         public EnumSendType broadcastTx(final ReviewTxModel model, final SamouraiActivity act)
                 throws Exception {
@@ -17,7 +17,7 @@ public enum EnumSendType {
             return this;
         }
     },
-    SPEND_BOLTZMANN(1) {
+    SPEND_BOLTZMANN(1, "STONEWALL") {
         @Override
         public EnumSendType broadcastTx(final ReviewTxModel model, final SamouraiActivity act)
                 throws Exception {
@@ -26,7 +26,7 @@ public enum EnumSendType {
             return this;
         }
     },
-    SPEND_RICOCHET(2) {
+    SPEND_RICOCHET(2, "Ricochet") {
         @Override
         public EnumSendType broadcastTx(final ReviewTxModel model, final SamouraiActivity act)
                 throws Exception {
@@ -35,12 +35,21 @@ public enum EnumSendType {
             return this;
         }
     },
-    SPEND_JOINBOT(3) {
+    SPEND_JOINBOT(3, "Joinbot") {
         @Override
         public EnumSendType broadcastTx(final ReviewTxModel model, final SamouraiActivity act)
                 throws Exception {
 
             SpendJoinbotTxBroadcaster.create(model.buildJoinbotTxData(), act).broadcast();
+            return this;
+        }
+    },
+    SPEND_BATCH(4, "Batch") {
+        @Override
+        public EnumSendType broadcastTx(final ReviewTxModel model, final SamouraiActivity act)
+                throws Exception {
+
+            SpendBatchTxBroadcaster.create(model.buildSpendBatchTxData(), act).broadcast();
             return this;
         }
     },
@@ -58,13 +67,19 @@ public enum EnumSendType {
     }
 
     private final int type;
+    private final String caption;
 
-    EnumSendType(int type) {
+    EnumSendType(final int type, final String caption) {
         this.type = type;
+        this.caption = caption;
     }
 
     public int getType() {
         return type;
+    }
+
+    public String getCaption() {
+        return caption;
     }
 
     public static EnumSendType fromType(final int type) {

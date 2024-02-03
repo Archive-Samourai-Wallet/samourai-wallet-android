@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.Nullable;
@@ -18,6 +20,7 @@ import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.TimeOutUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -49,6 +52,7 @@ public class SamouraiActivity extends AppCompatActivity {
         setUpTheme();
     }
 
+    // todo remove this
     private void setUpTheme() {
         if (switchThemes)
             if (account == WhirlpoolMeta.getInstance(getApplication()).getWhirlpoolPostmix()) {
@@ -112,6 +116,20 @@ public class SamouraiActivity extends AppCompatActivity {
         if (view != null) {
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    protected void setupThemes() {
+        if (account == SamouraiAccountIndex.POSTMIX) {
+            setTheme(R.style.Theme_Samourai_Whirlpool_Material);
+        }
+    }
+
+    protected void setNavigationBarColor(final int resourceColorValue) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            final Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setNavigationBarColor(resourceColorValue);
         }
     }
 

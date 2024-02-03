@@ -39,8 +39,8 @@
     <color name="blue_send_ui">#27c7bb</color>
     <color name="orange_send_ui">#DB8144</color>
     <color name="red_send_ui">#DA454F</color>
-    <color name="samourai_blue">#FF3b69f4</color>
     <color name="postmix_spending_blue_color">#3B69F4</color>
+    <color name="postmix_spending_blue_color_shadow">#2659f2</color>
 
 
     <color name="off_black">#181818</color>

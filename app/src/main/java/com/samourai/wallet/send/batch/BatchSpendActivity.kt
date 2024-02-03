@@ -50,6 +50,8 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
+import com.samourai.wallet.send.review.EnumSendType
+import com.samourai.wallet.send.review.ReviewTxActivity
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.util.activity.ActivityHelper
@@ -60,12 +62,13 @@ import com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper
 import com.samourai.wallet.util.tech.DecimalDigitsInputFilter
 import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.wallet.utxos.UTXOSActivity
-import com.samourai.wallet.whirlpool.WhirlpoolConst
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 import okhttp3.internal.toImmutableList
+import org.apache.commons.lang3.StringUtils
 import org.bitcoinj.core.Transaction
 import org.bouncycastle.util.encoders.Hex
 import java.io.UnsupportedEncodingException
@@ -111,6 +114,8 @@ class BatchSpendActivity : SamouraiActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        account = intent.extras!!.getInt("_account", account)
+        setupThemes()
         prepareBatchSpendUI()
     }
 
@@ -829,6 +834,14 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     private fun showReview() {
+        if (true) {
+            goToReview()
+            return
+        }
+
+        // from here it is about legacy code should not used and should be removed
+        // in a next time (prepare spend and initiate spend)
+
         val sharedAxis = MaterialSharedAxis(MaterialSharedAxis.Y, true)
         TransitionManager.beginDelayedTransition(binding.batchDetailContainer, sharedAxis)
         reviewFragment.enterTransition = sharedAxis
@@ -847,7 +860,7 @@ class BatchSpendActivity : SamouraiActivity() {
             }
         }
         reviewFragment.setOnClickListener {
-            this.initiateSpend()
+            initiateSpend()
         }
 
         val sharedAxis2 = MaterialSharedAxis(MaterialSharedAxis.Y, true)
@@ -860,6 +873,16 @@ class BatchSpendActivity : SamouraiActivity() {
         binding.addToBatch.visibility = View.INVISIBLE
         this.menu?.findItem(R.id.select_paynym)?.isVisible = false
         this.menu?.findItem(R.id.action_scan_qr)?.isVisible = false
+    }
+
+    private fun goToReview() {
+        val intent = Intent(this@BatchSpendActivity, ReviewTxActivity::class.java)
+        intent.putExtra("_account", account)
+        intent.putExtra("sendType", EnumSendType.SPEND_BATCH.type)
+        if (getIntent().hasExtra("preselected")) {
+            intent.putExtra("preselected", getIntent().getStringExtra("preselected"))
+        }
+        startActivity(intent)
     }
 
     private fun showCompose() {
@@ -904,8 +927,9 @@ class BatchSpendActivity : SamouraiActivity() {
 
     @Synchronized
     fun prepareSpend() {
+
         //Resets current receivers,outpoints etc..
-        this.reset()
+        reset()
 
         var countP2WSH_P2TR = 0
         for (_data in viewModel.getBatchList()) {
@@ -932,9 +956,9 @@ class BatchSpendActivity : SamouraiActivity() {
         }
 
         var utxos: List<UTXO> = arrayListOf();
-        if (account == 0) {
+        if (account == SamouraiAccountIndex.DEPOSIT) {
             utxos = APIFactory.getInstance(applicationContext).getUtxos(true)
-        } else if (account == WhirlpoolConst.WHIRLPOOL_POSTMIX_ACCOUNT) {
+        } else if (account == SamouraiAccountIndex.POSTMIX) {
             utxos = APIFactory.getInstance(applicationContext).getUtxosPostMix(true)
         }
 
@@ -956,7 +980,14 @@ class BatchSpendActivity : SamouraiActivity() {
             p2pkh += outpointTypes.left
             p2sh_p2wpkh += outpointTypes.middle
             p2wpkh += outpointTypes.right
-            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, (receivers.size - countP2WSH_P2TR) + 1, countP2WSH_P2TR).toLong()) {
+            val estimatedFee = FeeUtil.getInstance().estimatedFeeSegwit(
+                p2pkh,
+                p2sh_p2wpkh,
+                p2wpkh,
+                receivers.size - countP2WSH_P2TR + 1,
+                countP2WSH_P2TR
+            ).toLong()
+            if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + estimatedFee) {
                 break
             }
         }
@@ -973,7 +1004,12 @@ class BatchSpendActivity : SamouraiActivity() {
             }
         }
         val outpointTypes = FeeUtil.getInstance().getOutpointCount(Vector(outpoints))
-        fee = FeeUtil.getInstance().estimatedFeeSegwit(outpointTypes.left, outpointTypes.middle, outpointTypes.right, (receivers.size - countP2WSH_P2TR) + 1, countP2WSH_P2TR)
+        fee = FeeUtil.getInstance().estimatedFeeSegwit(
+            outpointTypes.left,
+            outpointTypes.middle,
+            outpointTypes.right,
+            receivers.size - countP2WSH_P2TR + 1, countP2WSH_P2TR
+        )
         val walletBalance = viewModel.totalWalletBalance() ?: 0L
         if (amount + fee.toLong() > walletBalance) {
             reviewFragment.setTotalMinerFees(BigInteger.ZERO)
@@ -989,7 +1025,7 @@ class BatchSpendActivity : SamouraiActivity() {
         changeAmount = totalValueSelected - (amount + fee.toLong())
         change_idx = 0
         if (changeAmount > 0L) {
-            change_idx = BIP84Util.getInstance(applicationContext).wallet.getAccount(0).change.addrIdx
+            change_idx = BIP84Util.getInstance(applicationContext).wallet.getAccount(account).change.addrIdx
             change_address = BIP84Util.getInstance(applicationContext).getAddressAt(
                 AddressFactory.CHANGE_CHAIN, change_idx).bech32AsString
             receivers[change_address!!] = BigInteger.valueOf(changeAmount!!)
@@ -1077,12 +1113,13 @@ class BatchSpendActivity : SamouraiActivity() {
                     SendActivity.SPEND_SIMPLE,
                     changeAmount,
                     84,
-                    0,
+                    account,
                     "",
                     false,
                     false,
                     _amount,
-                    _change_idx
+                    _change_idx,
+                    StringUtils.EMPTY
                 )
                 viewModel.clearBatch()
                 val intent = Intent(this, TxAnimUIActivity::class.java)

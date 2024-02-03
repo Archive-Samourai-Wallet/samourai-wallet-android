@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -36,7 +37,7 @@ class ComposeFragment : Fragment() {
     private val viewModel: BatchSpendViewModel by activityViewModels()
     private val batchListAdapter = BatchListAdapter()
     private lateinit var batchRecyclerView: RecyclerView;
-    private var reviewButton: MaterialButton? = null
+    private var reviewButton: ImageButton? = null
     private var onListItemClick: ((item: BatchSendUtil.BatchSend) -> Unit)? = null;
     private var onReviewClick: View.OnClickListener? = null
     private lateinit var binding: BatchSpendComposeBinding
@@ -126,25 +127,10 @@ class ComposeFragment : Fragment() {
 
     private fun enableReview(enable: Boolean) {
         reviewButton?.isEnabled = enable;
-        if (enable) {
-            reviewButton?.setBackgroundColor(
-                ContextCompat.getColor(
-                    requireContext(),
-                    R.color.blue_ui_2
-                )
-            )
-        } else {
-            reviewButton?.setBackgroundColor(
-                ContextCompat.getColor(
-                    requireContext(),
-                    R.color.disabled_grey
-                )
-            )
-        }
-    }
-
-    fun getReviewButton(): MaterialButton? {
-        return reviewButton
+        val colorStateList = ContextCompat.getColorStateList(
+            requireContext(),
+            if (enable) R.color.white else R.color.disabled_grey)
+        reviewButton?.setBackgroundTintList(colorStateList)
     }
 
     override fun onCreateView(

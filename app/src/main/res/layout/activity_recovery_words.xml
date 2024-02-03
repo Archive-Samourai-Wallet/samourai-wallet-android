@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         app:fabCustomSize="68dp"
         app:srcCompat="@drawable/ic_baseline_arrow_forward_24"
-        app:backgroundTint="@color/blue_ui_2"
+        app:backgroundTint="@color/postmix_spending_blue_color"
         app:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

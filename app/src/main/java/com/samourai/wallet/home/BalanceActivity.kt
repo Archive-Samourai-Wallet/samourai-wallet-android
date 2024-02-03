@@ -1080,7 +1080,7 @@ open class BalanceActivity : SamouraiActivity() {
     }
 
     private fun launchBatchSpend(inputBatchSpendAsJson: String) {
-        val intent = Intent(this@BalanceActivity, BatchSpendActivity::class.java)
+        val intent = Intent(this@BalanceActivity, AccountSelectionActivity::class.java)
         intent.putExtra("inputBatchSpend", inputBatchSpendAsJson)
         startActivity(intent)
     }

@@ -1,8 +1,13 @@
 package com.samourai.wallet.send;
 
+import static java.util.Objects.isNull;
+
 import android.util.Log;
 
+import com.google.common.collect.Maps;
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.api.fee.EnumFeeRepresentation;
+import com.samourai.wallet.api.fee.RawFees;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.NetworkParameters;
@@ -10,6 +15,7 @@ import org.bitcoinj.core.NetworkParameters;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
@@ -19,6 +25,8 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
     private static SuggestedFee normalFee = null;
     private static SuggestedFee lowFee = null;
     private static List<SuggestedFee> estimatedFees = null;
+    private static Map<EnumFeeRepresentation, RawFees> rawFeesMap = null;
+    private static EnumFeeRepresentation feeRepresentation = null;
 
     private static FeeUtil instance = null;
 
@@ -31,10 +39,31 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
             highFee = new SuggestedFee();
             suggestedFee = new SuggestedFee();
             lowFee = new SuggestedFee();
+            rawFeesMap = Maps.newConcurrentMap();
             instance = new FeeUtil();
         }
 
         return instance;
+    }
+
+    public FeeUtil putRawFees(final RawFees rawFees) {
+        if (isNull(rawFees)) return this;
+        if (rawFees.hasFee()) {
+            final EnumFeeRepresentation feeRepresentation = rawFees.getFeeRepresentation();
+            rawFeesMap.put(feeRepresentation, rawFees);
+            setEstimatedFees(feeRepresentation.createSuggestedFeeList(rawFees));
+            FeeUtil.feeRepresentation = feeRepresentation;
+        }
+        return this;
+    }
+
+    public EnumFeeRepresentation getFeeRepresentation() {
+        return feeRepresentation;
+    }
+
+    public String retrievesNearFeeIdentifier(final int fee) {
+        if (isNull(feeRepresentation)) return null;
+        return rawFeesMap.get(feeRepresentation).retrievesNearRepresentation(fee);
     }
 
     public synchronized SuggestedFee getSuggestedFee() {
@@ -92,10 +121,10 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
         return estimatedFees;
     }
 
-    public synchronized void setEstimatedFees(List<SuggestedFee> estimatedFees) {
+    private synchronized void setEstimatedFees(List<SuggestedFee> estimatedFees) {
         FeeUtil.estimatedFees = estimatedFees;
 
-        switch(estimatedFees.size())    {
+        switch(estimatedFees.size()) {
             case 1:
                 suggestedFee = highFee = normalFee = lowFee = estimatedFees.get(0);
                 break;
