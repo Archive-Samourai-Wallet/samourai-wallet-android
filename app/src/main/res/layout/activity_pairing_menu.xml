@@ -32,21 +32,25 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="10dp"
             android:layout_marginEnd="18dp"
+            android:layout_marginTop="3dp"
             android:src="@drawable/eye_off" />
 
         <LinearLayout
-            android:layout_width="269dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Caption"
                 android:layout_width="wrap_content"
+                android:layout_marginStart="10dp"
                 android:layout_height="wrap_content"
                 android:text="@string/private_codes_dont_share"
                 android:textAlignment="viewStart"
+                android:layout_marginTop="6dp"
+                android:textSize="18sp"
                 android:textColor="@color/white" />
         </LinearLayout>
 
@@ -67,6 +71,7 @@
             android:layout_marginTop="6dp"
             android:layout_marginBottom="8dp"/>
 
+        <!--
         <ImageButton
             android:id="@+id/option_info_details"
             android:layout_width="wrap_content"
@@ -80,6 +85,7 @@
             android:text=""
             android:textAllCaps="false"
             android:textStyle="bold" />
+            -->
 
         <LinearLayout
             android:id="@+id/optionsLayout"
