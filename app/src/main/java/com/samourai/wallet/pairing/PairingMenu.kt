@@ -112,7 +112,7 @@ class PairingMenuActivity : SamouraiActivity() {
             AESUtil.DefaultPBKDF2Iterations
         )
         val json = JSONObject()
-        json.put("external", "SW export")
+        json.put("external", "samourai.watch.only")
         json.put("payload", encrypted)
 
         return json.toString()
@@ -132,8 +132,8 @@ class PairingMenuActivity : SamouraiActivity() {
                     dojoObj.put("url", url)
                 }
             }
-            jsonObj.put("type", "whirlpool.gui")
-            jsonObj.put("version", "3.0.0")
+            jsonObj.put("type", "samourai.full.wallet")
+            jsonObj.put("version", "1.0.0")
             jsonObj.put(
                 "network",
                 if (SamouraiWallet.getInstance().isTestNet) "testnet" else "mainnet"
