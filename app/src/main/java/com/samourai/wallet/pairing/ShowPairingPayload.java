@@ -1,6 +1,7 @@
 package com.samourai.wallet.pairing;
 
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -45,8 +48,11 @@ public class ShowPairingPayload extends BottomSheetDialogFragment {
             pwdTypeText.setText("Login password");
         }
 
-        if (passphrase != null && passphrase.equals("your BIP39 Passphrase"))
+        if (passphrase != null && passphrase.equals("your BIP39 Passphrase")) {
             passwordText.setTextColor(getResources().getColor(R.color.white));
+            Typeface customTypeface = ResourcesCompat.getFont(requireContext(), R.font.raleway_regular);
+            passwordText.setTypeface(customTypeface);
+        }
 
         copyBtn.setOnClickListener((event) -> new MaterialAlertDialogBuilder(getContext())
                 .setTitle(R.string.app_name)
