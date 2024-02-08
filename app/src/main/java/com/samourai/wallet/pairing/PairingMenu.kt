@@ -112,7 +112,7 @@ class PairingMenuActivity : SamouraiActivity() {
             AESUtil.DefaultPBKDF2Iterations
         )
         val json = JSONObject()
-        json.put("external", "samourai.watch.only")
+        json.put("external", "samourai.wallet.watchonly")
         json.put("payload", encrypted)
 
         return json.toString()
@@ -132,7 +132,7 @@ class PairingMenuActivity : SamouraiActivity() {
                     dojoObj.put("url", url)
                 }
             }
-            jsonObj.put("type", "samourai.full.wallet")
+            jsonObj.put("type", "samourai.wallet.full")
             jsonObj.put("version", "1.0.0")
             jsonObj.put(
                 "network",
