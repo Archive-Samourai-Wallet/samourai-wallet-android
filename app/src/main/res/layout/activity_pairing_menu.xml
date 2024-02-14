@@ -50,7 +50,6 @@
                 android:text="@string/private_codes_dont_share"
                 android:textAlignment="viewStart"
                 android:layout_marginTop="6dp"
-                android:textSize="18sp"
                 android:textColor="@color/white" />
         </LinearLayout>
 
@@ -68,7 +67,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="New pairing code"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="30dp"
             android:layout_marginBottom="8dp"/>
 
         <!--
