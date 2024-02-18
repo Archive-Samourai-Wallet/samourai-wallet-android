@@ -15,10 +15,10 @@ import androidx.core.content.res.ResourcesCompat;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
 import com.google.zxing.client.android.Contents;
 import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.R;
+import com.samourai.wallet.util.tech.BitmapHelper;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -73,18 +73,17 @@ public class ShowPairingPayload extends BottomSheetDialogFragment {
         return view;
     }
 
-
-
     private Observable<Bitmap> generateQRCode(String uri) {
         return Observable.fromCallable(() -> {
             Bitmap bitmap = null;
             QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(uri, null, Contents.Type.TEXT, BarcodeFormat.QR_CODE.toString(), 1000);
             try {
-                bitmap = qrCodeEncoder.encodeAsBitmap();
-            } catch (WriterException e) {
+                bitmap = BitmapHelper.cropBitmap(qrCodeEncoder.encodeAsBitmap(), 50);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return bitmap;
         });
     }
+
 }
