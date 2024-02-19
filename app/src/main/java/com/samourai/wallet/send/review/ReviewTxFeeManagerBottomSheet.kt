@@ -35,6 +35,7 @@ import com.samourai.wallet.R
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.theme.samouraiAccent
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
+import com.samourai.wallet.theme.samouraiDarkGray
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.util.func.FormatsUtil
 
@@ -71,11 +72,12 @@ fun ReviewTxFeeManager(model: ReviewTxModel) {
 @Composable
 fun Body(model: ReviewTxModel) {
 
+    val maxSatByKB by model.feeMaxRate.observeAsState()
     var sliderPosition by remember { mutableStateOf(model.minerFeeRates.value!!.toFloat()) }
 
+    val minerFeeRates by model.minerFeeRates.observeAsState()
     val transactionPriority by model.transactionPriority.observeAsState()
 
-    val maxSatByKB = computeMaxSatByKB()
     val fees by model.fees.observeAsState()
 
     val colorGreenUI2 = colorResource(id = R.color.green_ui_2)
@@ -115,11 +117,11 @@ fun Body(model: ReviewTxModel) {
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = samouraiAccent,
+                    backgroundColor = if (model.feeLowRate.value == minerFeeRates) samouraiAccent else samouraiDarkGray,
                     contentColor = Color.White
                 ),
             ) {
-                Text(text = "Low")
+                Text(text = EnumTransactionPriority.LOW.getCaption(FeeUtil.getInstance().feeRepresentation))
             }
             Button(
                 onClick = {
@@ -131,11 +133,11 @@ fun Body(model: ReviewTxModel) {
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = samouraiAccent,
+                    backgroundColor = if (model.feeMedRate.value == minerFeeRates) samouraiAccent else samouraiDarkGray,
                     contentColor = Color.White
                 ),
             ) {
-                Text(text = "Normal")
+                Text(text = EnumTransactionPriority.NORMAL.getCaption(FeeUtil.getInstance().feeRepresentation))
             }
             Button(
                 onClick = {
@@ -147,11 +149,11 @@ fun Body(model: ReviewTxModel) {
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = samouraiAccent,
+                    backgroundColor = if (model.feeHighRate.value == minerFeeRates) samouraiAccent else samouraiDarkGray,
                     contentColor = Color.White
                 ),
             ) {
-                Text(text = "Next Block")
+                Text(text = EnumTransactionPriority.NEXT_BLOCK.getCaption(FeeUtil.getInstance().feeRepresentation))
             }
         }
         Row (
@@ -164,7 +166,7 @@ fun Body(model: ReviewTxModel) {
                 modifier = Modifier
                     .weight(0.77f),
                 value = sliderPosition,
-                valueRange = 1f..maxSatByKB,
+                valueRange = 1f..maxSatByKB!!.toFloat(),
                 colors = SliderDefaults.colors(
                     thumbColor = colorGreenUI2,
                     activeTrackColor = colorGreenUI2,
@@ -184,7 +186,7 @@ fun Body(model: ReviewTxModel) {
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = transactionPriority!!.caption,
+                    text = transactionPriority!!.getCaption(FeeUtil.getInstance().feeRepresentation),
                     color = Color.White,
                     fontSize = 14.sp,
                     fontFamily = robotoMediumBoldFont
@@ -234,7 +236,7 @@ fun Body(model: ReviewTxModel) {
                     fontFamily = robotoMediumBoldFont
                 )
                 Text(
-                    text = transactionPriority!!.description,
+                    text = transactionPriority!!.getDescription(FeeUtil.getInstance().feeRepresentation),
                     color = Color.White,
                     fontSize = 14.sp,
                     fontFamily = robotoMediumBoldFont
@@ -242,15 +244,6 @@ fun Body(model: ReviewTxModel) {
             }
         }
     }
-}
-
-@Composable
-private fun computeMaxSatByKB(): Float {
-    val feeHigh = FeeUtil.getInstance().highFee.defaultPerKB.toLong()
-    val high = feeHigh.toFloat() / 2 + feeHigh.toFloat()
-    val feeHighSliderValue = (high / 1000f).toInt()
-    val maxSatByKB = Math.max(1f, feeHighSliderValue + 10f)
-    return maxSatByKB
 }
 
 @Preview(showBackground = true, widthDp = 420)

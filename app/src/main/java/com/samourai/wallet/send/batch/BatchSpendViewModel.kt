@@ -10,6 +10,7 @@ import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.whirlpool.WhirlpoolConst
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 
 class BatchSpendViewModel() : ViewModel() {
 
@@ -141,7 +142,7 @@ class BatchSpendViewModel() : ViewModel() {
     fun setBalance(context:Context, account:Int) {
         try {
             var balance = 0L
-            if (account == WhirlpoolConst.WHIRLPOOL_POSTMIX_ACCOUNT) {
+            if (account == SamouraiAccountIndex.POSTMIX) {
                 balance = APIFactory.getInstance(context).xpubPostMixBalance
             } else {
                 val tempBalance = APIFactory.getInstance(context).xpubAmounts[HD_WalletFactory.getInstance(context).get().getAccount(0).xpubstr()]

@@ -3,6 +3,7 @@ package com.samourai.wallet.util.network;
 import android.content.Context;
 import android.util.Log;
 
+import com.google.common.collect.Maps;
 import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
@@ -10,6 +11,7 @@ import com.samourai.wallet.api.backend.beans.HttpException;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.tor.SamouraiTorManager;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
@@ -216,15 +218,12 @@ public class WebUtil {
         throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
     }
 
-    public String getURL(String URL) throws Exception {
+    public String getURL(final String URL) throws Exception {
         return getURL(URL, null);
     }
 
-    public String getURL(String URL, Map<String,String> headers) throws Exception {
-        // default headers
-        if (headers == null) {
-            headers = new HashMap<>();
-        }
+    public String getURL(final String URL, final Map<String, String> inputHeaders) throws Exception {
+        final Map<String, String> headers = Maps.newHashMap(MapUtils.emptyIfNull(inputHeaders));
         if (!headers.containsKey("charset")) {
             headers.put("charset", "utf-8");
         }
@@ -242,13 +241,14 @@ public class WebUtil {
             } else {
                 return _getURL(URL, headers);
             }
-
         }
-
     }
 
-    private String _getURL(String URL, Map<String,String> headers) throws Exception {
-        URL url = new URL(URL);
+    public String _getURL(final String URL, final Map<String,String> inputHeaders)
+            throws Exception {
+
+        final URL url = new URL(URL);
+        final Map<String, String> headers = Maps.newHashMap(MapUtils.emptyIfNull(inputHeaders));
 
         String responseBody = null;
 
@@ -276,7 +276,8 @@ public class WebUtil {
                 else
                     responseBody = IOUtils.toString(connection.getErrorStream(), "UTF-8");
 
-                Thread.sleep(5000);
+                Thread.sleep(5_000L);
+
             } finally {
                 connection.disconnect();
             }

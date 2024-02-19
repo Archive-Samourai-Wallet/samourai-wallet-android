@@ -160,7 +160,7 @@ public class WhirlPoolLoaderDialog extends BottomSheetDialogFragment {
     public void onDestroy() {
         Window window = getActivity().getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(getResources().getColor(R.color.whirlpoolBlue));
+        window.setStatusBarColor(getResources().getColor(R.color.postmix_spending_blue_color));
         compositeDisposable.dispose();
         super.onDestroy();
     }

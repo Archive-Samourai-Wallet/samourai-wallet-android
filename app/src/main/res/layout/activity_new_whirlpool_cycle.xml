@@ -9,7 +9,7 @@
         android:id="@+id/whirlpool.appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/whirlpoolBlue"
+        android:background="?statusBarBackground"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -17,6 +17,7 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar_new_whirlpool"
             android:layout_width="match_parent"
+            android:background="?statusBarBackground"
             android:layout_height="?attr/actionBarSize" />
 
         <include layout="@layout/whirlpool_stepper" />

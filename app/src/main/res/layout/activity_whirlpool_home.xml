@@ -7,14 +7,15 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="?statusBarBackground">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="210dp"
             android:animationCache="true"
             android:id="@+id/whirlpoolToolbar"
-            android:background="?colorAccent"
+            android:background="?statusBarBackground"
             android:theme="@style/SamouraiAppTheme.AppBarOverlay"
             app:collapsedTitleGravity="start"
             app:expandedTitleGravity="center"
@@ -37,6 +38,7 @@
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
+                android:background="?statusBarBackground"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:layout_marginBottom="42dp"
@@ -49,7 +51,7 @@
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabs"
-                android:background="?colorAccent"
+                android:background="?statusBarBackground"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -58,7 +60,7 @@
                 app:tabIndicatorColor="@color/white"
                 app:tabMode="fixed"
                 app:layout_scrollFlags="noScroll"
-                app:tabBackground="?colorAccent"
+                app:tabBackground="?statusBarBackground"
                 app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>

@@ -40,15 +40,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/view10" />
 
-    <com.google.android.material.button.MaterialButton
+    <ImageButton
         android:id="@+id/reviewButtonBatch"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:textColor="@color/white"
-        android:text="@string/review_transaction"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_arrow_right"
+        android:background="@drawable/circle_background"
+        app:layout_constraintBottom_toTopOf="@+id/invisibleSpace"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        />
+
+    <Space
+        android:id="@+id/invisibleSpace"
+        android:layout_width="0dp"
+        android:layout_height="28dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        android:visibility="invisible"
+        />
 
     <ProgressBar
         android:id="@+id/batch_spend_loading_status"

@@ -48,6 +48,7 @@ import androidx.core.content.ContextCompat.startActivity
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.batch.BatchSpendActivity
 import com.samourai.wallet.theme.samouraiPostmixSpendBlueButton
 import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.BalanceUtil
@@ -182,7 +183,12 @@ fun ComposeActivityContent(model: AccountSelectionModel, activity: SamouraiActiv
                         else depositBalance
                     itemRow(item = item, balance = balance, loading = loading) {
 
-                        val intent = Intent(context, SendActivity::class.java)
+                        val isBatchSpend = nonNull(currentIntent) &&
+                                currentIntent!!.hasExtra("inputBatchSpend");
+                        val nextActivityType =
+                            if (isBatchSpend) BatchSpendActivity::class.java else SendActivity::class.java
+                        val intent = Intent(context, nextActivityType)
+
                         if (nonNull(currentIntent)) {
                             intent.putExtra(
                                 "via_menu",

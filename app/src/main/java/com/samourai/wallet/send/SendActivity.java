@@ -17,6 +17,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -104,6 +105,7 @@ import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolConst;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.wallet.widgets.SendTransactionDetailsView;
+import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 import com.samourai.xmanager.client.XManagerClient;
 import com.samourai.xmanager.protocol.XManagerService;
 
@@ -300,8 +302,6 @@ public class SendActivity extends SamouraiActivity {
         setUpJoinBot();
         setUpRicochet();
 
-        setUpFee();
-
         setBalance();
 
         enableReviewButton(false);
@@ -322,12 +322,6 @@ public class SendActivity extends SamouraiActivity {
             SPEND_TYPE = sendTransactionDetailsView.getStoneWallSwitch().isChecked() ? SPEND_BOLTZMANN : SPEND_SIMPLE;
             premiumAddons.setVisibility(View.GONE);
             addonsNotAvailableMessage.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void setupThemes() {
-        if (account == WhirlpoolMeta.getInstance(getApplication()).getWhirlpoolPostmix()) {
-            setTheme(R.style.Theme_Samourai_Postmix_Spend_Material);
         }
     }
 
@@ -355,21 +349,19 @@ public class SendActivity extends SamouraiActivity {
                 .subscribe(aLong -> setBalance(), Throwable::printStackTrace);
         compositeDisposables.add(disposable);
 
-
         // Update fee
         final Disposable feeDisposable = Observable.fromCallable(() -> APIFactory
-                        .getInstance(getApplicationContext()).getDynamicFees())
-                .observeOn(AndroidSchedulers.mainThread())
+                        .getInstance(getApplicationContext()).loadFees())
                 .subscribeOn(Schedulers.io())
-                .subscribe(t -> setUpFee(), Throwable::printStackTrace);
-
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(t -> {}, Throwable::printStackTrace);
         compositeDisposables.add(feeDisposable);
+
         if (getIntent().getExtras() != null) {
             if (!getIntent().getExtras().containsKey("balance")) {
                 return;
             }
             balance = getIntent().getExtras().getLong("balance");
-
         }
     }
 
@@ -486,176 +478,15 @@ public class SendActivity extends SamouraiActivity {
             ricochetTitle.setAlpha(.6f);
             ricochetHopsSwitch.setAlpha(.6f);
             ricochetHopsSwitch.setEnabled(false);
-
         }
     }
 
     private void enableReviewButton(boolean enable) {
         btnReview.setEnabled(enable);
-        if (enable) {
-            btnReview.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
-        } else {
-            btnReview.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.disabled_grey));
-        }
-    }
-
-    private void setUpFee() {
-
-
-        int multiplier = 10000;
-
-        FEE_TYPE = PrefsUtil.getInstance(this).getValue(PrefsUtil.CURRENT_FEE_TYPE, FEE_NORMAL);
-
-
-        feeLow = FeeUtil.getInstance().getLowFee().getDefaultPerKB().longValue() / 1000L;
-        feeMed = FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue() / 1000L;
-        feeHigh = FeeUtil.getInstance().getHighFee().getDefaultPerKB().longValue() / 1000L;
-
-        float high = ((float) feeHigh / 2) + (float) feeHigh;
-        int feeHighSliderValue = (int) (high * multiplier);
-        int feeMedSliderValue = (int) (feeMed * multiplier);
-
-
-        // max formula to avoid crash when high == 0
-        feeSeekBar.setValueTo(max(feeSeekBar.getValueFrom(), feeHighSliderValue - multiplier));
-
-        if (feeLow == feeMed && feeMed == feeHigh) {
-            feeLow = (long) ((double) feeMed * 0.85);
-            feeHigh = (long) ((double) feeMed * 1.15);
-            SuggestedFee lo_sf = new SuggestedFee();
-            lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow * 1000L));
-            FeeUtil.getInstance().setLowFee(lo_sf);
-            SuggestedFee hi_sf = new SuggestedFee();
-            hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh * 1000L));
-            FeeUtil.getInstance().setHighFee(hi_sf);
-        } else if (feeLow == feeMed || feeMed == feeMed) {
-            feeMed = (feeLow + feeHigh) / 2L;
-            SuggestedFee mi_sf = new SuggestedFee();
-            mi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh * 1000L));
-            FeeUtil.getInstance().setNormalFee(mi_sf);
-        } else {
-            ;
-        }
-
-        if (feeLow < 1L) {
-            feeLow = 1L;
-            SuggestedFee lo_sf = new SuggestedFee();
-            lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow * 1000L));
-            FeeUtil.getInstance().setLowFee(lo_sf);
-        }
-        if (feeMed < 1L) {
-            feeMed = 1L;
-            SuggestedFee mi_sf = new SuggestedFee();
-            mi_sf.setDefaultPerKB(BigInteger.valueOf(feeMed * 1000L));
-            FeeUtil.getInstance().setNormalFee(mi_sf);
-        }
-        if (feeHigh < 1L) {
-            feeHigh = 1L;
-            SuggestedFee hi_sf = new SuggestedFee();
-            hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh * 1000L));
-            FeeUtil.getInstance().setHighFee(hi_sf);
-        }
-//        tvEstimatedBlockWait.setText("6 blocks");
-        tvSelectedFeeRateLayman.setText(getString(R.string.normal));
-
-        FeeUtil.getInstance().sanitizeFee();
-
-        tvSelectedFeeRate.setText((String.valueOf((int) feeMed)).concat(" sat/b"));
-
-        feeSeekBar.setValue((feeMedSliderValue - multiplier) + 1);
-        DecimalFormat decimalFormat = new DecimalFormat("##.##");
-        decimalFormat.setDecimalSeparatorAlwaysShown(false);
-        setFeeLabels();
-
-//        View.OnClickListener inputFeeListener = v -> {
-//            tvSelectedFeeRate.requestFocus();
-//            tvSelectedFeeRate.setFocusableInTouchMode(true);
-//            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-//            assert imm != null;
-//            imm.showSoftInput(tvSelectedFeeRate, InputMethodManager.SHOW_FORCED);
-//        };
-
-//        tvSelectedFeeRateLayman.setOnClickListener(inputFeeListener);
-//        satbText.setOnClickListener(inputFeeListener);
-
-//        tvSelectedFeeRate.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//                try {
-//                    int i = (int) ((Double.parseDouble(tvSelectedFeeRate.getText().toString())*multiplier) - multiplier);
-//                    //feeSeekBar.setMax(feeHighSliderValue - multiplier);
-//                    feeSeekBar.setProgress(i);
-//                } catch(NumberFormatException nfe) {
-//                    System.out.println("Could not parse " + nfe);
-//                }
-////                int position = tvSelectedFeeRate.length();
-////                Editable etext = (Editable) tvSelectedFeeRate.getText();
-////                Selection.setSelection(etext, position);
-//            }
-//        });
-
-        feeSeekBar.setLabelFormatter(i -> tvSelectedFeeRate.getText().toString());
-
-        feeSeekBar.addOnChangeListener((slider, i, fromUser) -> {
-
-            double value = ((double) i + multiplier) / (double) multiplier;
-
-            if (selectedCahootsType != SelectCahootsType.type.NONE || SPEND_TYPE == SPEND_RICOCHET) {
-                tvSelectedFeeRate.setText(String.valueOf(decimalFormat.format(value).concat(" sat/b")));
-            }
-            if (value == 0.0) {
-                value = 1.0;
-            }
-            double pct = 0.0;
-            int nbBlocks = 6;
-            if (value <= (double) feeLow) {
-                pct = ((double) feeLow / value);
-                nbBlocks = ((Double) Math.ceil(pct * 24.0)).intValue();
-            } else if (value >= (double) feeHigh) {
-                pct = ((double) feeHigh / value);
-                nbBlocks = ((Double) Math.ceil(pct * 2.0)).intValue();
-                if (nbBlocks < 1) {
-                    nbBlocks = 1;
-                }
-            } else {
-                pct = ((double) feeMed / value);
-                nbBlocks = ((Double) Math.ceil(pct * 6.0)).intValue();
-            }
-            tvEstimatedBlockWait.setText(nbBlocks + " blocks");
-            setFee(value);
-            setFeeLabels();
-
-            restoreChangeIndexes();
-
-        });
-
-
-        switch (FEE_TYPE) {
-            case FEE_LOW:
-                FeeUtil.getInstance().setSuggestedFee(FeeUtil.getInstance().getLowFee());
-                FeeUtil.getInstance().sanitizeFee();
-                break;
-            case FEE_PRIORITY:
-                FeeUtil.getInstance().setSuggestedFee(FeeUtil.getInstance().getHighFee());
-                FeeUtil.getInstance().sanitizeFee();
-                break;
-            default:
-                FeeUtil.getInstance().setSuggestedFee(FeeUtil.getInstance().getNormalFee());
-                FeeUtil.getInstance().sanitizeFee();
-                break;
-        }
-
-
+        final ColorStateList colorStateList = ContextCompat.getColorStateList(
+                this,
+                enable ? R.color.white : R.color.disabled_grey);
+        btnReview.setBackgroundTintList(colorStateList);
     }
 
     private void setFeeLabels() {
@@ -2440,13 +2271,17 @@ public class SendActivity extends SamouraiActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
         getMenuInflater().inflate(R.menu.send_menu, menu);
 
-        if (account != 0) {
-            menu.findItem(R.id.action_batch).setVisible(false);
+        if (account != SamouraiAccountIndex.DEPOSIT) {
+            if (account != SamouraiAccountIndex.POSTMIX) {
+                menu.findItem(R.id.action_batch).setVisible(false);
+            }
             menu.findItem(R.id.action_ricochet).setVisible(false);
             menu.findItem(R.id.action_empty_ricochet).setVisible(false);
         }
+
         if (preselectedUTXOs != null) {
             menu.findItem(R.id.action_batch).setVisible(false);
         }
@@ -2564,15 +2399,19 @@ public class SendActivity extends SamouraiActivity {
 
     private void launchBatchSpend(final String inputBatchSpendAsJson) {
         final Intent intent = new Intent(SendActivity.this, BatchSpendActivity.class);
+        intent.putExtra("_account", account);
         intent.putExtra("inputBatchSpend", inputBatchSpendAsJson);
+        if (getIntent().hasExtra("preselected")) {
+            intent.putExtra("preselected", getIntent().getStringExtra("preselected"));
+        }
         startActivity(intent);
     }
 
     private void doFees() {
 
-        SuggestedFee highFee = FeeUtil.getInstance().getHighFee();
-        SuggestedFee normalFee = FeeUtil.getInstance().getNormalFee();
-        SuggestedFee lowFee = FeeUtil.getInstance().getLowFee();
+        final SuggestedFee highFee = FeeUtil.getInstance().getHighFee();
+        final SuggestedFee normalFee = FeeUtil.getInstance().getNormalFee();
+        final SuggestedFee lowFee = FeeUtil.getInstance().getLowFee();
 
         String message = getText(R.string.current_fee_selection) + " " + (FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue() / 1000L) + " " + getText(R.string.slash_sat);
         message += "\n";
@@ -2582,7 +2421,7 @@ public class SendActivity extends SamouraiActivity {
         message += "\n";
         message += getText(R.string.current_lo_fee_value) + " " + (lowFee.getDefaultPerKB().longValue() / 1000L) + " " + getText(R.string.slash_sat);
 
-        MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(SendActivity.this)
+        final MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(SendActivity.this)
                 .setTitle(R.string.app_name)
                 .setMessage(message)
                 .setCancelable(false)

@@ -12,9 +12,13 @@ import android.util.Pair;
 
 import com.auth0.android.jwt.JWT;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.api.fee.FeeClient;
+import com.samourai.wallet.api.fee.RawFees;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception;
@@ -73,6 +77,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,8 +91,12 @@ import io.reactivex.subjects.BehaviorSubject;
 import static com.samourai.wallet.util.tech.LogUtil.debug;
 import static com.samourai.wallet.util.tech.LogUtil.info;
 import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 public class APIFactory {
+
+    public static final String TAG = APIFactory.class.getSimpleName();
 
     private static String APP_TOKEN = null;         // API app token
     private static String ACCESS_TOKEN = null;      // API access token
@@ -427,6 +436,7 @@ public class APIFactory {
                 xpub_txs.put(xpubs[0], new ArrayList<Tx>());
                 parseXPUB(jsonObject);
                 parseDynamicFees_bitcoind(jsonObject);
+                parse1DollarFeesEstimator(jsonObject);
                 xpub_amounts.put(HD_WalletFactory.getInstance(context).get().getAccount(0).xpubstr(), xpub_balance - BlockedUTXO.getInstance().getTotalValueBlocked0());
                 walletBalanceObserver.onNext( System.currentTimeMillis());
                 walletBalanceObserverLiveData.postValue(System.currentTimeMillis());
@@ -1399,8 +1409,36 @@ public class APIFactory {
         return jsonObject;
     }
 
-    public JSONObject getDynamicFees() throws Exception {
+    public Boolean loadFees() throws Exception {
+        loadDynamicFeesBitcoind();
+        load1DollarFeesEstimator();
+        return Boolean.TRUE;
+    }
 
+    private void load1DollarFeesEstimator() throws Exception {
+        if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
+            putMock1DollarFeesEstimator();
+        } else if(AppUtil.getInstance(context).isOfflineMode()) {
+            final JSONObject multiAddr = PayloadUtil.getInstance(context).deserializeMultiAddr();
+            parse1DollarFeesEstimator(new JSONObject(multiAddr.toString()));
+        } else {
+            final boolean testNet = SamouraiWallet.getInstance().isTestNet();
+            final RawFees fees = FeeClient.createFeeClient(context, testNet).getFees();
+            FeeUtil.getInstance().putRawFees(fees);
+        }
+    }
+
+    private static void putMock1DollarFeesEstimator() {
+        FeeUtil.getInstance().putRawFees(RawFees.createFromMap(ImmutableMap.of(
+                "0.999", 26,
+                "0.99", 18,
+                "0.9", 14,
+                "0.5", 13,
+                "0.2", 10,
+                "0.1", 9)));
+    }
+
+    private void loadDynamicFeesBitcoind() throws Exception {
         final String _url =  WebUtil.getAPIUrl(context);
         final String response;
         if(!AppUtil.getInstance(context).isOfflineMode()) {
@@ -1410,15 +1448,35 @@ public class APIFactory {
         }
         final JSONObject jsonObject = new JSONObject(response);
         parseDynamicFees_bitcoind(jsonObject);
+    }
 
-        return jsonObject;
+    private void parse1DollarFeesEstimator(final JSONObject payload) throws JSONException  {
+
+        if(isNull(payload)) return;
+
+        if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
+            putMock1DollarFeesEstimator();
+            return;
+        }
+
+        JSONObject jsonObject = null;
+
+        if(payload.has("info")){
+            if(payload.getJSONObject("info").has("estimatorFees")){
+                jsonObject = payload.getJSONObject("info").getJSONObject("estimatorFees");
+            }
+        } else if(payload.has("0.99")) {
+            jsonObject = payload;
+        }
+        if (nonNull(jsonObject)) {
+            info(TAG, "1$ fees estimator:" + jsonObject.toString(2));
+            FeeUtil.getInstance().putRawFees(toRawFees(jsonObject));
+        }
     }
 
     private void parseDynamicFees_bitcoind(JSONObject payload) throws JSONException  {
-        JSONObject jsonObject  = new JSONObject();
-        if(payload ==null){
-            return;
-        }
+
+        if(isNull(payload)) return;
 
         if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE ){
                 payload = new JSONObject("{\n" +
@@ -1429,55 +1487,32 @@ public class APIFactory {
                         "\"24\": 38\n" +
                         "}");
         }
+
+        JSONObject jsonObject = new JSONObject();
         if(payload.has("info")){
             if(payload.getJSONObject("info").has("fees")){
-                jsonObject =  payload.getJSONObject("info").getJSONObject("fees");
+                jsonObject = payload.getJSONObject("info").getJSONObject("fees");
              }
         } else if(payload.has("2")){
-            jsonObject= payload;
-        }
-        info("APIFactory", "Dynamic fees:" + jsonObject.toString(2));
-
-        if(jsonObject != null)  {
-
-            //
-            // bitcoind
-            //
-            final List<SuggestedFee> suggestedFees = new ArrayList<SuggestedFee>();
-
-            if(jsonObject.has("2"))    {
-                long fee = jsonObject.getInt("2");
-                SuggestedFee suggestedFee = new SuggestedFee();
-                suggestedFee.setDefaultPerKB(BigInteger.valueOf(fee * 1000L));
-                suggestedFee.setStressed(false);
-                suggestedFee.setOK(true);
-                suggestedFees.add(suggestedFee);
-            }
-
-            if(jsonObject.has("6"))    {
-                long fee = jsonObject.getInt("6");
-                SuggestedFee suggestedFee = new SuggestedFee();
-                suggestedFee.setDefaultPerKB(BigInteger.valueOf(fee * 1000L));
-                suggestedFee.setStressed(false);
-                suggestedFee.setOK(true);
-                suggestedFees.add(suggestedFee);
-            }
-
-            if(jsonObject.has("24"))    {
-                long fee = jsonObject.getInt("24");
-                SuggestedFee suggestedFee = new SuggestedFee();
-                suggestedFee.setDefaultPerKB(BigInteger.valueOf(fee * 1000L));
-                suggestedFee.setStressed(false);
-                suggestedFee.setOK(true);
-                suggestedFees.add(suggestedFee);
-            }
-
-            if(suggestedFees.size() > 0)    {
-                FeeUtil.getInstance().setEstimatedFees(suggestedFees);
-            }
-
+            jsonObject = payload;
         }
 
+        if (nonNull(jsonObject))  {
+            info(TAG, "Dynamic fees:" + jsonObject.toString(2));
+            FeeUtil.getInstance().putRawFees(toRawFees(jsonObject));
+        }
+
+    }
+
+    private static RawFees toRawFees(final JSONObject jsonObject) throws JSONException {
+        if (isNull(jsonObject)) return null;
+        final Map<String, Integer> feesMap = Maps.newLinkedHashMap();
+        final Iterator<String> feeIt = jsonObject.keys();
+        while(feeIt.hasNext()) {
+            final String blockCount = feeIt.next();
+            feesMap.put(blockCount, jsonObject.getInt(blockCount));
+        }
+        return RawFees.createFromMap(feesMap);
     }
 
     public synchronized void validateAPIThread() {
@@ -1648,6 +1683,7 @@ public class APIFactory {
                     // parseXPUB is included in getXPUB() above
                     parseUnspentOutputs(jObj.toString());
                     parseDynamicFees_bitcoind(jObj);
+                    parse1DollarFeesEstimator(jObj);
                 }
 
              }
