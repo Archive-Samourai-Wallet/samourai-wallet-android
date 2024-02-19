@@ -37,7 +37,7 @@ class PairingMenuActivity : SamouraiActivity() {
         val passsphrase =  HD_WalletFactory.getInstance(applicationContext).get().passphrase
         val randomWords = getRadomWords()
 
-        val watchOnlyPayload = generateSentinelPayload(randomWords)
+        var watchOnlyPayload = generateSentinelPayload(randomWords)
         val fullWalletPayload = generateFullWalletPayload(passsphrase ?: randomWords)
 
         var selectedPayload: String? = null
@@ -72,6 +72,10 @@ class PairingMenuActivity : SamouraiActivity() {
 
         generateCodeBtn.setOnClickListener {
             if (generateCodeBtn.alpha == 1f) {
+                if (selectedType.equals("watch-only")) {
+                    selectedPassword = getRadomWords()
+                    selectedPayload = generateSentinelPayload(selectedPassword)
+                }
                 val bundle = Bundle()
                 bundle.putString("type", selectedType)
                 bundle.putString("payload", selectedPayload.toString())
