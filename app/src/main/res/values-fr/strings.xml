@@ -1120,6 +1120,7 @@
     <string name="no_messaging_app_installed">Aucune application de messagerie n\'est installée</string>
     <string name="copy_content">Copier le contenu</string>
     <string name="email_content_copied">Contenu de l\'e-mail copié dans le presse-papiers</string>
+    <string name="postmix_Account_deposit_account">Vous essayez de dépenser de votre compte Postmix vers Deposit.\nSouhaitez-vous continuer?</string>
 
 </resources>
 

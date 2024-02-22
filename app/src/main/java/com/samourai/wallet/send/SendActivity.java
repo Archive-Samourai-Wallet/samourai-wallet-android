@@ -56,6 +56,7 @@ import com.google.android.material.slider.Slider;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Maps;
 import com.samourai.http.client.AndroidHttpClient;
 import com.samourai.http.client.IHttpClient;
 import com.samourai.wallet.R;
@@ -93,6 +94,7 @@ import com.samourai.wallet.util.CharSequenceX;
 import com.samourai.wallet.util.FormatsUtilGeneric;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.AddressHelper;
 import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper;
 import com.samourai.wallet.util.func.SendAddressUtil;
@@ -927,22 +929,116 @@ public class SendActivity extends SamouraiActivity {
     private void reviewTransaction() {
         setUpBoltzman();
         if (validateSpend()) {
-            final Intent intent = new Intent(SendActivity.this, ReviewTxActivity.class);
-            intent.putExtra("_account", account);
-            intent.putExtra("sendAmount", getSatValue(getBtcAmountFromWidget()));
-            intent.putExtra("sendAddress", nonNull(strDestinationBTCAddress) ? strDestinationBTCAddress : getToAddress());
-            if (nonNull(strDestinationBTCAddress)) {
-                intent.putExtra("sendAddressLabel", getToAddress());
-            }
-            intent.putExtra("sendType", SPEND_TYPE);
-            intent.putExtra("ricochetStaggeredDelivery", ricochetStaggeredDelivery.isChecked());
 
-            if (getIntent().hasExtra("preselected")) {
-                intent.putExtra("preselected", getIntent().getStringExtra("preselected"));
+            if (isPostmixAccount() && sendToMyDepositAddress()) {
+                final MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(SendActivity.this)
+                        .setTitle(R.string.app_name)
+                        .setMessage(R.string.postmix_Account_deposit_account)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                dialog.dismiss();
+                                launchReviewTxActivity();
+                            }
+                        }).setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                dialog.dismiss();
+                            }
+                        });
+                if (!isFinishing()) {
+                    dlg.show();
+                }
+            } else {
+                launchReviewTxActivity();
             }
-
-            startActivity(intent);
         }
+    }
+
+    private void launchReviewTxActivity() {
+        final Intent intent = new Intent(SendActivity.this, ReviewTxActivity.class);
+        intent.putExtra("_account", account);
+        intent.putExtra("sendAmount", getSatValue(getBtcAmountFromWidget()));
+        intent.putExtra("sendAddress", nonNull(strDestinationBTCAddress) ? strDestinationBTCAddress : getToAddress());
+        if (nonNull(strDestinationBTCAddress)) {
+            intent.putExtra("sendAddressLabel", getToAddress());
+        }
+        intent.putExtra("sendType", SPEND_TYPE);
+        intent.putExtra("ricochetStaggeredDelivery", ricochetStaggeredDelivery.isChecked());
+
+        if (getIntent().hasExtra("preselected")) {
+            intent.putExtra("preselected", getIntent().getStringExtra("preselected"));
+        }
+
+        startActivity(intent);
+    }
+
+    private boolean sendToMyDepositAddress() {
+
+        final String sendAddress = nonNull(strDestinationBTCAddress)
+                ? strDestinationBTCAddress
+                : getToAddress();
+
+        final AddressFactory addressFactory = AddressFactory.getInstance(this);
+
+        final int addressType = AddressHelper.getAddressType(sendAddress);
+        final String[] types = getResources().getStringArray(R.array.account_types);
+        final String addrTypeAsString;
+        final int receiveIndex;
+        final int changeIndex;
+        final Map<Boolean, Integer> currentIndex = Maps.newHashMap();
+        switch (addressType) {
+            case 49:
+                addrTypeAsString = types[0];
+                currentIndex.put(true, addressFactory.getIndex(WALLET_INDEX.BIP49_RECEIVE));
+                currentIndex.put(false, addressFactory.getIndex(WALLET_INDEX.BIP49_CHANGE));
+                break;
+            case 84:
+                addrTypeAsString = types[1];
+                currentIndex.put(true, addressFactory.getIndex(WALLET_INDEX.BIP84_RECEIVE));
+                currentIndex.put(false, addressFactory.getIndex(WALLET_INDEX.BIP84_CHANGE));
+                break;
+            case 44:
+                addrTypeAsString = types[2];
+                currentIndex.put(true, addressFactory.getIndex(WALLET_INDEX.BIP44_RECEIVE));
+                currentIndex.put(false, addressFactory.getIndex(WALLET_INDEX.BIP44_CHANGE));
+                break;
+            default:
+                addrTypeAsString = null;
+                currentIndex.put(true, Integer.MIN_VALUE);
+                currentIndex.put(false, Integer.MIN_VALUE);
+                break;
+        }
+
+        if (isNull(addrTypeAsString)) return false;
+
+        final int scanIndexMargin = 64;
+        boolean isExternal = true;
+        int startIdx = max(0, currentIndex.get(isExternal) - scanIndexMargin);
+        int endIdx = currentIndex.get(isExternal)  + scanIndexMargin;
+
+        int indexFound = AddressHelper.searchAddressIndex(
+                sendAddress,
+                addrTypeAsString,
+                isExternal,
+                startIdx,
+                endIdx,
+                this);
+        if (indexFound < endIdx && indexFound >= startIdx) return true;
+
+        isExternal = false;
+        startIdx = max(0, currentIndex.get(isExternal) - scanIndexMargin);
+        endIdx = currentIndex.get(isExternal)  + scanIndexMargin;
+
+        indexFound = AddressHelper.searchAddressIndex(
+                sendAddress,
+                addrTypeAsString,
+                isExternal,
+                startIdx,
+                endIdx,
+                this);
+        if (indexFound < endIdx && indexFound >= startIdx) return true;
+
+        return false;
     }
 
     private void reviewTransactionSafely() {
