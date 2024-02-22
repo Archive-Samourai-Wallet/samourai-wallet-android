@@ -1026,4 +1026,6 @@
     <string name="copy_content">Copy content</string>
     <string name="email_content_copied">Email content copied to clipboard</string>
 
+    <string name="postmix_Account_deposit_account">You are attempting to spend from your Postmix to Deposit account.\nDo you wish to continue?</string>
+
 </resources>
