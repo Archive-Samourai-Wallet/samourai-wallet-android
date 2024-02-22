@@ -239,6 +239,7 @@ fun Auth47Form(onClose: (() -> Unit)? = null) {
                 modifier = Modifier
                     .fillMaxWidth(),
                 value = authChallengeEdit,
+                readOnly = true,
                 trailingIcon = {
 
                     Row(
@@ -247,6 +248,7 @@ fun Auth47Form(onClose: (() -> Unit)? = null) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
+                            // paste
                             onClick = {
                                 val content = getContentFromClipboard(activity = context as Activity)
                                 if (! "".equals(content)) {
@@ -264,6 +266,7 @@ fun Auth47Form(onClose: (() -> Unit)? = null) {
                         }
 
                         IconButton(
+                            // from QR code scanning
                             onClick = {
                                 if (supportFragmentManager != null) {
                                     val cameraFragmentBottomSheet = CameraFragmentBottomSheet()
@@ -284,20 +287,9 @@ fun Auth47Form(onClose: (() -> Unit)? = null) {
                     }
                 },
                 textStyle = TextStyle(fontSize = 12.sp),
-                keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
-                    imeAction = ImeAction.Done,
-                    keyboardType = KeyboardType.Text,
-                ),
                 singleLine = false,
-                keyboardActions = KeyboardActions(onDone = {
-                    vm.setChallengeValue(authChallengeEdit)
-                    keyboardController?.hide()
-                }),
-                onValueChange = {
-                    authChallengeEdit = it
-                },
-                enabled = isPaynymClaimed,
+                onValueChange = {},
+                enabled = false,
                 colors = TextFieldDefaults.textFieldColors(
                     backgroundColor = Color.Black.copy(alpha = 0.06f)
                 ),

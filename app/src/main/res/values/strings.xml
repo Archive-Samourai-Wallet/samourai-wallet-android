@@ -939,7 +939,7 @@
     <string name="pins_not_match">Pins do not match, try again.</string>
     <string name="auth_challenge">Auth Challenge</string>
     <string name="auth_with_paynym">Authenticate with PayNym</string>
-    <string name="enter_challenge">Enter Challenge</string>
+    <string name="enter_challenge">Paste or scan Challenge</string>
     <string name="auth_success">Authentication success</string>
     <string name="is_requesting_your_auth">is requesting your authentication.</string>
     <string name="auth_using_paynym">Authenticate using PayNym</string>
