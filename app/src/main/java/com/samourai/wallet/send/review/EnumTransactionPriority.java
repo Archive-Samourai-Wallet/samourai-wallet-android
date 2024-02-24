@@ -106,6 +106,38 @@ public enum EnumTransactionPriority {
         return nextBlockDescription;
     }
 
+    public String getDescription(
+            final EnumFeeRepresentation feeRepresentation,
+            final long minerFeeRate,
+            final long lowFeeRate,
+            final long normalFeeRate,
+            final long highFeeRate
+    ) {
+
+        if (isNull(feeRepresentation)) return nextBlockDescription;
+
+        switch (feeRepresentation) {
+            case NEXT_BLOCK_RATE:
+                switch (this) {
+                    case LOW:
+                        if (minerFeeRate < lowFeeRate) return "<" + nextBlockDescription;
+                        return nextBlockDescription;
+                    case NORMAL:
+                        if (minerFeeRate > lowFeeRate && minerFeeRate < normalFeeRate) return "<" + nextBlockDescription;
+                        if (minerFeeRate < highFeeRate && minerFeeRate > normalFeeRate) return ">" + nextBlockDescription;
+                        return nextBlockDescription;
+                    case NEXT_BLOCK:
+                        if (minerFeeRate > highFeeRate) return ">" + nextBlockDescription;
+                        return nextBlockDescription;
+                    default:
+                        return nextBlockDescription;
+                }
+            case BLOCK_COUNT:
+                return nbBlockDescription;
+        }
+        return nextBlockDescription;
+    }
+
     public static EnumTransactionPriority fromIdentifier(
             final String identifier,
             final EnumFeeRepresentation feeRepresentation) {

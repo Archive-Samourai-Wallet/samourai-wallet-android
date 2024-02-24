@@ -1,11 +1,16 @@
 package com.samourai.wallet.send.cahoots;
 
 import static com.samourai.wallet.send.SendActivity.stubAddress;
+import static com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.DONE;
+import static com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_ENABLED;
+import static com.samourai.wallet.util.tech.ColorUtil.getAttributeColor;
+import static com.samourai.wallet.util.tech.ColorUtil.lightenColor;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static java.util.Objects.nonNull;
 
-import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.LayoutInflater;
@@ -16,16 +21,21 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.MutableLiveData;
 
-import com.google.android.material.button.MaterialButton;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
 import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
+import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.backend.IPushTx;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.Cahoots;
@@ -33,7 +43,9 @@ import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
-import com.samourai.wallet.utxos.UTXOUtil;
+import com.samourai.wallet.send.review.SwipeSendButtonFragment;
+import com.samourai.wallet.send.review.SwipeSendButtonListener;
+import com.samourai.wallet.util.tech.ColorUtil;
 import com.samourai.wallet.widgets.EntropyBar;
 
 import org.bitcoinj.core.TransactionOutput;
@@ -54,17 +66,18 @@ import io.reactivex.schedulers.Schedulers;
 
 public class CahootReviewFragment extends Fragment {
 
-
     private static final String TAG = "CahootReviewFragment";
     TextView toAddress, amountInBtc, amountInSats, feeInBtc, feeInSats, entropyBits, step, samouraiFeeBtc, samouraiFeeSats, samouraiFeeLabel;
     EntropyBar entropyBar;
-    MaterialButton sendBtn;
     ViewGroup cahootsEntropyGroup, cahootsSamouraiFeeGroup;
     Group cahootsProgressGroup;
     View cahootsSamouraiFeeGroupDivider, cahootsSamouraiEntropyGroupDivider;
     private Cahoots payload;
     private Callable onBroadcast;
     private CompositeDisposable disposables = new CompositeDisposable();
+
+    private MutableLiveData<Long> amountToLeaveWallet = new MutableLiveData<>(0L);
+    private MutableLiveData<Boolean> sendBtnEnable = new MutableLiveData<>(true);
 
     public static CahootReviewFragment newInstance(final Intent intent) {
         final CahootReviewFragment fragment = new CahootReviewFragment();
@@ -73,45 +86,7 @@ public class CahootReviewFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-
-
-        sendBtn.setOnClickListener(view1 -> {
-
-
-            if (payload != null) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle(R.string.app_name);
-                builder.setMessage("Are you sure want to broadcast this transaction ?");
-                builder.setCancelable(false);
-                sendBtn.setEnabled(false);
-                builder.setPositiveButton(R.string.yes, (dialogInterface, i) -> {
-                    dialogInterface.dismiss();
-                    cahootsProgressGroup.setVisibility(View.VISIBLE);
-                    new Thread(() -> {
-                        Looper.prepare();
-
-                        try {
-                            IPushTx pushTx = PushTx.getInstance(getActivity());
-                            payload.pushTx(pushTx);
-                            onSuccessfulBroadcast();
-                        } catch (Exception e) {
-                            showError();
-                            e.printStackTrace();
-                        }
-
-                        Looper.loop();
-
-                    }).start();
-                });
-                builder.setNegativeButton(R.string.no, (dialogInterface, i) -> {
-                    sendBtn.setEnabled(true);
-                });
-
-                builder.create().show();
-            }
-
-        });
+    public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
         showPayloadInfo();
     }
 
@@ -156,7 +131,7 @@ public class CahootReviewFragment extends Fragment {
         Toast.makeText(this.getActivity(), "Error broadcasting tx", Toast.LENGTH_SHORT).show();
         getActivity().runOnUiThread(() -> {
             cahootsProgressGroup.setVisibility(View.GONE);
-            sendBtn.setEnabled(true);
+            sendBtnEnable.postValue(true);
         });
     }
 
@@ -195,16 +170,15 @@ public class CahootReviewFragment extends Fragment {
     }
 
     private void showPayloadInfo() {
-        if (payload != null) {
+        if (nonNull(payload)) {
             if (payload instanceof MultiCahoots) {
                 MultiCahoots multiCahootsPayload = (MultiCahoots) payload;
                 long halfOfStonewallFee = (multiCahootsPayload.getStonewallx2().getFeeAmount()/2L);
                 long totalMinerFee = multiCahootsPayload.getStowaway().getFeeAmount() + halfOfStonewallFee; // stowaway tx fee + our half of stonewall miner fee we pay
                 long serviceFee = multiCahootsPayload.getStowaway().getSpendAmount(); // 3.5% + other half of stonewall miner fee that we also pay
-                String total = formatForBtc(multiCahootsPayload.getSpendAmount() + totalMinerFee + serviceFee);
-                sendBtn.setText(getString(R.string.send).concat(" ").concat(total));
+                amountToLeaveWallet.postValue(multiCahootsPayload.getSpendAmount() + totalMinerFee + serviceFee);
             } else {
-                sendBtn.setText(getString(R.string.send).concat(" ").concat(formatForBtc(payload.getSpendAmount() + payload.getFeeAmount())));
+                amountToLeaveWallet.postValue(payload.getSpendAmount() + payload.getFeeAmount());
             }
             toAddress.setText(payload.getDestination());
             amountInBtc.setText(formatForBtc(payload.getSpendAmount()));
@@ -245,11 +219,12 @@ public class CahootReviewFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.cahoots_broadcast_details, container, false);
+
+        final View view = inflater.inflate(R.layout.cahoots_broadcast_details, container, false);
+
         toAddress = view.findViewById(R.id.cahoots_review_address);
         amountInBtc = view.findViewById(R.id.cahoots_review_amount);
         amountInSats = view.findViewById(R.id.cahoots_review_amount_sats);
-        sendBtn = view.findViewById(R.id.cahoot_send_btn);
         feeInBtc = view.findViewById(R.id.cahoots_review_fee);
         entropyBits = view.findViewById(R.id.cahoots_entropy_value);
         entropyBar = view.findViewById(R.id.cahoots_entropy_bar);
@@ -262,7 +237,85 @@ public class CahootReviewFragment extends Fragment {
         step = view.findViewById(R.id.textView56);
         samouraiFeeBtc = view.findViewById(R.id.cahoots_review_fee_samourai);
         samouraiFeeSats = view.findViewById(R.id.cahoots_review_fee_samourai_sats);
+
+        final CardView broadcastDetailsCard = view.findViewById(R.id.cahoots_broadcast_details_card);
+        final int cardDefaultBckg = broadcastDetailsCard.getCardBackgroundColor().getDefaultColor();
+
+        final SamouraiActivity activity = (SamouraiActivity) getActivity();
+        final int statusBarColor = activity.getStatusBarColor();
+        final int navigationBarColor = activity.getNavigationBarColor();
+
+        final View headView = activity.findViewById(R.id.appBarLayout2);
+        final ColorStateList headViewBckgTintList = headView.getBackgroundTintList();
+        final View toolbar = activity.findViewById(R.id.toolbar);
+        final ColorStateList toolbarBckgTintList = toolbar.getBackgroundTintList();
+        final View stepView = activity.findViewById(R.id.step_view);
+        final ColorStateList stepViewBckgTintList = toolbar.getBackgroundTintList();
+
+        final int windowBackground = getAttributeColor(getContext(), android.R.attr.windowBackground);
+
+        final FragmentManager fragmentManager = getParentFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.compose_send_view, new SwipeSendButtonFragment(
+                amountToLeaveWallet,
+                () -> sentAction(),
+                sendBtnEnable,
+                new SwipeSendButtonListener() {
+                    @Override
+                    public void onStateChange(final EnumSwipeSendButtonState state) {
+
+                        getActivity().runOnUiThread(() -> {
+
+                            final boolean lightenColor =
+                                    state == IS_SWIPING_ENABLED ||
+                                    state == DONE;
+                            final float alpha = lightenColor ? 0.1f : 0f;
+
+                            broadcastDetailsCard.setBackgroundColor(lightenColor(cardDefaultBckg, alpha));
+                            if (lightenColor) {
+                                final int[][] states = new int[][] {new int[] {}};
+                                final int[] colors = new int[] {lightenColor(headViewBckgTintList.getDefaultColor(), alpha)};
+                                headView.setBackgroundTintList(new ColorStateList(states, colors));
+                                toolbar.setBackgroundTintList(new ColorStateList(states, colors));
+                                stepView.setBackgroundTintList(new ColorStateList(states, colors));
+                            } else {
+                                headView.setBackgroundTintList(headViewBckgTintList);
+                                toolbar.setBackgroundTintList(headViewBckgTintList);
+                                stepView.setBackgroundTintList(headViewBckgTintList);
+                            }
+
+                            view.setBackgroundColor(lightenColor(windowBackground, alpha));
+                            activity.setNavigationBarColor(lightenColor(navigationBarColor, alpha));
+                            activity.setStatusBarColor(lightenColor(statusBarColor, alpha));
+
+                        });
+                    }
+                }));
+        fragmentTransaction.commit();
+
         return view;
+    }
+
+    private void sentAction() {
+        if (nonNull(payload)) {
+            sendBtnEnable.postValue(false);
+            cahootsProgressGroup.setVisibility(View.VISIBLE);
+            new Thread(() -> {
+                Looper.prepare();
+
+                try {
+                    IPushTx pushTx = PushTx.getInstance(getActivity());
+                    payload.pushTx(pushTx);
+                    onSuccessfulBroadcast();
+                } catch (Exception e) {
+                    showError();
+                    e.printStackTrace();
+                }
+
+                Looper.loop();
+
+            }).start();
+        }
     }
 
     public void setCahoots(Cahoots payload) {

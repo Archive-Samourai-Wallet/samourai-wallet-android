@@ -58,11 +58,11 @@ import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.UTXOFactory
 import com.samourai.wallet.tor.SamouraiTorManager
-import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.CharSequenceX
+import com.samourai.wallet.util.PrefsUtil
+import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.func.MonetaryUtil
-import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.func.SentToFromBIP47Util
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
@@ -577,7 +577,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
             val hi = FeeUtil.getInstance().highFee.defaultPerKB.toLong() / 1000L
             if (lo == mi && mi == hi) {
                 val hi_sf = SuggestedFee()
-                hi_sf.defaultPerKB = BigInteger.valueOf((hi * 1.15 * 1000.0).toLong())
+                hi_sf.defaultPerKB = BigInteger.valueOf((hi * 1000.0 * 1.15).toLong())
                 FeeUtil.getInstance().suggestedFee = hi_sf
             } else if (lo == mi) {
                 FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().highFee

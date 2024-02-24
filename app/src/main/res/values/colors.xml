@@ -14,6 +14,7 @@
     <color name="text_primary">#FFCFD8DC</color>
     <color name="text_secondary">#FFbab9b9</color>
     <color name="accent">#FF03A9F4</color>
+    <color name="accent_shadow">#FF0AA1E9</color>
     <color name="balance">#FF13181f</color>
     <color name="pinBG">#FF212429</color>
     <color name="pinGreen">#FF4a9c52</color>

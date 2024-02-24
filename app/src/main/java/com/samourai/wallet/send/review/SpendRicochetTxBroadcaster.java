@@ -55,22 +55,11 @@ public class SpendRicochetTxBroadcaster {
     }
 
     private void ricochetSpend() {
-        MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(activity)
-                .setTitle(R.string.app_name)
-                .setMessage(model.getRicochetMessage())
-                .setCancelable(false)
-                .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
-                    dialog.dismiss();
-
-                    RicochetMeta.getInstance(activity).add(model.getRicochetJsonObj());
-                    final Intent intent = new Intent(activity, RicochetActivity.class);
-                    intent.putExtra("tx_note", defaultString(model.getTxNote().getValue()));
-                    intent.putExtra("_account", model.getAccount());
-                    activity.startActivityForResult(intent, RICOCHET);
-                }).setNegativeButton(R.string.no, (dialog, whichButton) -> dialog.dismiss());
-        if (!activity.isFinishing()) {
-            dlg.show();
-        }
+        RicochetMeta.getInstance(activity).add(model.getRicochetJsonObj());
+        final Intent intent = new Intent(activity, RicochetActivity.class);
+        intent.putExtra("tx_note", defaultString(model.getTxNote().getValue()));
+        intent.putExtra("_account", model.getAccount());
+        activity.startActivityForResult(intent, RICOCHET);
     }
 
     private void ricochetSpendStaggered() {

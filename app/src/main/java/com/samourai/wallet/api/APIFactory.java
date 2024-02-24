@@ -1410,32 +1410,45 @@ public class APIFactory {
     }
 
     public Boolean loadFees() throws Exception {
-        loadDynamicFeesBitcoind();
-        load1DollarFeesEstimator();
+
+        try {
+            final RawFees fees = load1DollarFeesEstimator();
+            if (isNull(fees) || !fees.hasFee()) {
+                Log.w(TAG, "will load fees fromm bitcoind because no get fees from 1$ fee estimator");
+                loadDynamicFeesBitcoind();
+            }
+        } catch (final Exception e) {
+            Log.e(TAG, e.getMessage(), e);
+            loadDynamicFeesBitcoind();
+        }
+
         return Boolean.TRUE;
     }
 
-    private void load1DollarFeesEstimator() throws Exception {
+    private RawFees load1DollarFeesEstimator() throws Exception {
         if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
-            putMock1DollarFeesEstimator();
+            return putMock1DollarFeesEstimator();
         } else if(AppUtil.getInstance(context).isOfflineMode()) {
             final JSONObject multiAddr = PayloadUtil.getInstance(context).deserializeMultiAddr();
-            parse1DollarFeesEstimator(new JSONObject(multiAddr.toString()));
+            return parse1DollarFeesEstimator(new JSONObject(multiAddr.toString()));
         } else {
             final boolean testNet = SamouraiWallet.getInstance().isTestNet();
             final RawFees fees = FeeClient.createFeeClient(context, testNet).getFees();
             FeeUtil.getInstance().putRawFees(fees);
+            return fees;
         }
     }
 
-    private static void putMock1DollarFeesEstimator() {
-        FeeUtil.getInstance().putRawFees(RawFees.createFromMap(ImmutableMap.of(
+    private RawFees putMock1DollarFeesEstimator() {
+        final RawFees rawFees = RawFees.createFromMap(ImmutableMap.of(
                 "0.999", 26,
                 "0.99", 18,
                 "0.9", 14,
                 "0.5", 13,
                 "0.2", 10,
-                "0.1", 9)));
+                "0.1", 9));
+        FeeUtil.getInstance().putRawFees(rawFees);
+        return rawFees;
     }
 
     private void loadDynamicFeesBitcoind() throws Exception {
@@ -1450,13 +1463,12 @@ public class APIFactory {
         parseDynamicFees_bitcoind(jsonObject);
     }
 
-    private void parse1DollarFeesEstimator(final JSONObject payload) throws JSONException  {
+    private RawFees parse1DollarFeesEstimator(final JSONObject payload) throws JSONException  {
 
-        if(isNull(payload)) return;
+        if(isNull(payload)) return null;
 
         if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
-            putMock1DollarFeesEstimator();
-            return;
+            return putMock1DollarFeesEstimator();
         }
 
         JSONObject jsonObject = null;
@@ -1468,10 +1480,14 @@ public class APIFactory {
         } else if(payload.has("0.99")) {
             jsonObject = payload;
         }
+
         if (nonNull(jsonObject)) {
             info(TAG, "1$ fees estimator:" + jsonObject.toString(2));
-            FeeUtil.getInstance().putRawFees(toRawFees(jsonObject));
+            final RawFees rawFees = toRawFees(jsonObject);
+            FeeUtil.getInstance().putRawFees(rawFees);
+            return rawFees;
         }
+        return null;
     }
 
     private void parseDynamicFees_bitcoind(JSONObject payload) throws JSONException  {
