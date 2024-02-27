@@ -1,19 +1,13 @@
 package com.samourai.wallet.send.review
 
-import android.content.Context
-import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.Log
-import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -33,7 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
@@ -49,16 +41,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -73,6 +61,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.MutableLiveData
 import com.google.common.collect.ImmutableList
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
@@ -83,14 +72,14 @@ import com.samourai.wallet.theme.samouraiBoxLightGrey
 import com.samourai.wallet.theme.samouraiLightGreyAccent
 import com.samourai.wallet.theme.samouraiPostmixSpendBlueButton
 import com.samourai.wallet.theme.samouraiSlateGreyAccent
-import com.samourai.wallet.theme.samouraiSuccess
 import com.samourai.wallet.theme.samouraiTextLightGrey
 import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.tech.ColorHelper.Companion.getAttributeColor
+import com.samourai.wallet.util.tech.ColorHelper.Companion.lightenColor
 import com.samourai.wallet.util.view.rememberImeState
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.commons.collections4.ListUtils
@@ -100,7 +89,6 @@ import java.lang.String.format
 import java.text.DecimalFormat
 import java.util.Objects
 import java.util.Objects.nonNull
-import kotlin.math.roundToInt
 
 class ReviewTxActivity : SamouraiActivity() {
 
@@ -149,6 +137,21 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
     var isOnSwipeValidation = remember { mutableStateOf(false) }
     val whiteAlpha = if(isOnSwipeValidation.value) 0.1f else 0f
 
+    val destinationAmount by model.impliedAmount.observeAsState()
+    val feeAggregated by model.feeAggregated.observeAsState()
+    val amountToLeaveWallet = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
+
+    val impliedSendType by model.impliedSendType.observeAsState()
+
+    val sendTx: () -> Unit = {
+        try {
+            model.sendType.broadcastTx(model, activity)
+        } catch (e : Exception) {
+            Log.e(TAG, e.message, e)
+            Toast.makeText(activity, format("issue when broadcasting %s transaction", model.sendType.type), Toast.LENGTH_LONG).show()
+        }
+    }
+
     UpdateStatusBarColorBasedOnDragState(isDraggable = isOnSwipeValidation, whiteAlpha = whiteAlpha)
     UpdateNavigationBarColorBasedOnDragState(isDraggable = isOnSwipeValidation, whiteAlpha = whiteAlpha)
 
@@ -161,53 +164,66 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
         .background(lightenColor(windowBackground, whiteAlpha))) {
         Column (
             modifier = Modifier
-                .verticalScroll(
-                    state = verticalScroll,
-                    enabled = true,
-                )
                 .fillMaxSize()
         ) {
             ReviewTxActivityContentHeader(activity = activity, whiteAlpha = whiteAlpha)
-            Box {
-                ReviewTxActivityContentDestination(
-                    model = model,
-                    activity = activity,
-                    whiteAlpha = whiteAlpha)
-                if (isSomethingLoading.value!!) {
-                    CircularProgressIndicator(
+            Column (
+                modifier = Modifier
+                    .padding(start = 18.dp, end = 18.dp)
+                    .verticalScroll(
+                        state = verticalScroll,
+                        enabled = true,
+                    )
+                    .fillMaxSize()
+            ) {
+                Box {
+                    ReviewTxActivityContentDestination(
+                        model = model,
+                        activity = activity,
+                        whiteAlpha = whiteAlpha)
+                }
+                ReviewTxActivityContentFees(model = model, activity = activity, whiteAlpha = whiteAlpha)
+                ReviewTxActivityContentTransaction(model = model, whiteAlpha = whiteAlpha)
+                Column (
+                    modifier = Modifier
+                        .padding(top = 24.dp)
+                ) {
+                    ReviewTxActivityContentSendNote(model = model)
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Column (
+                    modifier = Modifier
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
+                        JoinbotSendButton(
+                            model = model,
+                            activity = activity,
+                            isOnSwipeValidation = isOnSwipeValidation,
+                            action = sendTx
+                        )
+                    } else {
+                        SwipeSendButtonContent(
+                            MutableLiveData(amountToLeaveWallet),
+                            sendTx,
+                            MutableLiveData(true),
+                            null)
+                    }
+                    Spacer(
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(16.dp),
-                        color = samouraiBlueButton,
-                        strokeWidth = 8.dp
+                            .size(12.dp)
                     )
                 }
             }
-            ReviewTxActivityContentFees(model = model, activity = activity, whiteAlpha = whiteAlpha)
-            ReviewTxActivityContentTransaction(model = model, whiteAlpha = whiteAlpha)
-            Column (
-                modifier = Modifier
-                    .padding(top = 24.dp)
-            ) {
-                ReviewTxActivityContentSendNote(model = model)
-            }
-
-            ReviewTxActivityContentTapAndHoldInfo(
-                model = model,
-                activity = activity,
-                visible = showTapAndHoldComponent,
-                whiteAlpha = whiteAlpha)
-
-            ReviewTxActivityContentSendButton(
-                model = model,
-                activity = activity,
-                tapAndHoldInfo = showTapAndHoldComponent,
-                isOnSwipeValidation = isOnSwipeValidation)
-            Box (
-                modifier = Modifier
-                    .height(50.dp)
-            ) {}
         }
+
     }
 
 }
@@ -254,7 +270,7 @@ fun ReviewTxActivityContentDestination(
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 18.dp, start = 18.dp, end = 18.dp)
+            .padding(bottom = 9.dp, top = 18.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -426,7 +442,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 9.dp, start = 18.dp, end = 18.dp)
+            .padding(bottom = 9.dp, top = 9.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -552,12 +568,9 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                             modifier = Modifier
                                 .clickable {
                                     coroutineScope.launch(Dispatchers.IO) {
-                                        if (!model.refreshFees {
-                                                showFeeManager(model = model, activity = activity)
-                                            }) {
-                                            showFeeManager(model = model, activity = activity)
-                                        }
+                                        model.refreshFees {}
                                     }
+                                    showFeeManager(model = model, activity = activity)
                                 }
                         ) {
                             Text(
@@ -604,7 +617,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) 
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 9.dp, start = 18.dp, end = 18.dp)
+            .padding(bottom = 9.dp, top = 9.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -771,7 +784,7 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 9.dp, start = 18.dp, end = 18.dp)
+            .padding(bottom = 9.dp, top = 9.dp)
     ) {
         Row (
             modifier = Modifier
@@ -856,84 +869,14 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
 }
 
 @Composable
-fun ReviewTxActivityContentTapAndHoldInfo(
+fun JoinbotSendButton(
     model: ReviewTxModel,
     activity: SamouraiActivity?,
-    visible: MutableState<Boolean>,
-    whiteAlpha: Float
-) {
-
-    val ralewayFont = FontFamily(
-        Font(R.font.raleway, FontWeight.Normal)
-    )
-
-    Row (
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Box (
-            modifier = if (visible.value) Modifier.background(lightenColor(samouraiBoxLightGrey, whiteAlpha), RoundedCornerShape(20.dp)) else Modifier
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(bottom = 9.dp, top = 9.dp, start = 18.dp, end = 18.dp)
-            ) {
-                Text(
-                    text = if (visible.value) "Tap and hold" else StringUtils.EMPTY,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontFamily = ralewayFont
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-fun ReviewTxActivityContentSendButton(
-    model: ReviewTxModel,
-    activity: SamouraiActivity?,
-    tapAndHoldInfo: MutableState<Boolean>,
     isOnSwipeValidation: MutableState<Boolean>,
+    action: () -> Unit,
 ) {
 
-    val context = LocalContext.current
     val buttonSize = 48.dp
-    val screenWidthPx = getScreenWidthPx()
-
-    val destinationAmount by model.impliedAmount.observeAsState()
-    val feeAggregated by model.feeAggregated.observeAsState()
-    val amountToLeaveWallet = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
-
-    val impliedSendType by model.impliedSendType.observeAsState()
-
-    var jobHoldInfo by remember { mutableStateOf<Job?>(null) }
-    var jobForSwipeValidation by remember { mutableStateOf<Job?>(null) }
-    var isFullSwiped by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    var isButtonPressed by remember { mutableStateOf(false) }
-    val btnAlpha = if (isButtonPressed || isOnSwipeValidation.value) 0.90f else 1f
-
-    val swipeButtonPx = convertDpToPx(valueInDp = buttonSize)
-    val externalPaddingPx = convertDpToPx(valueInDp = 18.dp)
-
-    val robotoMonoNormalFont = FontFamily(
-        Font(R.font.roboto_mono, FontWeight.Normal)
-    )
-    val ralewayFont = FontFamily(
-        Font(R.font.raleway, FontWeight.Normal)
-    )
-
-    val sendTx: () -> Unit = {
-        try {
-            model.sendType.broadcastTx(model, activity)
-        } catch (e : Exception) {
-            Log.e(TAG, e.message, e)
-            Toast.makeText(activity, format("issue when broadcasting %s transaction", model.sendType.type), Toast.LENGTH_LONG).show()
-        }
-    }
 
     var dragOffset by remember { mutableStateOf(IntOffset(0, 0)) }
 
@@ -945,37 +888,6 @@ fun ReviewTxActivityContentSendButton(
                     Modifier
                         .padding(bottom = 9.dp, top = 9.dp, start = 18.dp, end = 18.dp)
     ) {
-        if (isOnSwipeValidation.value) {
-            Row (
-                modifier = Modifier
-                    .padding(start = 12.dp)
-                    .height(buttonSize),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = FormatsUtil.formatBTC(amountToLeaveWallet),
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontFamily = robotoMonoNormalFont
-                )
-            }
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 12.dp)
-                    .height(buttonSize),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Swipe and send",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontFamily = ralewayFont
-                )
-            }
-        }
 
         Row (
             modifier = Modifier
@@ -986,79 +898,7 @@ fun ReviewTxActivityContentSendButton(
             Box (
                 modifier = Modifier
                     .size(buttonSize)
-                    .pointerInput(Unit) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = {
-                                if (! isFullSwiped) {
-                                    vibratePhone(context = context)
-                                    jobForSwipeValidation?.cancel()
-                                    isOnSwipeValidation.value = true
-                                }
-                            },
-                            onDragEnd = {
-                                if (! isFullSwiped) {
-                                    dragOffset = IntOffset(0, dragOffset.y)
-                                    jobForSwipeValidation?.cancel()
-                                    jobForSwipeValidation = scope.launch {
-                                        delay(250L)
-                                        isOnSwipeValidation.value = false
-                                    }
-                                }
-                            },
-                            onDragCancel = {
-                                if (! isFullSwiped) {
-                                    dragOffset = IntOffset(0, dragOffset.y)
-                                    jobForSwipeValidation?.cancel()
-                                    jobForSwipeValidation = scope.launch {
-                                        delay(250L)
-                                        isOnSwipeValidation.value = false
-                                    }
-                                }
-                            },
-                            onDrag = { change, dragAmount ->
-                                if (! isFullSwiped) {
-                                    val newX = (dragOffset.x + dragAmount.x.roundToInt())
-                                        .coerceAtLeast(0)
-                                    dragOffset = IntOffset(newX, dragOffset.y)
-                                    change.consume()
-                                    if (newX >= (screenWidthPx / 2f - externalPaddingPx - swipeButtonPx / 2f)) {
-                                        isFullSwiped = true
-                                        vibratePhone(context = context)
-                                        scope.launch {
-                                            sendTx.invoke()
-                                        }
-                                    }
-                                }
-                            }
-                        )
-                    }
                     .offset { dragOffset }
-                    .pointerInteropFilter { event ->
-                        when (event.action) {
-
-                            MotionEvent.ACTION_DOWN -> {
-                                isButtonPressed = true
-                                jobHoldInfo?.cancel()
-                                tapAndHoldInfo.value = false
-                                true
-                            }
-
-                            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                                isButtonPressed = false
-                                jobHoldInfo?.cancel()
-                                jobHoldInfo = scope.launch {
-                                    delay(2000)
-                                    tapAndHoldInfo.value = false
-                                }
-                                if (!isOnSwipeValidation.value) {
-                                    tapAndHoldInfo.value = true
-                                }
-                                true
-                            }
-
-                            else -> false
-                        }
-                    }
             ) {
                 Row (
                     modifier = Modifier
@@ -1068,35 +908,20 @@ fun ReviewTxActivityContentSendButton(
                     horizontalArrangement = Arrangement.Center
                 ) {
 
-                    if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .size(buttonSize)
-                                .background(darkenColor(Color.White, 1f-btnAlpha), CircleShape)
-                                .clip(CircleShape)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_joinbot_send),
-                                contentDescription = null,
-                                tint = darkenColor(Color(52, 52, 52, 255), 1f-btnAlpha)
-                            )
-                        }
-                    } else {
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .size(buttonSize)
-                                .background(darkenColor(samouraiSuccess, 1f-btnAlpha), CircleShape)
-                                .clip(CircleShape)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_send),
-                                contentDescription = null,
-                                tint = darkenColor(Color(255, 255, 255, 255), 1f-btnAlpha)
-                            )
-                        }
+                    IconButton(
+                        onClick = action,
+                        modifier = Modifier
+                            .size(buttonSize)
+                            .background(Color.White, CircleShape)
+                            .clip(CircleShape)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_joinbot_send),
+                            contentDescription = null,
+                            tint = Color(52, 52, 52, 255)
+                        )
                     }
+
                 }
             }
         }
@@ -1128,56 +953,6 @@ fun UpdateNavigationBarColorBasedOnDragState(
     LaunchedEffect(isDraggable.value) {
         val activity = context as? SamouraiActivity
         activity?.window?.navigationBarColor = lightenColor(navigationBarColor, whiteAlpha).toArgb()
-    }
-}
-
-@Composable
-private fun getAttributeColor(
-    context: Context,
-    attr: Int,
-): Color {
-    val navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        context.resources.getColor(
-            context.theme.obtainStyledAttributes(intArrayOf(attr))
-                .getResourceId(0, 0), context.theme
-        )
-    } else {
-        @Suppress("DEPRECATION")
-        context.resources.getColor(
-            context.theme.obtainStyledAttributes(intArrayOf(attr))
-                .getResourceId(0, 0)
-        )
-    }
-    return Color(navigationBarColor)
-}
-
-fun lightenColor(color: Color, factor: Float): Color {
-    val clampFactor = factor.coerceIn(0f, 1f)
-    return lerp(color, Color.White, clampFactor)
-}
-
-fun darkenColor(color: Color, factor: Float): Color {
-    val clampFactor = factor.coerceIn(0f, 1f)
-    return lerp(color, Color.Black, clampFactor)
-}
-
-fun vibratePhone(context: Context) {
-
-    // if (!PrefsUtil.getInstance(context).getValue(PrefsUtil.HAPTIC_PIN, true)) return
-
-    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vibratorManager = context.getSystemService(android.content.Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
-        vibratorManager.defaultVibrator
-    } else {
-        @Suppress("DEPRECATION")
-        context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as Vibrator
-    }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        vibrator.vibrate(VibrationEffect.createOneShot(44, VibrationEffect.DEFAULT_AMPLITUDE))
-    } else {
-        @Suppress("DEPRECATION")
-        vibrator.vibrate(44)
     }
 }
 

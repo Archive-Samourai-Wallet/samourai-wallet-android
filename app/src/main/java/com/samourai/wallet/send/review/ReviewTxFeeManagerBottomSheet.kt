@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
 import androidx.compose.material.Text
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.samourai.wallet.R
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.theme.samouraiAccent
+import com.samourai.wallet.theme.samouraiBlueButton
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
 import com.samourai.wallet.theme.samouraiDarkGray
 import com.samourai.wallet.tools.WrapToolsPageAnimation
@@ -42,6 +44,8 @@ import com.samourai.wallet.util.func.FormatsUtil
 
 @Composable
 fun ReviewTxFeeManager(model: ReviewTxModel) {
+
+    val isSomethingLoading = model.isSomethingLoading.observeAsState()
 
     Box(
     ) {
@@ -52,16 +56,28 @@ fun ReviewTxFeeManager(model: ReviewTxModel) {
                 Modifier
                     .background(samouraiBottomSheetBackground)
             ) {
-                TopAppBar(
-                    elevation = 0.dp,
-                    backgroundColor = samouraiBottomSheetBackground,
-                    title = {
-                        Text(
-                            text = "Manage transaction priority", fontSize = 13.sp,
-                            color = samouraiAccent
+                Box {
+                    TopAppBar(
+                        elevation = 0.dp,
+                        backgroundColor = samouraiBottomSheetBackground,
+                        title = {
+                            Text(
+                                text = "Manage transaction priority", fontSize = 13.sp,
+                                color = samouraiAccent
+                            )
+                        },
+                    )
+                    if (isSomethingLoading.value!!) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 8.dp, end = 8.dp),
+                            color = samouraiBlueButton,
+                            strokeWidth = 6.dp
                         )
-                    },
-                )
+                    }
+                }
+
                 Body(model = model)
             }
         }
@@ -97,6 +113,10 @@ fun Body(model: ReviewTxModel) {
     )
     val textColorGray = Color(184, 184, 184)
 
+    val feeLowRate by model.feeLowRate.observeAsState()
+    val feeMedRate by model.feeMedRate.observeAsState()
+    val feeHighRate by model.feeHighRate.observeAsState()
+
     Column (
         modifier = Modifier
             .padding(top = 9.dp, start = 18.dp, end = 18.dp, bottom = 18.dp),
@@ -109,15 +129,14 @@ fun Body(model: ReviewTxModel) {
         ){
             Button(
                 onClick = {
-                    val feeRate = model.feeLowRate.value!!
-                    sliderPosition = feeRate.toFloat()
-                    model.setMinerFeeRatesAndComputeFees(feeRate)
+                    sliderPosition = feeLowRate!!.toFloat()
+                    model.setMinerFeeRatesAndComputeFees(feeLowRate!!)
                           },
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = if (model.feeLowRate.value == minerFeeRates) samouraiAccent else samouraiDarkGray,
+                    backgroundColor = if (feeLowRate == minerFeeRates) samouraiAccent else samouraiDarkGray,
                     contentColor = Color.White
                 ),
             ) {
@@ -125,15 +144,14 @@ fun Body(model: ReviewTxModel) {
             }
             Button(
                 onClick = {
-                    val feeRate = model.feeMedRate.value!!
-                    sliderPosition = feeRate.toFloat()
-                    model.setMinerFeeRatesAndComputeFees(feeRate)
+                    sliderPosition = feeMedRate!!.toFloat()
+                    model.setMinerFeeRatesAndComputeFees(feeMedRate!!)
                           },
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = if (model.feeMedRate.value == minerFeeRates) samouraiAccent else samouraiDarkGray,
+                    backgroundColor = if (feeMedRate == minerFeeRates) samouraiAccent else samouraiDarkGray,
                     contentColor = Color.White
                 ),
             ) {
@@ -141,15 +159,14 @@ fun Body(model: ReviewTxModel) {
             }
             Button(
                 onClick = {
-                    val feeRate = model.feeHighRate.value!!
-                    sliderPosition = feeRate.toFloat()
-                    model.setMinerFeeRatesAndComputeFees(feeRate)
+                    sliderPosition = feeHighRate!!.toFloat()
+                    model.setMinerFeeRatesAndComputeFees(feeHighRate!!)
                           },
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = if (model.feeHighRate.value == minerFeeRates) samouraiAccent else samouraiDarkGray,
+                    backgroundColor = if (feeHighRate == minerFeeRates) samouraiAccent else samouraiDarkGray,
                     contentColor = Color.White
                 ),
             ) {
@@ -185,12 +202,6 @@ fun Body(model: ReviewTxModel) {
                     .weight(0.23f),
                 horizontalAlignment = Alignment.End
             ) {
-                Text(
-                    text = transactionPriority!!.getCaption(FeeUtil.getInstance().feeRepresentation),
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontFamily = robotoMediumBoldFont
-                )
                 Text(
                     text = sliderPosition.toLong().toString() + " sat/vB",
                     color = textColorGray,
@@ -236,7 +247,13 @@ fun Body(model: ReviewTxModel) {
                     fontFamily = robotoMediumBoldFont
                 )
                 Text(
-                    text = transactionPriority!!.getDescription(FeeUtil.getInstance().feeRepresentation),
+                    text = transactionPriority!!.getDescription(
+                        FeeUtil.getInstance().feeRepresentation,
+                        minerFeeRates!!,
+                        feeLowRate!!,
+                        feeMedRate!!,
+                        feeHighRate!!
+                    ),
                     color = Color.White,
                     fontSize = 14.sp,
                     fontFamily = robotoMediumBoldFont

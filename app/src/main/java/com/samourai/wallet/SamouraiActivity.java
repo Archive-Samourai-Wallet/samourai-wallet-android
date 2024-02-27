@@ -125,12 +125,22 @@ public class SamouraiActivity extends AppCompatActivity {
         }
     }
 
-    protected void setNavigationBarColor(final int resourceColorValue) {
+    public void setNavigationBarColor(final int resourceColorValue) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             final Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setNavigationBarColor(resourceColorValue);
         }
+    }
+    public int getNavigationBarColor() {
+        return getWindow().getNavigationBarColor();
+    }
+
+    public void setStatusBarColor(final int color) {
+        getWindow().setStatusBarColor(color);
+    }
+    public int getStatusBarColor() {
+        return getWindow().getStatusBarColor();
     }
 
     public int getAccount() {

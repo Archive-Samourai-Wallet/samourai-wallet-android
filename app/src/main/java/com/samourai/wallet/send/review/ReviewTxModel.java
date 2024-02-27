@@ -846,7 +846,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
     public LiveData<Long> getFeeAggregated() {
         if (isNull(_feeAggregated)) {
-            computeFees();
+            computeFeeValues();
         }
         return _feeAggregated;
     }

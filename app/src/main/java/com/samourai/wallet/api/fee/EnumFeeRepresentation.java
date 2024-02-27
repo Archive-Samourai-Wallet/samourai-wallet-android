@@ -14,7 +14,9 @@ public enum EnumFeeRepresentation {
     NEXT_BLOCK_RATE {
         @Override
         public List<SuggestedFee> createSuggestedFeeList(final RawFees rawFees) {
+
             final List<SuggestedFee> suggestedFees = new ArrayList<>();
+            if (isNull(rawFees)) return suggestedFees;
 
             final Integer feeForNextBlock = rawFees.getFee(EnumFeeRate.RATE_990);
             if (nonNull(feeForNextBlock)) {
@@ -58,6 +60,7 @@ public enum EnumFeeRepresentation {
         public List<SuggestedFee> createSuggestedFeeList(final RawFees rawFees) {
 
             final List<SuggestedFee> suggestedFees = new ArrayList<>();
+            if (isNull(rawFees)) return suggestedFees;
 
             final Integer feeFor2Blocks = rawFees.getFee(EnumFeeBlockCount.BLOCK_02);
             if (nonNull(feeFor2Blocks)) {
