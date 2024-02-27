@@ -78,7 +78,8 @@ public class ShowPairingPayload extends BottomSheetDialogFragment {
             Bitmap bitmap = null;
             QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(uri, null, Contents.Type.TEXT, BarcodeFormat.QR_CODE.toString(), 1000);
             try {
-                bitmap = BitmapHelper.cropBitmap(qrCodeEncoder.encodeAsBitmap(), 50);
+                //bitmap = BitmapHelper.cropBitmap(qrCodeEncoder.encodeAsBitmap(), 50);
+                bitmap = qrCodeEncoder.encodeAsBitmap();
             } catch (Exception e) {
                 e.printStackTrace();
             }
