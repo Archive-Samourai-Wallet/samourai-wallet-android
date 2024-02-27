@@ -1,12 +1,12 @@
 package com.samourai.wallet.send.review;
 
 import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
-import static com.samourai.wallet.send.review.EnumSendType.SPEND_BATCH;
-import static com.samourai.wallet.send.review.EnumSendType.SPEND_BOLTZMANN;
-import static com.samourai.wallet.send.review.EnumSendType.SPEND_JOINBOT;
-import static com.samourai.wallet.send.review.EnumSendType.SPEND_RICOCHET;
-import static com.samourai.wallet.send.review.EnumSendType.SPEND_SIMPLE;
-import static com.samourai.wallet.send.review.EnumSendType.valueOf;
+import static com.samourai.wallet.send.review.filter.UTXOFilteringProcessor.applyUtxoFilter;
+import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_BOLTZMANN;
+import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_SIMPLE;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxoPoints;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
 import static com.samourai.wallet.util.tech.ThreadHelper.pauseMillis;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static java.lang.Math.max;
@@ -18,20 +18,15 @@ import android.app.Application;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
-import androidx.work.Operation;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
@@ -44,7 +39,6 @@ import com.samourai.wallet.api.fee.EnumFeeRepresentation;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
-import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
@@ -54,12 +48,14 @@ import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SuggestedFee;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.send.UTXOFactory;
-import com.samourai.wallet.send.batch.InputBatchSpendHelper;
 import com.samourai.wallet.send.cahoots.SelectCahootsType;
-import com.samourai.wallet.service.WalletRefreshWorker;
+import com.samourai.wallet.send.review.filter.UTXOFilterModel;
+import com.samourai.wallet.send.review.ref.EnumReviewScreen;
+import com.samourai.wallet.send.review.ref.EnumSendType;
+import com.samourai.wallet.send.review.ref.EnumTransactionPriority;
+import com.samourai.wallet.send.review.ref.EnumTxAlert;
 import com.samourai.wallet.util.FormatsUtilGeneric;
 import com.samourai.wallet.util.PrefsUtil;
-import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.util.func.BatchSendUtil.BatchSend;
 import com.samourai.wallet.util.func.FormatsUtil;
@@ -79,7 +75,6 @@ import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bouncycastle.util.encoders.Hex;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -90,7 +85,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -118,19 +112,21 @@ public class ReviewTxModel extends AndroidViewModel {
     private String addressLabel;
     private String preselectedUtxoId;
 
-    private long amount = 0l;
+    private long amount = 0L;
     private MutableLiveData<Long> _impliedAmount;
     private List<UTXOCoin> preselectedUTXOs;
-    private EnumSendType type = SPEND_SIMPLE;
-    private EnumSendType sendType = null;
+    private EnumSendType type = SPEND_BOLTZMANN;
+    private EnumSendType sendType;
     private MutableLiveData<EnumSendType> impliedSendType;
     private boolean ricochetStaggeredDelivery;
     private Long _balance = null;
-    private TxData txData = TxData.create(getApplication());
+//    private TxData txData = TxData.create(getApplication());
+    private MutableLiveData<TxData> txData = new MutableLiveData<>(TxData.create(getApplication()));
     private SelectCahootsType.type selectedCahootsType = SelectCahootsType.type.NONE;
     private MutableLiveData<EntropyInfo> entropy = null;
     private MutableLiveData<Map<String, Long>> _fees = null;
     private MutableLiveData<Boolean> isSomethingLoading = new MutableLiveData<>(false);
+    private MutableLiveData<Boolean> stonewallPossible = new MutableLiveData<>(false);
     private MutableLiveData<Long> _feeAggregated = null;
     private MutableLiveData<Long> _feeLowRate;
     private MutableLiveData<Long> _feeMedRate;
@@ -141,15 +137,63 @@ public class ReviewTxModel extends AndroidViewModel {
     private MutableLiveData<EnumTransactionPriority> transactionPriorityRequested = new MutableLiveData<>(EnumTransactionPriority.NORMAL);
     private MutableLiveData<String> txNote = new MutableLiveData<>(StringUtils.EMPTY);
     private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> _pair;
+    private MutableLiveData<Map<EnumTxAlert, TxAlertReview>> _alertReviews = null;
+    private MutableLiveData<EnumReviewScreen> currentScreen = new MutableLiveData<>(EnumReviewScreen.TX_INFO);
+
     private List<UTXO> shuffledUtxosP2PKH;
     private List<UTXO> shuffledUtxosP2SH_P2WPKH;
     private List<UTXO> shuffledUtxosP2WPKH;
+    private Set<MyTransactionOutPoint> customSelectionUtxoOutPoints = null;
+    private MutableLiveData<List<UTXO>> customSelectionUtxosLiveData = new MutableLiveData<>(null);
+    private MutableLiveData<UTXOFilterModel> utxoFilterModel = new MutableLiveData<>(UTXOFilterModel.create());
+    private MutableLiveData<List<MyTransactionOutPoint>> allSpendableUtxos = null;
+
+    private Boolean _changeUseLikeTyped;
+    private boolean useLikeRequestedAsFixForTx;
 
     private final AtomicBoolean feesRefreshed = new AtomicBoolean();
 
-    public ReviewTxModel(@NonNull Application application) {
+    public ReviewTxModel(final Application application) {
         super(application);
-        txData.restoreChangeIndexes(application);
+        txData.getValue().restoreChangeIndexes(application);
+    }
+
+    public LiveData<UTXOFilterModel> getUtxoFilterModel() {
+        return utxoFilterModel;
+    }
+
+    public ReviewTxModel updateUtxoFilterModel(final UTXOFilterModel model) {
+
+        utxoFilterModel.postValue(UTXOFilterModel.
+                createCopy(utxoFilterModel.getValue())
+                .updateWith(model));
+
+        if (isNull(allSpendableUtxos)) {
+            allSpendableUtxos = new MutableLiveData<>(allSpendableUtxo());
+        } else {
+            allSpendableUtxos.postValue(allSpendableUtxo());
+        }
+
+        return this;
+    }
+
+    public List<MyTransactionOutPoint> allSpendableUtxo() {
+        final APIFactory apiFactory = APIFactory.getInstance(getApplication());
+        final List<UTXO> spendableUtxos = isPostmixAccount()
+                ? apiFactory.getUtxosPostMix(true)
+                : apiFactory.getUtxos(true);
+        return toTxOutPoints(applyUtxoFilter(
+                spendableUtxos,
+                utxoFilterModel.getValue(),
+                isPostmixAccount(),
+                getApplication()));
+    }
+
+    public LiveData<List<MyTransactionOutPoint>> getAllSpendableUtxos() {
+        if (isNull(allSpendableUtxos)) {
+            allSpendableUtxos = new MutableLiveData<>(allSpendableUtxo());
+        }
+        return allSpendableUtxos;
     }
 
     @Override
@@ -160,20 +204,84 @@ public class ReviewTxModel extends AndroidViewModel {
         super.onCleared();
     }
 
+    public LiveData<List<UTXO>> getCustomSelectionUtxos() {
+        return customSelectionUtxosLiveData;
+    }
+
+    public ReviewTxModel addCustomSelectionUtxos(final Collection<UTXO> utxos) {
+        if (isNull(customSelectionUtxoOutPoints)) {
+            customSelectionUtxoOutPoints = Sets.newLinkedHashSet();
+        }
+        customSelectionUtxoOutPoints.addAll(toTxOutPoints(utxos));
+        customSelectionUtxosLiveData.postValue(ImmutableList.copyOf(toUtxos(customSelectionUtxoOutPoints)));
+        return this;
+    }
+
+    public ReviewTxModel removeCustomSelectionUtxos(final Collection<UTXO> utxos) {
+        if (CollectionUtils.isNotEmpty(customSelectionUtxoOutPoints)) {
+            customSelectionUtxoOutPoints.removeAll(toTxOutPoints(utxos));
+            customSelectionUtxosLiveData.postValue(ImmutableList.copyOf(toUtxos(customSelectionUtxoOutPoints)));
+        }
+        return this;
+    }
+
+    private boolean isCustomComputation() {
+        return sendType.isCustomSelection() && nonNull(customSelectionUtxoOutPoints);
+    }
+
     public LiveData<EnumTransactionPriority> getTransactionPriorityRequested() {
         return transactionPriorityRequested;
     }
 
-    public void setTransactionPriorityRequested(final EnumTransactionPriority priority) {
+    public ReviewTxModel setTransactionPriorityRequested(final EnumTransactionPriority priority) {
         transactionPriorityRequested.postValue(priority);
+        return this;
     }
 
     public MutableLiveData<Boolean> getIsSomethingLoading() {
         return isSomethingLoading;
     }
 
-    public void setIsSomethingLoading(MutableLiveData<Boolean> isSomethingLoading) {
+    public ReviewTxModel setIsSomethingLoading(MutableLiveData<Boolean> isSomethingLoading) {
         this.isSomethingLoading = isSomethingLoading;
+        return this;
+    }
+
+    public MutableLiveData<Map<EnumTxAlert, TxAlertReview>> getAlertReviews() {
+        if (isNull(_alertReviews)) {
+            updateAlerts();
+        }
+        return _alertReviews;
+    }
+
+    private void updateAlerts() {
+        final Map<EnumTxAlert, TxAlertReview> alerts = retrievesAlerts();
+        if (isNull(_alertReviews)) {
+            _alertReviews = new MutableLiveData<>(alerts);
+        } else {
+            _alertReviews.postValue(alerts);
+        }
+    }
+
+    public MutableLiveData<EnumReviewScreen> getCurrentScreen() {
+        return currentScreen;
+    }
+
+    private Map<EnumTxAlert, TxAlertReview> retrievesAlerts() {
+        final Map<EnumTxAlert, TxAlertReview> alerts = Maps.newLinkedHashMap();
+
+        for (final EnumTxAlert alert : EnumTxAlert.values()) {
+            final TxAlertReview alertReview = alert.checkForAlert(this);
+            if (nonNull(alertReview)) {
+                alerts.put(alert, alertReview);
+            }
+        }
+
+        return alerts;
+    }
+
+    private TxAlertReview checkAddressReused(final String address) {
+        return null;
     }
 
     public boolean refreshFees(final Runnable postRefresh) {
@@ -184,7 +292,7 @@ public class ReviewTxModel extends AndroidViewModel {
                 public Object call() throws Exception {
                     isSomethingLoading.postValue(true);
                     APIFactory.getInstance(getApplication()).loadFees();
-                    recomputeOnUpdateFees(computeFeeRate());
+                    refreshModel();
                     return null;
                 }
             }, new SimpleCallback<Object>() {
@@ -226,7 +334,7 @@ public class ReviewTxModel extends AndroidViewModel {
     private void computeEntropyAsync() {
         try {
             buildBoltzmannTxData();
-            final Disposable entropyDisposable = reactiveCalculateEntropy(txData.getSelectedUTXO(), txData.getReceivers())
+            final Disposable entropyDisposable = reactiveCalculateEntropy(txData.getValue().getSelectedUTXO(), txData.getValue().getReceivers())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.computation())
                     .doOnSuccess(txProcessorResult -> {
@@ -296,16 +404,27 @@ public class ReviewTxModel extends AndroidViewModel {
         });
     }
 
+    public ReviewTxModel refreshModel() {
+        recomputeOnUpdateFees(computeFeeRate());
+        return this;
+    }
+
     synchronized private void recomputeOnUpdateFees(final long feeRates) {
         setMinerFeeRates(feeRates);
         setSuggestedFee(feeRates);
         setTransactionPriority(feeRates);
-        txData.restoreChangeIndexes(getApplication());
+        txData.getValue().restoreChangeIndexes(getApplication());
         _pair = null;
         recomputeFees();
         if (getSendType() == SPEND_BOLTZMANN) {
             computeEntropyAsync();
         }
+        try {
+            getSendType().buildTx(this);
+        } catch (Exception e) {
+            Log.e(TAG, "issue on buildTx");
+        }
+        updateAlerts();
     }
 
     private void setMinerFeeRates(final long value) {
@@ -345,7 +464,7 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     private void recomputeFees() {
-        impliedSendType.postValue(computeSendType());
+        computeSendType();
         computeFeeValues();
     }
 
@@ -387,17 +506,16 @@ public class ReviewTxModel extends AndroidViewModel {
 
     public ReviewTxModel setType(final EnumSendType type) {
         this.type = type;
-        if (type == SPEND_BATCH) {
+        if (type.isBatchSpend()) {
             initForBatchSpend();
         }
-        return this;
+        return refreshModel();
     }
 
     private void initForBatchSpend() {
         final List<BatchSend> spendList = BatchSendUtil.getInstance().getSends();
-        final Collection<BatchSend> batch = CollectionUtils.emptyIfNull(spendList);
         amount = 0;
-        for (final BatchSend spend : batch) {
+        for (final BatchSend spend : CollectionUtils.emptyIfNull(spendList)) {
             amount += spend.amount;
             try {
                 spend.computeAddressIfNeeded(getApplication());
@@ -416,14 +534,14 @@ public class ReviewTxModel extends AndroidViewModel {
         return this;
     }
 
-    public ReviewTxModel buildSimleTxData() throws Exception {
+    public ReviewTxModel buildSimpleTxData() throws Exception {
         getSimpleFees();
         return this;
     }
 
     public ReviewTxModel buildSpendBatchTxData() throws Exception {
 
-        txData.clear();
+        txData.getValue().clear();
 
         int countP2WSH_P2TR = 0;
         for (final BatchSendUtil.BatchSend _data : BatchSendUtil.getInstance().getSends()) {
@@ -434,26 +552,21 @@ public class ReviewTxModel extends AndroidViewModel {
             Log.d(TAG, "output:" + _data.addr);
             Log.d(TAG, "output:" + _data.pcode);
 
-            if (txData.getReceivers().containsKey(_data.addr)) {
+            if (txData.getValue().getReceivers().containsKey(_data.addr)) {
 
-                final BigInteger addrAmount = txData.getReceivers().get(_data.addr);
-                txData.getReceivers().put(_data.addr, addrAmount.add(BigInteger.valueOf(_data.amount)));
+                final BigInteger addrAmount = txData.getValue().getReceivers().get(_data.addr);
+                txData.getValue().getReceivers().put(_data.addr, addrAmount.add(BigInteger.valueOf(_data.amount)));
 
             } else {
 
-                txData.getReceivers().put(_data.addr, BigInteger.valueOf(_data.amount));
+                txData.getValue().getReceivers().put(_data.addr, BigInteger.valueOf(_data.amount));
                 if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(_data.addr))    {
                     ++ countP2WSH_P2TR;
                 }
             }
         }
 
-        final List<UTXO> utxos = Lists.newArrayList();
-        if (account == SamouraiAccountIndex.DEPOSIT) {
-            utxos.addAll(APIFactory.getInstance(getApplication()).getUtxos(true));
-        } else if (account == SamouraiAccountIndex.POSTMIX) {
-            utxos.addAll(APIFactory.getInstance(getApplication()).getUtxosPostMix(true));
-        }
+        final List<UTXO> utxos = getAllUtxo();
         Collections.sort(utxos, new UTXO.UTXOComparator());
 
         int p2pkh = 0;
@@ -464,23 +577,25 @@ public class ReviewTxModel extends AndroidViewModel {
 
         for (final UTXO utxo : utxos) {
             Log.d(TAG, "utxo value:" + utxo.getValue());
-            txData.getSelectedUTXO().add(utxo);
+            txData.getValue().addSelectedUTXO(utxo);
             totalValueSelected += utxo.getValue();
             totalSelected += utxo.getOutpoints().size();
-            final Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(utxo.getOutpoints()));
-            p2pkh += outpointTypes.getLeft();
-            p2sh_p2wpkh += outpointTypes.getMiddle();
-            p2wpkh += outpointTypes.getRight();
-            final long estimatedFee = FeeUtil.getInstance().estimatedFeeSegwit(
-                    p2pkh,
-                    p2sh_p2wpkh,
-                    p2wpkh,
-                    txData.getReceivers().size() - countP2WSH_P2TR + 1,
-                    countP2WSH_P2TR
-            ).longValue();
-            final long spendValueEst = amount + SamouraiWallet.bDust.longValue() + estimatedFee;
-            if (totalValueSelected >= spendValueEst) {
-                break;
+            if (! isCustomComputation()) {
+                final Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance().getOutpointCount(new Vector(utxo.getOutpoints()));
+                p2pkh += outpointTypes.getLeft();
+                p2sh_p2wpkh += outpointTypes.getMiddle();
+                p2wpkh += outpointTypes.getRight();
+                final long estimatedFee = FeeUtil.getInstance().estimatedFeeSegwit(
+                        p2pkh,
+                        p2sh_p2wpkh,
+                        p2wpkh,
+                        txData.getValue().getReceivers().size() - countP2WSH_P2TR + 1,
+                        countP2WSH_P2TR
+                ).longValue();
+                final long spendValueEst = amount + SamouraiWallet.bDust.longValue() + estimatedFee;
+                if (totalValueSelected >= spendValueEst) {
+                    break;
+                }
             }
         }
 
@@ -488,7 +603,7 @@ public class ReviewTxModel extends AndroidViewModel {
         Log.d(TAG, "totalValueSelected:" + totalValueSelected);
 
         final List<MyTransactionOutPoint> outpoints = Lists.newArrayList();
-        for (final UTXO utxo : txData.getSelectedUTXO()) {
+        for (final UTXO utxo : txData.getValue().getSelectedUTXO()) {
             outpoints.addAll(utxo.getOutpoints());
             for (final MyTransactionOutPoint out : utxo.getOutpoints()) {
                 Log.d(TAG, "outpoint hash:" + out.getTxHash().toString());
@@ -501,8 +616,10 @@ public class ReviewTxModel extends AndroidViewModel {
                 outpointTypes.getLeft(),
                 outpointTypes.getMiddle(),
                 outpointTypes.getRight(),
-                txData.getReceivers().size() - countP2WSH_P2TR + 1, countP2WSH_P2TR
+                txData.getValue().getReceivers().size() - countP2WSH_P2TR + 1, countP2WSH_P2TR
         );
+
+        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
 
         if (amount + fee.longValue() > getBalance()) {
             Toast.makeText(getApplication(), R.string.insufficient_funds, Toast.LENGTH_SHORT);
@@ -512,11 +629,8 @@ public class ReviewTxModel extends AndroidViewModel {
         final long changeAmount = totalValueSelected - (amount + fee.longValue());
         int change_idx = 0;
         if (changeAmount > 0L) {
-            txData.setChange(changeAmount);
+            txData.getValue().setChange(changeAmount);
             Log.d(TAG, "changeAmount output:" + changeAmount);
-        } else {
-            Toast.makeText(getApplication(), R.string.error_change_output, Toast.LENGTH_SHORT).show();
-            return this;
         }
 
         return this;
@@ -524,16 +638,16 @@ public class ReviewTxModel extends AndroidViewModel {
 
     public ReviewTxModel buildJoinbotTxData() {
 
-        txData.clear();
-        txData.getReceivers().put(address, BigInteger.valueOf(getImpliedAmount().getValue()));
+        txData.getValue().clear();
+        txData.getValue().getReceivers().put(address, BigInteger.valueOf(getImpliedAmount().getValue()));
         selectedCahootsType = SelectCahootsType.type.MULTI_SOROBAN;
         return this;
     }
 
     public ReviewTxModel buildBoltzmannTxData() throws Exception {
 
-        txData.clear();
-        txData.getReceivers().put(address, BigInteger.valueOf(getImpliedAmount().getValue()));
+        txData.getValue().clear();
+        txData.getValue().getReceivers().put(address, BigInteger.valueOf(getImpliedAmount().getValue()));
 
         int countP2WSH_P2TR = 0;
         if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(address))    {
@@ -547,7 +661,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
             final UTXO u = new UTXO();
             u.setOutpoints(Lists.newArrayList(outpoint));
-            txData.getSelectedUTXO().add(u);
+            txData.getValue().addSelectedUTXO(u);
             totalValueSelected += u.getValue();
         }
         for (final TransactionOutput output : pair.getRight()) {
@@ -558,20 +672,20 @@ public class ReviewTxModel extends AndroidViewModel {
                 final String addressFromScript = Bech32Util.getInstance()
                         .getAddressFromScript(script);
                 final BigInteger value = BigInteger.valueOf(output.getValue().longValue());
-                txData.getReceivers().put(addressFromScript, value);
+                txData.getValue().getReceivers().put(addressFromScript, value);
             } else {
                 final String address = script
                         .getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams())
                         .toString();
                 final BigInteger value = BigInteger.valueOf(output.getValue().longValue());
-                txData.getReceivers().put(address, value);
+                txData.getValue().getReceivers().put(address, value);
             }
         }
 
-        if (txData.getSelectedUTXO().size() > 0) {
+        if (txData.getValue().getSelectedUTXO().size() > 0) {
 
             final List<MyTransactionOutPoint> outpoints = new ArrayList<>();
-            for (final UTXO utxo : txData.getSelectedUTXO()) {
+            for (final UTXO utxo : txData.getValue().getSelectedUTXO()) {
                 outpoints.addAll(utxo.getOutpoints());
             }
 
@@ -587,7 +701,7 @@ public class ReviewTxModel extends AndroidViewModel {
                         1 - countP2WSH_P2TR,
                         countP2WSH_P2TR);
                 Log.d("SendActivity", "fee:" + fee.longValue());
-                txData.setChange(totalValueSelected - (amount + fee.longValue()));
+                txData.getValue().setChange(totalValueSelected - (amount + fee.longValue()));
 
             } else {
 
@@ -598,7 +712,7 @@ public class ReviewTxModel extends AndroidViewModel {
                         2 - countP2WSH_P2TR,
                         countP2WSH_P2TR);
 
-                txData.setChange(totalValueSelected - (amount + fee.longValue()));
+                txData.getValue().setChange(totalValueSelected - (amount + fee.longValue()));
             }
         }
 
@@ -626,9 +740,9 @@ public class ReviewTxModel extends AndroidViewModel {
                 .boltzmann(_utxos1, _utxos2, BigInteger.valueOf(amount), address, account);
     }
 
-    public MutableLiveData<EnumSendType> getImpliedSendType() {
+    public LiveData<EnumSendType> getImpliedSendType() {
         if (isNull(impliedSendType)) {
-            impliedSendType = new MutableLiveData<>(computeSendType());
+            computeSendType();
         }
         return impliedSendType;
     }
@@ -642,12 +756,16 @@ public class ReviewTxModel extends AndroidViewModel {
 
     private EnumSendType computeSendType() {
         sendType = processSendType();
+        if (isNull(impliedSendType)) {
+            impliedSendType = new MutableLiveData<>(sendType);
+        } else {
+            impliedSendType.postValue(sendType);
+        }
         return sendType;
     }
 
     private EnumSendType processSendType() {
         switch (type) {
-            case SPEND_SIMPLE:
             case SPEND_BOLTZMANN:
                 return canDoBoltzmann() ? SPEND_BOLTZMANN : SPEND_SIMPLE;
             default:
@@ -671,7 +789,7 @@ public class ReviewTxModel extends AndroidViewModel {
         return this;
     }
 
-    public TxData getTxData() {
+    public MutableLiveData<TxData> getTxData() {
         return txData;
     }
 
@@ -743,8 +861,10 @@ public class ReviewTxModel extends AndroidViewModel {
                         .put("Joinbot Fee", computeJoinbotFee())
                         .build());
             case SPEND_BATCH:
+            case SPEND_CUSTOM_BATCH:
                 return getSpendBatchFees();
             case SPEND_SIMPLE:
+            case SPEND_CUSTOM:
             default:
                 return getSimpleFees();
         }
@@ -771,12 +891,7 @@ public class ReviewTxModel extends AndroidViewModel {
             }
         }
 
-        final List<UTXO> utxos = Lists.newArrayList();
-        if (account == SamouraiAccountIndex.DEPOSIT) {
-            utxos.addAll(APIFactory.getInstance(getApplication()).getUtxos(true));
-        } else if (account == SamouraiAccountIndex.POSTMIX) {
-            utxos.addAll(APIFactory.getInstance(getApplication()).getUtxosPostMix(true));
-        }
+        final List<UTXO> utxos = getAllUtxo();
 
         Collections.sort(utxos, new UTXO.UTXOComparator());
 
@@ -790,26 +905,28 @@ public class ReviewTxModel extends AndroidViewModel {
         for (final UTXO utxo : utxos) {
 
             selectedUTXO.add(utxo);
-            totalValueSelected += utxo.getValue();
-            totalSelected += utxo.getOutpoints().size();
 
-            final Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance()
-                    .getOutpointCount(new Vector(utxo.getOutpoints()));
-            p2pkh += outpointTypes.getLeft();
-            p2sh_p2wpkh += outpointTypes.getMiddle();
-            p2wpkh += outpointTypes.getRight();
+            if (! isCustomComputation()) {
+                totalValueSelected += utxo.getValue();
+                totalSelected += utxo.getOutpoints().size();
 
-            final long estimatedFee = FeeUtil.getInstance().estimatedFeeSegwit(
-                    p2pkh,
-                    p2sh_p2wpkh,
-                    p2wpkh,
-                    destAddresses.size() - countP2WSH_P2TR + 1,
-                    countP2WSH_P2TR
-            ).longValue();
+                final Triple<Integer, Integer, Integer> outpointTypes = FeeUtil.getInstance()
+                        .getOutpointCount(new Vector(utxo.getOutpoints()));
+                p2pkh += outpointTypes.getLeft();
+                p2sh_p2wpkh += outpointTypes.getMiddle();
+                p2wpkh += outpointTypes.getRight();
 
-            final long spendValueEst = amount + SamouraiWallet.bDust.longValue() + estimatedFee;
-            if (totalValueSelected >= spendValueEst) {
-                break;
+                final long estimatedFee = FeeUtil.getInstance().estimatedFeeSegwit(
+                        p2pkh,
+                        p2sh_p2wpkh,
+                        p2wpkh,
+                        destAddresses.size() - countP2WSH_P2TR + 1,
+                        countP2WSH_P2TR
+                ).longValue();
+                final long spendValueEst = amount + SamouraiWallet.bDust.longValue() + estimatedFee;
+                if (totalValueSelected >= spendValueEst) {
+                    break;
+                }
             }
         }
 
@@ -874,10 +991,14 @@ public class ReviewTxModel extends AndroidViewModel {
 
     public boolean canDoBoltzmann() {
 
+        final boolean isStonewallPossible = stonewallPossible.getValue();
+
         if (CollectionUtils.isNotEmpty(preselectedUTXOs)) {
+            stonewallPossible.postValue(false);
             return false;
         }
         if (amount == getBalance()) {
+            stonewallPossible.postValue(false);
             return false;
         }
 
@@ -886,6 +1007,7 @@ public class ReviewTxModel extends AndroidViewModel {
         final List<UTXO> _utxos2 = utxo1AndUtxo2.getRight();
 
         if (CollectionUtils.isEmpty(_utxos1) && CollectionUtils.isEmpty(_utxos2)) {
+            stonewallPossible.postValue(false);
             return false;
         } else {
 
@@ -894,40 +1016,72 @@ public class ReviewTxModel extends AndroidViewModel {
             final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = getStonewallPair();
 
             if (isNull(pair)) {
-                txData.restoreChangeIndexes(getApplication());
+                txData.getValue().restoreChangeIndexes(getApplication());
+                stonewallPossible.postValue(false);
                 return false;
             } else {
+                stonewallPossible.postValue(true);
                 return true;
             }
         }
     }
 
+    public LiveData<Boolean> isStonewallPossible() {
+        return stonewallPossible;
+    }
+
     public int getChangeType() {
         
-        if (type == SPEND_BATCH) {
+        if (getSendType().isBatchSpend()) {
             return 84;
         }
 
-        boolean useLikeType = PrefsUtil.getInstance(getApplication())
-                .getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true);
+        final boolean useLikeType = isChangeUseLikeTyped() || useLikeRequestedAsFixForTx;
 
-        if (nonNull(DojoUtil.getInstance(getApplication()).getDojoParams()) &&
-                !DojoUtil.getInstance(getApplication()).isLikeType()) {
-            
-            useLikeType = false;
-        }
-
-        if (!useLikeType) {
+        if (!useLikeType || FormatsUtil.getInstance().isValidBech32(address)) {
             return 84;
-        } else if (FormatsUtil.getInstance().isValidBech32(address) ||
-                Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
-            return FormatsUtil.getInstance().isValidBech32(address) ? 84 : 49;
+        } else if (Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
+            return 49;
         } else {
             return 44;
         }
     }
 
+    public boolean isChangeUseLikeTyped() {
+        if (isNull(_changeUseLikeTyped)) {
+
+            boolean useLikeType = true;
+            try {
+                useLikeType = PrefsUtil.getInstance(getApplication())
+                        .getValue(PrefsUtil.USE_LIKE_TYPED_CHANGE, true);
+            } catch (final Exception e) {
+                useLikeType = true;
+            }
+
+            if (nonNull(DojoUtil.getInstance(getApplication()).getDojoParams()) &&
+                    !DojoUtil.getInstance(getApplication()).isLikeType()) {
+
+                useLikeType = false;
+            }
+            _changeUseLikeTyped = useLikeType;
+        }
+        return _changeUseLikeTyped;
+    }
+
+    public void setUseLikeRequestedAsFixForTx(boolean useLikeRequestedAsFixForTx) {
+        this.useLikeRequestedAsFixForTx = useLikeRequestedAsFixForTx;
+    }
+
+    public boolean isUseLikeRequestedAsFixForTx() {
+        return useLikeRequestedAsFixForTx;
+    }
+
     private List<UTXO> getAllUtxo() {
+
+        if (isCustomComputation()) {
+            return toUtxos(customSelectionUtxoOutPoints);
+        }
+
         if (CollectionUtils.isNotEmpty(preselectedUTXOs)) {
             final List<UTXO> utxos = new ArrayList<>();
             // sort in descending order by value
@@ -941,12 +1095,13 @@ public class ReviewTxModel extends AndroidViewModel {
             return utxos;
         } else {
             if (isPostmixAccount()) {
-                return new ArrayList<>(APIFactory.getInstance(getApplication()).getUtxosPostMix(true));
+                return toUtxoPoints(APIFactory.getInstance(getApplication()).getUtxosPostMix(true));
             } else {
                 if (nonNull(address)) {
-                    return UTXOFactory.getInstance().getUTXOS(address, getNeededAmount(), account);
+                    return toUtxoPoints(UTXOFactory.getInstance().getUTXOS(address, getNeededAmount(), account));
+                } else {
+                    return toUtxoPoints(APIFactory.getInstance(getApplication()).getUtxos(true));
                 }
-                return Lists.newArrayList();
             }
         }
     }
@@ -966,7 +1121,6 @@ public class ReviewTxModel extends AndroidViewModel {
             }
         }
         return shuffledUtxosP2PKH;
-
     }
     private List<UTXO> getShuffledUtxosP2SH_P2WPKH() {
         if (isNull(shuffledUtxosP2SH_P2WPKH)) {
@@ -992,8 +1146,8 @@ public class ReviewTxModel extends AndroidViewModel {
 
     private Map<String, Long> getSimpleFees() {
 
-        txData.clear();
-        txData.getReceivers().put(address, BigInteger.valueOf(getImpliedAmount().getValue()));
+        txData.getValue().clear();
+        txData.getValue().getReceivers().put(address, BigInteger.valueOf(getImpliedAmount().getValue()));
 
         int countP2WSH_P2TR = 0;
         if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(address))    {
@@ -1004,12 +1158,12 @@ public class ReviewTxModel extends AndroidViewModel {
         Collections.sort(utxos, UTXO_COMPARATOR_BY_VALUE);
         Collections.reverse(utxos);
 
-        long totalValueSelected = 0l;
+        long totalValueSelected = 0L;
 
-        if (amount == getBalance()) {
+        if (amount == getBalance() || isCustomComputation()) {
 
-            txData.getSelectedUTXO().addAll(utxos);
-            for (final UTXO u : txData.getSelectedUTXO()) {
+            txData.getValue().addSelectedUTXO(utxos);
+            for (final UTXO u : txData.getValue().getSelectedUTXO()) {
                 totalValueSelected += u.getValue();
             }
 
@@ -1026,7 +1180,7 @@ public class ReviewTxModel extends AndroidViewModel {
                                 outpointTypes.getRight(),
                                 2 - countP2WSH_P2TR,
                                 countP2WSH_P2TR).longValue())) {
-                    txData.getSelectedUTXO().add(utxo);
+                    txData.getValue().addSelectedUTXO(utxo);
                     totalValueSelected += utxo.getValue();
                     Log.d("SendActivity", "spend type:" + getSendType());
                     Log.d("SendActivity", "single output");
@@ -1038,7 +1192,7 @@ public class ReviewTxModel extends AndroidViewModel {
                 }
             }
 
-            if (txData.getSelectedUTXO().size() == 0) {
+            if (txData.getValue().getSelectedUTXO().size() == 0) {
                 // sort in descending order by value
                 Collections.sort(utxos, new UTXO.UTXOComparator());
                 int selected = 0;
@@ -1049,7 +1203,7 @@ public class ReviewTxModel extends AndroidViewModel {
                 // get largest UTXOs > than spend + fee + dust
                 for (final UTXO u : utxos) {
 
-                    txData.getSelectedUTXO().add(u);
+                    txData.getValue().addSelectedUTXO(u);
                     totalValueSelected += u.getValue();
                     selected += u.getOutpoints().size();
 
@@ -1072,10 +1226,12 @@ public class ReviewTxModel extends AndroidViewModel {
             }
         }
 
-        if (txData.getSelectedUTXO().size() > 0) {
+        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
+
+        if (txData.getValue().getSelectedUTXO().size() > 0) {
 
             final List<MyTransactionOutPoint> outpoints = new ArrayList<>();
-            for (final UTXO utxo : txData.getSelectedUTXO()) {
+            for (final UTXO utxo : txData.getValue().getSelectedUTXO()) {
                 outpoints.addAll(utxo.getOutpoints());
             }
 
@@ -1092,7 +1248,7 @@ public class ReviewTxModel extends AndroidViewModel {
                         countP2WSH_P2TR);
                 Log.d("SendActivity", "fee:" + fee.longValue());
 
-                txData.setChange(0);
+                txData.getValue().setChange(0);
                 return Maps.newLinkedHashMap(ImmutableMap.of(MINER, fee.longValue()));
 
             } else {
@@ -1104,12 +1260,12 @@ public class ReviewTxModel extends AndroidViewModel {
                         2 - countP2WSH_P2TR,
                         countP2WSH_P2TR);
 
-                txData.setChange(totalValueSelected - (amount + fee.longValue()));
+                txData.getValue().setChange(totalValueSelected - (amount + fee.longValue()));
                 return Maps.newLinkedHashMap(ImmutableMap.of(MINER, fee.longValue()));
             }
         }
 
-        return Maps.newLinkedHashMap(ImmutableMap.of(MINER, 0l));
+        return Maps.newLinkedHashMap(ImmutableMap.of(MINER, 0L));
     }
 
     public JSONObject getRicochetJsonObj() {
@@ -1542,5 +1698,12 @@ public class ReviewTxModel extends AndroidViewModel {
         } else {
             return 0L;
         }
+    }
+
+    public void recomposeStonewall() {
+        shuffledUtxosP2PKH = null;
+        shuffledUtxosP2WPKH = null;
+        shuffledUtxosP2SH_P2WPKH = null;
+        refreshModel();
     }
 }

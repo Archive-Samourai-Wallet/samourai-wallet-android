@@ -49,10 +49,11 @@ import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.LinearLayoutManagerWrapper;
+import com.samourai.wallet.util.func.EnumAddressType;
+import com.samourai.wallet.util.func.FormatsUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.utxos.models.UTXOCoinSegment;
@@ -292,20 +293,20 @@ public class UTXOSActivity extends SamouraiActivity implements ActionMode.Callba
                 spendables = spendables + 1;
 
             }
-            UTXOUtil.AddressTypes type = UTXOUtil.getAddressType(model.address);
+            final EnumAddressType type = EnumAddressType.fromAddress(model.address);
             switch (type) {
-                case LEGACY:
+                case BIP44_LEGACY:
                     if (!addressFilterLegacy) {
                         filteredAddress.remove(model);
                     }
                     break;
-                case SEGWIT_COMPAT: {
+                case BIP49_SEGWIT_COMPAT: {
                     if (!addressFilterSegwitCompat) {
                         filteredAddress.remove(model);
                     }
                     break;
                 }
-                case SEGWIT_NATIVE: {
+                case BIP84_SEGWIT_NATIVE: {
                     if (!addressFilterSegwitNat) {
                         filteredAddress.remove(model);
                     }

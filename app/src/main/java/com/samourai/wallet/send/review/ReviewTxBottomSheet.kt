@@ -9,7 +9,6 @@ import androidx.compose.material.Surface
 import androidx.compose.ui.platform.ComposeView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.samourai.wallet.theme.SamouraiWalletTheme
-import com.samourai.wallet.tools.SignMessage
 
 class ReviewTxBottomSheet(
     private val model: ReviewTxModel,
@@ -19,6 +18,8 @@ class ReviewTxBottomSheet(
     enum class ReviewSheetType {
         MANAGE_FEE,
         PREVIEW_TX,
+        FILTER_UTXO,
+        ;
     }
 
     override fun onCreateView(
@@ -33,7 +34,8 @@ class ReviewTxBottomSheet(
                 Surface(color = MaterialTheme.colors.background) {
                     when (type) {
                         ReviewSheetType.MANAGE_FEE -> ReviewTxFeeManager(model = model)
-                        ReviewSheetType.PREVIEW_TX -> SignMessage()
+                        ReviewSheetType.PREVIEW_TX -> ReviewTxCoinSelectionManager(model = model)
+                        ReviewSheetType.FILTER_UTXO -> FilterUtxoManager(model = model)
                     }
                 }
             }

@@ -1,5 +1,7 @@
 package com.samourai.wallet.util.func;
 
+import static org.apache.commons.lang3.StringUtils.isAllBlank;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -33,7 +35,8 @@ public class SendAddressUtil {
         }
     }
 
-    public int get(String addr) {
+    public int get(final String addr) {
+        if (isAllBlank(addr)) return 0;
         if(addr.length() >= 12 && sendAddresses.get(addr.substring(0, 12)) == null) {
             return -1;
         }

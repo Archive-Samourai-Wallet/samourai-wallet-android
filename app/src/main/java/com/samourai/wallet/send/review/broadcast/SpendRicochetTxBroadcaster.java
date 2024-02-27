@@ -1,4 +1,4 @@
-package com.samourai.wallet.send.review;
+package com.samourai.wallet.send.review.broadcast;
 
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -8,13 +8,13 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.ricochet.RicochetActivity;
 import com.samourai.wallet.ricochet.RicochetMeta;
+import com.samourai.wallet.send.review.ReviewTxModel;
 import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.activity.ActivityHelper;
 import com.samourai.wallet.util.network.WebUtil;

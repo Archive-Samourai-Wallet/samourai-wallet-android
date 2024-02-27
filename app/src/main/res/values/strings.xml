@@ -1026,6 +1026,24 @@
     <string name="copy_content">Copy content</string>
     <string name="email_content_copied">Email content copied to clipboard</string>
 
-    <string name="postmix_Account_deposit_account">You are attempting to spend from your Postmix to Deposit account.\nDo you wish to continue?</string>
+    <string name="tx_alert_title">Transaction alerts</string>
+
+    <string name="tx_alert_title_reused_sending_address">Reused sending address</string>
+    <string name="tx_alert_desc_reused_sending_address">You have sent bitcoin to this address before. Try to avoid sending to addresses that have already been used to help protect your privacy.</string>
+
+    <string name="tx_alert_title_unnecessary_input">Unnecessary inputs</string>
+    <string name="tx_alert_desc_unnecessary_input">This transaction includes more inputs than is needed to compose the transaction which is inefficient and may reveal more information than needed on the blockchain.</string>
+
+    <string name="tx_alert_title_rounded_sending_amount">Rounded sending amount heuristic</string>
+    <string name="tx_alert_desc_rounded_sending_amount">This transaction includes a round amount. This heuristic is reliably used by blockchain surveillance firms to determine the send location and change output. Consider sending a less obvious amount to avoid this heuristic.</string>
+
+    <string name="tx_alert_title_scrypt_type_heuristic">Script type heuristic</string>
+    <string name="tx_alert_desc_scrypt_type_heuristic">This transaction spends to a script type that will make it obvious to blockchain surveillance observers what the send destination is and what the change output is. Your Samourai Wallet can solve this privacy issue by enabling the Like Type Change Outputs feature.</string>
+
+    <string name="tx_alert_title_spend_dust_output">Spending dust outputs</string>
+    <string name="tx_alert_desc_spend_dust_output">This transaction includes one or more inputs that are considered "dust". Unless you specifically meant for this transaction to include these small outputs it may indicate a serious privacy issue. Your Samourai Wallet can solve this privacy by marking these dust outputs as unspendable.</string>
+
+    <string name="tx_alert_title_spend_from_postmix_to_deposit">Spending from Postmix to Deposit account</string>
+    <string name="tx_alert_desc_spend_from_postmix_to_deposit">You are attempting to spend from your Postmix to Deposit account</string>
 
 </resources>

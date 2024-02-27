@@ -1,8 +1,8 @@
 package com.samourai.wallet.send.cahoots;
 
 import static com.samourai.wallet.send.SendActivity.stubAddress;
-import static com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.DONE;
-import static com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_ENABLED;
+import static com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener.EnumSwipeSendButtonState.DONE;
+import static com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_ENABLED;
 import static com.samourai.wallet.util.tech.ColorUtil.getAttributeColor;
 import static com.samourai.wallet.util.tech.ColorUtil.lightenColor;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -10,7 +10,6 @@ import static java.util.Objects.nonNull;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.LayoutInflater;
@@ -24,7 +23,6 @@ import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.MutableLiveData;
@@ -43,9 +41,8 @@ import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.cahoots.stowaway.Stowaway;
 import com.samourai.wallet.send.PushTx;
-import com.samourai.wallet.send.review.SwipeSendButtonFragment;
-import com.samourai.wallet.send.review.SwipeSendButtonListener;
-import com.samourai.wallet.util.tech.ColorUtil;
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonFragment;
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener;
 import com.samourai.wallet.widgets.EntropyBar;
 
 import org.bitcoinj.core.TransactionOutput;

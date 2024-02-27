@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.samourai.wallet.R
 import com.samourai.wallet.send.FeeUtil
+import com.samourai.wallet.send.review.ref.EnumTransactionPriority
 import com.samourai.wallet.theme.samouraiAccent
 import com.samourai.wallet.theme.samouraiBlueButton
 import com.samourai.wallet.theme.samouraiBottomSheetBackground
@@ -62,7 +63,8 @@ fun ReviewTxFeeManager(model: ReviewTxModel) {
                         backgroundColor = samouraiBottomSheetBackground,
                         title = {
                             Text(
-                                text = "Manage transaction priority", fontSize = 13.sp,
+                                text = "Manage transaction priority",
+                                fontSize = 14.sp,
                                 color = samouraiAccent
                             )
                         },
@@ -119,8 +121,8 @@ fun Body(model: ReviewTxModel) {
 
     Column (
         modifier = Modifier
-            .padding(top = 9.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row (
             modifier = Modifier
@@ -267,7 +269,7 @@ fun Body(model: ReviewTxModel) {
     }
 }
 
-@Preview(showBackground = true, widthDp = 420)
+@Preview(showBackground = true, widthDp = 420, apiLevel = 33)
 @Composable
 fun DefaultPreviewReviewTxFeeManager(
     @PreviewParameter(MyModelPreviewProvider::class) model: ReviewTxModel

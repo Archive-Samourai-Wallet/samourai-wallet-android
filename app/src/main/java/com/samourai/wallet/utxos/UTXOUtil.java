@@ -3,10 +3,6 @@ package com.samourai.wallet.utxos;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.samourai.wallet.SamouraiWallet;
-import com.samourai.wallet.util.func.FormatsUtil;
-
-import org.bitcoinj.core.Address;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -17,12 +13,6 @@ import java.util.List;
 
 
 public class UTXOUtil {
-
-    public enum AddressTypes {
-        LEGACY,
-        SEGWIT_COMPAT,
-        SEGWIT_NATIVE;
-    }
 
     private static UTXOUtil instance = null;
 
@@ -246,20 +236,6 @@ public class UTXOUtil {
         }
         catch(JSONException ex) {
             throw new RuntimeException(ex);
-        }
-    }
-
-    public static AddressTypes getAddressType(String address) {
-
-
-        if (FormatsUtil.getInstance().isValidBech32(address)) {
-            // is bech32: p2wpkh BIP84
-            return AddressTypes.SEGWIT_NATIVE;
-        } else if (Address.fromBase58(SamouraiWallet.getInstance().getCurrentNetworkParams(), address).isP2SHAddress()) {
-            // is P2SH wrapped segwit BIP49
-            return AddressTypes.SEGWIT_COMPAT;
-        } else {
-            return AddressTypes.LEGACY;
         }
     }
 

@@ -1,24 +1,17 @@
-package com.samourai.wallet.send.review;
+package com.samourai.wallet.send.review.broadcast;
 
-import static com.samourai.wallet.send.review.EnumSendType.SPEND_SIMPLE;
 import static java.util.Objects.nonNull;
 
 import android.content.Intent;
-import android.widget.CheckBox;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.common.collect.Lists;
-import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.TxAnimUIActivity;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.send.MyTransactionOutPoint;
-import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXO;
-import com.samourai.wallet.util.func.AddressFactory;
-import com.samourai.wallet.util.func.FormatsUtil;
+import com.samourai.wallet.send.review.ReviewTxModel;
 import com.samourai.wallet.util.func.SendAddressUtil;
 
 import java.math.BigInteger;
@@ -45,13 +38,13 @@ public class SpendSimpleTxBroadcaster {
     public SpendSimpleTxBroadcaster broadcast() {
 
         final List<MyTransactionOutPoint> outPoints = Lists.newArrayList();
-        for (final UTXO u : model.getTxData().getSelectedUTXO()) {
+        for (final UTXO u : model.getTxData().getValue().getSelectedUTXO()) {
             outPoints.addAll(u.getOutpoints());
         }
 
         final String changeAddress = SendParams.generateChangeAddress(
                 activity,
-                model.getTxData().getChange(),
+                model.getTxData().getValue().getChange(),
                 model.getSendType().getType(),
                 model.getAccount(),
                 model.getChangeType(),
@@ -59,17 +52,17 @@ public class SpendSimpleTxBroadcaster {
                 true);
 
         if (nonNull(changeAddress)) {
-            model.getTxData().getReceivers().put(
+            model.getTxData().getValue().getReceivers().put(
                     changeAddress,
-                    BigInteger.valueOf(model.getTxData().getChange()));
+                    BigInteger.valueOf(model.getTxData().getValue().getChange()));
         }
 
         SendParams.getInstance().setParams(
                 outPoints,
-                model.getTxData().getReceivers(),
+                model.getTxData().getValue().getReceivers(),
                 BIP47Meta.getInstance().getPcodeFromLabel(model.getAddressLabel()),
                 model.getSendType().getType(),
-                model.getTxData().getChange(),
+                model.getTxData().getValue().getChange(),
                 model.getChangeType(),
                 model.getAccount(),
                 model.getAddress(),
@@ -89,13 +82,13 @@ public class SpendSimpleTxBroadcaster {
     public int getChangeIndex() {
         final int changeType = model.getChangeType();
         if (model.isPostmixAccount()) {
-            return model.getTxData().getIdxBIP84PostMixInternal();
+            return model.getTxData().getValue().getIdxBIP84PostMixInternal();
         } else if (changeType == 84) {
-            return model.getTxData().getIdxBIP84Internal();
+            return model.getTxData().getValue().getIdxBIP84Internal();
         } else if (changeType == 49) {
-            return model.getTxData().getIdxBIP49Internal();
+            return model.getTxData().getValue().getIdxBIP49Internal();
         } else {
-            return model.getTxData().getIdxBIP44Internal();
+            return model.getTxData().getValue().getIdxBIP44Internal();
         }
     }
 }
