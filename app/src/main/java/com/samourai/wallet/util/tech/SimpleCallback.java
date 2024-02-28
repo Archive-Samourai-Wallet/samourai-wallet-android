@@ -2,8 +2,8 @@ package com.samourai.wallet.util.tech;
 
 public interface SimpleCallback<T> {
 
-    void onComplete(T result);
+    default void onComplete(T result) {}
 
-    void onException(Throwable t);
+    default void onException(Throwable t) {}
 
 }
