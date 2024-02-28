@@ -129,12 +129,7 @@ class Auth47ViewModel : ViewModel() {
             SamouraiTorManager.getTorStateLiveData().observe(activity) {
                 if (it.state == EnumTorState.ON) {
                     if (authStarted.compareAndSet(false, true)) {
-                        viewModelScope.launch {
-                            withContext(Dispatchers.IO) {
-                                // needs to let extra time to Tor for the first init to avoid retry
-                                delay(2000L)
-                            }
-                        }.invokeOnCompletion { startAuth(!starting, activity) }
+                        startAuth(!starting, activity)
                     }
                 }
             }

@@ -1,5 +1,8 @@
 package com.samourai.wallet;
 
+import static java.lang.Math.max;
+import static java.util.Objects.isNull;
+
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -16,6 +19,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.lifecycle.Observer;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.auth0.android.jwt.JWT;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.samourai.wallet.access.AccessFactory;
@@ -29,21 +37,25 @@ import com.samourai.wallet.service.BackgroundManager;
 import com.samourai.wallet.service.WebSocketService;
 import com.samourai.wallet.tor.EnumTorState;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.tor.TorState;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.network.ConnectivityStatus;
-import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.TimeOutUtil;
+import com.samourai.wallet.util.network.ConnectivityStatus;
+import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.util.tech.LogUtil;
+import com.samourai.wallet.util.tech.SimpleCallback;
+import com.samourai.wallet.util.tech.SimpleTaskRunner;
 
 import org.apache.commons.codec.DecoderException;
+import org.apache.commons.io.ThreadUtils;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import java.time.Duration;
+import java.util.concurrent.Callable;
+
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -63,6 +75,7 @@ public class MainActivity2 extends AppCompatActivity {
     private SwitchCompat netSwitch;
     private TextView mainnetText;
     private TextView testnetText;
+    private Observer<TorState> torStateObserver;
 
     protected BroadcastReceiver receiver_restart = new BroadcastReceiver() {
         @Override
@@ -122,6 +135,8 @@ public class MainActivity2 extends AppCompatActivity {
 
         loaderTxView = findViewById(R.id.loader_text);
         progressIndicator = findViewById(R.id.loader);
+        progressIndicator.setIndeterminate(false);
+        progressIndicator.setMax(100);
 
 
         if (PrefsUtil.getInstance(MainActivity2.this).getValue(PrefsUtil.TESTNET, false) == true) {
@@ -135,26 +150,36 @@ public class MainActivity2 extends AppCompatActivity {
         startApp();
     }
 
+    @Override
+    protected void onResume() {
+
+        if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false) &&
+                !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE,false) &&
+                !SamouraiTorManager.INSTANCE.isConnected()) {
+
+            progressIndicator.setProgressCompat(0, false);
+            SamouraiTorManager.INSTANCE.start();
+            initAppOnTorStart();
+        } else {
+            initAppOnResume();
+        }
+        super.onResume();
+
+    }
+
     private void startApp() {
 
-        if (SamouraiTorManager.INSTANCE.isRequired() && !AppUtil.getInstance(getApplicationContext()).isOfflineMode() && ConnectivityStatus.hasConnectivity(getApplicationContext()) && !SamouraiTorManager.INSTANCE.isConnected()) {
-            loaderTxView.setText(getText(R.string.initializing_tor));
-            progressIndicator.setIndeterminate(false);
-            progressIndicator.setMax(100);
-            SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(this, torState -> {
-                progressIndicator.setProgressCompat(torState.getProgressIndicator(),true);
-                if (torState.getState() == EnumTorState.ON) {
-                    initAppOnCreate();
-                    progressIndicator.setVisibility(View.GONE);
-                    progressIndicator.setIndeterminate(true);
-                    progressIndicator.setVisibility(View.VISIBLE);
-                }
-            });
+        if (SamouraiTorManager.INSTANCE.isRequired() &&
+                !AppUtil.getInstance(getApplicationContext()).isOfflineMode() &&
+                ConnectivityStatus.hasConnectivity(getApplicationContext()) &&
+                !SamouraiTorManager.INSTANCE.isConnected()) {
 
+            progressIndicator.setProgressCompat(0, false);
+            loaderTxView.setText(getText(R.string.initializing_tor));
+            initAppOnTorStart();
         } else {
             initAppOnCreate();
         }
-
     }
 
     private void initAppOnCreate() {
@@ -196,23 +221,36 @@ public class MainActivity2 extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onResume() {
-        if (PrefsUtil.getInstance(this).getValue(PrefsUtil.ENABLE_TOR, false)
-                && !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE,false)
-                && !SamouraiTorManager.INSTANCE.isConnected()) {
+    private void initAppOnTorStart() {
+        if (isNull(torStateObserver)) {
+            torStateObserver = new Observer<TorState>() {
+                @Override
+                public void onChanged(TorState torState) {
 
-            SamouraiTorManager.INSTANCE.start();
-            SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(this, torState -> {
-                if (torState.getState() == EnumTorState.ON) {
-                    initAppOnResume();
+                    final int progressIndicatorValue = torState.getProgressIndicator();
+                    progressIndicator.setProgressCompat(
+                            max(progressIndicatorValue, progressIndicator.getProgress()),
+                            true);
+
+                    if (torState.getState() == EnumTorState.ON) {
+                        SimpleTaskRunner.create().executeAsync(new Callable<Object>() {
+                            @Override
+                            public Object call() throws Exception {
+                                // wait for progress bar to reach 100%
+                                ThreadUtils.sleep(Duration.ofMillis(500));
+                                return null;
+                            }
+                        }, new SimpleCallback<Object>() {
+                            @Override
+                            public void onComplete(Object result) {
+                                SimpleTaskRunner.create().executeAsync(() -> initAppOnCreate());
+                            }
+                        });
+                    }
                 }
-            });
-        } else {
-            initAppOnResume();
+            };
+            SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(this, torStateObserver);
         }
-        super.onResume();
-
     }
 
     private void initAppOnResume() {
@@ -271,12 +309,12 @@ public class MainActivity2 extends AppCompatActivity {
     }
 
     private void initDialog() {
-        Intent intent = new Intent(MainActivity2.this, OnBoardSlidesActivity.class);
+        final Intent intent = new Intent(MainActivity2.this, OnBoardSlidesActivity.class);
         startActivity(intent);
         finish();
     }
 
-    private void validatePIN(String strUri) {
+    private void validatePIN(final String strUri) {
         if (!pinEntryActivityLaunched) {
 
             if (AccessFactory.getInstance(MainActivity2.this).isLoggedIn() && !TimeOutUtil.getInstance().isTimedOut()) {
@@ -284,7 +322,7 @@ public class MainActivity2 extends AppCompatActivity {
             }
 
             AccessFactory.getInstance(MainActivity2.this).setIsLoggedIn(false);
-            Intent intent = new Intent(MainActivity2.this, PinEntryActivity.class);
+            final Intent intent = new Intent(MainActivity2.this, PinEntryActivity.class);
             if (strUri != null) {
                 intent.putExtra("uri", strUri);
                 PrefsUtil.getInstance(MainActivity2.this).setValue("SCHEMED_URI", strUri);
