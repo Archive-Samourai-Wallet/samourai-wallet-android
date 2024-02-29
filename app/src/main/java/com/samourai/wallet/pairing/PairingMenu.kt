@@ -117,6 +117,7 @@ class PairingMenuActivity : SamouraiActivity() {
         )
         val json = JSONObject()
         json.put("external", "samourai.wallet.watchonly")
+        json.put("version", "1.0.0")
         json.put("payload", encrypted)
 
         return json.toString()
