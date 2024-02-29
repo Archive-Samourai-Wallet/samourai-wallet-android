@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.samourai.wallet.R;
-import com.samourai.wallet.util.view.ViewHelper;
+import com.samourai.wallet.util.view.ViewUtil;
 
 
 public class TransactionProgressView extends FrameLayout {
@@ -167,7 +167,7 @@ public class TransactionProgressView extends FrameLayout {
 
         optionBtn1.setText(getResources().getText(R.string.broadcast_with_txtenna));
         optionBtn1.setVisibility(VISIBLE);
-        ViewHelper.animateChangeColor(
+        ViewUtil.animateChangeColor(
                 animator -> optionBtn1.setTextColor((int) animator.getAnimatedValue()),
                 getResources().getColor(R.color.blue_send_ui),
                 getResources().getColor(R.color.orange_send_ui),
@@ -175,7 +175,7 @@ public class TransactionProgressView extends FrameLayout {
 
         optionBtn2.setText(R.string.tx_option_broadcast_manually);
         optionBtn2.setVisibility(VISIBLE);
-        ViewHelper.animateChangeColor(
+        ViewUtil.animateChangeColor(
                 animator -> optionBtn2.setTextColor((int) animator.getAnimatedValue()),
                 getResources().getColor(R.color.blue_send_ui),
                 getResources().getColor(R.color.orange_send_ui),
@@ -204,7 +204,7 @@ public class TransactionProgressView extends FrameLayout {
 
         optionBtn1.setText(R.string.tx_option_attempt_broadcast);
         optionBtn1.setVisibility(VISIBLE);
-        ViewHelper.animateChangeColor(
+        ViewUtil.animateChangeColor(
                 animator -> optionBtn1.setTextColor((int) animator.getAnimatedValue()),
                 getResources().getColor(R.color.blue_send_ui),
                 getResources().getColor(R.color.red_send_ui),
@@ -212,7 +212,7 @@ public class TransactionProgressView extends FrameLayout {
 
         optionBtn2.setText(R.string.tx_option_contact_support);
         optionBtn2.setVisibility(VISIBLE);
-        ViewHelper.animateChangeColor(
+        ViewUtil.animateChangeColor(
                 animator -> optionBtn2.setTextColor((int) animator.getAnimatedValue()),
                 getResources().getColor(R.color.blue_send_ui),
                 getResources().getColor(R.color.red_send_ui),
@@ -226,7 +226,7 @@ public class TransactionProgressView extends FrameLayout {
                                                 final int colorFrom,
                                                 final int colorTo) {
 
-        ViewHelper.animateChangeColor(
+        ViewUtil.animateChangeColor(
                 mainView,
                 getResources().getColor(colorFrom),
                 getResources().getColor(colorTo),

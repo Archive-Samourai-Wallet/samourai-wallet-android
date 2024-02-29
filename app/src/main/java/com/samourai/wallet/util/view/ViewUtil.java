@@ -4,9 +4,9 @@ import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.view.View;
 
-public class ViewHelper {
+public class ViewUtil {
 
-    private ViewHelper() {}
+    private ViewUtil() {}
 
     public static void animateChangeColor(
             final View view,

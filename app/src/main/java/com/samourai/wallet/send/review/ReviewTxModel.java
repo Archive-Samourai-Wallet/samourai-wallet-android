@@ -138,6 +138,7 @@ public class ReviewTxModel extends AndroidViewModel {
     private MutableLiveData<Long> _feeMaxRate;
     private MutableLiveData<Long> minerFeeRates = null;
     private MutableLiveData<EnumTransactionPriority> transactionPriority = new MutableLiveData<>(EnumTransactionPriority.NORMAL);
+    private MutableLiveData<EnumTransactionPriority> transactionPriorityRequested = new MutableLiveData<>(EnumTransactionPriority.NORMAL);
     private MutableLiveData<String> txNote = new MutableLiveData<>(StringUtils.EMPTY);
     private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> _pair;
     private List<UTXO> shuffledUtxosP2PKH;
@@ -157,6 +158,14 @@ public class ReviewTxModel extends AndroidViewModel {
             compositeDisposable.dispose();
         }
         super.onCleared();
+    }
+
+    public LiveData<EnumTransactionPriority> getTransactionPriorityRequested() {
+        return transactionPriorityRequested;
+    }
+
+    public void setTransactionPriorityRequested(final EnumTransactionPriority priority) {
+        transactionPriorityRequested.postValue(priority);
     }
 
     public MutableLiveData<Boolean> getIsSomethingLoading() {

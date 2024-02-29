@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -29,10 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -49,12 +51,13 @@ import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButt
 import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_DISABLED
 import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_ENABLED
 import com.samourai.wallet.theme.samouraiBoxLightGrey
-import com.samourai.wallet.theme.samouraiLightGreyAccent
 import com.samourai.wallet.theme.samouraiSuccess
 import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.tech.ColorHelper
 import com.samourai.wallet.util.tech.ColorHelper.Companion.darkenColor
 import com.samourai.wallet.util.tech.ColorHelper.Companion.lightenColor
 import com.samourai.wallet.util.tech.HapticHelper.Companion.vibratePhone
+import com.samourai.wallet.util.view.ViewHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -70,11 +73,21 @@ fun SwipeSendButtonContent(
     listener: SwipeSendButtonListener?
 ) {
 
+    val context = LocalContext.current
+
     val showTapAndHoldComponent = remember { mutableStateOf(false) }
     val isOnSwipeValidation = remember { mutableStateOf(false) }
     val whiteAlpha = if(isOnSwipeValidation.value) 0.1f else 0f
 
-    Box {
+    val windowBackground = ColorHelper.getAttributeColor(
+        context = context,
+        attr = android.R.attr.windowBackground
+    )
+
+    Box (
+        modifier = Modifier
+            .background(lightenColor(windowBackground, whiteAlpha))
+    ) {
         Column (
             verticalArrangement = Arrangement.Bottom
         ) {
@@ -100,31 +113,34 @@ private fun TapAndHoldInfoComponent(
 ) {
 
     val ralewayFont = FontFamily(
-        Font(R.font.raleway, FontWeight.Normal)
+        Font(R.font.raleway_regular, FontWeight.Normal)
     )
 
     Row (
-        modifier = if (visible.value)
-            Modifier
-                .fillMaxWidth()
-                .background(
-                    lightenColor(samouraiBoxLightGrey, whiteAlpha),
-                    RoundedCornerShape(20.dp)
-                )
-        else Modifier
+        modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
     ) {
-        Column(
-            modifier = Modifier
-                .padding(bottom = 14.dp, top = 9.dp, start = 18.dp, end = 18.dp),
+        Box(
+            modifier = if (visible.value)
+                Modifier
+                    .background(
+                        lightenColor(samouraiBoxLightGrey, whiteAlpha),
+                        RoundedCornerShape(20.dp)
+                    )
+            else Modifier,
         ) {
-            androidx.compose.material.Text(
-                text = if (visible.value) "Tap and hold" else StringUtils.EMPTY,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontFamily = ralewayFont
-            )
+            Column(
+                modifier = Modifier
+                    .padding(bottom = 14.dp, top = 9.dp, start = 18.dp, end = 18.dp),
+            ) {
+                androidx.compose.material.Text(
+                    text = if (visible.value) "Tap and hold" else StringUtils.EMPTY,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontFamily = ralewayFont
+                )
+            }
         }
     }
 }
@@ -141,8 +157,8 @@ private fun SwipeSendButtonComponent(
 ) {
 
     val context = LocalContext.current
+    val density = LocalDensity.current
     val buttonSize = 48.dp
-    val screenWidthPx = getScreenWidthPx()
 
     var jobHoldInfo by remember { mutableStateOf<Job?>(null) }
     var jobForSwipeValidation by remember { mutableStateOf<Job?>(null) }
@@ -152,14 +168,14 @@ private fun SwipeSendButtonComponent(
     var btnAlpha = if (isButtonPressed || isOnSwipeValidation.value) 0.90f else 1f
     btnAlpha = if (enable.value!!) btnAlpha else btnAlpha - 0.5f
 
-    val swipeButtonPx = convertDpToPx(valueInDp = buttonSize)
-    val externalPaddingPx = convertDpToPx(valueInDp = 18.dp)
+    val swipeButtonPx = ViewHelper.convertDpToPx(valueInDp = buttonSize, density = density)
+    var componentSize by remember { mutableStateOf(Size.Zero) }
 
     val robotoMonoNormalFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Normal)
     )
     val ralewayFont = FontFamily(
-        Font(R.font.raleway, FontWeight.Normal)
+        Font(R.font.raleway_regular, FontWeight.Normal)
     )
     val hapticTadaPattern = longArrayOf(30, 64, 120, 64)
 
@@ -169,13 +185,24 @@ private fun SwipeSendButtonComponent(
 
     var dragOffset by remember { mutableStateOf(IntOffset(0, 0)) }
 
+    val windowBackground = ColorHelper.getAttributeColor(
+        context = context,
+        attr = android.R.attr.windowBackground
+    )
+
     Box (
         modifier = if (isOnSwipeValidation.value)
             Modifier
                 .padding(bottom = 9.dp, top = 9.dp)
-                .background(samouraiLightGreyAccent, RoundedCornerShape(20.dp)) else
+                .background(windowBackground, RoundedCornerShape(20.dp))
+                .onSizeChanged { newSize ->
+                    componentSize = Size(newSize.width.toFloat(), newSize.height.toFloat())
+                } else
             Modifier
                 .padding(bottom = 9.dp, top = 9.dp)
+                .onSizeChanged { newSize ->
+                    componentSize = Size(newSize.width.toFloat(), newSize.height.toFloat())
+                }
     ) {
         if (isOnSwipeValidation.value) {
             Row (
@@ -265,7 +292,7 @@ private fun SwipeSendButtonComponent(
                                                         .coerceAtLeast(0)
                                                 dragOffset = IntOffset(newX, dragOffset.y)
                                                 change.consume()
-                                                if (newX >= (screenWidthPx / 2f - externalPaddingPx - swipeButtonPx / 2f)) {
+                                                if (newX >= (componentSize.width / 2f - swipeButtonPx / 2f)) {
                                                     isFullSwiped = true
                                                     vibratePhone(
                                                         durationMs = 50L,
