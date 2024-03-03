@@ -63,6 +63,8 @@ import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.func.MonetaryUtil
+import com.samourai.wallet.util.func.RBFFactory.createRBFSpendFromTx
+import com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister
 import com.samourai.wallet.util.func.SentToFromBIP47Util
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
@@ -558,7 +560,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
             // get smallest 1 UTXO > than spend + fee + sw fee + dust
             //
             for (u in _utxos!!) {
-                if (u!!.value >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFee(1, 4).toLong()) {
+                if (u!!.value >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance()
+                    .estimatedFee(1, 4).toLong()) {
+
                     selectedUTXO.add(u)
                     totalValueSelected += u.value
                     Log.d("PayNymDetailsActivity", "value selected:" + u.value)
@@ -665,12 +669,13 @@ class PayNymDetailsActivity : SamouraiActivity() {
             // create inputs from outpoints
             //
             val inputs: MutableList<MyTransactionInput> = ArrayList()
+            val currentNetworkParams = SamouraiWallet.getInstance().currentNetworkParams
             for (o in outpoints) {
                 val script = Script(o.scriptBytes)
                 if (script.scriptType == Script.ScriptType.NO_TYPE) {
                     continue
                 }
-                val input = MyTransactionInput(SamouraiWallet.getInstance().currentNetworkParams, null, ByteArray(0), o, o.txHash.toString(), o.txOutputN)
+                val input = MyTransactionInput(currentNetworkParams, null, ByteArray(0), o, o.txHash.toString(), o.txOutputN)
                 inputs.add(input)
             }
             //
@@ -697,11 +702,11 @@ class PayNymDetailsActivity : SamouraiActivity() {
             try {
 //            Script inputScript = new Script(outPoint.getConnectedPubKeyScript());
                 val scriptBytes = outPoint?.connectedPubKeyScript
-                var address: String? = null
+                var address: String?
                 address = if (Bech32Util.getInstance().isBech32Script(Hex.toHexString(scriptBytes))) {
                     Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(scriptBytes))
                 } else {
-                    Script(scriptBytes).getToAddress(SamouraiWallet.getInstance().currentNetworkParams).toString()
+                    Script(scriptBytes).getToAddress(currentNetworkParams).toString()
                 }
                 //            String address = inputScript.getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
                 val ecKey = SendFactory.getPrivKey(address, 0)
@@ -713,7 +718,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 // use outpoint for payload masking
                 //
                 val privkey = ecKey.privKeyBytes
-                val pubkey = payment_code.notificationAddress(SamouraiWallet.getInstance().currentNetworkParams).pubKey
+                val pubkey = payment_code.notificationAddress(currentNetworkParams).pubKey
                 val outpoint = outPoint?.bitcoinSerialize()
                 //                Log.i("PayNymDetailsActivity", "outpoint:" + Hex.toHexString(outpoint));
 //                Log.i("PayNymDetailsActivity", "payer shared secret:" + Hex.toHexString(new SecretPoint(privkey, pubkey).ECDHSecretAsBytes()));
@@ -736,8 +741,15 @@ class PayNymDetailsActivity : SamouraiActivity() {
             }
             val receivers = HashMap<String, BigInteger>()
             receivers[Hex.toHexString(op_return)] = BigInteger.ZERO
-            receivers[payment_code.notificationAddress(SamouraiWallet.getInstance().currentNetworkParams).addressString] = SendNotifTxFactory._bNotifTxValue
-            receivers[if (SamouraiWallet.getInstance().isTestNet) SendNotifTxFactory.getInstance().TESTNET_SAMOURAI_NOTIF_TX_FEE_ADDRESS else SendNotifTxFactory.getInstance().SAMOURAI_NOTIF_TX_FEE_ADDRESS] = SendNotifTxFactory._bSWFee
+
+            val notificationAddr = payment_code.notificationAddress(currentNetworkParams).addressString
+            val samFeeAddress = if (SamouraiWallet.getInstance().isTestNet)
+                SendNotifTxFactory.getInstance().TESTNET_SAMOURAI_NOTIF_TX_FEE_ADDRESS
+            else SendNotifTxFactory.getInstance().SAMOURAI_NOTIF_TX_FEE_ADDRESS;
+
+            receivers[notificationAddr] = SendNotifTxFactory._bNotifTxValue
+            receivers[samFeeAddress] = SendNotifTxFactory._bSWFee
+
             val change = totalValueSelected - (amount + fee.toLong())
             if (change > 0L) {
                 val change_address = BIP84Util.getInstance(this@PayNymDetailsActivity).getAddressAt(
@@ -785,8 +797,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
                             }
 
                             var isOK = false
-                            var response: String? = null
+                            var response: String?
                             try {
+                                val rbf = createRBFSpendFromTx(tx, this@PayNymDetailsActivity)
                                 response = PushTx.getInstance(this@PayNymDetailsActivity).samourai(hexTx, null)
                                 Log.d("SendActivity", "pushTx:$response")
                                 if (response != null) {
@@ -818,11 +831,14 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                         //
                                         BIP47Meta.getInstance().setOutgoingStatus(pcode, tx.hashAsString, BIP47Meta.STATUS_SENT_NO_CFM)
 
+                                        updateRBFSpendForBroadcastTxAndRegister(rbf,  tx, samFeeAddress, 84, this@PayNymDetailsActivity)
+
                                         //
                                         // increment change index
                                         //
                                         if (change > 0L) {
-                                            BIP49Util.getInstance(this@PayNymDetailsActivity).wallet.getAccount(0).change.incAddrIdx()
+                                            BIP49Util.getInstance(this@PayNymDetailsActivity)
+                                                .wallet.getAccount(0).change.incAddrIdx()
                                         }
                                         if (!BIP47Meta.getInstance().exists(pcode, false)) {
                                             BIP47Meta.getInstance().setLabel(pcode, BIP47Meta.getInstance().getAbbreviatedPcode(pcode));

@@ -98,7 +98,7 @@ class CPFPTask(private val activity: SamouraiActivity, private val hash: String)
                 }
                 for (i in 0 until outputs.length()) {
                     val obj = outputs.getJSONObject(i)
-                    if (obj.has("value")) {
+                    if (obj.has("value") && obj.has("address")) {
                         total_outputs += obj.getLong("value")
                         val addr = obj.getString("address")
                         Log.d("CPFPTask", "checking address:$addr")

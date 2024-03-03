@@ -57,6 +57,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.util.Objects.isNull
+import java.util.Objects.nonNull
 import java.util.concurrent.atomic.AtomicBoolean
 
 class TxDetailsActivity : SamouraiActivity() {
@@ -85,8 +86,10 @@ class TxDetailsActivity : SamouraiActivity() {
         setSupportActionBar(findViewById(R.id.toolbar))
         if (intent.hasExtra("TX")) {
             try {
-                val TxJsonObject = JSONObject(intent.getStringExtra("TX"))
-                tx = Tx(TxJsonObject)
+                val txContent = intent.getStringExtra("TX")
+                if (nonNull(txContent)) {
+                    tx = Tx(JSONObject(txContent.toString()))
+                }
             } catch (e: JSONException) {
                 e.printStackTrace()
             }
