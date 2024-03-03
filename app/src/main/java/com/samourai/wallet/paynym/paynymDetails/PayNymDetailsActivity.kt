@@ -31,6 +31,7 @@ import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.Tx
+import com.samourai.wallet.api.fee.EnumFeeRepresentation
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.SendNotifTxFactory
@@ -572,56 +573,59 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 }
             }
 
-            //
-            // use normal fee settings
-            //
-            val suggestedFee = FeeUtil.getInstance().suggestedFee
-            val lo = FeeUtil.getInstance().lowFee.defaultPerKB.toLong() / 1000L
-            val mi = FeeUtil.getInstance().normalFee.defaultPerKB.toLong() / 1000L
-            val hi = FeeUtil.getInstance().highFee.defaultPerKB.toLong() / 1000L
-            if (lo == mi && mi == hi) {
-                val hi_sf = SuggestedFee()
-                hi_sf.defaultPerKB = BigInteger.valueOf((hi * 1000.0 * 1.15).toLong())
-                FeeUtil.getInstance().suggestedFee = hi_sf
-            } else if (lo == mi) {
-                FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().highFee
-            } else {
-                FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().normalFee
-            }
-            if (selectedUTXO.size == 0) {
-                // sort in descending order by value
-                Collections.sort(_utxos, UTXOComparator())
-                var selected = 0
+            val keepCurrentSuggestedFee = FeeUtil.getInstance().suggestedFee
+            try {
+                if (FeeUtil.getInstance().feeRepresentation === EnumFeeRepresentation.NEXT_BLOCK_RATE) {
+                    FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().highFee
+                } else {
 
-                // get largest UTXOs > than spend + fee + dust
-                for (u in _utxos) {
-                    selectedUTXO.add(u)
-                    totalValueSelected += u!!.value
-                    selected += u.outpoints.size
-                    if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFee(selected, 4).toLong()) {
-                        Log.d("PayNymDetailsActivity", "multiple outputs")
-                        Log.d("PayNymDetailsActivity", "total value selected:$totalValueSelected")
-                        Log.d("PayNymDetailsActivity", "nb inputs:" + u.outpoints.size)
-                        break
+                    val lo = FeeUtil.getInstance().lowFee.defaultPerKB.toLong() / 1000L
+                    val mi = FeeUtil.getInstance().normalFee.defaultPerKB.toLong() / 1000L
+                    val hi = FeeUtil.getInstance().highFee.defaultPerKB.toLong() / 1000L
+                    if (lo == mi && mi == hi) {
+                        val hi_sf = SuggestedFee()
+                        hi_sf.defaultPerKB = BigInteger.valueOf((hi * 1000.0 * 1.15).toLong())
+                        FeeUtil.getInstance().suggestedFee = hi_sf
+                    } else if (lo == mi) {
+                        FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().highFee
+                    } else {
+                        FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().normalFee
                     }
                 }
 
-//            fee = FeeUtil.getInstance().estimatedFee(selected, 4);
-                fee = FeeUtil.getInstance().estimatedFee(selected, 7)
-            } else {
-//            fee = FeeUtil.getInstance().estimatedFee(1, 4);
-                fee = FeeUtil.getInstance().estimatedFee(1, 7)
-            }
 
-            //
-            // reset fee to previous setting
-            //
-            FeeUtil.getInstance().suggestedFee = suggestedFee
+                if (selectedUTXO.size == 0) {
+                    // sort in descending order by value
+                    Collections.sort(_utxos, UTXOComparator())
+                    var selected = 0
+
+                    // get largest UTXOs > than spend + fee + dust
+                    for (u in _utxos) {
+                        selectedUTXO.add(u)
+                        totalValueSelected += u!!.value
+                        selected += u.outpoints.size
+                        if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFee(selected, 4).toLong()) {
+                            Log.d("PayNymDetailsActivity", "multiple outputs")
+                            Log.d("PayNymDetailsActivity", "total value selected:$totalValueSelected")
+                            Log.d("PayNymDetailsActivity", "nb inputs:" + u.outpoints.size)
+                            break
+                        }
+                    }
+
+                    fee = FeeUtil.getInstance().estimatedFee(selected, 7)
+                } else {
+                    fee = FeeUtil.getInstance().estimatedFee(1, 7)
+                }
+            } catch(e : Exception) {
+                return@launch
+            } finally {
+                FeeUtil.getInstance().suggestedFee = keepCurrentSuggestedFee
+            }
 
             //
             // total amount to spend including fee
             //
-            if (amount + fee.toLong() >= balance) {
+            if (amount + fee!!.toLong() >= balance) {
                 scope.launch(Dispatchers.Main) {
                     binding.progressBar.visibility = View.INVISIBLE
                     var message: String? = getText(R.string.bip47_notif_tx_insufficient_funds_1).toString() + " "
@@ -874,6 +878,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 manageException(it!!)
             }
         }
+        return
     }
 
     private fun manageException(it: Throwable) {

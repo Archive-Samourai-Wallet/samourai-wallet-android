@@ -133,6 +133,7 @@ public class RBFPreProcessing implements Callable<String> {
         Log.d("RBF", "tx outputs:" + tx.getOutputs().size());
         final JSONObject txObj = APIFactory.getInstance(activity).getTxInfo(txHash);
         if (nonNull(txObj) && txObj.has("inputs") && txObj.has("outputs")) {
+            final SuggestedFee keepCurrentSuggestedFee = FeeUtil.getInstance().getSuggestedFee();
             try {
                 JSONArray inputs = txObj.getJSONArray("inputs");
                 JSONArray outputs = txObj.getJSONArray("outputs");
@@ -167,14 +168,13 @@ public class RBFPreProcessing implements Callable<String> {
                     }
                 }
 
-                final SuggestedFee suggestedFee = FeeUtil.getInstance().getSuggestedFee();
                 FeeUtil.getInstance().setSuggestedFee(FeeUtil.getInstance().getHighFee());
                 final BigInteger estimatedInitialFee = FeeUtil.getInstance().estimatedFeeSegwit(p2pkh, p2sh_p2wpkh, p2wpkh, outputs.length());
 
-                long total_inputs = 0l;
-                long total_outputs = 0l;
+                long total_inputs = 0L;
+                long total_outputs = 0L;
                 long currentFee;
-                long total_change = 0l;
+                long total_change = 0L;
                 final Collection<String> outAddresses = Sets.newHashSet();
 
                 for (int i = 0; i < inputs.length(); i++) {
@@ -213,7 +213,7 @@ public class RBFPreProcessing implements Callable<String> {
                     feeWarning = true;
                 }
 
-                remainingFee = (estimatedInitialFee.longValue() > currentFee) ? estimatedInitialFee.longValue() - currentFee : 0l;
+                remainingFee = (estimatedInitialFee.longValue() > currentFee) ? estimatedInitialFee.longValue() - currentFee : 0L;
 
                 Log.d("RBF", "total inputs:" + total_inputs);
                 Log.d("RBF", "total outputs:" + total_outputs);
@@ -241,11 +241,11 @@ public class RBFPreProcessing implements Callable<String> {
                                 final long currentAmount = output.getValue().longValue();
                                 if (currentAmount >= (remainder + SamouraiWallet.bDust.longValue())) {
                                     output.setValue(Coin.valueOf(currentAmount - remainder));
-                                    remainder = 0l;
+                                    remainder = 0L;
                                     break;
                                 } else {
                                     remainder -= currentAmount;
-                                    output.setValue(Coin.valueOf(0l));      // output will be discarded later
+                                    output.setValue(Coin.valueOf(0L));      // output will be discarded later
                                 }
                             }
                         } catch (Exception e) {
@@ -275,11 +275,11 @@ public class RBFPreProcessing implements Callable<String> {
                     Log.d("RBF", "add outpoint:" + _input.getOutpoint().toString());
                 }
 
-                if (remainder > 0l) {
+                if (remainder > 0L) {
 
                     final List<UTXO> selectedUTXO = new ArrayList<>();
 
-                    long selectedAmount = 0l;
+                    long selectedAmount = 0L;
                     int selectedCount = 0;
                     long adjRemainingFee = remainder;
                     Collections.sort(utxos, new UTXO.UTXOComparator());
@@ -339,7 +339,7 @@ public class RBFPreProcessing implements Callable<String> {
                             break;
                         }
                     }
-                    long extraChange = 0l;
+                    long extraChange = 0L;
                     if (selectedAmount < (adjRemainingFee + SamouraiWallet.bDust.longValue())) {
                         return activity.getString(R.string.insufficient_funds);
                     } else {
@@ -348,7 +348,7 @@ public class RBFPreProcessing implements Callable<String> {
                     }
 
                     boolean addedChangeOutput = false;
-                    if (extraChange > 0l) {
+                    if (extraChange > 0L) {
                         // parent tx didn't have change output
                         if (outputs.length() == 1) {
 
@@ -449,7 +449,7 @@ public class RBFPreProcessing implements Callable<String> {
                 Collections.sort(_txOutputs, new BIP69OutputComparator());
                 for (final TransactionOutput to : _txOutputs) {
                     // zero value outputs discarded here
-                    if (to.getValue().longValue() > 0l) {
+                    if (to.getValue().longValue() > 0L) {
                         transaction.addOutput(to);
                     }
                 }
@@ -461,10 +461,10 @@ public class RBFPreProcessing implements Callable<String> {
                     transaction.addInput(input);
                 }
 
-                FeeUtil.getInstance().setSuggestedFee(suggestedFee);
-
             } catch (final Exception e) {
                 return "rbf:" + e.getMessage();
+            } finally {
+                FeeUtil.getInstance().setSuggestedFee(keepCurrentSuggestedFee);
             }
 
         } else {
