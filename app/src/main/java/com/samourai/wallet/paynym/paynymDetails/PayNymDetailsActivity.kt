@@ -31,6 +31,7 @@ import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.access.AccessFactory
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.Tx
+import com.samourai.wallet.api.fee.EnumFeeRepresentation
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.SendNotifTxFactory
@@ -63,6 +64,8 @@ import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.func.MonetaryUtil
+import com.samourai.wallet.util.func.RBFFactory.createRBFSpendFromTx
+import com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister
 import com.samourai.wallet.util.func.SentToFromBIP47Util
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
@@ -558,7 +561,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
             // get smallest 1 UTXO > than spend + fee + sw fee + dust
             //
             for (u in _utxos!!) {
-                if (u!!.value >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFee(1, 4).toLong()) {
+                if (u!!.value >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance()
+                    .estimatedFee(1, 4).toLong()) {
+
                     selectedUTXO.add(u)
                     totalValueSelected += u.value
                     Log.d("PayNymDetailsActivity", "value selected:" + u.value)
@@ -568,56 +573,59 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 }
             }
 
-            //
-            // use normal fee settings
-            //
-            val suggestedFee = FeeUtil.getInstance().suggestedFee
-            val lo = FeeUtil.getInstance().lowFee.defaultPerKB.toLong() / 1000L
-            val mi = FeeUtil.getInstance().normalFee.defaultPerKB.toLong() / 1000L
-            val hi = FeeUtil.getInstance().highFee.defaultPerKB.toLong() / 1000L
-            if (lo == mi && mi == hi) {
-                val hi_sf = SuggestedFee()
-                hi_sf.defaultPerKB = BigInteger.valueOf((hi * 1000.0 * 1.15).toLong())
-                FeeUtil.getInstance().suggestedFee = hi_sf
-            } else if (lo == mi) {
-                FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().highFee
-            } else {
-                FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().normalFee
-            }
-            if (selectedUTXO.size == 0) {
-                // sort in descending order by value
-                Collections.sort(_utxos, UTXOComparator())
-                var selected = 0
+            val keepCurrentSuggestedFee = FeeUtil.getInstance().suggestedFee
+            try {
+                if (FeeUtil.getInstance().feeRepresentation === EnumFeeRepresentation.NEXT_BLOCK_RATE) {
+                    FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().highFee
+                } else {
 
-                // get largest UTXOs > than spend + fee + dust
-                for (u in _utxos) {
-                    selectedUTXO.add(u)
-                    totalValueSelected += u!!.value
-                    selected += u.outpoints.size
-                    if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFee(selected, 4).toLong()) {
-                        Log.d("PayNymDetailsActivity", "multiple outputs")
-                        Log.d("PayNymDetailsActivity", "total value selected:$totalValueSelected")
-                        Log.d("PayNymDetailsActivity", "nb inputs:" + u.outpoints.size)
-                        break
+                    val lo = FeeUtil.getInstance().lowFee.defaultPerKB.toLong() / 1000L
+                    val mi = FeeUtil.getInstance().normalFee.defaultPerKB.toLong() / 1000L
+                    val hi = FeeUtil.getInstance().highFee.defaultPerKB.toLong() / 1000L
+                    if (lo == mi && mi == hi) {
+                        val hi_sf = SuggestedFee()
+                        hi_sf.defaultPerKB = BigInteger.valueOf((hi * 1000.0 * 1.15).toLong())
+                        FeeUtil.getInstance().suggestedFee = hi_sf
+                    } else if (lo == mi) {
+                        FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().highFee
+                    } else {
+                        FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().normalFee
                     }
                 }
 
-//            fee = FeeUtil.getInstance().estimatedFee(selected, 4);
-                fee = FeeUtil.getInstance().estimatedFee(selected, 7)
-            } else {
-//            fee = FeeUtil.getInstance().estimatedFee(1, 4);
-                fee = FeeUtil.getInstance().estimatedFee(1, 7)
-            }
 
-            //
-            // reset fee to previous setting
-            //
-            FeeUtil.getInstance().suggestedFee = suggestedFee
+                if (selectedUTXO.size == 0) {
+                    // sort in descending order by value
+                    Collections.sort(_utxos, UTXOComparator())
+                    var selected = 0
+
+                    // get largest UTXOs > than spend + fee + dust
+                    for (u in _utxos) {
+                        selectedUTXO.add(u)
+                        totalValueSelected += u!!.value
+                        selected += u.outpoints.size
+                        if (totalValueSelected >= amount + SamouraiWallet.bDust.toLong() + FeeUtil.getInstance().estimatedFee(selected, 4).toLong()) {
+                            Log.d("PayNymDetailsActivity", "multiple outputs")
+                            Log.d("PayNymDetailsActivity", "total value selected:$totalValueSelected")
+                            Log.d("PayNymDetailsActivity", "nb inputs:" + u.outpoints.size)
+                            break
+                        }
+                    }
+
+                    fee = FeeUtil.getInstance().estimatedFee(selected, 7)
+                } else {
+                    fee = FeeUtil.getInstance().estimatedFee(1, 7)
+                }
+            } catch(e : Exception) {
+                return@launch
+            } finally {
+                FeeUtil.getInstance().suggestedFee = keepCurrentSuggestedFee
+            }
 
             //
             // total amount to spend including fee
             //
-            if (amount + fee.toLong() >= balance) {
+            if (amount + fee!!.toLong() >= balance) {
                 scope.launch(Dispatchers.Main) {
                     binding.progressBar.visibility = View.INVISIBLE
                     var message: String? = getText(R.string.bip47_notif_tx_insufficient_funds_1).toString() + " "
@@ -665,12 +673,13 @@ class PayNymDetailsActivity : SamouraiActivity() {
             // create inputs from outpoints
             //
             val inputs: MutableList<MyTransactionInput> = ArrayList()
+            val currentNetworkParams = SamouraiWallet.getInstance().currentNetworkParams
             for (o in outpoints) {
                 val script = Script(o.scriptBytes)
                 if (script.scriptType == Script.ScriptType.NO_TYPE) {
                     continue
                 }
-                val input = MyTransactionInput(SamouraiWallet.getInstance().currentNetworkParams, null, ByteArray(0), o, o.txHash.toString(), o.txOutputN)
+                val input = MyTransactionInput(currentNetworkParams, null, ByteArray(0), o, o.txHash.toString(), o.txOutputN)
                 inputs.add(input)
             }
             //
@@ -697,11 +706,11 @@ class PayNymDetailsActivity : SamouraiActivity() {
             try {
 //            Script inputScript = new Script(outPoint.getConnectedPubKeyScript());
                 val scriptBytes = outPoint?.connectedPubKeyScript
-                var address: String? = null
+                var address: String?
                 address = if (Bech32Util.getInstance().isBech32Script(Hex.toHexString(scriptBytes))) {
                     Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(scriptBytes))
                 } else {
-                    Script(scriptBytes).getToAddress(SamouraiWallet.getInstance().currentNetworkParams).toString()
+                    Script(scriptBytes).getToAddress(currentNetworkParams).toString()
                 }
                 //            String address = inputScript.getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
                 val ecKey = SendFactory.getPrivKey(address, 0)
@@ -713,7 +722,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 // use outpoint for payload masking
                 //
                 val privkey = ecKey.privKeyBytes
-                val pubkey = payment_code.notificationAddress(SamouraiWallet.getInstance().currentNetworkParams).pubKey
+                val pubkey = payment_code.notificationAddress(currentNetworkParams).pubKey
                 val outpoint = outPoint?.bitcoinSerialize()
                 //                Log.i("PayNymDetailsActivity", "outpoint:" + Hex.toHexString(outpoint));
 //                Log.i("PayNymDetailsActivity", "payer shared secret:" + Hex.toHexString(new SecretPoint(privkey, pubkey).ECDHSecretAsBytes()));
@@ -736,8 +745,15 @@ class PayNymDetailsActivity : SamouraiActivity() {
             }
             val receivers = HashMap<String, BigInteger>()
             receivers[Hex.toHexString(op_return)] = BigInteger.ZERO
-            receivers[payment_code.notificationAddress(SamouraiWallet.getInstance().currentNetworkParams).addressString] = SendNotifTxFactory._bNotifTxValue
-            receivers[if (SamouraiWallet.getInstance().isTestNet) SendNotifTxFactory.getInstance().TESTNET_SAMOURAI_NOTIF_TX_FEE_ADDRESS else SendNotifTxFactory.getInstance().SAMOURAI_NOTIF_TX_FEE_ADDRESS] = SendNotifTxFactory._bSWFee
+
+            val notificationAddr = payment_code.notificationAddress(currentNetworkParams).addressString
+            val samFeeAddress = if (SamouraiWallet.getInstance().isTestNet)
+                SendNotifTxFactory.getInstance().TESTNET_SAMOURAI_NOTIF_TX_FEE_ADDRESS
+            else SendNotifTxFactory.getInstance().SAMOURAI_NOTIF_TX_FEE_ADDRESS;
+
+            receivers[notificationAddr] = SendNotifTxFactory._bNotifTxValue
+            receivers[samFeeAddress] = SendNotifTxFactory._bSWFee
+
             val change = totalValueSelected - (amount + fee.toLong())
             if (change > 0L) {
                 val change_address = BIP84Util.getInstance(this@PayNymDetailsActivity).getAddressAt(
@@ -785,8 +801,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
                             }
 
                             var isOK = false
-                            var response: String? = null
+                            var response: String?
                             try {
+                                val rbf = createRBFSpendFromTx(tx, this@PayNymDetailsActivity)
                                 response = PushTx.getInstance(this@PayNymDetailsActivity).samourai(hexTx, null)
                                 Log.d("SendActivity", "pushTx:$response")
                                 if (response != null) {
@@ -818,11 +835,14 @@ class PayNymDetailsActivity : SamouraiActivity() {
                                         //
                                         BIP47Meta.getInstance().setOutgoingStatus(pcode, tx.hashAsString, BIP47Meta.STATUS_SENT_NO_CFM)
 
+                                        updateRBFSpendForBroadcastTxAndRegister(rbf,  tx, samFeeAddress, 84, this@PayNymDetailsActivity)
+
                                         //
                                         // increment change index
                                         //
                                         if (change > 0L) {
-                                            BIP49Util.getInstance(this@PayNymDetailsActivity).wallet.getAccount(0).change.incAddrIdx()
+                                            BIP49Util.getInstance(this@PayNymDetailsActivity)
+                                                .wallet.getAccount(0).change.incAddrIdx()
                                         }
                                         if (!BIP47Meta.getInstance().exists(pcode, false)) {
                                             BIP47Meta.getInstance().setLabel(pcode, BIP47Meta.getInstance().getAbbreviatedPcode(pcode));
@@ -858,6 +878,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 manageException(it!!)
             }
         }
+        return
     }
 
     private fun manageException(it: Throwable) {

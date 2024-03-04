@@ -1,6 +1,7 @@
 package com.samourai.wallet;
 
 import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
+import static com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister;
 import static com.samourai.wallet.util.tech.LogUtil.debug;
 import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
@@ -10,6 +11,7 @@ import static java.util.Objects.nonNull;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -32,6 +34,7 @@ import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.RBFFactory;
 import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.util.func.MonetaryUtil;
@@ -42,9 +45,7 @@ import com.samourai.wallet.util.view.ViewUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.widgets.TransactionProgressView;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -105,7 +106,7 @@ public class TxAnimUIActivity extends SamouraiActivity {
         progressView.getOptionBtn2().setOnClickListener(view -> {});
 
         // make tx
-        final Transaction tx = SendFactory.getInstance(TxAnimUIActivity.this)
+        final Transaction tx = SendFactory.getInstance(this)
                 .makeTransaction(
                         SendParams.getInstance().getOutpoints(),
                         SendParams.getInstance().getReceivers());
@@ -115,59 +116,11 @@ public class TxAnimUIActivity extends SamouraiActivity {
             return;
         }
 
-        final RBFSpend rbf;
-        if (PrefsUtil.getInstance(TxAnimUIActivity.this).getValue(PrefsUtil.RBF_OPT_IN, false) == true) {
-
-            rbf = new RBFSpend();
-
-            for (TransactionInput input : tx.getInputs()) {
-
-                boolean _isBIP49 = false;
-                boolean _isBIP84 = false;
-                String _addr = null;
-                String script = Hex.toHexString(input.getConnectedOutput().getScriptBytes());
-                if (Bech32Util.getInstance().isBech32Script(script)) {
-                    try {
-                        _addr = Bech32Util.getInstance().getAddressFromScript(script);
-                        _isBIP84 = true;
-                    } catch (Exception e) {
-                        ;
-                    }
-                } else {
-                    Address _address = input.getConnectedOutput().getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams());
-                    if (_address != null) {
-                        _addr = _address.toString();
-                        _isBIP49 = true;
-                    }
-                }
-                if (_addr == null) {
-                    _addr = input.getConnectedOutput().getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
-                }
-
-                String path = APIFactory.getInstance(TxAnimUIActivity.this).getUnspentPaths().get(_addr);
-                if (path != null) {
-                    if (_isBIP84) {
-                        rbf.addKey(input.getOutpoint().toString(), path + "/84");
-                    } else if (_isBIP49) {
-                        rbf.addKey(input.getOutpoint().toString(), path + "/49");
-                    } else {
-                        rbf.addKey(input.getOutpoint().toString(), path);
-                    }
-                } else {
-                    String pcode = BIP47Meta.getInstance().getPCode4Addr(_addr);
-                    int idx = BIP47Meta.getInstance().getIdx4Addr(_addr);
-                    rbf.addKey(input.getOutpoint().toString(), pcode + "/" + idx);
-                }
-
-            }
-
-        } else {
-            rbf = null;
-        }
+        final RBFSpend rbf = RBFFactory.createRBFSpendFromTx(tx, this);
 
         final List<Integer> strictModeVouts = new ArrayList<>();
         if (SendParams.getInstance().getDestAddress() != null && SendParams.getInstance().getDestAddress().compareTo("") != 0 &&
-                PrefsUtil.getInstance(TxAnimUIActivity.this).getValue(PrefsUtil.STRICT_OUTPUTS, true) == true) {
+                PrefsUtil.getInstance(this).getValue(PrefsUtil.STRICT_OUTPUTS, true) == true) {
             List<Integer> idxs = SendParams.getInstance().getSpendOutputIndex(tx);
             for(int i = 0; i < tx.getOutputs().size(); i++)   {
                 if(!idxs.contains(i))   {
@@ -573,32 +526,12 @@ public class TxAnimUIActivity extends SamouraiActivity {
                     AddressFactory.getInstance().increment(changeIndex);
                 }
 
-                if (PrefsUtil.getInstance(TxAnimUIActivity.this).getValue(PrefsUtil.RBF_OPT_IN, false) == true) {
-
-                    for (final TransactionOutput out : _tx.getOutputs()) {
-                        try {
-                            if (Bech32Util.getInstance().isBech32Script(Hex.toHexString(out.getScriptBytes())) && !SendParams.getInstance().getDestAddress().equals(Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(out.getScriptBytes())))) {
-                                rbf.addChangeAddr(Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(out.getScriptBytes())));
-                                debug("SendActivity", "added change output:" + Bech32Util.getInstance().getAddressFromScript(Hex.toHexString(out.getScriptBytes())));
-                            } else if (SendParams.getInstance().getChangeType() == 44 && nonNull(out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams())) && !SendParams.getInstance().getDestAddress().equals(out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString())) {
-                                rbf.addChangeAddr(out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                                debug("SendActivity", "added change output:" + out.getAddressFromP2PKHScript(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                            } else if (SendParams.getInstance().getChangeType() != 44 && nonNull(out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams())) && !SendParams.getInstance().getDestAddress().equals(out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString())) {
-                                rbf.addChangeAddr(out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                                debug("SendActivity", "added change output:" + out.getAddressFromP2SH(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                            }
-                        } catch (final NullPointerException npe) {
-                            Log.e(TAG, npe.getMessage(), npe);
-                        } catch (final Exception e) {
-                            Log.e(TAG, e.getMessage(), e);
-                        }
-                    }
-
-                    rbf.setHash(strTxHash);
-                    rbf.setSerializedTx(hexTx);
-
-                    RBFUtil.getInstance().add(rbf);
-                }
+                updateRBFSpendForBroadcastTxAndRegister(
+                        rbf,
+                        _tx,
+                        SendParams.getInstance().getDestAddress(),
+                        SendParams.getInstance().getChangeType(),
+                        this);
 
                 // increment counter if BIP47 spend
                 if (SendParams.getInstance().getPCode() != null

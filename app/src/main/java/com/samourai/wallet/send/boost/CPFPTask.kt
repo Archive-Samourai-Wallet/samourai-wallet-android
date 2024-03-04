@@ -48,7 +48,7 @@ class CPFPTask(private val activity: SamouraiActivity, private val hash: String)
     fun checkCPFP(): String {
         val txObj = APIFactory.getInstance(activity).getTxInfo(hash)
         if (txObj.has("inputs") && txObj.has("outputs")) {
-            val suggestedFee = FeeUtil.getInstance().suggestedFee
+            val keepCurrentSuggestedFee = FeeUtil.getInstance().suggestedFee
             try {
                 val inputs = txObj.getJSONArray("inputs")
                 val outputs = txObj.getJSONArray("outputs")
@@ -98,7 +98,7 @@ class CPFPTask(private val activity: SamouraiActivity, private val hash: String)
                 }
                 for (i in 0 until outputs.length()) {
                     val obj = outputs.getJSONObject(i)
-                    if (obj.has("value")) {
+                    if (obj.has("value") && obj.has("address")) {
                         total_outputs += obj.getLong("value")
                         val addr = obj.getString("address")
                         Log.d("CPFPTask", "checking address:$addr")
@@ -168,7 +168,6 @@ class CPFPTask(private val activity: SamouraiActivity, private val hash: String)
                             }
                         }
                         if (totalAmount < cpfpFee.toLong() + remainingFee + SamouraiWallet.bDust.toLong()) {
-                            FeeUtil.getInstance().suggestedFee = suggestedFee
                             throw CPFPException(activity.getString(R.string.insufficient_funds))
                         }
                     }
@@ -203,6 +202,8 @@ class CPFPTask(private val activity: SamouraiActivity, private val hash: String)
                 }
             } catch (je: JSONException) {
                 throw CPFPException("cpfp:" + je.message)
+            } finally {
+                FeeUtil.getInstance().suggestedFee = keepCurrentSuggestedFee
             }
         } else {
             throw CPFPException(activity.getString(R.string.cpfp_cannot_retrieve_tx))
