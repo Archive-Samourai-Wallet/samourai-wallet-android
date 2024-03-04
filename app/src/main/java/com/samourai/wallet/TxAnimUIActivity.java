@@ -16,9 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.samourai.wallet.api.APIFactory;
@@ -33,7 +31,6 @@ import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.activity.ActivityHelper;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.func.BatchSendUtil;
@@ -41,7 +38,7 @@ import com.samourai.wallet.util.func.MonetaryUtil;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.SendAddressUtil;
 import com.samourai.wallet.util.func.SentToFromBIP47Util;
-import com.samourai.wallet.util.view.ViewHelper;
+import com.samourai.wallet.util.view.ViewUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.widgets.TransactionProgressView;
 
@@ -443,14 +440,14 @@ public class TxAnimUIActivity extends SamouraiActivity {
     private void failTx(final int resIdDetails) {
         TxAnimUIActivity.this.runOnUiThread(() -> {
 
-            ViewHelper.animateChangeColor(
+            ViewUtil.animateChangeColor(
                     animation -> getWindow().setStatusBarColor((int) animation.getAnimatedValue()),
                     getResources().getColor(R.color.blue_send_ui),
                     getResources().getColor(R.color.red_send_ui),
                     BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                ViewHelper.animateChangeColor(
+                ViewUtil.animateChangeColor(
                         animation ->  getWindow().setNavigationBarColor((int) animation.getAnimatedValue()),
                         getResources().getColor(R.color.blue_send_ui),
                         getResources().getColor(R.color.red_send_ui),
@@ -469,14 +466,14 @@ public class TxAnimUIActivity extends SamouraiActivity {
 
     private void reBroadcastTx() {
 
-        ViewHelper.animateChangeColor(
+        ViewUtil.animateChangeColor(
             animation -> getWindow().setStatusBarColor((int) animation.getAnimatedValue()),
             getResources().getColor(R.color.red_send_ui),
             getResources().getColor(R.color.blue_send_ui),
             BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            ViewHelper.animateChangeColor(
+            ViewUtil.animateChangeColor(
                     animation ->  getWindow().setNavigationBarColor((int) animation.getAnimatedValue()),
                     getResources().getColor(R.color.red_send_ui),
                     getResources().getColor(R.color.blue_send_ui),
@@ -499,14 +496,14 @@ public class TxAnimUIActivity extends SamouraiActivity {
 
         TxAnimUIActivity.this.runOnUiThread(() -> {
 
-            ViewHelper.animateChangeColor(
+            ViewUtil.animateChangeColor(
                     animation -> getWindow().setStatusBarColor((int) animation.getAnimatedValue()),
                     getResources().getColor(R.color.blue_send_ui),
                     getResources().getColor(R.color.orange_send_ui),
                     BACKGROUND_COLOR_CHANGE_ANIM_DURATION_IN_MS);
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                ViewHelper.animateChangeColor(
+                ViewUtil.animateChangeColor(
                         animation ->  getWindow().setNavigationBarColor((int) animation.getAnimatedValue()),
                         getResources().getColor(R.color.blue_send_ui),
                         getResources().getColor(R.color.orange_send_ui),

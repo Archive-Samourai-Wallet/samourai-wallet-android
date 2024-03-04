@@ -131,6 +131,7 @@ fun Body(model: ReviewTxModel) {
                 onClick = {
                     sliderPosition = feeLowRate!!.toFloat()
                     model.setMinerFeeRatesAndComputeFees(feeLowRate!!)
+                    model.setTransactionPriorityRequested(EnumTransactionPriority.LOW)
                           },
                 modifier = Modifier
                     .weight(1f)
@@ -145,6 +146,7 @@ fun Body(model: ReviewTxModel) {
             Button(
                 onClick = {
                     sliderPosition = feeMedRate!!.toFloat()
+                    model.setTransactionPriorityRequested(EnumTransactionPriority.NORMAL)
                     model.setMinerFeeRatesAndComputeFees(feeMedRate!!)
                           },
                 modifier = Modifier
@@ -160,6 +162,7 @@ fun Body(model: ReviewTxModel) {
             Button(
                 onClick = {
                     sliderPosition = feeHighRate!!.toFloat()
+                    model.setTransactionPriorityRequested(EnumTransactionPriority.NEXT_BLOCK)
                     model.setMinerFeeRatesAndComputeFees(feeHighRate!!)
                           },
                 modifier = Modifier
@@ -194,6 +197,7 @@ fun Body(model: ReviewTxModel) {
                 onValueChange = {
                     sliderPosition = it
                     model.setMinerFeeRatesAndComputeFeesAsync(it.toLong())
+                    model.setTransactionPriorityRequested(null)
                 }
             )
             Column (

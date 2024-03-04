@@ -66,9 +66,10 @@ import com.google.common.collect.ImmutableList
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.home.TestApplication
+import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.review.ReviewTxActivity.Companion.TAG
+import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState
 import com.samourai.wallet.theme.samouraiBlueButton
-import com.samourai.wallet.theme.samouraiBoxLightGrey
 import com.samourai.wallet.theme.samouraiLightGreyAccent
 import com.samourai.wallet.theme.samouraiPostmixSpendBlueButton
 import com.samourai.wallet.theme.samouraiSlateGreyAccent
@@ -83,7 +84,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.commons.collections4.ListUtils
-import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.isBlank
 import java.lang.String.format
 import java.text.DecimalFormat
@@ -130,10 +130,8 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
 
     val context = LocalContext.current
 
-    val isSomethingLoading = model.isSomethingLoading.observeAsState()
     val verticalScroll = rememberScrollState(0)
 
-    var showTapAndHoldComponent = remember { mutableStateOf(false) }
     var isOnSwipeValidation = remember { mutableStateOf(false) }
     val whiteAlpha = if(isOnSwipeValidation.value) 0.1f else 0f
 
@@ -151,6 +149,18 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
             Toast.makeText(activity, format("issue when broadcasting %s transaction", model.sendType.type), Toast.LENGTH_LONG).show()
         }
     }
+    val scope = rememberCoroutineScope()
+
+    val swipeSendButtonContentListener =
+        SwipeSendButtonListener { state ->
+
+            scope.launch {
+                val lightenColor =
+                    state == EnumSwipeSendButtonState.IS_SWIPING_ENABLED ||
+                            state == EnumSwipeSendButtonState.DONE
+                isOnSwipeValidation.value = lightenColor
+            }
+        }
 
     UpdateStatusBarColorBasedOnDragState(isDraggable = isOnSwipeValidation, whiteAlpha = whiteAlpha)
     UpdateNavigationBarColorBasedOnDragState(isDraggable = isOnSwipeValidation, whiteAlpha = whiteAlpha)
@@ -179,7 +189,6 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
                 Box {
                     ReviewTxActivityContentDestination(
                         model = model,
-                        activity = activity,
                         whiteAlpha = whiteAlpha)
                 }
                 ReviewTxActivityContentFees(model = model, activity = activity, whiteAlpha = whiteAlpha)
@@ -190,40 +199,39 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
                 ) {
                     ReviewTxActivityContentSendNote(model = model)
                 }
-            }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.BottomStart
-            ) {
-                Column (
+                Box(
                     modifier = Modifier
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.Bottom
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.BottomStart
                 ) {
-                    if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
-                        JoinbotSendButton(
-                            model = model,
-                            activity = activity,
-                            isOnSwipeValidation = isOnSwipeValidation,
-                            action = sendTx
-                        )
-                    } else {
-                        SwipeSendButtonContent(
-                            MutableLiveData(amountToLeaveWallet),
-                            sendTx,
-                            MutableLiveData(true),
-                            null)
-                    }
-                    Spacer(
+                    Column (
                         modifier = Modifier
-                            .size(12.dp)
-                    )
+                            .padding(top = 18.dp, bottom = 18.dp),
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
+                            JoinbotSendButton(
+                                model = model,
+                                activity = activity,
+                                isOnSwipeValidation = isOnSwipeValidation,
+                                action = sendTx
+                            )
+                        } else {
+                            SwipeSendButtonContent(
+                                MutableLiveData(amountToLeaveWallet),
+                                sendTx,
+                                MutableLiveData(true),
+                                listener = swipeSendButtonContentListener)
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .size(12.dp)
+                        )
+                    }
                 }
             }
         }
-
     }
 
 }
@@ -250,7 +258,6 @@ fun ReviewTxActivityContentHeader(activity: SamouraiActivity?, whiteAlpha: Float
 @Composable
 fun ReviewTxActivityContentDestination(
     model: ReviewTxModel,
-    activity: SamouraiActivity?,
     whiteAlpha: Float
 ) {
 
@@ -437,6 +444,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
     val feeRate by model.minerFeeRates.observeAsState()
     val fees by model.fees.observeAsState()
     val feeAggregated by model.feeAggregated.observeAsState()
+    val transactionPriorityRequested by model.transactionPriorityRequested.observeAsState()
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -503,6 +511,15 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                             color = samouraiTextLightGrey,
                             fontSize = 12.sp,
                             fontFamily = robotoItalicBoldFont
+                        )
+                        Spacer(modifier = Modifier.size(18.dp))
+                        Text(
+                            text = if (nonNull(transactionPriorityRequested))
+                                transactionPriorityRequested!!.getCaption(FeeUtil.getInstance().feeRepresentation)
+                            else "Custom",
+                            color = samouraiTextLightGrey,
+                            fontSize = 12.sp,
+                            fontFamily = robotoMonoBoldFont
                         )
                     }
                     Column (
@@ -954,21 +971,6 @@ fun UpdateNavigationBarColorBasedOnDragState(
         val activity = context as? SamouraiActivity
         activity?.window?.navigationBarColor = lightenColor(navigationBarColor, whiteAlpha).toArgb()
     }
-}
-
-@Composable
-fun convertDpToPx(valueInDp: Dp): Float {
-    val density = LocalDensity.current
-    val valueInPx = with(density) { valueInDp.toPx() }
-    return valueInPx
-}
-
-@Composable
-fun getScreenWidthPx(): Int {
-    val context = LocalContext.current
-    val resources = context.resources
-    val displayMetrics = resources.displayMetrics
-    return displayMetrics.widthPixels
 }
 
 @Preview(showBackground = true, heightDp = 780, widthDp = 420)

@@ -46,6 +46,7 @@ import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.tech.SimpleCallback;
 import com.samourai.wallet.util.tech.SimpleTaskRunner;
+import com.samourai.wallet.util.tech.ThreadHelper;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.io.ThreadUtils;
@@ -135,7 +136,7 @@ public class MainActivity2 extends AppCompatActivity {
 
         loaderTxView = findViewById(R.id.loader_text);
         progressIndicator = findViewById(R.id.loader);
-        progressIndicator.setIndeterminate(false);
+        progressIndicator.setIndeterminate(true);
         progressIndicator.setMax(100);
 
 
@@ -157,7 +158,8 @@ public class MainActivity2 extends AppCompatActivity {
                 !PrefsUtil.getInstance(this).getValue(PrefsUtil.OFFLINE,false) &&
                 !SamouraiTorManager.INSTANCE.isConnected()) {
 
-            progressIndicator.setProgressCompat(0, false);
+            progressIndicator.setIndeterminate(true);
+            progressIndicator.setProgress(0, false);
             SamouraiTorManager.INSTANCE.start();
             initAppOnTorStart();
         } else {
@@ -174,7 +176,7 @@ public class MainActivity2 extends AppCompatActivity {
                 ConnectivityStatus.hasConnectivity(getApplicationContext()) &&
                 !SamouraiTorManager.INSTANCE.isConnected()) {
 
-            progressIndicator.setProgressCompat(0, false);
+            progressIndicator.setProgress(0, false);
             loaderTxView.setText(getText(R.string.initializing_tor));
             initAppOnTorStart();
         } else {
@@ -227,26 +229,57 @@ public class MainActivity2 extends AppCompatActivity {
                 @Override
                 public void onChanged(TorState torState) {
 
-                    final int progressIndicatorValue = torState.getProgressIndicator();
-                    progressIndicator.setProgressCompat(
-                            max(progressIndicatorValue, progressIndicator.getProgress()),
-                            true);
+                    SimpleTaskRunner.create().executeAsync(new Callable<Integer>() {
+                        @Override
+                        public Integer call() throws Exception {
+                            final int progressIndicatorValue = torState.getProgressIndicator();
+                            final int newProgressIndicatorValue = max(
+                                    progressIndicatorValue,
+                                    progressIndicator.getProgress());
+                            return newProgressIndicatorValue;
+                        }
+                    }, new SimpleCallback<Integer>() {
+                        @Override
+                        public void onComplete(final Integer newProgressIndicatorValue) {
 
-                    if (torState.getState() == EnumTorState.ON) {
-                        SimpleTaskRunner.create().executeAsync(new Callable<Object>() {
-                            @Override
-                            public Object call() throws Exception {
-                                // wait for progress bar to reach 100%
-                                ThreadUtils.sleep(Duration.ofMillis(500));
-                                return null;
+                            if (newProgressIndicatorValue > 0 && progressIndicator.isIndeterminate()) {
+                                progressIndicator.setIndeterminate(false);
                             }
-                        }, new SimpleCallback<Object>() {
-                            @Override
-                            public void onComplete(Object result) {
-                                SimpleTaskRunner.create().executeAsync(() -> initAppOnCreate());
-                            }
-                        });
-                    }
+
+                            SimpleTaskRunner.create().executeAsync(new Callable<Boolean>() {
+                                @Override
+                                public Boolean call() throws Exception {
+                                    if (progressIndicator.getProgress() <= 0 && newProgressIndicatorValue > 0) {
+                                        ThreadHelper.pauseMillis(100L);
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                            }, new SimpleCallback<Boolean>() {
+                                @Override
+                                public void onComplete(final Boolean stateChanged) {
+                                    if (newProgressIndicatorValue > 0) {
+                                        progressIndicator.setProgressCompat(newProgressIndicatorValue, true);
+                                    }
+                                    if (torState.getState() == EnumTorState.ON) {
+                                        SimpleTaskRunner.create().executeAsync(new Callable<Object>() {
+                                            @Override
+                                            public Object call() throws Exception {
+                                                // wait for progress bar to reach 100%
+                                                ThreadUtils.sleep(Duration.ofMillis(500));
+                                                return null;
+                                            }
+                                        }, new SimpleCallback<Object>() {
+                                            @Override
+                                            public void onComplete(Object result) {
+                                                SimpleTaskRunner.create().executeAsync(() -> initAppOnCreate());
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
                 }
             };
             SamouraiTorManager.INSTANCE.getTorStateLiveData().observe(this, torStateObserver);
