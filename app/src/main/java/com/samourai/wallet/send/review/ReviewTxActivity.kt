@@ -48,7 +48,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -57,7 +56,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -179,7 +177,8 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
             ReviewTxActivityContentHeader(activity = activity, whiteAlpha = whiteAlpha)
             Column (
                 modifier = Modifier
-                    .padding(start = 18.dp, end = 18.dp)
+                    .weight(1f)
+                    .padding(start = 16.dp, end = 16.dp)
                     .verticalScroll(
                         state = verticalScroll,
                         enabled = true,
@@ -199,36 +198,36 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
                 ) {
                     ReviewTxActivityContentSendNote(model = model)
                 }
+            }
 
-                Box(
+            Box(
+                modifier = Modifier
+                    .fillMaxSize().weight(0.27f),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Column (
                     modifier = Modifier
-                        .fillMaxHeight(),
-                    contentAlignment = Alignment.BottomStart
+                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                    verticalArrangement = Arrangement.Bottom
                 ) {
-                    Column (
-                        modifier = Modifier
-                            .padding(bottom = 16.dp),
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
-                            JoinbotSendButton(
-                                model = model,
-                                activity = activity,
-                                isOnSwipeValidation = isOnSwipeValidation,
-                                action = sendTx
-                            )
-                        } else {
-                            SwipeSendButtonContent(
-                                MutableLiveData(amountToLeaveWallet),
-                                sendTx,
-                                MutableLiveData(true),
-                                listener = swipeSendButtonContentListener)
-                        }
-                        Spacer(
-                            modifier = Modifier
-                                .size(12.dp)
+                    if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
+                        JoinbotSendButton(
+                            model = model,
+                            activity = activity,
+                            isOnSwipeValidation = isOnSwipeValidation,
+                            action = sendTx
                         )
+                    } else {
+                        SwipeSendButtonContent(
+                            MutableLiveData(amountToLeaveWallet),
+                            sendTx,
+                            MutableLiveData(true),
+                            listener = swipeSendButtonContentListener)
                     }
+                    Spacer(
+                        modifier = Modifier
+                            .size(12.dp)
+                    )
                 }
             }
         }
@@ -277,7 +276,7 @@ fun ReviewTxActivityContentDestination(
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 16.dp)
+            .padding(bottom = 8.dp, top = 16.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -450,7 +449,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 9.dp)
+            .padding(bottom = 8.dp, top = 8.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -651,7 +650,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) 
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 9.dp)
+            .padding(bottom = 8.dp, top = 8.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -816,10 +815,7 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
         }
     }
 
-    Box (
-        modifier = Modifier
-            //.padding(bottom = 9.dp, top = 9.dp)
-    ) {
+    Box {
         Row (
             modifier = Modifier
                 .padding(all = 12.dp)
@@ -916,10 +912,10 @@ fun JoinbotSendButton(
     Box (
         modifier = if (isOnSwipeValidation.value)
             Modifier
-                .padding(bottom = 9.dp, top = 9.dp, start = 16.dp, end = 16.dp)
+                .padding(bottom = 8.dp, top = 8.dp, start = 16.dp, end = 16.dp)
                 .background(samouraiLightGreyAccent, RoundedCornerShape(20.dp)) else
                     Modifier
-                        .padding(bottom = 9.dp, top = 9.dp, start = 16.dp, end = 16.dp)
+                        .padding(bottom = 8.dp, top = 8.dp, start = 16.dp, end = 16.dp)
     ) {
 
         Row (
