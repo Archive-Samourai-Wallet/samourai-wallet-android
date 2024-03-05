@@ -496,36 +496,53 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                 }
                 Row (
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 ) {
-                    Row {
-                        Text(
-                            text = "Miner Fee",
-                            color = samouraiTextLightGrey,
-                            fontSize = 12.sp,
-                            fontFamily = robotoMediumBoldFont
-                        )
-                        Spacer(modifier = Modifier.size(16.dp))
-                        Text(
-                            text = format("%s sat/vB", feeRate),
-                            color = samouraiTextLightGrey,
-                            fontSize = 12.sp,
-                            fontFamily = robotoItalicBoldFont
-                        )
-                        Spacer(modifier = Modifier.size(16.dp))
-                        Text(
-                            text = if (nonNull(transactionPriorityRequested))
-                                transactionPriorityRequested!!.getCaption(FeeUtil.getInstance().feeRepresentation)
-                            else "Custom",
-                            color = samouraiTextLightGrey,
-                            fontSize = 12.sp,
-                            fontFamily = robotoMonoBoldFont
-                        )
+                    Row (
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    ) {
+                        Row (
+                            modifier = Modifier
+                                .weight(0.38f)
+                        ) {
+                            Text(
+                                text = "Miner Fee",
+                                color = samouraiTextLightGrey,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMediumBoldFont
+                            )
+                        }
+
+                        Row (
+                            modifier = Modifier
+                                .weight(1f),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = format("%s sat/vB", feeRate),
+                                color = samouraiTextLightGrey,
+                                fontSize = 12.sp,
+                                fontFamily = robotoItalicBoldFont
+                            )
+                            Spacer(modifier = Modifier.size(6.dp))
+                            Text(
+                                text = if (nonNull(transactionPriorityRequested))
+                                    transactionPriorityRequested!!.getCaption(FeeUtil.getInstance().feeRepresentation)
+                                else "Custom",
+                                color = samouraiTextLightGrey,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMonoBoldFont
+                            )
+                        }
+
                     }
                     Column (
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .weight(1f),
+                            .weight(0.5f),
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.Center
                     ) {
