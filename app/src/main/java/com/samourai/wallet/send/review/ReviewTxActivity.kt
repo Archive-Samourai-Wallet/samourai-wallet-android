@@ -195,7 +195,7 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
                 ReviewTxActivityContentTransaction(model = model, whiteAlpha = whiteAlpha)
                 Column (
                     modifier = Modifier
-                        .padding(top = 24.dp)
+                        .padding(top = 12.dp)
                 ) {
                     ReviewTxActivityContentSendNote(model = model)
                 }
@@ -207,7 +207,7 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
                 ) {
                     Column (
                         modifier = Modifier
-                            .padding(top = 18.dp, bottom = 18.dp),
+                            .padding(bottom = 16.dp),
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
@@ -277,7 +277,7 @@ fun ReviewTxActivityContentDestination(
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 18.dp)
+            .padding(bottom = 9.dp, top = 16.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -298,7 +298,7 @@ fun ReviewTxActivityContentDestination(
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 18.dp)
+                        .padding(bottom = 16.dp)
                 ) {
                     Column {
                         Text(
@@ -396,7 +396,7 @@ fun TransactionOutput(spendInfo: BatchSendUtil.BatchSend) {
 
     Row (
         modifier = Modifier
-            .padding(bottom = 18.dp)
+            .padding(bottom = 16.dp)
     ) {
         Column (
             modifier = Modifier
@@ -471,7 +471,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 18.dp)
+                        .padding(bottom = 16.dp)
                 ) {
                     Column {
                         Text(
@@ -496,7 +496,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                 }
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 18.dp)
+                        .padding(bottom = 16.dp)
                 ) {
                     Row {
                         Text(
@@ -505,14 +505,14 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                             fontSize = 12.sp,
                             fontFamily = robotoMediumBoldFont
                         )
-                        Spacer(modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.size(16.dp))
                         Text(
                             text = format("%s sat/vB", feeRate),
                             color = samouraiTextLightGrey,
                             fontSize = 12.sp,
                             fontFamily = robotoItalicBoldFont
                         )
-                        Spacer(modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.size(16.dp))
                         Text(
                             text = if (nonNull(transactionPriorityRequested))
                                 transactionPriorityRequested!!.getCaption(FeeUtil.getInstance().feeRepresentation)
@@ -544,7 +544,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                         val values = fees!!.get(name);
                         Row (
                             modifier = Modifier
-                                .padding(bottom = 18.dp)
+                                .padding(bottom = 16.dp)
                         ) {
                             Row {
                                 Text(
@@ -655,7 +655,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) 
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 18.dp)
+                        .padding(bottom = 16.dp)
                 ) {
                     Column {
                         Text(
@@ -668,7 +668,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) 
                 }
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 18.dp)
+                        .padding(bottom = 16.dp)
                 ) {
                     Column {
                         Text(
@@ -801,7 +801,7 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
 
     Box (
         modifier = Modifier
-            .padding(bottom = 9.dp, top = 9.dp)
+            //.padding(bottom = 9.dp, top = 9.dp)
     ) {
         Row (
             modifier = Modifier
@@ -821,7 +821,6 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
                 ) {
                     Column {
                         Box(
@@ -900,10 +899,10 @@ fun JoinbotSendButton(
     Box (
         modifier = if (isOnSwipeValidation.value)
             Modifier
-                .padding(bottom = 9.dp, top = 9.dp, start = 18.dp, end = 18.dp)
+                .padding(bottom = 9.dp, top = 9.dp, start = 16.dp, end = 16.dp)
                 .background(samouraiLightGreyAccent, RoundedCornerShape(20.dp)) else
                     Modifier
-                        .padding(bottom = 9.dp, top = 9.dp, start = 18.dp, end = 18.dp)
+                        .padding(bottom = 9.dp, top = 9.dp, start = 16.dp, end = 16.dp)
     ) {
 
         Row (

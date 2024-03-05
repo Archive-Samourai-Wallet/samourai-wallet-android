@@ -132,7 +132,7 @@ private fun TapAndHoldInfoComponent(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(bottom = 14.dp, top = 9.dp, start = 18.dp, end = 18.dp),
+                    .padding(bottom = 14.dp, top = 9.dp, start = 16.dp, end = 16.dp),
             ) {
                 androidx.compose.material.Text(
                     text = if (visible.value) "Tap and hold" else StringUtils.EMPTY,
