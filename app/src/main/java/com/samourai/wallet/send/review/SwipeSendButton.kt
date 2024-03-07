@@ -70,7 +70,8 @@ fun SwipeSendButtonContent(
     amountToLeaveWallet: LiveData<Long>,
     action: Runnable?,
     enable: LiveData<Boolean>,
-    listener: SwipeSendButtonListener?
+    listener: SwipeSendButtonListener?,
+    alphaBackground: Float
 ) {
 
     val context = LocalContext.current
@@ -86,7 +87,7 @@ fun SwipeSendButtonContent(
 
     Box (
         modifier = Modifier
-            .background(lightenColor(windowBackground, whiteAlpha))
+            .background(lightenColor(windowBackground, whiteAlpha).copy(alpha = alphaBackground))
     ) {
         Column (
             verticalArrangement = Arrangement.Bottom
@@ -384,5 +385,6 @@ fun SwipeSendButtonContentPreview(
         MutableLiveData(125000L),
         null,
         MutableLiveData(true),
-        null)
+        null,
+        1f)
 }
