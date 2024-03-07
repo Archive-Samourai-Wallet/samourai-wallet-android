@@ -25,7 +25,8 @@ class SwipeSendButtonFragment(
                     amountToLeaveWallet = amountToLeaveWallet,
                     action = action,
                     enable = enable,
-                    listener = listener
+                    listener = listener,
+                    1f
                 )
             }
         }

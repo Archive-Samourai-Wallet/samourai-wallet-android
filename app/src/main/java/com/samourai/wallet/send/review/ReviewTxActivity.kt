@@ -167,68 +167,72 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
         context = context,
         attr = android.R.attr.windowBackground)
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(lightenColor(windowBackground, whiteAlpha))) {
+    Box (
+        modifier = Modifier
+            .fillMaxSize()
+            .background(lightenColor(windowBackground, whiteAlpha))
+    ) {
+
         Column (
             modifier = Modifier
                 .fillMaxSize()
         ) {
             ReviewTxActivityContentHeader(activity = activity, whiteAlpha = whiteAlpha)
-            Column (
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp, end = 16.dp)
-                    .verticalScroll(
-                        state = verticalScroll,
-                        enabled = true,
-                    )
-                    .fillMaxSize()
-            ) {
-                Box {
-                    ReviewTxActivityContentDestination(
-                        model = model,
-                        whiteAlpha = whiteAlpha)
-                }
-                ReviewTxActivityContentFees(model = model, activity = activity, whiteAlpha = whiteAlpha)
-                ReviewTxActivityContentTransaction(model = model, whiteAlpha = whiteAlpha)
-                Column (
-                    modifier = Modifier
-                        .padding(top = 12.dp)
-                ) {
-                    ReviewTxActivityContentSendNote(model = model)
-                }
-            }
-
             Box(
                 modifier = Modifier
-                    .fillMaxSize().weight(0.27f),
-                contentAlignment = Alignment.BottomStart
+                    .fillMaxSize()
             ) {
                 Column (
                     modifier = Modifier
-                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
-                    verticalArrangement = Arrangement.Bottom
-                ) {
-                    if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
-                        JoinbotSendButton(
-                            model = model,
-                            activity = activity,
-                            isOnSwipeValidation = isOnSwipeValidation,
-                            action = sendTx
+                        .padding(start = 16.dp, end = 16.dp)
+                        .verticalScroll(
+                            state = verticalScroll,
+                            enabled = true,
                         )
-                    } else {
-                        SwipeSendButtonContent(
-                            MutableLiveData(amountToLeaveWallet),
-                            sendTx,
-                            MutableLiveData(true),
-                            listener = swipeSendButtonContentListener)
+                        .fillMaxSize()
+                ) {
+                    Box {
+                        ReviewTxActivityContentDestination(
+                            model = model,
+                            whiteAlpha = whiteAlpha)
                     }
-                    Spacer(
+                    ReviewTxActivityContentFees(model = model, activity = activity, whiteAlpha = whiteAlpha)
+                    ReviewTxActivityContentTransaction(model = model, whiteAlpha = whiteAlpha)
+                    Column (
                         modifier = Modifier
-                            .size(12.dp)
-                    )
+                            .padding(top = 4.dp)
+                    ) {
+                        ReviewTxActivityContentSendNote(model = model)
+                    }
                 }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Column (
+                        modifier = Modifier
+                            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
+                            JoinbotSendButton(
+                                isOnSwipeValidation = isOnSwipeValidation,
+                                action = sendTx,
+                                alphaBackground = 0f
+                            )
+                        } else {
+                            SwipeSendButtonContent(
+                                amountToLeaveWallet = MutableLiveData(amountToLeaveWallet),
+                                action = sendTx,
+                                enable = MutableLiveData(true),
+                                listener = swipeSendButtonContentListener,
+                                alphaBackground = 0f)
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -899,10 +903,9 @@ fun ReviewTxActivityContentSendNote(model: ReviewTxModel) {
 
 @Composable
 fun JoinbotSendButton(
-    model: ReviewTxModel,
-    activity: SamouraiActivity?,
     isOnSwipeValidation: MutableState<Boolean>,
     action: () -> Unit,
+    alphaBackground: Float,
 ) {
 
     val buttonSize = 48.dp
@@ -913,7 +916,7 @@ fun JoinbotSendButton(
         modifier = if (isOnSwipeValidation.value)
             Modifier
                 .padding(bottom = 8.dp, top = 8.dp, start = 16.dp, end = 16.dp)
-                .background(samouraiLightGreyAccent, RoundedCornerShape(20.dp)) else
+                .background(samouraiLightGreyAccent.copy(alphaBackground), RoundedCornerShape(20.dp)) else
                     Modifier
                         .padding(bottom = 8.dp, top = 8.dp, start = 16.dp, end = 16.dp)
     ) {
