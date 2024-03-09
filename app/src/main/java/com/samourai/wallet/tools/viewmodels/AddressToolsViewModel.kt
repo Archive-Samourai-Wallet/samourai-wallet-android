@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiWallet
+import com.samourai.wallet.constants.WALLET_INDEX
 import com.samourai.wallet.hd.HD_Address
 import com.samourai.wallet.hd.HD_WalletFactory
-import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.ricochet.RicochetMeta
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util

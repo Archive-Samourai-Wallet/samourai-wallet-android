@@ -2,7 +2,7 @@ package com.samourai.wallet.swaps;
 
 import android.content.Context;
 
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 
 import org.json.JSONException;
 import org.json.JSONObject;

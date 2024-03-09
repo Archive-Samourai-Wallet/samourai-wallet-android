@@ -2,6 +2,7 @@ package com.samourai.http.client;
 
 import android.content.Context;
 
+import com.samourai.wallet.httpClient.JacksonHttpClient;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.WebUtil;
 
@@ -36,6 +37,7 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     public AndroidHttpClient(WebUtil webUtil, TorManager torManager) {
+        super();
         this.webUtil = webUtil;
         this.torManager = torManager;
     }
@@ -69,6 +71,11 @@ public class AndroidHttpClient extends JacksonHttpClient {
             String jsonString = queryString(body);
             return webUtil.postURL(null, url, jsonString, headers);
         }
+    }
+
+    @Override
+    protected String requestStringPost(String s, Map<String, String> map, String s1, String s2) throws Exception {
+        return null; // not used yet
     }
 
     public String queryString(final Map<String,String> parameters) throws UnsupportedEncodingException {

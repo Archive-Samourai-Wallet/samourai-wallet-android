@@ -22,7 +22,7 @@ import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
@@ -825,8 +825,8 @@ public class APIFactory {
                 }
             }
 
-        } catch (NullPointerException | NotSecp256k1Exception | InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
-            ;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -1289,19 +1289,20 @@ public class APIFactory {
                             address = new Script(scriptBytes).getToAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
                         }
 
+                        String xpubM = null;
                         if(outDict.has("xpub"))    {
                             JSONObject xpubObj = (JSONObject)outDict.get("xpub");
                             path = (String)xpubObj.get("path");
-                            String m = (String)xpubObj.get("m");
+                            xpubM = (String)xpubObj.get("m");
                             unspentPaths.put(address, path);
-                            if(m.equals(BIP49Util.getInstance(context).getWallet().getAccount(0).xpubstr()))    {
+                            if(xpubM.equals(BIP49Util.getInstance(context).getWallet().getAccount(0).xpubstr()))    {
                                 unspentBIP49.put(address, 0);   // assume account 0
                             }
-                            else if(m.equals(BIP84Util.getInstance(context).getWallet().getAccount(0).xpubstr()))    {
+                            else if(xpubM.equals(BIP84Util.getInstance(context).getWallet().getAccount(0).xpubstr()))    {
                                 unspentBIP84.put(address, 0);   // assume account 0
                             }
                             else    {
-                                unspentAccounts.put(address, AddressFactory.getInstance(context).xpub2account().get(m));
+                                unspentAccounts.put(address, AddressFactory.getInstance(context).xpub2account().get(xpubM));
                             }
                         }
                         else if(outDict.has("pubkey"))    {
@@ -1324,9 +1325,8 @@ public class APIFactory {
                             utxos.get(script).getOutpoints().add(outPoint);
                         }
                         else    {
-                            UTXO utxo = new UTXO();
+                            UTXO utxo = new UTXO(path, xpubM);
                             utxo.getOutpoints().add(outPoint);
-                            utxo.setPath(path);
                             utxos.put(script, utxo);
                         }
 
@@ -1969,8 +1969,7 @@ public class APIFactory {
 
         if(filter)    {
             for(UTXO utxo : utxos)   {
-                UTXO u = new UTXO();
-                u.setPath(utxo.getPath());
+                UTXO u = new UTXO(utxo.getPath(), utxo.getXpub());
                 for(MyTransactionOutPoint out : utxo.getOutpoints())    {
                     boolean blocked = checkBlocked.apply(out);
                     if(!blocked)    {
@@ -2392,22 +2391,22 @@ public class APIFactory {
 
                     try {
                         String address = outDict.getString("addr");
-
+                        String xpubM = null;
                         if(outDict.has("xpub"))    {
                             JSONObject xpubObj = (JSONObject)outDict.get("xpub");
                             path = (String)xpubObj.get("path");
-                            String m = (String)xpubObj.get("m");
+                            xpubM = (String)xpubObj.get("m");
 
                             unspentPaths.put(address, path);
-                            if(m.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).xpubstr()))    {
+                            if(xpubM.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix()).xpubstr()))    {
                                 unspentBIP84PostMix.put(address, WhirlpoolMeta.getInstance(context).getWhirlpoolPostmix());
                                 account_type = XPUB_POSTMIX;
                             }
-                            else if(m.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr()))    {
+                            else if(xpubM.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount()).xpubstr()))    {
                                 unspentBIP84PreMix.put(address, WhirlpoolMeta.getInstance(context).getWhirlpoolPremixAccount());
                                 account_type = XPUB_PREMIX;
                             }
-                            else if(m.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).xpubstr()))    {
+                            else if(xpubM.equals(BIP84Util.getInstance(context).getWallet().getAccount(WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank()).xpubstr()))    {
                                 unspentBIP84BadBank.put(address, WhirlpoolMeta.getInstance(context).getWhirlpoolBadBank());
                                 account_type = XPUB_BADBANK;
                             }
@@ -2427,9 +2426,8 @@ public class APIFactory {
                                 utxosPostMix.get(script).getOutpoints().add(outPoint);
                             }
                             else    {
-                                UTXO utxo = new UTXO();
+                                UTXO utxo = new UTXO(path, xpubM);
                                 utxo.getOutpoints().add(outPoint);
-                                utxo.setPath(path);
                                 utxosPostMix.put(script, utxo);
                             }
                         }
@@ -2438,9 +2436,8 @@ public class APIFactory {
                                 utxosPreMix.get(script).getOutpoints().add(outPoint);
                             }
                             else    {
-                                UTXO utxo = new UTXO();
+                                UTXO utxo = new UTXO(path, xpubM);
                                 utxo.getOutpoints().add(outPoint);
-                                utxo.setPath(path);
                                 utxosPreMix.put(script, utxo);
                             }
                         } if(account_type == XPUB_BADBANK)    {
@@ -2448,9 +2445,8 @@ public class APIFactory {
                                 utxosBadBank.get(script).getOutpoints().add(outPoint);
                             }
                             else    {
-                                UTXO utxo = new UTXO();
+                                UTXO utxo = new UTXO(path, xpubM);
                                 utxo.getOutpoints().add(outPoint);
-                                utxo.setPath(path);
                                 utxosBadBank.put(script, utxo);
                             }
                         }

@@ -6,19 +6,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.material.math.MathUtils
-import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.bip47.BIP47Util
-import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.cahoots.CahootsMode
 import com.samourai.wallet.cahoots.CahootsType
-import com.samourai.wallet.segwit.SegwitAddress
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity
 import com.samourai.wallet.util.FormatsUtil
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -278,15 +275,7 @@ class CahootsTransactionViewModel : ViewModel() {
             address = collaboratorPcode.value
         }
         if (FormatsUtil.getInstance().isValidPaymentCode(address)) {
-            val _pcode = PaymentCode(address)
-            val paymentAddress = BIP47Util.getInstance(context).getSendAddress(_pcode, BIP47Meta.getInstance().getOutgoingIdx(address))
-            address = if (BIP47Meta.getInstance().getSegwit(address)) {
-                val segwitAddress = SegwitAddress(paymentAddress.sendECKey, SamouraiWallet.getInstance().currentNetworkParams)
-                segwitAddress.bech32AsString
-            } else {
-                paymentAddress.sendECKey.toAddress(SamouraiWallet.getInstance().currentNetworkParams).toString()
-            }
-
+            address = BIP47Util.getInstance(context).getSendAddressString(address)
         }
         val amountInSats = amount.value?.toLong() ?: 0.0
         //If the custom fee is not null the value will be taken as fee

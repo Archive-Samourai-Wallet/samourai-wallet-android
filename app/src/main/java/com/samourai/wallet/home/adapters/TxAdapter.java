@@ -28,8 +28,8 @@ import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
+import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
 import org.json.JSONObject;

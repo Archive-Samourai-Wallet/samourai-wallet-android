@@ -11,9 +11,17 @@ import java.math.BigInteger;
 
 public class AndroidMinerFeeSupplier implements MinerFeeSupplier {
     private Logger log = LoggerFactory.getLogger(AndroidMinerFeeSupplier.class);
+    private static AndroidMinerFeeSupplier instance;
     private FeeUtil feeUtil;
 
-    public AndroidMinerFeeSupplier(FeeUtil feeUtil) {
+    public static AndroidMinerFeeSupplier getInstance() {
+        if (instance == null) {
+            instance = new AndroidMinerFeeSupplier(FeeUtil.getInstance());
+        }
+        return instance;
+    }
+
+    private AndroidMinerFeeSupplier(FeeUtil feeUtil) {
         this.feeUtil = feeUtil;
     }
 

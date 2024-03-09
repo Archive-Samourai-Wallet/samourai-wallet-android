@@ -16,7 +16,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 public class PushTx implements IPushTx {
@@ -94,11 +96,15 @@ public class PushTx implements IPushTx {
 
     @Override
     public String pushTx(String hexTx) throws Exception {
+        return pushTx(hexTx, null);
+    }
 
+    @Override
+    public String pushTx(String hexTx, Collection<Integer> strictModeVoutsOrNull) throws Exception {
         String txid = null;
 
         if(DO_SPEND)    {
-            String response = PushTx.getInstance(context).samourai(hexTx, null);
+            String response = PushTx.getInstance(context).samourai(hexTx, new LinkedList<>(strictModeVoutsOrNull));
             if(response == null) {
                 throw new Exception(context.getString(R.string.pushtx_returns_null));
             }
@@ -114,7 +120,5 @@ public class PushTx implements IPushTx {
             debug("PushTx", hexTx);
         }
         return txid;
-
     }
-
 }

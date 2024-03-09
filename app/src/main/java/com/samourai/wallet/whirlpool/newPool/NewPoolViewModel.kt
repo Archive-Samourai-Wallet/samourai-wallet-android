@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.api.backend.MinerFeeTarget
 import com.samourai.wallet.api.backend.beans.UnspentOutput
+import com.samourai.wallet.constants.SamouraiAccount
+import com.samourai.wallet.util.AsyncUtil
 import com.samourai.wallet.utxos.models.UTXOCoin
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.WhirlpoolTx0
@@ -14,7 +16,6 @@ import com.samourai.wallet.whirlpool.models.PoolViewModel
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,7 +83,7 @@ class NewPoolViewModel : ViewModel() {
                 }
 
                 val tx0Config = whirlpoolWallet.getTx0Config(mixFeeTarget, mixFeeTarget)
-                tx0Config.changeWallet = WhirlpoolAccount.DEPOSIT
+                tx0Config.changeWallet = SamouraiAccount.DEPOSIT
 
                 val tx0 = WhirlpoolTx0(WhirlpoolMeta.getMinimumPoolDenomination(), fee.toLong(), 0, utxos.value)
 
@@ -91,7 +92,8 @@ class NewPoolViewModel : ViewModel() {
 
                 val poolModels = ArrayList<PoolViewModel>();
 
-                val tx0Previews = whirlpoolWallet.tx0Previews(tx0Config, spendFroms)
+                val tx0Previews = AsyncUtil.getInstance().blockingGet(
+                    whirlpoolWallet.tx0Previews(tx0Config, spendFroms))
 
                 for (whirlpoolPool in pools) {
                     val poolViewModel = PoolViewModel(whirlpoolPool)

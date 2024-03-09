@@ -84,7 +84,7 @@ public class WebUtil {
         if (context == null) {
             return postURL(null, request, urlParameters, headers);
         } else {
-            Log.v("WebUtil", "Tor required status:" + TorManager.INSTANCE.isRequired());
+            //Log.v("WebUtil", "Tor required status:" + TorManager.INSTANCE.isRequired());
             if (TorManager.INSTANCE.isRequired()) {
                 if (urlParameters.startsWith("tx=")) {
                     HashMap<String, String> args = new HashMap<String, String>();
@@ -118,6 +118,7 @@ public class WebUtil {
         }
 
         String responseBody = null;
+        int responseCode = 500;
 
         for (int ii = 0; ii < DefaultRequestRetry; ++ii) {
             URL url = new URL(request);
@@ -149,8 +150,8 @@ public class WebUtil {
                 wr.close();
 
                 connection.setInstanceFollowRedirects(false);
-
-                if (connection.getResponseCode() == 200) {
+                responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
 //					System.out.println("postURL:return code 200");
                     return IOUtils.toString(connection.getInputStream(), "UTF-8");
                 } else {
@@ -164,12 +165,13 @@ public class WebUtil {
             }
         }
 
-        throw new HttpException("Invalid Response " , responseBody);
+        throw new HttpException("Invalid Response " , responseBody, responseCode);
     }
 
     public String deleteURL(String request, String urlParameters) throws Exception {
 
         String responseBody = null;
+        int responseCode = 500;
 
         for (int ii = 0; ii < DefaultRequestRetry; ++ii) {
             URL url = new URL(request);
@@ -198,8 +200,8 @@ public class WebUtil {
                 wr.close();
 
                 connection.setInstanceFollowRedirects(false);
-
-                if (connection.getResponseCode() == 200) {
+                responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
 //					System.out.println("postURL:return code 200");
                     return IOUtils.toString(connection.getInputStream(), "UTF-8");
                 } else {
@@ -213,7 +215,7 @@ public class WebUtil {
             }
         }
 
-        throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
+        throw new HttpException("Invalid Response " + responseBody, responseBody, responseCode); // required by Whirlpool
     }
 
     public String getURL(String URL) throws Exception {
@@ -236,7 +238,7 @@ public class WebUtil {
             return _getURL(URL, headers);
         } else {
             //if(TorUtil.getInstance(context).orbotIsRunning())    {
-            Log.v("WebUtil", "Tor required status:" + TorManager.INSTANCE.isRequired());
+            //Log.v("WebUtil", "Tor required status:" + TorManager.INSTANCE.isRequired());
             if (TorManager.INSTANCE.isRequired()) {
                 return tor_getURL(URL, headers);
             } else {
@@ -251,6 +253,7 @@ public class WebUtil {
         URL url = new URL(URL);
 
         String responseBody = null;
+        int responseCode = 500;
 
         for (int ii = 0; ii < DefaultRequestRetry; ++ii) {
 
@@ -271,7 +274,8 @@ public class WebUtil {
 
                 connection.connect();
 
-                if (connection.getResponseCode() == 200)
+                responseCode = connection.getResponseCode();
+                if (responseCode == 200)
                     return IOUtils.toString(connection.getInputStream(), "UTF-8");
                 else
                     responseBody = IOUtils.toString(connection.getErrorStream(), "UTF-8");
@@ -282,7 +286,7 @@ public class WebUtil {
             }
         }
 
-        throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
+        throw new HttpException("Invalid Response " + responseBody, responseBody, responseCode); // required by Whirlpool
     }
 
     private String tor_getURL(String URL, Map<String,String> headers) throws Exception {
@@ -303,7 +307,7 @@ public class WebUtil {
         try (Response response = builder.build().newCall(request).execute()) {
             String responseBody = (response.body()!=null ? response.body().string() : "");
             if (!response.isSuccessful()) {
-                throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
+                throw new HttpException("Invalid Response " + responseBody, responseBody, response.code()); // required by Whirlpool
             }
             return responseBody;
         }
@@ -342,11 +346,12 @@ public class WebUtil {
 
         try (Response response = builder.build().newCall(request).execute()) {
             String responseBody = (response.body()!=null ? response.body().string() : "");
-            if (response.code() == 401) {
+            int responseCode = response.code();
+            if (responseCode == 401) {
                 APIFactory.getInstance(context).getToken(true, true);
             }
             if (!response.isSuccessful()) {
-                throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
+                throw new HttpException("Invalid Response " + responseBody, responseBody, responseCode); // required by Whirlpool
             }
             if(DojoUtil.getInstance(context).getDojoParams() != null)   {
                 Headers _headers = response.headers();
@@ -391,7 +396,7 @@ public class WebUtil {
         try (Response response = builder.build().newCall(request).execute()) {
             String responseBody = (response.body()!=null ? response.body().string() : "");
             if (!response.isSuccessful()) {
-                throw new HttpException("Invalid Response " + responseBody, responseBody); // required by Whirlpool
+                throw new HttpException("Invalid Response " + responseBody, responseBody, response.code()); // required by Whirlpool
             }
             return responseBody;
 

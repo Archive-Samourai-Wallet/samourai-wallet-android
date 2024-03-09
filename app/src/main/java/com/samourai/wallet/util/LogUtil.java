@@ -8,8 +8,6 @@ import com.samourai.whirlpool.client.utils.ClientUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
@@ -60,14 +58,14 @@ public class LogUtil {
         // enable debug logs for external Samourai libraries...
         ((Logger) LoggerFactory.getLogger("com.samourai")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.samourai.wallet")).setLevel(Level.DEBUG);
-        ((Logger) LoggerFactory.getLogger("com.samourai.soroban")).setLevel(Level.DEBUG);
+        ((Logger) LoggerFactory.getLogger("com.samourai.soroban")).setLevel(Level.TRACE);
         ((Logger) LoggerFactory.getLogger("com.samourai.whirlpool")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.samourai.xmanager")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.samourai.wallet.staging")).setLevel(Level.DEBUG);
 
         // set whirlpool log level
         Level level = BuildConfig.DEBUG ? Level.DEBUG : Level.WARN;
-        ClientUtils.setLogLevel(level, level);
+        ClientUtils.setLogLevel(level.toString());
 
         Log.d("LogUtil", "Debug logs enabled");
     }

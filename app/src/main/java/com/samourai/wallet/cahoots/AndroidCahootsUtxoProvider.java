@@ -3,11 +3,11 @@ package com.samourai.wallet.cahoots;
 import android.content.Context;
 
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.send.provider.CahootsUtxoProvider;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -50,7 +50,8 @@ public class AndroidCahootsUtxoProvider implements CahootsUtxoProvider {
             String path = apiFactory.getUnspentPaths().get(address);
             if(path != null)   {
                 byte[] ecKey = SendFactory.getPrivKey(address, account).getPrivKeyBytes();
-                CahootsUtxo cahootsUtxo = new CahootsUtxo(outpoint, path, ecKey);
+                String xpub = utxo.getXpub();
+                CahootsUtxo cahootsUtxo = new CahootsUtxo(outpoint, path, xpub, ecKey);
                 utxos.add(cahootsUtxo);
             }
         }

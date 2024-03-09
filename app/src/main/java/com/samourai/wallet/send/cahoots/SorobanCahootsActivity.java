@@ -18,6 +18,8 @@ import com.samourai.wallet.util.AppUtil;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.concurrent.Callable;
+
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -106,19 +108,27 @@ public class SorobanCahootsActivity extends SamouraiActivity {
         if(getIntent().hasExtra("destPcode")){
             paynymDestination = getIntent().getStringExtra("destPcode");
         }
+        final String paynymDestinationFinal = paynymDestination;
         // send cahoots
-        subscribeCahoots(cahootsUi.meetAndInitiate(account, feePerB, sendAmount, sendAddress, paynymDestination, paymentCode));
+        subscribeCahoots(() -> cahootsUi.meetAndInitiate(account, feePerB, sendAmount, sendAddress, paynymDestinationFinal, paymentCode));
     }
 
     private void startReceiver() throws Exception {
-        subscribeCahoots(cahootsUi.startCounterparty(account, paymentCode));
+        subscribeCahoots(() -> cahootsUi.startCounterparty(account, paymentCode));
         Toast.makeText(this, "Waiting for online Cahoots", Toast.LENGTH_SHORT).show();
     }
 
-    private void subscribeCahoots(Single<Cahoots> onCahoots) {
-        sorobanDisposable = onCahoots.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(cahoots -> onCahootsSuccess(cahoots), e -> onCahootsError(e));
+    private void subscribeCahoots(Callable<Single<Cahoots>> onCahoots) {
+        // start in a new thread to not block UI
+        new Thread(() -> {
+            try {
+                sorobanDisposable = onCahoots.call().subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(cahoots -> onCahootsSuccess(cahoots), e -> onCahootsError(e));
+            } catch (Exception e) {
+                onCahootsError(e);
+            }
+        }).start();
     }
 
     private void onCahootsSuccess(Cahoots cahoots) {

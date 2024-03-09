@@ -3,8 +3,8 @@ package com.samourai.whirlpool.client.wallet;
 import android.content.Context;
 
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
+import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.wallet.hd.HD_Wallet;
-import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.util.LogUtil;
@@ -12,7 +12,6 @@ import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.whirlpool.client.exception.NotifiableException;
 import com.samourai.whirlpool.client.utils.ClientUtils;
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus;
 
@@ -112,7 +111,7 @@ public class WhirlpoolUtils {
             if (whirlpoolUtxo != null && whirlpoolUtxo.getUtxo() != null ) {
 
                 try {
-                    if(WhirlpoolAccount.POSTMIX.equals(whirlpoolUtxo.getAccount()) && whirlpoolUtxo.getUtxo().getPath() != null && whirlpoolUtxo.getUtxo().getPath().contains("M/1/")){
+                    if(SamouraiAccount.POSTMIX.equals(whirlpoolUtxo.getAccount()) && whirlpoolUtxo.getUtxo().getPath() != null && whirlpoolUtxo.getUtxo().getPath().contains("M/1/")){
                         return tags;
                     }
                 } catch (Exception e) {
@@ -120,7 +119,7 @@ public class WhirlpoolUtils {
                     return tags;
                 }
                 // tag only premix & postmix utxos
-                if (WhirlpoolAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || WhirlpoolAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
+                if (SamouraiAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || SamouraiAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
                     // show whirlpool tag
                     if(whirlpoolUtxo.getUtxo().value > BlockedUTXO.BLOCKED_UTXO_THRESHOLD){
                         tags.add(whirlpoolUtxo.getMixsDone() + " MIXED");

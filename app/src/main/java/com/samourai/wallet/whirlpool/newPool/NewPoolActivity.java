@@ -1,16 +1,11 @@
 package com.samourai.wallet.whirlpool.newPool;
 
-import static android.graphics.Typeface.BOLD;
-
-import android.app.Activity;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -18,26 +13,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
+import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
+import com.samourai.wallet.util.AsyncUtil;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.util.LogUtil;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
-import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.wallet.whirlpool.WhirlpoolTx0;
 import com.samourai.wallet.whirlpool.models.PoolCyclePriority;
@@ -52,7 +42,6 @@ import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 
 import org.bitcoinj.core.TransactionOutput;
 
@@ -61,14 +50,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
-
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
+
+import static android.graphics.Typeface.BOLD;
 
 public class NewPoolActivity extends SamouraiActivity {
 
@@ -318,14 +313,14 @@ public class NewPoolActivity extends SamouraiActivity {
             }
             Tx0Config tx0Config = whirlpoolWallet.getTx0Config(mixFeeTarget, mixFeeTarget);
             if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
-                tx0Config.setChangeWallet(WhirlpoolAccount.POSTMIX);
+                tx0Config.setChangeWallet(SamouraiAccount.POSTMIX);
             } else {
-                tx0Config.setChangeWallet(WhirlpoolAccount.DEPOSIT);
+                tx0Config.setChangeWallet(SamouraiAccount.DEPOSIT);
             }
             try {
                 com.samourai.whirlpool.client.whirlpool.beans.Pool pool = whirlpoolWallet.getPoolSupplier().findPoolById(newPoolViewModel.getGetPool().getValue().getPoolId());
 
-                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, tx0Config, pool);
+                Tx0 tx0 = AsyncUtil.getInstance().blockingGet(whirlpoolWallet.tx0(spendFroms, tx0Config, pool));
                 final String txHash = tx0.getTx().getHashAsString();
                 // tx0 success
                 if (tx0.getChangeOutputs() != null && !tx0.getChangeOutputs().isEmpty()) {
