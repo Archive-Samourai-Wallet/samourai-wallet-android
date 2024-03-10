@@ -30,7 +30,7 @@ public class SorobanCahootsUi extends ManualCahootsUi {
         super(stepsViewGroup, viewPager, intent, fragmentManager, i -> SorobanCahootsStepFragment.newInstance(i), activity);
     }
 
-    public Single<Cahoots> meetAndInitiate(int account, long feePerB, long sendAmount, String sendAddress, String paynymDestination, PaymentCode paymentCodeCounterparty) throws Exception {
+    public Cahoots meetAndInitiate(int account, long feePerB, long sendAmount, String sendAddress, String paynymDestination, PaymentCode paymentCodeCounterparty) throws Exception {
         cahootsContext = computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
 
         // verify
@@ -77,7 +77,7 @@ public class SorobanCahootsUi extends ManualCahootsUi {
         return sorobanWalletService.getSorobanWalletInitiator().meetAndInitiate(cahootsContext, paymentCodeCounterparty, listener);
     }
 
-    public Single<Cahoots> startCounterparty(int account, PaymentCode paymentCode) throws Exception {
+    public Cahoots startCounterparty(int account, PaymentCode paymentCode) throws Exception {
         CahootsWallet cahootsWallet = sorobanWalletService.getCahootsWallet();
         cahootsContext = CahootsContext.newCounterparty(cahootsWallet, cahootsType, account);
 

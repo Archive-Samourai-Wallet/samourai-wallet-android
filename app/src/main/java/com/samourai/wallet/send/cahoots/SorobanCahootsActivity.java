@@ -118,17 +118,16 @@ public class SorobanCahootsActivity extends SamouraiActivity {
         Toast.makeText(this, "Waiting for online Cahoots", Toast.LENGTH_SHORT).show();
     }
 
-    private void subscribeCahoots(Callable<Single<Cahoots>> onCahoots) {
+    private void subscribeCahoots(Callable<Cahoots> runCahoots) {
         // start in a new thread to not block UI
-        new Thread(() -> {
-            try {
-                sorobanDisposable = onCahoots.call().subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(cahoots -> onCahootsSuccess(cahoots), e -> onCahootsError(e));
-            } catch (Exception e) {
-                onCahootsError(e);
-            }
-        }).start();
+        try {
+            sorobanDisposable = Single.fromCallable(runCahoots)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(cahoots -> onCahootsSuccess(cahoots), e -> onCahootsError(e));
+        } catch (Exception e) {
+            onCahootsError(e);
+        }
     }
 
     private void onCahootsSuccess(Cahoots cahoots) {

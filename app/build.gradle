@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 33
-    buildToolsVersion "30.0.3"
+    buildToolsVersion "34.0.0"
     useLibrary 'org.apache.http.legacy'
     flavorDimensions "versionCode"
     defaultConfig {
@@ -149,7 +149,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:1.0.0-dexwp-beta3') {
+    implementation ('io.samourai.code.wallet:extlibj:1.0.0-dexwp-beta4-SNAPSHOT') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'

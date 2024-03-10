@@ -18,6 +18,8 @@ import com.samourai.wallet.cahoots.manual.ManualCahootsService;
 import com.samourai.wallet.chain.ChainSupplier;
 import com.samourai.wallet.constants.SamouraiNetwork;
 import com.samourai.wallet.crypto.CryptoUtil;
+import com.samourai.wallet.dexConfig.DexConfigProvider;
+import com.samourai.wallet.dexConfig.SamouraiConfig;
 import com.samourai.wallet.httpClient.IHttpClientService;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.send.provider.CahootsUtxoProvider;
@@ -29,11 +31,13 @@ import com.samourai.whirlpool.client.wallet.data.AndroidChainSupplier;
 
 import java.security.Provider;
 import java.security.Security;
+import java.util.Arrays;
+import java.util.Collection;
 
 public class AndroidSorobanWalletService {
     private static final String TAG = "AndroidSorobanWalletS";
     private static final Provider PROVIDER = new org.spongycastle.jce.provider.BouncyCastleProvider(); // use spongycastle
-
+    private static Collection<String> sorobanUrlsForced;
     private static AndroidSorobanWalletService instance;
     private Context ctx;
     private CahootsWallet cahootsWallet;
@@ -53,11 +57,32 @@ public class AndroidSorobanWalletService {
     private AndroidSorobanWalletService(Context ctx) {
         this.ctx = ctx;
         this.sorobanConfig = computeSorobanConfig(ctx);
+        this.sorobanUrlsForced = computeSorobanUrlsForced(ctx);
 
         ChainSupplier chainSupplier = AndroidChainSupplier.getInstance(ctx);
         CahootsUtxoProvider utxoProvider = AndroidCahootsUtxoProvider.getInstance(ctx);
         WalletSupplier walletSupplier = AndroidWalletSupplier.getInstance(ctx);
         this.cahootsWallet = new CahootsWalletImpl(chainSupplier, walletSupplier, utxoProvider);
+    }
+
+    private static Collection<String> computeSorobanUrlsForced(Context ctx) {
+        boolean testnet = SamouraiWallet.getInstance().isTestNet();
+
+        DojoUtil dojoUtil = DojoUtil.getInstance(ctx);
+        String dojoParams = dojoUtil.getDojoParams();
+        boolean useDojo = (dojoParams != null);
+        boolean isTorRequired = TorManager.INSTANCE.isRequired();
+        boolean onion = useDojo || isTorRequired;
+        SamouraiConfig samouraiConfig = DexConfigProvider.getInstance().getSamouraiConfig();
+        String url;
+        if (testnet) {
+            url = onion ? samouraiConfig.getSorobanServerTestnetOnion()
+                    : samouraiConfig.getSorobanServerTestnetClear();
+        } else {
+            url = onion ? samouraiConfig.getSorobanServerMainnetOnion()
+                    : samouraiConfig.getSorobanServerMainnetClear();
+        }
+        return Arrays.asList(url);
     }
 
     private static ExtLibJConfig computeExtLibJConfig(Context ctx) {
@@ -91,6 +116,7 @@ public class AndroidSorobanWalletService {
         checkOnline();
         SorobanWalletService sorobanWalletService = sorobanConfig.getSorobanWalletService();
         SorobanWalletInitiator sw = sorobanWalletService.getSorobanWalletInitiator(cahootsWallet);
+        sw.getRpcSession().setSorobanUrlsForced(sorobanUrlsForced); // use single soroban server
         sw.setTimeoutMeetingMs(120000);
         return sw;
     }
@@ -99,6 +125,7 @@ public class AndroidSorobanWalletService {
         checkOnline();
         SorobanWalletService sorobanWalletService = sorobanConfig.getSorobanWalletService();
         SorobanWalletCounterparty sw = sorobanWalletService.getSorobanWalletCounterparty(cahootsWallet);
+        sw.getRpcSession().setSorobanUrlsForced(sorobanUrlsForced); // use single soroban server
         sw.setTimeoutMeetingMs(60000);
         return sw;
     }
