@@ -158,8 +158,6 @@ public class WebUtil {
                     responseBody = IOUtils.toString(connection.getErrorStream(), "UTF-8");
 //                    System.out.println("postURL:return code " + error);
                 }
-
-                Thread.sleep(5000);
             } finally {
                 connection.disconnect();
             }
@@ -208,8 +206,6 @@ public class WebUtil {
                     responseBody = IOUtils.toString(connection.getErrorStream(), "UTF-8");
 //                    System.out.println("postURL:return code " + error);
                 }
-
-                Thread.sleep(5000);
             } finally {
                 connection.disconnect();
             }
@@ -280,7 +276,6 @@ public class WebUtil {
                 else
                     responseBody = IOUtils.toString(connection.getErrorStream(), "UTF-8");
 
-                Thread.sleep(5000);
             } finally {
                 connection.disconnect();
             }

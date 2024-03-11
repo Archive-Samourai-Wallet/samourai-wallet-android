@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -90,8 +89,9 @@ public class AndroidHttpClient extends JacksonHttpClient {
 
     @Override
     protected <T> Single<Optional<T>> httpObservable(final Callable<T> supplier) {
-        Single<Optional<T>> observable = super.httpObservable(supplier);
-        return observable.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        return Single.fromCallable(() -> Optional.ofNullable(supplier.call()))
+                // important: subscribe & observe on IO for Cahoots stuff
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io());
     }
 }

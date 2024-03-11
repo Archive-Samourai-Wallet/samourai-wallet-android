@@ -104,7 +104,8 @@ public class PushTx implements IPushTx {
         String txid = null;
 
         if(DO_SPEND)    {
-            String response = PushTx.getInstance(context).samourai(hexTx, new LinkedList<>(strictModeVoutsOrNull));
+            List<Integer> listVouts = strictModeVoutsOrNull!=null ? new LinkedList<>(strictModeVoutsOrNull) : null;
+            String response = PushTx.getInstance(context).samourai(hexTx, listVouts);
             if(response == null) {
                 throw new Exception(context.getString(R.string.pushtx_returns_null));
             }

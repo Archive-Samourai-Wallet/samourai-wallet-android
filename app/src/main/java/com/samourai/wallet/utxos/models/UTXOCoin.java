@@ -18,6 +18,7 @@ public class UTXOCoin {
     public long amount = 0L;
     public String hash = "";
     public String path = "";
+    public String xpub;
     public int idx = 0;
     public boolean isSelected = false;
     private MyTransactionOutPoint outPoint;
@@ -34,6 +35,7 @@ public class UTXOCoin {
         this.outPoint = outPoint;
         this.address = outPoint.getAddress();
         this.path = utxo.getPath() == null ? "" : utxo.getPath();
+        this.xpub = utxo.getXpub();
         this.amount = outPoint.getValue().longValue();
         this.hash = outPoint.getTxHash().toString();
         this.idx = outPoint.getTxOutputN();
