@@ -2,16 +2,17 @@ package com.samourai.http.client;
 
 import android.content.Context;
 
+import com.samourai.wallet.api.backend.beans.HttpException;
 import com.samourai.wallet.httpClient.JacksonHttpClient;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.WebUtil;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
+import io.matthewnelson.topl_service.TorServiceController;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 
@@ -36,7 +37,11 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     public AndroidHttpClient(WebUtil webUtil, TorManager torManager) {
-        super();
+        super((e) -> {
+            if (torManager.isRequired()) {
+                TorServiceController.newIdentity();
+            }
+        });
         this.webUtil = webUtil;
         this.torManager = torManager;
     }
@@ -47,12 +52,12 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     @Override
-    protected String requestJsonGet(String urlStr, Map<String, String> headers, boolean async) throws Exception {
+    protected String requestJsonGet(String urlStr, Map<String, String> headers, boolean async) throws HttpException {
         return webUtil.getURL(urlStr, headers);
     }
 
     @Override
-    protected String requestJsonPost(String url, Map<String, String> headers, String jsonBody) throws Exception {
+    protected String requestJsonPost(String url, Map<String, String> headers, String jsonBody) throws HttpException {
         if (torManager.isRequired()) {
             return webUtil.tor_postURL(url, jsonBody, headers);
         } else {
@@ -61,7 +66,7 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     @Override
-    protected String requestJsonPostUrlEncoded(String url, Map<String, String> headers, Map<String, String> body) throws Exception {
+    protected String requestJsonPostUrlEncoded(String url, Map<String, String> headers, Map<String, String> body) throws HttpException {
         if (torManager.isRequired()) {
             // tor enabled
             return webUtil.tor_postURL(url, body, headers);
@@ -73,16 +78,20 @@ public class AndroidHttpClient extends JacksonHttpClient {
     }
 
     @Override
-    protected String requestStringPost(String s, Map<String, String> map, String s1, String s2) throws Exception {
+    protected String requestStringPost(String s, Map<String, String> map, String s1, String s2) throws HttpException {
         return null; // not used yet
     }
 
-    public String queryString(final Map<String,String> parameters) throws UnsupportedEncodingException {
+    public String queryString(final Map<String,String> parameters) throws HttpException {
         String url = "";
-        for (Map.Entry<String,String> parameter : parameters.entrySet()) {
-            final String encodedKey = URLEncoder.encode(parameter.getKey(), "UTF-8");
-            final String encodedValue = URLEncoder.encode(parameter.getValue(), "UTF-8");
-            url += encodedKey + "=" + encodedValue+"&";
+        try {
+            for (Map.Entry<String, String> parameter : parameters.entrySet()) {
+                final String encodedKey = URLEncoder.encode(parameter.getKey(), "UTF-8");
+                final String encodedValue = URLEncoder.encode(parameter.getValue(), "UTF-8");
+                url += encodedKey + "=" + encodedValue + "&";
+            }
+        } catch (Exception e) {
+            throw new HttpSystemException(e);
         }
         return url;
     }

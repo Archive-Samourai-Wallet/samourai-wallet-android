@@ -1,12 +1,14 @@
 package com.samourai.wallet.util;
 
 import android.content.Context;
-import android.util.Log;
 
+import com.samourai.http.client.HttpSystemException;
 import com.samourai.wallet.BuildConfig;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.beans.HttpException;
+import com.samourai.wallet.httpClient.HttpNetworkException;
+import com.samourai.wallet.httpClient.HttpResponseException;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.tor.TorManager;
 
@@ -105,7 +107,7 @@ public class WebUtil {
         return postURL(contentType, request, urlParameters, null);
     }
 
-    public String postURL(String contentType, String request, String urlParameters, Map<String, String> headers) throws Exception {
+    public String postURL(String contentType, String request, String urlParameters, Map<String, String> headers) throws HttpException {
         // default headers
         if (headers == null) {
             headers = new HashMap<>();
@@ -121,9 +123,15 @@ public class WebUtil {
         int responseCode = 500;
 
         for (int ii = 0; ii < DefaultRequestRetry; ++ii) {
-            URL url = new URL(request);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            URL url;
             try {
+                url = new URL(request);
+            } catch (Exception e) {
+                throw new HttpSystemException(e);
+            }
+            HttpURLConnection connection = null;
+            try {
+                connection = (HttpURLConnection) url.openConnection();
                 connection.setDoOutput(true);
                 connection.setDoInput(true);
                 connection.setInstanceFollowRedirects(false);
@@ -158,12 +166,17 @@ public class WebUtil {
                     responseBody = IOUtils.toString(connection.getErrorStream(), "UTF-8");
 //                    System.out.println("postURL:return code " + error);
                 }
-            } finally {
-                connection.disconnect();
+            } catch(Exception e) {
+                throw new HttpNetworkException(e);
+            }
+            finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
             }
         }
 
-        throw new HttpException("Invalid Response " , responseBody, responseCode);
+        throw new HttpResponseException(responseBody, responseCode);
     }
 
     public String deleteURL(String request, String urlParameters) throws Exception {
@@ -211,14 +224,14 @@ public class WebUtil {
             }
         }
 
-        throw new HttpException("Invalid Response " + responseBody, responseBody, responseCode); // required by Whirlpool
+        throw new HttpResponseException(responseBody, responseCode); // required by Whirlpool
     }
 
     public String getURL(String URL) throws Exception {
         return getURL(URL, null);
     }
 
-    public String getURL(String URL, Map<String,String> headers) throws Exception {
+    public String getURL(String URL, Map<String,String> headers) throws HttpException {
         // default headers
         if (headers == null) {
             headers = new HashMap<>();
@@ -245,17 +258,23 @@ public class WebUtil {
 
     }
 
-    private String _getURL(String URL, Map<String,String> headers) throws Exception {
-        URL url = new URL(URL);
+    private String _getURL(String URL, Map<String,String> headers) throws HttpException {
+        URL url;
+        try {
+            url = new URL(URL);
+        } catch (Exception e) {
+            throw new HttpSystemException(e);
+        }
 
         String responseBody = null;
         int responseCode = 500;
 
         for (int ii = 0; ii < DefaultRequestRetry; ++ii) {
 
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection connection = null;
 
             try {
+                connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 
                 // set headers
@@ -276,15 +295,19 @@ public class WebUtil {
                 else
                     responseBody = IOUtils.toString(connection.getErrorStream(), "UTF-8");
 
-            } finally {
-                connection.disconnect();
+            } catch(Exception e){
+                throw new HttpNetworkException(e);
+            }finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
             }
         }
 
-        throw new HttpException("Invalid Response " + responseBody, responseBody, responseCode); // required by Whirlpool
+        throw new HttpResponseException(responseBody, responseCode); // required by Whirlpool
     }
 
-    private String tor_getURL(String URL, Map<String,String> headers) throws Exception {
+    private String tor_getURL(String URL, Map<String,String> headers) throws HttpException {
 
         OkHttpClient.Builder builder = WebUtil.getInstance(context).httpClientBuilder(URL);
 
@@ -302,9 +325,13 @@ public class WebUtil {
         try (Response response = builder.build().newCall(request).execute()) {
             String responseBody = (response.body()!=null ? response.body().string() : "");
             if (!response.isSuccessful()) {
-                throw new HttpException("Invalid Response " + responseBody, responseBody, response.code()); // required by Whirlpool
+                throw new HttpResponseException(responseBody, response.code()); // required by Whirlpool
             }
             return responseBody;
+        } catch (HttpException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new HttpNetworkException(e);
         }
 
     }
@@ -313,7 +340,7 @@ public class WebUtil {
         return tor_postURL(URL, args, null);
     }
 
-    public String tor_postURL(String URL, Map<String, String> args, Map<String,String> headers) throws Exception {
+    public String tor_postURL(String URL, Map<String, String> args, Map<String,String> headers) throws HttpException {
         FormBody.Builder formBodyBuilder = new FormBody.Builder();
 
         if (args != null && args.size()!=0) {
@@ -323,7 +350,12 @@ public class WebUtil {
         }
 
 
-        OkHttpClient.Builder builder = WebUtil.getInstance(context).httpClientBuilder(URL);
+        OkHttpClient.Builder builder;
+        try {
+            builder = WebUtil.getInstance(context).httpClientBuilder(URL);
+        } catch (Exception e) {
+            throw new HttpSystemException(e);
+        }
 
         Request.Builder rb = new Request.Builder().url(URL);
 
@@ -339,35 +371,41 @@ public class WebUtil {
                 .post(formBodyBuilder.build())
                 .build();
 
-        try (Response response = builder.build().newCall(request).execute()) {
-            String responseBody = (response.body()!=null ? response.body().string() : "");
-            int responseCode = response.code();
-            if (responseCode == 401) {
-                APIFactory.getInstance(context).getToken(true, true);
-            }
-            if (!response.isSuccessful()) {
-                throw new HttpException("Invalid Response " + responseBody, responseBody, responseCode); // required by Whirlpool
-            }
-            if(DojoUtil.getInstance(context).getDojoParams() != null)   {
-                Headers _headers = response.headers();
-                List<String> values = _headers.values("X-Dojo-Version");
-                if(values != null && values.size() > 0)   {
-                    info("WebUtil", "header:" + values.get(0));
-                    DojoUtil.getInstance(context).setDojoVersion(values.get(0));
+        try {
+            try (Response response = builder.build().newCall(request).execute()) {
+                String responseBody = (response.body() != null ? response.body().string() : "");
+                int responseCode = response.code();
+                if (responseCode == 401) {
+                    APIFactory.getInstance(context).getToken(true, true);
                 }
+                if (!response.isSuccessful()) {
+                    throw new HttpResponseException(responseBody, responseCode); // required by Whirlpool
+                }
+                if (DojoUtil.getInstance(context).getDojoParams() != null) {
+                    Headers _headers = response.headers();
+                    List<String> values = _headers.values("X-Dojo-Version");
+                    if (values != null && values.size() > 0) {
+                        info("WebUtil", "header:" + values.get(0));
+                        DojoUtil.getInstance(context).setDojoVersion(values.get(0));
+                    }
+
+                }
+                return responseBody;
 
             }
-            return responseBody;
-
+        } catch (HttpException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new HttpNetworkException(e);
         }
 
     }
 
-    public String tor_postURL(String URL, JSONObject args, Map<String,String> headers) throws Exception {
+    public String tor_postURL(String URL, JSONObject args, Map<String,String> headers) throws HttpException {
         return tor_postURL(URL, args.toString(), headers);
     }
 
-    public String tor_postURL(String URL, String jsonToString, Map<String,String> headers) throws Exception {
+    public String tor_postURL(String URL, String jsonToString, Map<String,String> headers) throws HttpException {
         final MediaType JSON
                 = MediaType.parse("application/json; charset=utf-8");
         RequestBody body = RequestBody.create(JSON, jsonToString);
@@ -388,13 +426,20 @@ public class WebUtil {
                 .post(body)
                 .build();
 
+        String responseBody = null;
+
         try (Response response = builder.build().newCall(request).execute()) {
-            String responseBody = (response.body()!=null ? response.body().string() : "");
+            if (response.body()!=null) {
+                responseBody = response.body().string();
+            }
             if (!response.isSuccessful()) {
-                throw new HttpException("Invalid Response " + responseBody, responseBody, response.code()); // required by Whirlpool
+                throw new HttpResponseException(responseBody, response.code()); // required by Whirlpool
             }
             return responseBody;
-
+        } catch (HttpException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new HttpNetworkException(e);
         }
 
     }
@@ -445,11 +490,15 @@ public class WebUtil {
 
     }
 
-    public OkHttpClient.Builder httpClientBuilder(String url) throws Exception {
+    public OkHttpClient.Builder httpClientBuilder(String url) throws HttpException {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        if (new URL(url).getHost().contains(".onion")) {
-            this.getHostNameVerifier(builder);
+        try {
+            if (new URL(url).getHost().contains(".onion")) {
+                this.getHostNameVerifier(builder);
+            }
+        } catch (Exception e) {
+            throw new HttpSystemException(e);
         }
 
         builder.connectTimeout(45, TimeUnit.SECONDS)
