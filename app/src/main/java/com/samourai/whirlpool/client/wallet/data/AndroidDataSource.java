@@ -36,7 +36,9 @@ public class AndroidDataSource implements DataSource {
 
     @Override
     public void open(CoordinatorSupplier coordinatorSupplier) throws Exception {
-        //this.poolSupplier = poolSupplier; // TODO zl
+        // initialize for coordinatorSupplier
+        coordinatorSupplier.load();
+        getUtxoSupplier()._setCoordinatorSupplier(coordinatorSupplier);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.samourai.wallet.whirlpool.newPool
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -7,20 +8,25 @@ import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.api.backend.MinerFeeTarget
 import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.constants.SamouraiAccount
-import com.samourai.wallet.util.AsyncUtil
 import com.samourai.wallet.utxos.models.UTXOCoin
 import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.WhirlpoolTx0
 import com.samourai.wallet.whirlpool.models.PoolCyclePriority
 import com.samourai.wallet.whirlpool.models.PoolViewModel
+import com.samourai.whirlpool.client.tx0.Tx0Info
+import com.samourai.whirlpool.client.tx0.Tx0Previews
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.function.Consumer
 
 class NewPoolViewModel : ViewModel() {
+    protected val TAG = "NewPoolViewModel"
 
     private val poolsLiveData: MutableLiveData<ArrayList<PoolViewModel>> = MutableLiveData(arrayListOf())
     private val utxos: MutableLiveData<List<UTXOCoin>> = MutableLiveData(arrayListOf())
@@ -29,6 +35,7 @@ class NewPoolViewModel : ViewModel() {
     private var pool: MutableLiveData<PoolViewModel?> = MutableLiveData(null);
 
     private val poolLoadError: MutableLiveData<Exception?> = MutableLiveData(null)
+    var tx0Info: Tx0Info? = null;
 
     val getTx0PoolPriority: LiveData<PoolCyclePriority> get() = tx0PoolPriority
     val getPool: LiveData<PoolViewModel?> get() = pool
@@ -37,6 +44,18 @@ class NewPoolViewModel : ViewModel() {
     val getLoadingPools: LiveData<Boolean> get() = loadingPools
     val getPoolLoadError: LiveData<Exception?> get() = poolLoadError
 
+    fun loadTx0Info(onSuccess:Runnable, onError: Consumer<Throwable>){
+        // fetch tx0Info only once (you should refresh it after each TX0)
+        val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet()
+        whirlpoolWallet.fetchTx0Info()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ result: Tx0Info ->
+                Log.v(TAG, "loadTx0Info success")
+            tx0Info = result
+            onSuccess.run()
+        }, {onError})
+    }
 
     fun setPoolPriority(poolCyclePriority: PoolCyclePriority) {
         this.tx0PoolPriority.value = poolCyclePriority
@@ -82,9 +101,6 @@ class NewPoolViewModel : ViewModel() {
                     }
                 }
 
-                val tx0Config = whirlpoolWallet.getTx0Config(mixFeeTarget, mixFeeTarget)
-                tx0Config.changeWallet = SamouraiAccount.DEPOSIT
-
                 val tx0 = WhirlpoolTx0(WhirlpoolMeta.getMinimumPoolDenomination(), fee.toLong(), 0, utxos.value)
 
                 val spendFroms: MutableCollection<UnspentOutput> =
@@ -92,8 +108,12 @@ class NewPoolViewModel : ViewModel() {
 
                 val poolModels = ArrayList<PoolViewModel>();
 
-                val tx0Previews = AsyncUtil.getInstance().blockingGet(
-                    whirlpoolWallet.tx0Previews(tx0Config, spendFroms))
+                var tx0Previews:Tx0Previews? = null;
+                if (tx0Info != null) {
+                    val tx0Config = tx0Info!!.getTx0Config(mixFeeTarget, mixFeeTarget)
+                    tx0Config.changeWallet = SamouraiAccount.DEPOSIT
+                    tx0Previews = tx0Info!!.tx0Previews(tx0Config, spendFroms)
+                }
 
                 for (whirlpoolPool in pools) {
                     val poolViewModel = PoolViewModel(whirlpoolPool)
@@ -102,15 +122,12 @@ class NewPoolViewModel : ViewModel() {
                         poolViewModel.isSelected = getPool.value!!.poolId == poolViewModel.poolId
                     }
 
-                    val txoPreview = tx0Previews.getTx0Preview(poolViewModel.pool.poolId)
-
-                    poolViewModel.setMinerFee(fee.toLong(),utxos.value)
-
-                    if (txoPreview != null) {
-                        poolViewModel.tx0Preview = txoPreview
+                    if (tx0Previews!=null) {
+                        poolViewModel.tx0Preview = tx0Previews.getTx0Preview(poolViewModel.pool.poolId);
                     }
+
                     poolModels.add(poolViewModel)
-//
+                    poolViewModel.setMinerFee(fee.toLong(),utxos.value)
                 }
                 if(pool.value!=null){
                     pool.postValue(poolModels.find { it.pool.poolId == pool.value!!.poolId })

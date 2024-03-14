@@ -14,6 +14,7 @@ import com.samourai.wallet.send.provider.SimpleUtxoKeyProvider;
 import com.samourai.wallet.util.AsyncUtil;
 import com.samourai.whirlpool.client.tx0.Tx0;
 import com.samourai.whirlpool.client.tx0.Tx0Config;
+import com.samourai.whirlpool.client.tx0.Tx0Info;
 import com.samourai.whirlpool.client.tx0.Tx0Preview;
 import com.samourai.whirlpool.client.tx0.Tx0Previews;
 import com.samourai.whirlpool.client.utils.DebugUtils;
@@ -130,12 +131,11 @@ public class WhirlpoolWalletTest extends AbstractWhirlpoolTest {
         utxoKeyProvider.setKey(unspentOutput.computeOutpoint(networkParameters), ecKey);
 
         Pool pool = whirlpoolWallet.getPoolSupplier().findPoolById("0.01btc");
-        Tx0Config tx0Config = whirlpoolWallet.getTx0Config(Tx0FeeTarget.BLOCKS_2, Tx0FeeTarget.BLOCKS_2);
-        Tx0Previews tx0Previews = AsyncUtil.getInstance().blockingGet(
-                whirlpoolWallet.tx0Previews(tx0Config, spendFroms));
+        Tx0Info tx0Info = AsyncUtil.getInstance().blockingGet(whirlpoolWallet.fetchTx0Info());
+        Tx0Config tx0Config = tx0Info.getTx0Config(Tx0FeeTarget.BLOCKS_2, Tx0FeeTarget.BLOCKS_2);
+        Tx0Previews tx0Previews = tx0Info.tx0Previews(tx0Config, spendFroms);
         Tx0Preview tx0Preview = tx0Previews.getTx0Preview(pool.getPoolId());
-        Tx0 tx0 = AsyncUtil.getInstance().blockingGet(
-                whirlpoolWallet.tx0(spendFroms, tx0Config, pool));
+        Tx0 tx0 = tx0Info.tx0(whirlpoolWallet.getWalletSupplier(), whirlpoolWallet.getUtxoSupplier(), spendFroms, tx0Config, pool);
 
         Assert.assertEquals("dc398c99cf9ce18123ea916d69bb99da44a3979a625eeaac5e17837f879a8874", tx0.getTx().getHashAsString());
         Assert.assertEquals("01000000000101ae24e3f5dbcee7971ae0e5b83fcb1eb67057901f2d371ca494f868b3dc8c58cc0100000000ffffffff040000000000000000426a408a9eb379a44ff4d4579118c64b64bbd327cd95ba826ac68f334155fd9ca4e3acd64acdfd75dd7c3cc5bc34d31af6c6e68b4db37eac62b574890f6cfc7b904d9950c300000000000016001441021632871b0f1cf61a7ac7b6a0187e88628291b44b0f00000000001600147e4a4628dd8fbd638681a728e39f7d92ada04070e954bd1d00000000160014df3a4bc83635917ad18621f3ba78cef6469c5f5902483045022100c48f02762ab9877533b5c7b0bc729479ce7809596b89cb9f62b740ea3350068f02205ef46ca67df39d35f940e33223c5ddd56669d953b6ef4948e355c1f3430f32e10121032e46baef8bcde0c3a19cadb378197fa31d69adb21535de3f84de699a1cf88b4500000000", new String(Hex.encode(tx0.getTx().bitcoinSerialize())));
