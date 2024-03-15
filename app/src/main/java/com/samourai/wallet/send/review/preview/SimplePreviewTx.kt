@@ -80,10 +80,10 @@ fun SimplePreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
                 modifier = Modifier.fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column (modifier = Modifier.weight(0.6f, false)) {
+                Column (modifier = Modifier.weight(0.5f, false)) {
                     SimplePreviewTxInput(model = model)
                 }
-                Column (modifier = Modifier.weight(0.4f, false)) {
+                Column (modifier = Modifier.weight(0.5f, false)) {
                     SimplePreviewTxOutput(model = model, activity = activity)
                 }
             }
@@ -197,7 +197,7 @@ fun SimplePreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
                 }
                 Column (
                     modifier = Modifier
-                        .weight(0.3f),
+                        .weight(0.35f),
                     horizontalAlignment = Alignment.End,
                 ) {
                     Text(

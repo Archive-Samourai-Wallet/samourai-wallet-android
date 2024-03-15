@@ -1,5 +1,11 @@
 package com.samourai.wallet.api;
 
+import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
+import static com.samourai.wallet.util.tech.LogUtil.info;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -9,6 +15,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
+
+import androidx.lifecycle.MutableLiveData;
 
 import com.auth0.android.jwt.JWT;
 import com.google.common.collect.ImmutableList;
@@ -38,16 +46,15 @@ import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.RBFUtil;
-import com.samourai.wallet.send.SuggestedFee;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.tor.SamouraiTorManager;
-import com.samourai.wallet.util.func.AddressFactory;
-import com.samourai.wallet.util.tech.AppUtil;
-import com.samourai.wallet.util.network.BackendApiAndroid;
-import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.func.SentToFromBIP47Util;
+import com.samourai.wallet.util.network.BackendApiAndroid;
 import com.samourai.wallet.util.network.WebUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
@@ -81,18 +88,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.Objects;
+import java.util.function.Function;
 
-import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
-
-import static com.samourai.wallet.util.tech.LogUtil.debug;
-import static com.samourai.wallet.util.tech.LogUtil.info;
-import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
 public class APIFactory {
 
@@ -1426,11 +1426,17 @@ public class APIFactory {
     }
 
     private RawFees load1DollarFeesEstimator() throws Exception {
-        if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
-            return putMock1DollarFeesEstimator();
-        } else if(AppUtil.getInstance(context).isOfflineMode()) {
-            final JSONObject multiAddr = PayloadUtil.getInstance(context).deserializeMultiAddr();
-            return parse1DollarFeesEstimator(new JSONObject(multiAddr.toString()));
+        if(AppUtil.getInstance(context).isOfflineMode()) {
+            if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
+                return putMock1DollarFeesEstimator();
+            } else {
+                final JSONObject multiAddr = PayloadUtil.getInstance(context).deserializeMultiAddr();
+                return parse1DollarFeesEstimator(new JSONObject(multiAddr.toString()));
+            }
+        } else if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
+            final RawFees fees = FeeClient.createFeeClient(context, false).getFees();
+            FeeUtil.getInstance().putRawFees(fees);
+            return fees;
         } else {
             final boolean testNet = SamouraiWallet.getInstance().isTestNet();
             final RawFees fees = FeeClient.createFeeClient(context, testNet).getFees();

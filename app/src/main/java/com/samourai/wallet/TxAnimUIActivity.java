@@ -1,17 +1,16 @@
 package com.samourai.wallet;
 
 import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
-import static com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister;
-import static com.samourai.wallet.util.tech.LogUtil.debug;
-import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
 import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
+import static com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static java.util.Objects.nonNull;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,29 +23,26 @@ import android.widget.Toast;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.hd.WALLET_INDEX;
-import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.RBFSpend;
-import com.samourai.wallet.send.RBFUtil;
 import com.samourai.wallet.send.SendActivity;
 import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXOFactory;
 import com.samourai.wallet.tor.SamouraiTorManager;
+import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.AddressFactory;
-import com.samourai.wallet.util.func.RBFFactory;
-import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.util.func.MonetaryUtil;
-import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.func.RBFFactory;
 import com.samourai.wallet.util.func.SendAddressUtil;
 import com.samourai.wallet.util.func.SentToFromBIP47Util;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.view.ViewUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.widgets.TransactionProgressView;
 
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.spongycastle.util.encoders.DecoderException;
@@ -562,28 +558,32 @@ public class TxAnimUIActivity extends SamouraiActivity {
                 } else if (SendParams.getInstance().getBatchSend() != null) {
 
                     for (final BatchSendUtil.BatchSend d : SendParams.getInstance().getBatchSend()) {
-                        String address = d.addr;
-                        String pcode = d.pcode;
-                        // increment counter if BIP47 spend
-                        if (isNotBlank(pcode)) {
+                        try {
+                            String address = d.getAddr(this);
+                            String pcode = d.pcode;
+                            // increment counter if BIP47 spend
+                            if (isNotBlank(pcode)) {
 
-                            if (nonNull(BIP47Meta.getInstance().getPCode4Addr(address))) {
-                                Log.w(TAG, String.format("address %s is reuse for pcode %s", address, pcode));
+                                if (nonNull(BIP47Meta.getInstance().getPCode4Addr(address))) {
+                                    Log.w(TAG, String.format("address %s is reuse for pcode %s", address, pcode));
+                                }
+
+                                BIP47Meta.getInstance().getPCode4AddrLookup().put(address, pcode);
+                                BIP47Meta.getInstance().incOutgoingIdx(pcode);
+
+                                SentToFromBIP47Util.getInstance().add(pcode, strTxHash);
+
+                                SimpleDateFormat sd = new SimpleDateFormat("dd MMM");
+                                String strTS = sd.format(System.currentTimeMillis());
+                                String event = strTS + " " +
+                                        TxAnimUIActivity.this.getString(R.string.sent) + " " +
+                                        MonetaryUtil.getInstance().getBTCFormat().format(getBtcValue(d.amount)) +
+                                        " BTC";
+                                BIP47Meta.getInstance().setLatestEvent(pcode, event);
+
                             }
-
-                            BIP47Meta.getInstance().getPCode4AddrLookup().put(address, pcode);
-                            BIP47Meta.getInstance().incOutgoingIdx(pcode);
-
-                            SentToFromBIP47Util.getInstance().add(pcode, strTxHash);
-
-                            SimpleDateFormat sd = new SimpleDateFormat("dd MMM");
-                            String strTS = sd.format(System.currentTimeMillis());
-                            String event = strTS + " " +
-                                    TxAnimUIActivity.this.getString(R.string.sent) + " " +
-                                    MonetaryUtil.getInstance().getBTCFormat().format(getBtcValue(d.amount)) +
-                                    " BTC";
-                            BIP47Meta.getInstance().setLatestEvent(pcode, event);
-
+                        } catch (final Exception e) {
+                            Log.e(TAG, e.getMessage(), e);
                         }
                     }
 

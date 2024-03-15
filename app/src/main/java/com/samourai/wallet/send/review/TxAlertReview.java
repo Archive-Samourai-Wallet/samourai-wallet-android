@@ -63,6 +63,11 @@ public class TxAlertReview {
         return this;
     }
 
+    public TxAlertReview addReusedAddresses(final Set<String> addresses) {
+        reusedAddresses.addAll(addresses);
+        return this;
+    }
+
     public boolean isReusedAddress(final String address) {
         return reusedAddresses.contains(address);
     }

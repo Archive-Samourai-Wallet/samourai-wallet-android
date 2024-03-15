@@ -98,7 +98,6 @@ import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.StringUtils.EMPTY
 import org.apache.commons.lang3.StringUtils.SPACE
 import org.apache.commons.lang3.StringUtils.isBlank
@@ -242,7 +241,7 @@ private fun ReviewTxInfo(
     ) {
         Column(
             modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp)
+                .padding(start = 14.dp, end = 14.dp)
                 .verticalScroll(
                     state = verticalScroll,
                     enabled = true,
@@ -276,7 +275,7 @@ private fun ReviewTxInfo(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                    .padding(bottom = 14.dp, start = 14.dp, end = 14.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
                 if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
@@ -399,7 +398,7 @@ fun ReviewTxActivityContentDestination(
 
     Box (
         modifier = Modifier
-            .padding(bottom = 8.dp, top = 16.dp)
+            .padding(bottom = 7.dp, top = 14.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -420,7 +419,7 @@ fun ReviewTxActivityContentDestination(
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 14.dp)
                 ) {
                     Column {
                         Text(
@@ -445,7 +444,7 @@ fun ReviewTxActivityContentDestination(
                     }
                 }
                 if (model.sendType.isBatchSpend) {
-                    val batchSpendList = ListUtils.emptyIfNull(BatchSendUtil.getInstance().sends)
+                    val batchSpendList = BatchSendUtil.getInstance().copyOfBatchSends
                     if (batchSpendList.isEmpty()) return
                     if (expand) {
                         for (spend in batchSpendList) {
@@ -520,12 +519,15 @@ fun TransactionOutput(
         Font(R.font.roboto_mono, FontWeight.Bold)
     )
 
-    val alertReused = model.alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS)
-    val isReusedAddr = if (nonNull(alertReused)) alertReused!!.isReusedAddress(spendInfo.addr) else false
+    val alertReviews = model.alertReviews.observeAsState()
+    val alertReused = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS)
+    val isReusedAddr = if (nonNull(alertReused))
+        alertReused!!.isReusedAddress(spendInfo.getAddr(model.application))
+    else false
 
     Row (
         modifier = Modifier
-            .padding(bottom = 16.dp),
+            .padding(bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column (
@@ -533,7 +535,7 @@ fun TransactionOutput(
                 .weight(1f),
         ) {
             DisplayAddress(
-                address = spendInfo.captionDestination(),
+                address = spendInfo.captionDestination(model.application),
                 addressReused = isReusedAddr
             )
         }
@@ -636,7 +638,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
 
     Box (
         modifier = Modifier
-            .padding(bottom = 8.dp, top = 8.dp)
+            .padding(bottom = 7.dp, top = 7.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -657,7 +659,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 14.dp)
                 ) {
                     Column {
                         Text(
@@ -683,7 +685,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                 Row (
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 14.dp)
                 ) {
                     Row (
                         modifier = Modifier
@@ -747,7 +749,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                         val values = fees!!.get(name);
                         Row (
                             modifier = Modifier
-                                .padding(bottom = 16.dp)
+                                .padding(bottom = 14.dp)
                         ) {
                             Row {
                                 Text(
@@ -833,7 +835,7 @@ fun ReviewTxActivityContentAlert(model: ReviewTxModel, whiteAlpha: Float) {
     Box (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp, top = 8.dp)
+            .padding(bottom = 7.dp, top = 7.dp)
             .background(lightenColor(samouraiAlerts, whiteAlpha), RoundedCornerShape(6.dp))
             .clickable {
                 coroutineScope.launch(Dispatchers.Main) {
@@ -908,7 +910,7 @@ fun ReviewTxActivityContentTransaction(
 
     Box (
         modifier = Modifier
-            .padding(bottom = 8.dp, top = 8.dp)
+            .padding(bottom = 7.dp, top = 7.dp)
             .background(lightenColor(samouraiLightGreyAccent, whiteAlpha), RoundedCornerShape(6.dp))
     ) {
         Row (
@@ -929,7 +931,7 @@ fun ReviewTxActivityContentTransaction(
             Column {
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 14.dp)
                 ) {
                     Column {
                         Text(
@@ -942,7 +944,7 @@ fun ReviewTxActivityContentTransaction(
                 }
                 Row (
                     modifier = Modifier
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 14.dp)
                 ) {
                     Column {
                         Text(
@@ -1177,13 +1179,13 @@ fun JoinbotSendButton(
     Box (
         modifier = if (isOnSwipeValidation.value)
             Modifier
-                .padding(bottom = 8.dp, top = 8.dp, start = 16.dp, end = 16.dp)
+                .padding(bottom = 7.dp, top = 7.dp, start = 14.dp, end = 14.dp)
                 .background(
                     samouraiLightGreyAccent.copy(alphaBackground),
                     RoundedCornerShape(20.dp)
                 ) else
                     Modifier
-                        .padding(bottom = 8.dp, top = 8.dp, start = 16.dp, end = 16.dp)
+                        .padding(bottom = 7.dp, top = 7.dp, start = 14.dp, end = 14.dp)
     ) {
 
         Row (
@@ -1259,8 +1261,8 @@ fun TransactionOutputPreview(
     @PreviewParameter(MyModelPreviewProvider::class) reviewTxModel: ReviewTxModel
 ) {
 
-    val spend = BatchSendUtil.BatchSend()
-    spend.addr = "this is address"
+    val spend = BatchSendUtil.getInstance().createBatchSend()
+    spend.rawAddr = "this is address"
     spend.amount = 123456
 
     TransactionOutput(

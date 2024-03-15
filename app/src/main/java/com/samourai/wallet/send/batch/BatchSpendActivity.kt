@@ -178,9 +178,9 @@ class BatchSpendActivity : SamouraiActivity() {
         binding.addToBatch.setOnClickListener {
             hidekeyboard()
             if (validate()) {
-                val batchItem = BatchSendUtil.BatchSend().apply {
+                val batchItem = BatchSendUtil.getInstance().createBatchSend().apply {
                     amount = this@BatchSpendActivity.amount
-                    addr = destAddress
+                    setRawAddr(destAddress)
                     if (strPCode != null) {
                         pcode = strPCode;
                     }
@@ -498,9 +498,6 @@ class BatchSpendActivity : SamouraiActivity() {
                         .updateOutgoingStatusForNewPayNymConnections()
                 }
 
-                inputBatchSpend.spendDescriptionList.forEach { spendDescription ->
-                    spendDescription.computeAddress(this@BatchSpendActivity)
-                }
                 true
             }
                 .subscribeOn(Schedulers.io())
@@ -544,27 +541,26 @@ class BatchSpendActivity : SamouraiActivity() {
             var newItemsToAdd = arrayListOf<BatchSendUtil.BatchSend>()
             inputBatchSpend.spendDescriptionList.forEach { spendDescription ->
 
-                val address = spendDescription.address
-                if (nonNull(address) && spendDescription.isValidAmount) {
+                if (spendDescription.isValidAddress && spendDescription.isValidAmount) {
 
                     val walletBalance = viewModel.totalWalletBalance() ?: 0
                     var insufficientFunds =
                         if (spendDescription.amount > walletBalance) true else false
                     binding.addToBatch.isEnabled = !insufficientFunds
 
-                    val batchItem = BatchSendUtil.BatchSend().apply {
+                    val batchItem = BatchSendUtil.getInstance().createBatchSend().apply {
 
                         UUID = idStart + (offset++)
                         amount = spendDescription.amount
                         pcode = spendDescription.pcode
                         paynymCode = spendDescription.paynym
-                        addr = address
+                        setRawAddr(spendDescription.address)
                     }
                     newItemsToAdd.add(batchItem)
                     ++validatedItem
-                } else if (isNull(address)) {
+                } else if (! spendDescription.isValidAddress) {
                     ++addressInvalidItem
-                } else if (!spendDescription.isValidAmount) {
+                } else if (! spendDescription.isValidAmount) {
                     ++amountInvalidItem
                 }
             }
@@ -898,13 +894,14 @@ class BatchSpendActivity : SamouraiActivity() {
         }
         composeFragment.setOnItemClickListener {
             if (it.pcode == null) {
-                this.destAddress = it.addr
-                this.setToAddress(it.addr)
+                val addr = it.getAddr(this@BatchSpendActivity)
+                destAddress = addr
+                setToAddress(addr)
             } else {
-                this.processPCode(it.pcode, null)
+                processPCode(it.pcode, null)
             }
-            this.satEditText.setText("${it.amount}")
-            this.selectedId = it.UUID
+            satEditText.setText("${it.amount}")
+            selectedId = it.UUID
             validate()
         }
         val sharedAxis2 = MaterialSharedAxis(MaterialSharedAxis.Y, false)
@@ -930,22 +927,22 @@ class BatchSpendActivity : SamouraiActivity() {
         var countP2WSH_P2TR = 0
         for (_data in viewModel.getBatchList()) {
 
-            _data.computeAddressIfNeeded(this)
+            val addr = _data.getAddr(this@BatchSpendActivity)
 
             LogUtil.debug("BatchSendActivity", "output:" + _data.amount)
-            LogUtil.debug("BatchSendActivity", "output:" + _data.addr)
+            LogUtil.debug("BatchSendActivity", "output:" + addr)
             LogUtil.debug("BatchSendActivity", "output:" + _data.pcode)
 
             amount += _data.amount
-            if (receivers.containsKey(_data.addr)) {
+            if (receivers.containsKey(addr)) {
 
-                val _amount = receivers[_data.addr]
-                receivers[_data.addr] = _amount!!.add(BigInteger.valueOf(_data.amount))
+                val _amount = receivers[addr]
+                receivers[addr] = _amount!!.add(BigInteger.valueOf(_data.amount))
 
             } else {
 
-                receivers[_data.addr] = BigInteger.valueOf(_data.amount)
-                if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(_data.addr))    {
+                receivers[addr] = BigInteger.valueOf(_data.amount)
+                if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(addr))    {
                     countP2WSH_P2TR++
                 }
             }
