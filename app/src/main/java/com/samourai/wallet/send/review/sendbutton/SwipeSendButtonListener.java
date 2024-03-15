@@ -1,4 +1,4 @@
-package com.samourai.wallet.send.review;
+package com.samourai.wallet.send.review.sendbutton;
 
 public interface SwipeSendButtonListener {
 

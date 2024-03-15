@@ -1,16 +1,26 @@
 package com.samourai.wallet.send.review;
 
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import android.content.Context;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.utxos.UTXOUtil;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TxData {
 
@@ -20,11 +30,10 @@ public class TxData {
     private int idxBIP84PostMixInternal = 0;
 
     private final List<UTXO> selectedUTXO = Lists.newArrayList();
-    private final Map<String, BigInteger> receivers = Maps.newHashMap();
-    private long change = 0l;
+    private final Map<String, BigInteger> receivers = Maps.newLinkedHashMap();
+    private long change = 0L;
 
-    private TxData() {
-    }
+    private TxData() {}
 
     public static TxData create(final Context context) {
         final TxData txData = new TxData();
@@ -33,6 +42,18 @@ public class TxData {
         txData.idxBIP84Internal = addressFactory.getIndex(WALLET_INDEX.BIP84_CHANGE);
         txData.idxBIP49Internal = addressFactory.getIndex(WALLET_INDEX.BIP49_CHANGE);
         txData.idxBIP44Internal = addressFactory.getIndex(WALLET_INDEX.BIP44_CHANGE);
+        return txData;
+    }
+
+    public static TxData copy(final TxData source) {
+        final TxData txData = new TxData();
+        txData.idxBIP84PostMixInternal = source.idxBIP84PostMixInternal;
+        txData.idxBIP84Internal = source.idxBIP84Internal;
+        txData.idxBIP49Internal = source.idxBIP49Internal;
+        txData.idxBIP44Internal = source.idxBIP44Internal;
+        txData.selectedUTXO.addAll(source.selectedUTXO);
+        txData.receivers.putAll(source.receivers);
+        txData.change = source.change;
         return txData;
     }
 
@@ -56,11 +77,63 @@ public class TxData {
     }
 
     public List<UTXO> getSelectedUTXO() {
-        return selectedUTXO;
+        return ImmutableList.copyOf(selectedUTXO);
+    }
+
+    public TxData addSelectedUTXO(final Collection<UTXO> utxos) {
+        selectedUTXO.addAll(utxos);
+        return this;
+    }
+
+    public TxData addSelectedUTXO(final UTXO utxo) {
+        selectedUTXO.add(utxo);
+        return this;
+    }
+
+    public List<MyTransactionOutPoint> getSelectedUTXOPoints() {
+        return toTxOutPoints(selectedUTXO);
+    }
+
+    public Set<String> getSelectedUTXOPointAddresses() {
+        final Set<String> addresses = Sets.newHashSet();
+         for (final MyTransactionOutPoint outPoint : getSelectedUTXOPoints()) {
+             addresses.add(txOutPointId(outPoint));
+         }
+        return addresses;
+    }
+
+    public static String txOutPointId(final MyTransactionOutPoint outPoint) {
+        return outPoint.getTxHash() + "_" + outPoint.getTxOutputN();
+    }
+
+    public long getTotalAmountInTxInput() {
+        long amount = 0L;
+        for (final MyTransactionOutPoint outPoint : getSelectedUTXOPoints()) {
+            amount += outPoint.getValue().value;
+        }
+        return amount;
+    }
+
+    public static String getNoteOrAddress(final MyTransactionOutPoint transactionOutPoint) {
+        return defaultIfBlank(
+                UTXOUtil.getInstance().getNote(transactionOutPoint.getTxHash().toString()),
+                transactionOutPoint.getAddress());
+    }
+
+    public static boolean hasNote(final MyTransactionOutPoint transactionOutPoint) {
+        return isNotBlank(UTXOUtil.getInstance().getNote(transactionOutPoint.getTxHash().toString()));
     }
 
     public Map<String, BigInteger> getReceivers() {
         return receivers;
+    }
+
+    public long getAggregatedReceiversAmount() {
+        long amount = 0L;
+        for (final BigInteger amountForReceiver : receivers.values()) {
+            amount += amountForReceiver.longValue();
+        }
+        return amount;
     }
 
     public long getChange() {
@@ -91,4 +164,5 @@ public class TxData {
         receivers.clear();
         selectedUTXO.clear();
     }
+
 }

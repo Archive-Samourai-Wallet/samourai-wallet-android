@@ -1,4 +1,4 @@
-package com.samourai.wallet.send.review
+package com.samourai.wallet.send.review.sendbutton
 
 import android.view.MotionEvent
 import androidx.compose.foundation.background
@@ -47,9 +47,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.samourai.wallet.R
-import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.DONE
-import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_DISABLED
-import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_ENABLED
+import com.samourai.wallet.send.review.MyModelPreviewProvider
+import com.samourai.wallet.send.review.ReviewTxModel
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener.EnumSwipeSendButtonState.DONE
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_DISABLED
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener.EnumSwipeSendButtonState.IS_SWIPING_ENABLED
 import com.samourai.wallet.theme.samouraiBoxLightGrey
 import com.samourai.wallet.theme.samouraiSuccess
 import com.samourai.wallet.util.func.FormatsUtil
@@ -68,6 +70,7 @@ import kotlin.math.roundToInt
 @Composable
 fun SwipeSendButtonContent(
     amountToLeaveWallet: LiveData<Long>,
+    amountToLeaveWalletColor: Color = Color.White,
     action: Runnable?,
     enable: LiveData<Boolean>,
     listener: SwipeSendButtonListener?,
@@ -98,6 +101,7 @@ fun SwipeSendButtonContent(
 
             SwipeSendButtonComponent(
                 amount = amountToLeaveWallet,
+                amountColor = amountToLeaveWalletColor,
                 action = action,
                 enable = enable,
                 tapAndHoldInfo = showTapAndHoldComponent,
@@ -150,6 +154,7 @@ private fun TapAndHoldInfoComponent(
 @Composable
 private fun SwipeSendButtonComponent(
     amount: LiveData<Long>,
+    amountColor: Color = Color.White,
     action:Runnable?,
     enable: LiveData<Boolean>,
     tapAndHoldInfo: MutableState<Boolean>,
@@ -171,6 +176,7 @@ private fun SwipeSendButtonComponent(
 
     val swipeButtonPx = ViewHelper.convertDpToPx(valueInDp = buttonSize, density = density)
     var componentSize by remember { mutableStateOf(Size.Zero) }
+    var swipeButtonThresold = (componentSize.width / 2f - swipeButtonPx / 2f).toInt()
 
     val robotoMonoNormalFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Normal)
@@ -198,11 +204,13 @@ private fun SwipeSendButtonComponent(
                 .background(windowBackground, RoundedCornerShape(20.dp))
                 .onSizeChanged { newSize ->
                     componentSize = Size(newSize.width.toFloat(), newSize.height.toFloat())
+                    swipeButtonThresold = (componentSize.width / 2f - swipeButtonPx / 2f).toInt()
                 } else
             Modifier
                 .padding(bottom = 9.dp, top = 9.dp)
                 .onSizeChanged { newSize ->
                     componentSize = Size(newSize.width.toFloat(), newSize.height.toFloat())
+                    swipeButtonThresold = (componentSize.width / 2f - swipeButtonPx / 2f).toInt()
                 }
     ) {
         if (isOnSwipeValidation.value) {
@@ -215,7 +223,7 @@ private fun SwipeSendButtonComponent(
             ) {
                 androidx.compose.material.Text(
                     text = FormatsUtil.formatBTC(amount.value),
-                    color = Color.White,
+                    color = amountColor,
                     fontSize = 14.sp,
                     fontFamily = robotoMonoNormalFont
                 )
@@ -288,12 +296,15 @@ private fun SwipeSendButtonComponent(
                                         },
                                         onDrag = { change, dragAmount ->
                                             if (!isFullSwiped) {
+
                                                 val newX =
                                                     (dragOffset.x + dragAmount.x.roundToInt())
                                                         .coerceAtLeast(0)
+                                                        .coerceAtMost(swipeButtonThresold)
+
                                                 dragOffset = IntOffset(newX, dragOffset.y)
                                                 change.consume()
-                                                if (newX >= (componentSize.width / 2f - swipeButtonPx / 2f)) {
+                                                if (newX >= swipeButtonThresold) {
                                                     isFullSwiped = true
                                                     vibratePhone(
                                                         durationMs = 50L,
@@ -301,8 +312,18 @@ private fun SwipeSendButtonComponent(
                                                     )
                                                     scope.launch {
                                                         executeAction.invoke()
+                                                        listener?.onStateChange(DONE)
+                                                        scope.launch {
+                                                            delay(1000L)
+                                                            dragOffset = IntOffset(0, dragOffset.y)
+                                                            jobForSwipeValidation?.cancel()
+                                                            jobForSwipeValidation = scope.launch {
+                                                                delay(250L)
+                                                                isOnSwipeValidation.value = false
+                                                                isFullSwiped = false
+                                                            }
+                                                        }
                                                     }
-                                                    listener?.onStateChange(DONE)
                                                 }
                                             }
                                         }
@@ -382,9 +403,9 @@ fun SwipeSendButtonContentPreview(
     @PreviewParameter(MyModelPreviewProvider::class) model: ReviewTxModel
 ) {
     SwipeSendButtonContent(
-        MutableLiveData(125000L),
-        null,
-        MutableLiveData(true),
-        null,
-        1f)
+        amountToLeaveWallet = MutableLiveData(125000L),
+        action = null,
+        enable = MutableLiveData(true),
+        listener = null,
+        alphaBackground = 1f)
 }

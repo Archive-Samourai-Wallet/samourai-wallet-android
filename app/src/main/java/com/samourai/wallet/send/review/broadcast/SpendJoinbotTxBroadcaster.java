@@ -1,4 +1,4 @@
-package com.samourai.wallet.send.review;
+package com.samourai.wallet.send.review.broadcast;
 
 import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
 
@@ -11,6 +11,7 @@ import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity;
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity;
+import com.samourai.wallet.send.review.ReviewTxModel;
 
 public class SpendJoinbotTxBroadcaster {
 

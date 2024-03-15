@@ -1,4 +1,4 @@
-package com.samourai.wallet.send.review;
+package com.samourai.wallet.send.review.ref;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;

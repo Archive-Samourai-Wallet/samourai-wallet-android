@@ -1,4 +1,4 @@
-package com.samourai.wallet.send.review
+package com.samourai.wallet.send.review.sendbutton
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -26,7 +26,7 @@ class SwipeSendButtonFragment(
                     action = action,
                     enable = enable,
                     listener = listener,
-                    1f
+                    alphaBackground = 1f
                 )
             }
         }

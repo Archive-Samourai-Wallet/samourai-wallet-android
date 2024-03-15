@@ -19,7 +19,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.lifecycle.viewModelScope
 import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -50,8 +49,8 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
-import com.samourai.wallet.send.review.EnumSendType
 import com.samourai.wallet.send.review.ReviewTxActivity
+import com.samourai.wallet.send.review.ref.EnumSendType
 import com.samourai.wallet.tor.SamouraiTorManager
 import com.samourai.wallet.util.*
 import com.samourai.wallet.util.activity.ActivityHelper
@@ -834,45 +833,42 @@ class BatchSpendActivity : SamouraiActivity() {
     }
 
     private fun showReview() {
-        if (true) {
-            goToReview()
-            return
-        }
+        goToReview()
 
-        // from here it is about legacy code should not used and should be removed
-        // in a next time (prepare spend and initiate spend)
-
-        val sharedAxis = MaterialSharedAxis(MaterialSharedAxis.Y, true)
-        TransitionManager.beginDelayedTransition(binding.batchDetailContainer, sharedAxis)
-        reviewFragment.enterTransition = sharedAxis
-        supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.batchDetailContainer, reviewFragment)
-            .commit()
-        isInReviewMode = true
-
-        reviewFragment.setOnFeeChangeListener {
-            composeJob = viewModel.viewModelScope.launch(Dispatchers.Default) {
-                delay(300)
-                withContext(Dispatchers.Main) {
-                    prepareSpend()
-                }
-            }
-        }
-        reviewFragment.setOnClickListener {
-            initiateSpend()
-        }
-
-        val sharedAxis2 = MaterialSharedAxis(MaterialSharedAxis.Y, true)
-            .apply {
-                addTarget(binding.reviewForm)
-            }
-        TransitionManager.beginDelayedTransition(binding.appBarLayoutBatch, sharedAxis2)
-        binding.sendForm.visibility = View.GONE
-        binding.reviewForm.visibility = View.VISIBLE
-        binding.addToBatch.visibility = View.INVISIBLE
-        this.menu?.findItem(R.id.select_paynym)?.isVisible = false
-        this.menu?.findItem(R.id.action_scan_qr)?.isVisible = false
+//        // from here it is about legacy code should not used and should be removed
+//        // in a next time (prepare spend and initiate spend)
+//
+//        val sharedAxis = MaterialSharedAxis(MaterialSharedAxis.Y, true)
+//        TransitionManager.beginDelayedTransition(binding.batchDetailContainer, sharedAxis)
+//        reviewFragment.enterTransition = sharedAxis
+//        supportFragmentManager
+//            .beginTransaction()
+//            .replace(R.id.batchDetailContainer, reviewFragment)
+//            .commit()
+//        isInReviewMode = true
+//
+//        reviewFragment.setOnFeeChangeListener {
+//            composeJob = viewModel.viewModelScope.launch(Dispatchers.Default) {
+//                delay(300)
+//                withContext(Dispatchers.Main) {
+//                    prepareSpend()
+//                }
+//            }
+//        }
+//        reviewFragment.setOnClickListener {
+//            initiateSpend()
+//        }
+//
+//        val sharedAxis2 = MaterialSharedAxis(MaterialSharedAxis.Y, true)
+//            .apply {
+//                addTarget(binding.reviewForm)
+//            }
+//        TransitionManager.beginDelayedTransition(binding.appBarLayoutBatch, sharedAxis2)
+//        binding.sendForm.visibility = View.GONE
+//        binding.reviewForm.visibility = View.VISIBLE
+//        binding.addToBatch.visibility = View.INVISIBLE
+//        this.menu?.findItem(R.id.select_paynym)?.isVisible = false
+//        this.menu?.findItem(R.id.action_scan_qr)?.isVisible = false
     }
 
     private fun goToReview() {

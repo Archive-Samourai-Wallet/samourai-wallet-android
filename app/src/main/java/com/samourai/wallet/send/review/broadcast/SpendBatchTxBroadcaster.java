@@ -1,22 +1,19 @@
-package com.samourai.wallet.send.review;
+package com.samourai.wallet.send.review.broadcast;
 
-import static com.samourai.wallet.send.review.EnumSendType.SPEND_SIMPLE;
-import static java.lang.String.format;
+import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_SIMPLE;
 import static java.util.Objects.nonNull;
 
 import android.content.Intent;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.TxAnimUIActivity;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.SendParams;
 import com.samourai.wallet.send.UTXO;
+import com.samourai.wallet.send.review.ReviewTxModel;
 import com.samourai.wallet.util.func.BatchSendUtil;
-import com.samourai.wallet.util.func.FormatsUtil;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -44,13 +41,13 @@ public class SpendBatchTxBroadcaster {
     public SpendBatchTxBroadcaster broadcast() {
 
         final List<MyTransactionOutPoint> outPoints = Lists.newArrayList();
-        for (final UTXO u : model.getTxData().getSelectedUTXO()) {
+        for (final UTXO u : model.getTxData().getValue().getSelectedUTXO()) {
             outPoints.addAll(u.getOutpoints());
         }
 
         final String changeAddress = SendParams.generateChangeAddress(
                 activity,
-                model.getTxData().getChange(),
+                model.getTxData().getValue().getChange(),
                 SPEND_SIMPLE.getType(),
                 model.getAccount(),
                 model.getChangeType(),
@@ -58,17 +55,17 @@ public class SpendBatchTxBroadcaster {
                 true);
 
         if (nonNull(changeAddress)) {
-            model.getTxData().getReceivers().put(
+            model.getTxData().getValue().getReceivers().put(
                     changeAddress,
-                    BigInteger.valueOf(model.getTxData().getChange()));
+                    BigInteger.valueOf(model.getTxData().getValue().getChange()));
         }
 
         SendParams.getInstance().setParams(
                 outPoints,
-                model.getTxData().getReceivers(),
+                model.getTxData().getValue().getReceivers(),
                 ImmutableList.copyOf(BatchSendUtil.getInstance().getSends()),
                 SPEND_SIMPLE.getType(),
-                model.getTxData().getChange(),
+                model.getTxData().getValue().getChange(),
                 model.getChangeType(),
                 model.getAccount(),
                 StringUtils.EMPTY,
@@ -87,13 +84,13 @@ public class SpendBatchTxBroadcaster {
     public int getChangeIndex() {
         final int changeType = model.getChangeType();
         if (model.isPostmixAccount()) {
-            return model.getTxData().getIdxBIP84PostMixInternal();
+            return model.getTxData().getValue().getIdxBIP84PostMixInternal();
         } else if (changeType == 84) {
-            return model.getTxData().getIdxBIP84Internal();
+            return model.getTxData().getValue().getIdxBIP84Internal();
         } else if (changeType == 49) {
-            return model.getTxData().getIdxBIP49Internal();
+            return model.getTxData().getValue().getIdxBIP49Internal();
         } else {
-            return model.getTxData().getIdxBIP44Internal();
+            return model.getTxData().getValue().getIdxBIP44Internal();
         }
     }
 }

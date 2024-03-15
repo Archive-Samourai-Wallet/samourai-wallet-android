@@ -26,6 +26,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.IconButton
@@ -51,6 +53,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -67,7 +72,18 @@ import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.home.TestApplication
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.review.ReviewTxActivity.Companion.TAG
-import com.samourai.wallet.send.review.SwipeSendButtonListener.EnumSwipeSendButtonState
+import com.samourai.wallet.send.review.ReviewTxBottomSheet.ReviewSheetType
+import com.samourai.wallet.send.review.ReviewTxBottomSheet.ReviewSheetType.FILTER_UTXO
+import com.samourai.wallet.send.review.ReviewTxBottomSheet.ReviewSheetType.MANAGE_FEE
+import com.samourai.wallet.send.review.ReviewTxBottomSheet.ReviewSheetType.PREVIEW_TX
+import com.samourai.wallet.send.review.preview.PreviewTx
+import com.samourai.wallet.send.review.ref.EnumReviewScreen
+import com.samourai.wallet.send.review.ref.EnumSendType
+import com.samourai.wallet.send.review.ref.EnumTxAlert
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonContent
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener
+import com.samourai.wallet.send.review.sendbutton.SwipeSendButtonListener.EnumSwipeSendButtonState
+import com.samourai.wallet.theme.samouraiAlerts
 import com.samourai.wallet.theme.samouraiBlueButton
 import com.samourai.wallet.theme.samouraiLightGreyAccent
 import com.samourai.wallet.theme.samouraiPostmixSpendBlueButton
@@ -83,6 +99,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.commons.collections4.ListUtils
+import org.apache.commons.lang3.StringUtils.EMPTY
+import org.apache.commons.lang3.StringUtils.SPACE
 import org.apache.commons.lang3.StringUtils.isBlank
 import java.lang.String.format
 import java.text.DecimalFormat
@@ -109,7 +127,7 @@ class ReviewTxActivity : SamouraiActivity() {
             .setAddressLabel(intent.getStringExtra("sendAddressLabel"))
             .setAmount(intent.getLongExtra("sendAmount", 0L))
             .setRicochetStaggeredDelivery(intent.getBooleanExtra("ricochetStaggeredDelivery", false))
-            .setType(EnumSendType.fromType(type))
+            .setType(EnumSendType.firstFromType(type))
 
         if (intent.hasExtra("preselected")) {
             reviewTxModel
@@ -129,37 +147,9 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
 
     val context = LocalContext.current
 
-    val verticalScroll = rememberScrollState(0)
-
     var isOnSwipeValidation = remember { mutableStateOf(false) }
     val whiteAlpha = if(isOnSwipeValidation.value) 0.1f else 0f
-
-    val destinationAmount by model.impliedAmount.observeAsState()
-    val feeAggregated by model.feeAggregated.observeAsState()
-    val amountToLeaveWallet = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
-
-    val impliedSendType by model.impliedSendType.observeAsState()
-
-    val sendTx: () -> Unit = {
-        try {
-            model.sendType.broadcastTx(model, activity)
-        } catch (e : Exception) {
-            Log.e(TAG, e.message, e)
-            Toast.makeText(activity, format("issue when broadcasting %s transaction", model.sendType.type), Toast.LENGTH_LONG).show()
-        }
-    }
-    val scope = rememberCoroutineScope()
-
-    val swipeSendButtonContentListener =
-        SwipeSendButtonListener { state ->
-
-            scope.launch {
-                val lightenColor =
-                    state == EnumSwipeSendButtonState.IS_SWIPING_ENABLED ||
-                            state == EnumSwipeSendButtonState.DONE
-                isOnSwipeValidation.value = lightenColor
-            }
-        }
+    val currentScreen by model.currentScreen.observeAsState()
 
     UpdateStatusBarColorBasedOnDragState(isDraggable = isOnSwipeValidation, whiteAlpha = whiteAlpha)
     UpdateNavigationBarColorBasedOnDragState(isDraggable = isOnSwipeValidation, whiteAlpha = whiteAlpha)
@@ -178,71 +168,148 @@ fun ReviewTxActivityContent(model: ReviewTxModel, activity: SamouraiActivity?) {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            ReviewTxActivityContentHeader(activity = activity, whiteAlpha = whiteAlpha)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                Column (
-                    modifier = Modifier
-                        .padding(start = 16.dp, end = 16.dp)
-                        .verticalScroll(
-                            state = verticalScroll,
-                            enabled = true,
-                        )
-                        .fillMaxSize()
-                ) {
-                    Box {
-                        ReviewTxActivityContentDestination(
-                            model = model,
-                            whiteAlpha = whiteAlpha)
-                    }
-                    ReviewTxActivityContentFees(model = model, activity = activity, whiteAlpha = whiteAlpha)
-                    ReviewTxActivityContentTransaction(model = model, whiteAlpha = whiteAlpha)
-                    Column (
-                        modifier = Modifier
-                            .padding(top = 4.dp)
-                    ) {
-                        ReviewTxActivityContentSendNote(model = model)
-                    }
-                    Spacer(modifier = Modifier.height(115.dp).background(Color.Yellow))
-                }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.BottomStart
-                ) {
-                    Column (
-                        modifier = Modifier
-                            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
-                            JoinbotSendButton(
-                                isOnSwipeValidation = isOnSwipeValidation,
-                                action = sendTx,
-                                alphaBackground = 0f
-                            )
-                        } else {
-                            SwipeSendButtonContent(
-                                amountToLeaveWallet = MutableLiveData(amountToLeaveWallet),
-                                action = sendTx,
-                                enable = MutableLiveData(true),
-                                listener = swipeSendButtonContentListener,
-                                alphaBackground = 0f)
-                        }
-                    }
-                }
+            ReviewTxActivityContentHeader(
+                model = model,
+                activity = activity,
+                whiteAlpha = whiteAlpha,
+                screen = currentScreen)
 
+            when (currentScreen) {
+
+                EnumReviewScreen.TX_PREVIEW -> PreviewTx(model = model, activity = activity)
+
+                EnumReviewScreen.TX_ALERT -> ReviewTxAlert(model = model, activity = activity)
+
+                EnumReviewScreen.TX_INFO ->
+                    ReviewTxInfo(
+                        model = model,
+                        activity = activity,
+                        whiteAlpha = whiteAlpha,
+                        isOnSwipeValidation = isOnSwipeValidation)
+
+                else -> throw RuntimeException(format("unknown %s value in EnumReviewScreen", currentScreen))
             }
+
         }
     }
-
 }
 
 @Composable
-fun ReviewTxActivityContentHeader(activity: SamouraiActivity?, whiteAlpha: Float) {
+private fun ReviewTxInfo(
+    model: ReviewTxModel,
+    activity: SamouraiActivity?,
+    whiteAlpha: Float,
+    isOnSwipeValidation: MutableState<Boolean>
+) {
+
+    val verticalScroll = rememberScrollState(0)
+    val impliedSendType by model.impliedSendType.observeAsState()
+
+    val destinationAmount by model.impliedAmount.observeAsState()
+    val feeAggregated by model.feeAggregated.observeAsState()
+    val txData by model.txData.observeAsState()
+    val totalAmountToSpend = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
+    val amountToLeaveWallet = Math.min(totalAmountToSpend, txData!!.totalAmountInTxInput)
+    val amountToLeaveWalletColor =
+        if (amountToLeaveWallet < totalAmountToSpend) samouraiAlerts else Color.White
+
+    val scope = rememberCoroutineScope()
+
+    val swipeSendButtonContentListener =
+        SwipeSendButtonListener { state ->
+
+            scope.launch {
+                val lightenColor =
+                    state == EnumSwipeSendButtonState.IS_SWIPING_ENABLED ||
+                            state == EnumSwipeSendButtonState.DONE
+                isOnSwipeValidation.value = lightenColor
+            }
+        }
+
+    val sendTx: () -> Unit = {
+        try {
+            model.sendType.broadcastTx(model, activity)
+        } catch (e : Exception) {
+            Log.e(TAG, e.message, e)
+            Toast.makeText(activity, format("issue when broadcasting %s transaction", model.sendType.type), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp)
+                .verticalScroll(
+                    state = verticalScroll,
+                    enabled = true,
+                )
+                .fillMaxSize()
+        ) {
+            Box {
+                ReviewTxActivityContentDestination(
+                    model = model,
+                    whiteAlpha = whiteAlpha
+                )
+            }
+            ReviewTxActivityContentFees(model = model, activity = activity, whiteAlpha = whiteAlpha)
+            ReviewTxActivityContentTransaction(model = model, whiteAlpha = whiteAlpha)
+            ReviewTxActivityContentAlert(model = model, whiteAlpha = whiteAlpha)
+            Column(
+                modifier = Modifier
+                    .padding(top = 4.dp)
+            ) {
+                ReviewTxActivityContentSendNote(model = model)
+            }
+            Spacer(modifier = Modifier
+                .height(115.dp)
+                .background(Color.Yellow))
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                if (impliedSendType == EnumSendType.SPEND_JOINBOT) {
+                    JoinbotSendButton(
+                        isOnSwipeValidation = isOnSwipeValidation,
+                        action = sendTx,
+                        alphaBackground = 0f
+                    )
+                } else {
+                    SwipeSendButtonContent(
+                        amountToLeaveWallet = MutableLiveData(amountToLeaveWallet),
+                        amountToLeaveWalletColor = amountToLeaveWalletColor,
+                        action = sendTx,
+                        enable = MutableLiveData(true),
+                        listener = swipeSendButtonContentListener,
+                        alphaBackground = 0f
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReviewTxActivityContentHeader(
+    model: ReviewTxModel,
+    activity: SamouraiActivity?,
+    whiteAlpha: Float,
+    screen: EnumReviewScreen?
+) {
+
+    val impliedSendType by model.impliedSendType.observeAsState()
+
     val account = if (nonNull(activity)) activity!!.getIntent().extras!!.getInt("_account") else 0
     val backgroundColor = if (account == SamouraiAccountIndex.POSTMIX) samouraiPostmixSpendBlueButton else samouraiSlateGreyAccent
     Row (
@@ -250,13 +317,63 @@ fun ReviewTxActivityContentHeader(activity: SamouraiActivity?, whiteAlpha: Float
             .fillMaxWidth()
             .background(lightenColor(backgroundColor, whiteAlpha))
     ){
-        IconButton(onClick = { activity!!.onBackPressed() }) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
-                contentDescription = null,
-                tint = Color.White
-            )
+
+        Column {
+            IconButton(onClick = {
+                when(screen) {
+                    EnumReviewScreen.TX_PREVIEW -> model.currentScreen.postValue(
+                        EnumReviewScreen.TX_INFO)
+                    EnumReviewScreen.TX_ALERT -> model.currentScreen.postValue(
+                        EnumReviewScreen.TX_INFO)
+                    EnumReviewScreen.TX_INFO -> activity!!.onBackPressed()
+                    else -> throw RuntimeException(format("unknown %s value in EnumReviewScreen", screen))
+                }
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
+                    contentDescription = null,
+                    tint = Color.White
+                )
+            }
         }
+        Column (
+            modifier = Modifier.weight(1f)
+        ) {}
+        Row {
+            if (screen == EnumReviewScreen.TX_PREVIEW) {
+                if (impliedSendType == EnumSendType.SPEND_BOLTZMANN) {
+                    IconButton(onClick = {
+                        model.recomposeStonewall()
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_refresh),
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                    }
+                } else if (impliedSendType!!.isCustomSelection) {
+                    IconButton(onClick = {
+                        showBottomSheet(type = FILTER_UTXO, model = model, activity = activity)
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_filter_list),
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                    }
+                }
+                IconButton(onClick = {
+                    showBottomSheet(type = PREVIEW_TX, model = model, activity = activity)
+                }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_receipt_text_edit_outline),
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+
     }
 }
 
@@ -307,7 +424,7 @@ fun ReviewTxActivityContentDestination(
                 ) {
                     Column {
                         Text(
-                            text = if (model.impliedSendType.value == EnumSendType.SPEND_BATCH)
+                            text = if (model.sendType.isBatchSpend)
                                 "Batch transaction total" else "Destination",
                             color = Color.White,
                             fontSize = 14.sp,
@@ -327,12 +444,15 @@ fun ReviewTxActivityContentDestination(
                         )
                     }
                 }
-                if (model.impliedSendType.value == EnumSendType.SPEND_BATCH) {
+                if (model.sendType.isBatchSpend) {
                     val batchSpendList = ListUtils.emptyIfNull(BatchSendUtil.getInstance().sends)
                     if (batchSpendList.isEmpty()) return
                     if (expand) {
                         for (spend in batchSpendList) {
-                            TransactionOutput(spend)
+                            TransactionOutput(
+                                spendInfo = spend,
+                                model = model
+                            )
                         }
                         Row (
                             modifier = Modifier
@@ -350,7 +470,10 @@ fun ReviewTxActivityContentDestination(
                             )
                         }
                     } else {
-                        TransactionOutput(batchSpendList.get(0))
+                        TransactionOutput(
+                            spendInfo = batchSpendList.get(0),
+                            model = model
+                        )
                         Row (
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -373,8 +496,7 @@ fun ReviewTxActivityContentDestination(
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Column (
-                        ) {
+                        Column {
                             Text(
                                 text = model.addressLabel,
                                 color = samouraiTextLightGrey,
@@ -390,30 +512,29 @@ fun ReviewTxActivityContentDestination(
 }
 
 @Composable
-fun TransactionOutput(spendInfo: BatchSendUtil.BatchSend) {
+fun TransactionOutput(
+    spendInfo: BatchSendUtil.BatchSend,
+    model: ReviewTxModel) {
 
-    val robotoMonoNormalFont = FontFamily(
-        Font(R.font.roboto_mono, FontWeight.Normal)
-    )
     val robotoMonoBoldFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Bold)
     )
 
+    val alertReused = model.alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS)
+    val isReusedAddr = if (nonNull(alertReused)) alertReused!!.isReusedAddress(spendInfo.addr) else false
+
     Row (
         modifier = Modifier
-            .padding(bottom = 16.dp)
+            .padding(bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Column (
             modifier = Modifier
                 .weight(1f),
         ) {
-            Text(
-                text = spendInfo.captionDestination(),
-                color = samouraiTextLightGrey,
-                fontSize = 12.sp,
-                fontFamily = robotoMonoNormalFont,
-                softWrap = true,
-                maxLines = 3
+            DisplayAddress(
+                address = spendInfo.captionDestination(),
+                addressReused = isReusedAddr
             )
         }
         Column (
@@ -428,6 +549,66 @@ fun TransactionOutput(spendInfo: BatchSendUtil.BatchSend) {
                 fontFamily = robotoMonoBoldFont
             )
         }
+    }
+}
+
+@Composable
+fun DisplayAddress(
+    address: String,
+    addressReused: Boolean) {
+
+    val robotoMonoNormalFont = FontFamily(
+        Font(R.font.roboto_mono, FontWeight.Normal)
+    )
+
+    if (addressReused) {
+
+        val inlineContentId = address + "inlineIcon"
+        val annotatedString = buildAnnotatedString {
+            append(address)
+            append(SPACE)
+            appendInlineContent(inlineContentId, "[icon]")
+            append("Reused sending address")
+        }
+
+        val inlineContent = mapOf(
+            Pair(
+                inlineContentId,
+                InlineTextContent(
+                    Placeholder(
+                        width = 18.sp,
+                        height = 18.sp,
+                        placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_alert_outline_red),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.Unspecified
+                    )
+                }
+            )
+        )
+        Text(
+            text = annotatedString,
+            inlineContent = inlineContent,
+            color = samouraiTextLightGrey,
+            fontSize = 12.sp,
+            fontFamily = robotoMonoNormalFont,
+            softWrap = true,
+            maxLines = 3
+        )
+
+    } else {
+        Text(
+            text = address,
+            color = samouraiTextLightGrey,
+            fontSize = 12.sp,
+            fontFamily = robotoMonoNormalFont,
+            softWrap = true,
+            maxLines = 3
+        )
     }
 }
 
@@ -609,7 +790,10 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                                     coroutineScope.launch(Dispatchers.IO) {
                                         model.refreshFees {}
                                     }
-                                    showFeeManager(model = model, activity = activity)
+                                    showBottomSheet(
+                                        type = MANAGE_FEE,
+                                        model = model,
+                                        activity = activity)
                                 }
                         ) {
                             Text(
@@ -627,15 +811,87 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
     }
 }
 
-fun showFeeManager(model: ReviewTxModel, activity: SamouraiActivity?) {
-    ReviewTxBottomSheet(model = model, type = ReviewTxBottomSheet.ReviewSheetType.MANAGE_FEE)
+fun showBottomSheet(type: ReviewSheetType, model: ReviewTxModel, activity: SamouraiActivity?) {
+    ReviewTxBottomSheet(model = model, type = type)
         .apply {
             show(activity!!.supportFragmentManager, this.tag)
         }
 }
 
 @Composable
-fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) {
+fun ReviewTxActivityContentAlert(model: ReviewTxModel, whiteAlpha: Float) {
+
+    val robotoMediumBoldFont = FontFamily(
+        Font(R.font.roboto_medium, FontWeight.Bold)
+    )
+
+    val alert by model.alertReviews.observeAsState()
+    if (alert!!.isEmpty()) return
+
+    val coroutineScope = rememberCoroutineScope()
+
+    Box (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp, top = 8.dp)
+            .background(lightenColor(samouraiAlerts, whiteAlpha), RoundedCornerShape(6.dp))
+            .clickable {
+                coroutineScope.launch(Dispatchers.Main) {
+                    model.currentScreen.postValue(EnumReviewScreen.TX_ALERT)
+                }
+            }
+    ) {
+        Row (
+            modifier = Modifier
+                .padding(all = 12.dp)
+        ) {
+            Column (
+                modifier = Modifier
+                    .padding(end = 12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_receipt_text),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = Color.White
+                )
+            }
+            Column {
+                Row (
+                    modifier = Modifier
+                ) {
+                    Column {
+                        Text(
+                            text = format("Transaction Alert%s (%s)", if (alert!!.size > 1) "s" else EMPTY, alert!!.size),
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontFamily = robotoMediumBoldFont
+                        )
+                    }
+                    Column (
+                        modifier = Modifier
+                            .weight(1f),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "REVIEW",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontFamily = robotoMediumBoldFont
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReviewTxActivityContentTransaction(
+    model: ReviewTxModel,
+    whiteAlpha: Float,
+) {
 
     val robotoMediumNormalFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Normal)
@@ -648,11 +904,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) 
 
     val entropy by model.entropy.observeAsState()
 
-    val sendTypesHavingPreview: List<EnumSendType> =
-        ImmutableList.of(
-            EnumSendType.SPEND_SIMPLE,
-            EnumSendType.SPEND_BOLTZMANN,
-            EnumSendType.SPEND_BATCH)
+    val coroutineScope = rememberCoroutineScope()
 
     Box (
         modifier = Modifier
@@ -770,7 +1022,7 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) 
                         }
                     }
                 }
-                if (sendTypesHavingPreview.contains(impliedSendType)) {
+                if (nonNull(impliedSendType!!.coinSelectionType)) {
                     Row (
                         modifier = Modifier
                             .padding(top = 12.dp)
@@ -781,12 +1033,20 @@ fun ReviewTxActivityContentTransaction(model: ReviewTxModel, whiteAlpha: Float) 
                             horizontalAlignment = Alignment.End,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = "PREVIEW",
-                                color = samouraiBlueButton,
-                                fontSize = 14.sp,
-                                fontFamily = robotoMediumBoldFont
-                            )
+                            Row (
+                                modifier = Modifier.clickable {
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        model.currentScreen.postValue(EnumReviewScreen.TX_PREVIEW)
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    text = "PREVIEW",
+                                    color = samouraiBlueButton,
+                                    fontSize = 14.sp,
+                                    fontFamily = robotoMediumBoldFont
+                                )
+                            }
                         }
                     }
                 }
@@ -993,12 +1253,31 @@ fun UpdateNavigationBarColorBasedOnDragState(
     }
 }
 
+@Preview(showBackground = true, heightDp = 100, widthDp = 420)
+@Composable
+fun TransactionOutputPreview(
+    @PreviewParameter(MyModelPreviewProvider::class) reviewTxModel: ReviewTxModel
+) {
+
+    val spend = BatchSendUtil.BatchSend()
+    spend.addr = "this is address"
+    spend.amount = 123456
+
+    TransactionOutput(
+        spendInfo = spend,
+        model = reviewTxModel
+    )
+}
+
 @Preview(showBackground = true, heightDp = 780, widthDp = 420)
 @Composable
 fun DefaultPreview(
     @PreviewParameter(MyModelPreviewProvider::class) reviewTxModel: ReviewTxModel
 ) {
-    ReviewTxActivityContent(reviewTxModel, null)
+    ReviewTxActivityContent(
+        model = reviewTxModel,
+        activity = null
+    )
 }
 
 class MyModelPreviewProvider : PreviewParameterProvider<ReviewTxModel> {
