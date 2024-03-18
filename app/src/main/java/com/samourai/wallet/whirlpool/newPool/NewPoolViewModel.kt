@@ -18,12 +18,9 @@ import com.samourai.whirlpool.client.tx0.Tx0Previews
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.function.Consumer
 
 class NewPoolViewModel : ViewModel() {
     protected val TAG = "NewPoolViewModel"
@@ -44,17 +41,11 @@ class NewPoolViewModel : ViewModel() {
     val getLoadingPools: LiveData<Boolean> get() = loadingPools
     val getPoolLoadError: LiveData<Exception?> get() = poolLoadError
 
-    fun loadTx0Info(onSuccess:Runnable, onError: Consumer<Throwable>){
+    fun loadTx0Info() {
         // fetch tx0Info only once (you should refresh it after each TX0)
         val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet()
-        whirlpoolWallet.fetchTx0Info()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ result: Tx0Info ->
-                Log.v(TAG, "loadTx0Info success")
-            tx0Info = result
-            onSuccess.run()
-        }, {onError})
+        tx0Info = whirlpoolWallet.fetchTx0Info()
+        Log.w(TAG, "loadTx0Info success")
     }
 
     fun setPoolPriority(poolCyclePriority: PoolCyclePriority) {

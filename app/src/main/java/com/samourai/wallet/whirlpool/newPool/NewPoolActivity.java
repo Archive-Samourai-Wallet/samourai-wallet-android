@@ -130,17 +130,20 @@ public class NewPoolActivity extends SamouraiActivity {
         // fetch tx0Info only once  (it should be refreshed after each TX0)
         // disable confirmButton until tx0Info is not loaded
         confirmButton.setText(getString(R.string.loading));
-        newPoolViewModel.loadTx0Info(() -> {
-                    // enable confirmButton once tx0Info is loaded
-                    confirmButton.setText(getString(R.string.next));
-                    enableConfirmButton(true);
-                },
-                e -> {
-                    // keep confirmButton disabled on tx0Info loading error
-                    confirmButton.setText(getString(R.string.cannot_reach_api));
-                    Snackbar.make(findViewById(R.id.new_pool_snackbar_layout),getString(R.string.cannot_reach_api),Snackbar.LENGTH_LONG).show();
-                    Log.e(TAG, "loadTx0Info() failed", e);
-                });
+
+        Completable.fromRunnable(() -> newPoolViewModel.loadTx0Info())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(() -> {
+                // enable confirmButton once tx0Info is loaded
+                confirmButton.setText(getString(R.string.next));
+                enableConfirmButton(true);
+            }, e -> {
+                // keep confirmButton disabled on tx0Info loading error
+                confirmButton.setText(getString(R.string.cannot_reach_api));
+                Snackbar.make(findViewById(R.id.new_pool_snackbar_layout), getString(R.string.cannot_reach_api), Snackbar.LENGTH_LONG).show();
+                Log.e(TAG, "loadTx0Info() failed", e);
+        });
 
         //Disable selection from fragment since post mix utxo's are populated by the activity
         if (account != WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix())
