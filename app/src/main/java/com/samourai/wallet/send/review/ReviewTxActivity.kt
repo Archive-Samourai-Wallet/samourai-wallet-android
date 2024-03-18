@@ -121,17 +121,13 @@ class ReviewTxActivity : SamouraiActivity() {
         val type = intent.getIntExtra("sendType", 0)
 
         reviewTxModel
+            .setPreselectedUtxo(intent.getStringExtra("preselected"))
             .setAccount(account)
             .setAddress(intent.getStringExtra("sendAddress"))
             .setAddressLabel(intent.getStringExtra("sendAddressLabel"))
             .setAmount(intent.getLongExtra("sendAmount", 0L))
             .setRicochetStaggeredDelivery(intent.getBooleanExtra("ricochetStaggeredDelivery", false))
             .setType(EnumSendType.firstFromType(type))
-
-        if (intent.hasExtra("preselected")) {
-            reviewTxModel
-                .setPreselectedUtxo(intent.getStringExtra("preselected"))
-        }
 
         setupThemes()
 

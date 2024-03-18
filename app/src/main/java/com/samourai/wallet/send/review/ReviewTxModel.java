@@ -74,7 +74,6 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bouncycastle.util.encoders.Hex;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -111,7 +110,6 @@ public class ReviewTxModel extends AndroidViewModel {
     private int account;
     private String address;
     private String addressLabel;
-    private String preselectedUtxoId;
 
     private long amount = 0L;
     private MutableLiveData<Long> _impliedAmount;
@@ -1352,14 +1350,6 @@ public class ReviewTxModel extends AndroidViewModel {
         return Maps.newLinkedHashMap();
     }
 
-    public String getPreselectedUtxoId() {
-        return preselectedUtxoId;
-    }
-
-    public boolean hasPreselectedUtxo() {
-        return nonNull(preselectedUtxoId);
-    }
-
     public boolean isPostmixAccount() {
         return account == SamouraiAccountIndex.POSTMIX;
     }
@@ -1407,8 +1397,7 @@ public class ReviewTxModel extends AndroidViewModel {
         return this;
     }
 
-    public ReviewTxModel setPreselectedUtxo(final @Nullable String preselectedUtxoId) {
-        this.preselectedUtxoId = preselectedUtxoId;
+    public ReviewTxModel setPreselectedUtxo(String preselectedUtxoId) {
         if (nonNull(preselectedUtxoId)) {
             preselectedUTXOs = PreSelectUtil.getInstance().getPreSelected(preselectedUtxoId);
         }
@@ -1541,43 +1530,37 @@ public class ReviewTxModel extends AndroidViewModel {
 
         if (nonNull(_balance)) return _balance;
 
-        try {
-            if (isPostmixAccount()) {
-                _balance = APIFactory.getInstance(getApplication()).getXpubPostMixBalance();
-            } else {
-                _balance = APIFactory.getInstance(getApplication()).getXpubBalance();
-            }
-        } catch (java.lang.NullPointerException npe) {
-            npe.printStackTrace();
-        }
-
         if (hasPreselectedUtxo()) {
-            //Reloads preselected utxo's if it changed on last call
-            if (CollectionUtils.isNotEmpty(preselectedUTXOs)) {
-
-                //Checks utxo's state, if the item is blocked it will be removed from preselectedUTXOs
-                for (int i = preselectedUTXOs.size()-1; i >= 0; --i) {
-                    final UTXOCoin coin = preselectedUTXOs.get(i);
-                    if (BlockedUTXO.getInstance().containsAny(coin.hash, coin.idx)) {
-                        preselectedUTXOs.remove(i);
-                    }
+            //Checks utxo's state, if the item is blocked it will be removed from preselectedUTXOs
+            for (int i = preselectedUTXOs.size()-1; i >= 0; --i) {
+                final UTXOCoin coin = preselectedUTXOs.get(i);
+                if (BlockedUTXO.getInstance().containsAny(coin.hash, coin.idx)) {
+                    preselectedUTXOs.remove(i);
                 }
-                long amount = 0;
-                for (final UTXOCoin utxo : preselectedUTXOs) {
-                    amount += utxo.amount;
-                }
-                _balance = amount;
-            } else {
-                ;
             }
-
-        }
-
-        if (isNull(_balance)) {
-            _balance = 0L;
+            long amount = 0L;
+            for (final UTXOCoin utxo : preselectedUTXOs) {
+                amount += utxo.amount;
+            }
+            _balance = amount;
+        } else {
+            try {
+                if (isPostmixAccount()) {
+                    _balance = APIFactory.getInstance(getApplication()).getXpubPostMixBalance();
+                } else {
+                    _balance = APIFactory.getInstance(getApplication()).getXpubBalance();
+                }
+            } catch (final java.lang.NullPointerException npe) {
+                _balance = 0L;
+                Log.e(TAG, npe.getMessage(), npe);
+            }
         }
 
         return _balance;
+    }
+
+    private boolean hasPreselectedUtxo() {
+        return CollectionUtils.isNotEmpty(preselectedUTXOs);
     }
 
     public static Single<TxProcessorResult> reactiveCalculateEntropy(

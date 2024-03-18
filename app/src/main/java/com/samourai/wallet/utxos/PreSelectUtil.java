@@ -9,14 +9,14 @@ public class PreSelectUtil {
 
     private static PreSelectUtil instance = null;
 
-    private static HashMap<String,List<UTXOCoin>> preSelected = null;
+    private static HashMap<String, List<UTXOCoin>> preSelected = null;
 
     private PreSelectUtil() { ; }
 
     public static PreSelectUtil getInstance() {
 
         if(instance == null) {
-            preSelected = new HashMap<String,List<UTXOCoin>>();
+            preSelected = new HashMap<>();
             instance = new PreSelectUtil();
         }
 
