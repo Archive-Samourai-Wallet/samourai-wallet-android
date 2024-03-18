@@ -512,7 +512,7 @@ public class WebUtil {
                     .callTimeout(90, TimeUnit.SECONDS);
         }
         if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
+            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC));
         }
         return builder;
     }

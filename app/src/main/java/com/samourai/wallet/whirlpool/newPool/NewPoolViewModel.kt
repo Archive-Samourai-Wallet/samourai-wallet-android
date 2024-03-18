@@ -44,7 +44,8 @@ class NewPoolViewModel : ViewModel() {
     fun loadTx0Info() {
         // fetch tx0Info only once (you should refresh it after each TX0)
         val whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet()
-        tx0Info = whirlpoolWallet.fetchTx0Info()
+        val scode = whirlpoolWallet.config.scode
+        tx0Info = whirlpoolWallet.whirlpoolInfo.fetchTx0Info(scode)
         Log.w(TAG, "loadTx0Info success")
     }
 

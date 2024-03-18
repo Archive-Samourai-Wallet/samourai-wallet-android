@@ -136,6 +136,7 @@ public class NewPoolActivity extends SamouraiActivity {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(() -> {
                 // enable confirmButton once tx0Info is loaded
+                Log.v(TAG, "loadTx0Info success");
                 confirmButton.setText(getString(R.string.next));
                 enableConfirmButton(true);
             }, e -> {
