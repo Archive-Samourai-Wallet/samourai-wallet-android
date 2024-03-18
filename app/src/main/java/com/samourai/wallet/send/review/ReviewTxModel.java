@@ -74,7 +74,6 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bouncycastle.util.encoders.Hex;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -91,6 +90,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -110,7 +110,6 @@ public class ReviewTxModel extends AndroidViewModel {
     private int account;
     private String address;
     private String addressLabel;
-    private String preselectedUtxoId;
 
     private long amount = 0L;
     private MutableLiveData<Long> _impliedAmount;
@@ -249,35 +248,49 @@ public class ReviewTxModel extends AndroidViewModel {
 
     public MutableLiveData<Map<EnumTxAlert, TxAlertReview>> getAlertReviews() {
         if (isNull(_alertReviews)) {
-            updateAlerts();
+            updateAlertsAsync();
         }
         return _alertReviews;
     }
 
-    private void updateAlerts() {
-        final Map<EnumTxAlert, TxAlertReview> alerts = retrievesAlerts();
-        if (isNull(_alertReviews)) {
-            _alertReviews = new MutableLiveData<>(alerts);
-        } else {
-            _alertReviews.postValue(alerts);
+    private void updateAlertsAsync() {
+        final boolean forInit = isNull(_alertReviews);
+        if (forInit) {
+            _alertReviews = new MutableLiveData<>(Maps.newHashMap());
         }
+        final Disposable disposable = retrievesAlerts(forInit)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(alerts -> {
+                    if (isNull(_alertReviews)) {
+                        _alertReviews = new MutableLiveData<>(alerts);
+                    } else {
+                        _alertReviews.postValue(alerts);
+                    }
+                }, error -> {
+                    Log.e(TAG, error.getMessage(), error);
+                });
+
+        compositeDisposable.add(disposable);
     }
 
     public MutableLiveData<EnumReviewScreen> getCurrentScreen() {
         return currentScreen;
     }
 
-    private Map<EnumTxAlert, TxAlertReview> retrievesAlerts() {
-        final Map<EnumTxAlert, TxAlertReview> alerts = Maps.newLinkedHashMap();
+    private Observable<Map<EnumTxAlert, TxAlertReview>> retrievesAlerts(final boolean forInit) {
+        return Observable.fromCallable(() -> {
+            final Map<EnumTxAlert, TxAlertReview> alerts = Maps.newLinkedHashMap();
 
-        for (final EnumTxAlert alert : EnumTxAlert.values()) {
-            final TxAlertReview alertReview = alert.checkForAlert(this);
-            if (nonNull(alertReview)) {
-                alerts.put(alert, alertReview);
+            for (final EnumTxAlert alert : EnumTxAlert.values()) {
+                final TxAlertReview alertReview = alert.checkForAlert(this, forInit);
+                if (nonNull(alertReview)) {
+                    alerts.put(alert, alertReview);
+                }
             }
-        }
 
-        return alerts;
+            return alerts;
+        });
     }
 
     private TxAlertReview checkAddressReused(final String address) {
@@ -424,7 +437,7 @@ public class ReviewTxModel extends AndroidViewModel {
         } catch (Exception e) {
             Log.e(TAG, "issue on buildTx");
         }
-        updateAlerts();
+        updateAlertsAsync();
     }
 
     private void setMinerFeeRates(final long value) {
@@ -513,15 +526,10 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     private void initForBatchSpend() {
-        final List<BatchSend> spendList = BatchSendUtil.getInstance().getSends();
+        final List<BatchSend> spendList = BatchSendUtil.getInstance().getCopyOfBatchSends();
         amount = 0;
         for (final BatchSend spend : CollectionUtils.emptyIfNull(spendList)) {
             amount += spend.amount;
-            try {
-                spend.computeAddressIfNeeded(getApplication());
-            } catch (final Exception e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
         }
         if (isNull(_impliedAmount)) {
             _impliedAmount = new MutableLiveData<>(amount);
@@ -544,23 +552,22 @@ public class ReviewTxModel extends AndroidViewModel {
         txData.getValue().clear();
 
         int countP2WSH_P2TR = 0;
-        for (final BatchSendUtil.BatchSend _data : BatchSendUtil.getInstance().getSends()) {
+        for (final BatchSendUtil.BatchSend _data : BatchSendUtil.getInstance().getCopyOfBatchSends()) {
 
-            _data.computeAddressIfNeeded(getApplication());
-
+            final String addr = _data.getAddr(getApplication());
             Log.d(TAG, "output:" + _data.amount);
-            Log.d(TAG, "output:" + _data.addr);
+            Log.d(TAG, "output:" + addr);
             Log.d(TAG, "output:" + _data.pcode);
 
-            if (txData.getValue().getReceivers().containsKey(_data.addr)) {
+            if (txData.getValue().getReceivers().containsKey(addr)) {
 
-                final BigInteger addrAmount = txData.getValue().getReceivers().get(_data.addr);
-                txData.getValue().getReceivers().put(_data.addr, addrAmount.add(BigInteger.valueOf(_data.amount)));
+                final BigInteger addrAmount = txData.getValue().getReceivers().get(addr);
+                txData.getValue().getReceivers().put(addr, addrAmount.add(BigInteger.valueOf(_data.amount)));
 
             } else {
 
-                txData.getValue().getReceivers().put(_data.addr, BigInteger.valueOf(_data.amount));
-                if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(_data.addr))    {
+                txData.getValue().getReceivers().put(addr, BigInteger.valueOf(_data.amount));
+                if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(addr))    {
                     ++ countP2WSH_P2TR;
                 }
             }
@@ -725,19 +732,28 @@ public class ReviewTxModel extends AndroidViewModel {
 
     private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> getStonewallPair() {
         if (isNull(_pair)) {
-            _pair = computeStonewallPair();
+            _pair = computeStonewallPair(10);
         }
         return _pair;
     }
 
-    private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> computeStonewallPair() {
+    private Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> computeStonewallPair(
+            final int retry) {
+
         final Pair<List<UTXO>, List<UTXO>> utxo1AndUtxo2 = getUtxo1AndUtxo2();
         final List<UTXO> _utxos1 = utxo1AndUtxo2.getLeft();
         final List<UTXO> _utxos2 = utxo1AndUtxo2.getRight();
 
         // boltzmann spend (STONEWALL)
-        return SendFactory.getInstance(getApplication())
-                .boltzmann(_utxos1, _utxos2, BigInteger.valueOf(amount), address, account);
+        final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair =
+                SendFactory.getInstance(getApplication())
+                        .boltzmann(_utxos1, _utxos2, BigInteger.valueOf(amount), address, account);
+
+        if (isNull(pair) && retry > 0) {
+            resetStonewallSelection();
+            return computeStonewallPair(retry-1);
+        }
+        return pair;
     }
 
     public LiveData<EnumSendType> getImpliedSendType() {
@@ -875,20 +891,22 @@ public class ReviewTxModel extends AndroidViewModel {
         int countP2WSH_P2TR = 0;
 
         final Set<String> destAddresses = Sets.newHashSet();
-        for (final BatchSendUtil.BatchSend batchSend : BatchSendUtil.getInstance().getSends()) {
+        final BatchSendUtil batchSendUtil = BatchSendUtil.getInstance();
+        for (final BatchSendUtil.BatchSend batchSend : batchSendUtil.getCopyOfBatchSends()) {
 
             try {
-                batchSend.computeAddressIfNeeded(getApplication());
+                final String addr = batchSend.getAddr(getApplication());
+                if (! destAddresses.contains(addr)) {
+                    destAddresses.add(addr);
+                    if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(addr))    {
+                        ++ countP2WSH_P2TR;
+                    }
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
-            if (! destAddresses.contains(batchSend.addr)) {
-                destAddresses.add(batchSend.addr);
-                if(FormatsUtilGeneric.getInstance().isValidP2WSH_P2TR(batchSend.addr))    {
-                    ++ countP2WSH_P2TR;
-                }
-            }
+
         }
 
         final List<UTXO> utxos = getAllUtxo();
@@ -1332,14 +1350,6 @@ public class ReviewTxModel extends AndroidViewModel {
         return Maps.newLinkedHashMap();
     }
 
-    public String getPreselectedUtxoId() {
-        return preselectedUtxoId;
-    }
-
-    public boolean hasPreselectedUtxo() {
-        return nonNull(preselectedUtxoId);
-    }
-
     public boolean isPostmixAccount() {
         return account == SamouraiAccountIndex.POSTMIX;
     }
@@ -1387,8 +1397,7 @@ public class ReviewTxModel extends AndroidViewModel {
         return this;
     }
 
-    public ReviewTxModel setPreselectedUtxo(final @Nullable String preselectedUtxoId) {
-        this.preselectedUtxoId = preselectedUtxoId;
+    public ReviewTxModel setPreselectedUtxo(String preselectedUtxoId) {
         if (nonNull(preselectedUtxoId)) {
             preselectedUTXOs = PreSelectUtil.getInstance().getPreSelected(preselectedUtxoId);
         }
@@ -1521,43 +1530,37 @@ public class ReviewTxModel extends AndroidViewModel {
 
         if (nonNull(_balance)) return _balance;
 
-        try {
-            if (isPostmixAccount()) {
-                _balance = APIFactory.getInstance(getApplication()).getXpubPostMixBalance();
-            } else {
-                _balance = APIFactory.getInstance(getApplication()).getXpubBalance();
-            }
-        } catch (java.lang.NullPointerException npe) {
-            npe.printStackTrace();
-        }
-
         if (hasPreselectedUtxo()) {
-            //Reloads preselected utxo's if it changed on last call
-            if (CollectionUtils.isNotEmpty(preselectedUTXOs)) {
-
-                //Checks utxo's state, if the item is blocked it will be removed from preselectedUTXOs
-                for (int i = preselectedUTXOs.size()-1; i >= 0; --i) {
-                    final UTXOCoin coin = preselectedUTXOs.get(i);
-                    if (BlockedUTXO.getInstance().containsAny(coin.hash, coin.idx)) {
-                        preselectedUTXOs.remove(i);
-                    }
+            //Checks utxo's state, if the item is blocked it will be removed from preselectedUTXOs
+            for (int i = preselectedUTXOs.size()-1; i >= 0; --i) {
+                final UTXOCoin coin = preselectedUTXOs.get(i);
+                if (BlockedUTXO.getInstance().containsAny(coin.hash, coin.idx)) {
+                    preselectedUTXOs.remove(i);
                 }
-                long amount = 0;
-                for (final UTXOCoin utxo : preselectedUTXOs) {
-                    amount += utxo.amount;
-                }
-                _balance = amount;
-            } else {
-                ;
             }
-
-        }
-
-        if (isNull(_balance)) {
-            _balance = 0L;
+            long amount = 0L;
+            for (final UTXOCoin utxo : preselectedUTXOs) {
+                amount += utxo.amount;
+            }
+            _balance = amount;
+        } else {
+            try {
+                if (isPostmixAccount()) {
+                    _balance = APIFactory.getInstance(getApplication()).getXpubPostMixBalance();
+                } else {
+                    _balance = APIFactory.getInstance(getApplication()).getXpubBalance();
+                }
+            } catch (final java.lang.NullPointerException npe) {
+                _balance = 0L;
+                Log.e(TAG, npe.getMessage(), npe);
+            }
         }
 
         return _balance;
+    }
+
+    private boolean hasPreselectedUtxo() {
+        return CollectionUtils.isNotEmpty(preselectedUTXOs);
     }
 
     public static Single<TxProcessorResult> reactiveCalculateEntropy(
@@ -1670,7 +1673,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
         if (isNull(_feeMedRate)) {
             _feeMedRate = new MutableLiveData<>(feeMed / 1000L);
-            setSuggestedFee(_feeMedRate.getValue());
+            setSuggestedFee(feeMed / 1000L);
         } else {
             _feeMedRate.postValue(feeMed / 1000L);
         }
@@ -1696,14 +1699,18 @@ public class ReviewTxModel extends AndroidViewModel {
                 return minerFeeRates.getValue();
             }
         } else {
-            return 0L;
+            return feeMed / 1000L;
         }
     }
 
     public void recomposeStonewall() {
+        resetStonewallSelection();
+        refreshModel();
+    }
+
+    private void resetStonewallSelection() {
         shuffledUtxosP2PKH = null;
         shuffledUtxosP2WPKH = null;
         shuffledUtxosP2SH_P2WPKH = null;
-        refreshModel();
     }
 }

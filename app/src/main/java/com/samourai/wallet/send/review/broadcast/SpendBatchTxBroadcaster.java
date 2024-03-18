@@ -5,7 +5,6 @@ import static java.util.Objects.nonNull;
 
 import android.content.Intent;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.TxAnimUIActivity;
@@ -63,7 +62,7 @@ public class SpendBatchTxBroadcaster {
         SendParams.getInstance().setParams(
                 outPoints,
                 model.getTxData().getValue().getReceivers(),
-                ImmutableList.copyOf(BatchSendUtil.getInstance().getSends()),
+                BatchSendUtil.getInstance().getCopyOfBatchSends(),
                 SPEND_SIMPLE.getType(),
                 model.getTxData().getValue().getChange(),
                 model.getChangeType(),
@@ -76,7 +75,7 @@ public class SpendBatchTxBroadcaster {
                 model.getTxNote().getValue()
         );
 
-        BatchSendUtil.getInstance().getSends().clear();
+        BatchSendUtil.getInstance().clear();
         activity.startActivity(new Intent(activity, TxAnimUIActivity.class));
         return this;
     }

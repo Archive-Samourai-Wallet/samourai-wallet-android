@@ -2,10 +2,10 @@ package com.samourai.wallet.send.batch;
 
 import static com.samourai.wallet.bip47.BIP47Meta.STATUS_SENT_CFM;
 import static com.samourai.wallet.send.batch.InputBatchSpend.SpendDescription.createSpendDescription;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.strip;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 import android.content.Context;
@@ -16,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.paynym.WebUtil;
 import com.samourai.wallet.util.func.FormatsUtil;
 
@@ -28,6 +27,7 @@ import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class InputBatchSpend {
 
@@ -42,10 +42,12 @@ public class InputBatchSpend {
     }
 
     public InputBatchSpend addSpend(final String destAddress, final long amount) {
-        if(spendDescriptionMap.containsKey(destAddress)) {
-            spendDescriptionMap.get(destAddress).plus(amount);
+        final SpendDescription spendDescription = createSpendDescription(destAddress, amount);
+        final String key = spendDescription.getKey();
+        if(spendDescriptionMap.containsKey(key)) {
+            spendDescriptionMap.get(key).plus(amount);
         } else {
-            spendDescriptionMap.put(destAddress, createSpendDescription(destAddress, amount));
+            spendDescriptionMap.put(key, spendDescription);
         }
         return this;
     }
@@ -66,14 +68,15 @@ public class InputBatchSpend {
     }
 
     static public class SpendDescription {
-        private String address;
-        private final String inputAddress;
+        private final String address;
         private String pcode;
         private String paynym;
         private long amount;
         private final boolean validAddress;
         private final boolean validAmount;
         private final boolean needToBeConnected;
+        private static final AtomicInteger INDEXER = new AtomicInteger();
+        private final int index = INDEXER.incrementAndGet();
 
         private SpendDescription(final String inputAddress, final long amount) {
 
@@ -92,20 +95,25 @@ public class InputBatchSpend {
                         needToBeConnected = BIP47Meta.getInstance().getOutgoingStatus(pcode) != STATUS_SENT_CFM;
                         paynym = null;
                     }
-                    this.inputAddress = null;
+                    this.address = null;
                 } else {
-                    this.inputAddress = inputAddress;
+                    this.address = inputAddress;
                     pcode = null;
                     paynym = null;
                     needToBeConnected = false;
                 }
             } else {
                 this.pcode = null;
-                this.inputAddress = null;
+                this.address = null;
                 this.paynym = null;
                 this.needToBeConnected = false;
             }
 
+        }
+
+        private String getKey() {
+            if (nonNull(address)) return address;
+            return defaultIfBlank(paynym, pcode) + "_" +index;
         }
 
         public static SpendDescription createSpendDescription(
@@ -128,6 +136,14 @@ public class InputBatchSpend {
             return pcode;
         }
 
+        public String getAddress() {
+            return address;
+        }
+
+        public boolean isValidAddress() {
+            return validAddress;
+        }
+
         public boolean isValidAmount() {
             return validAmount;
         }
@@ -136,35 +152,8 @@ public class InputBatchSpend {
             return needToBeConnected;
         }
 
-        public String getAddress() {
-            return address;
-        }
-
         public String getPaynym() {
             return paynym;
-        }
-
-        public void computeAddress(final Context context) {
-            address = computeAddressSafe(context);
-        }
-
-        private String computeAddressSafe(final Context context) {
-            try {
-                if (nonNull(inputAddress)) return inputAddress;
-                if (nonNull(pcode)) {
-                    final String destAddress = BIP47Util.getInstance(context)
-                            .getDestinationAddrFromPcode(pcode);
-                    if(isNull(paynym)) {
-                        paynym = retrievePayNym(context, pcode);
-                    }
-                    return destAddress;
-                }
-                if (nonNull(paynym)) return BIP47Util.getInstance(context)
-                        .getDestinationAddrFromPcode(retrievePaymentCode(context, paynym));
-            } catch (final Exception e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-            return null;
         }
 
         private String retrievePaymentCode(final Context context, final String pCodeOrPayNym) {

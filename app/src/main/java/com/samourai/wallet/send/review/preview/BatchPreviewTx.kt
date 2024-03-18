@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -43,7 +45,6 @@ import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.util.func.FormatsUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.StringUtils.EMPTY
 import java.lang.String.format
 
@@ -79,10 +80,10 @@ fun BatchPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
                 modifier = Modifier.fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column (modifier = Modifier.weight(0.6f, false)) {
+                Column (modifier = Modifier.weight(0.5f, false)) {
                     SimplePreviewTxInput(model = model)
                 }
-                Column (modifier = Modifier.weight(0.4f, false)) {
+                Column (modifier = Modifier.weight(0.5f, false)) {
                     BatchPreviewTxOutput(model = model, activity = activity)
                 }
             }
@@ -103,12 +104,14 @@ fun BatchPreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
         Font(R.font.roboto_mono, FontWeight.Bold)
     )
 
+    val verticalScroll = rememberScrollState(0)
+
     val fees by model.fees.observeAsState()
     val txData by model.txData.observeAsState();
 
     val coroutineScope = rememberCoroutineScope()
 
-    val batchSpends = ListUtils.emptyIfNull(BatchSendUtil.getInstance().sends)
+    val batchSpends = BatchSendUtil.getInstance().copyOfBatchSends
     val outputCount = if (txData!!.change > 0L) batchSpends.size + 1 else batchSpends.size
 
     Box (
@@ -117,7 +120,11 @@ fun BatchPreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
     ) {
         Column (
             modifier =  Modifier
-                .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 6.dp),
+                .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 6.dp)
+                .verticalScroll(
+                    state = verticalScroll,
+                    enabled = true,
+                ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Column {

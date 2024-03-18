@@ -1,5 +1,6 @@
 package com.samourai.wallet.send.batch;
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -86,14 +87,8 @@ class ComposeFragment : Fragment() {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ success: Boolean ->
-
-                        it.forEach {
-                            it.computeAddressIfNeeded(this@ComposeFragment.activity)
-                        }
-
                         batchListAdapter.submitList(it)
                         enableReview(viewModel.isValidBatchSpend())
-
                     }) { error: Throwable ->
                         Log.e(TAG, "exception on BatchSpend Activity: " + error.message, error)
                     }
@@ -142,13 +137,14 @@ class ComposeFragment : Fragment() {
     }
 
 
-    class BatchListAdapter : RecyclerView.Adapter<BatchListAdapter.BatchViewHolder>() {
+    class BatchListAdapter() : RecyclerView.Adapter<BatchListAdapter.BatchViewHolder>() {
 
         private val mDiffer: AsyncListDiffer<BatchSendUtil.BatchSend> =
             AsyncListDiffer(this, callBack)
 
         private var viewOnClick: ((batch: BatchSendUtil.BatchSend) -> Unit)? = null
         private var onDeleteClick: ((batch: BatchSendUtil.BatchSend) -> Unit)? = null
+        private var context : Context? = null
 
         fun setViewOnClick(listener: ((batch: BatchSendUtil.BatchSend) -> Unit)) {
             viewOnClick = listener
@@ -210,7 +206,7 @@ class ComposeFragment : Fragment() {
                 true
             }
             holder.amount.text = "${FormatsUtil.getBTCDecimalFormat(item.amount)} BTC"
-            holder.to.text = item.addr
+            holder.to.text = item.getAddr(context)
             if (nonNull(item.pcode)) {
                 holder.to.text =
                     if (nonNull(item.paynymCode)) item.paynymCode else bip47Meta.getDisplayLabel(
@@ -237,7 +233,9 @@ class ComposeFragment : Fragment() {
         }
 
         companion object {
+
             val callBack = object : DiffUtil.ItemCallback<BatchSendUtil.BatchSend>() {
+
                 override fun areItemsTheSame(
                     oldItem: BatchSendUtil.BatchSend,
                     newItem: BatchSendUtil.BatchSend
@@ -249,14 +247,12 @@ class ComposeFragment : Fragment() {
                     oldItem: BatchSendUtil.BatchSend,
                     newItem: BatchSendUtil.BatchSend
                 ): Boolean {
-                    return newItem.addr == oldItem.addr
+                    return newItem.rawAddr == oldItem.rawAddr
                             && newItem.amount == oldItem.amount
                             && newItem.UUID == oldItem.UUID
                             && newItem.pcode == oldItem.pcode
                 }
             }
         }
-
     }
-
 }

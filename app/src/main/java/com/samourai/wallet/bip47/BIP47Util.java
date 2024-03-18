@@ -204,11 +204,21 @@ public class BIP47Util extends BIP47UtilGeneric {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
+    synchronized public String getDestinationAddrFromPcode(
+            final String pcodeAsString
+    ) throws Exception {
 
-    synchronized public String getDestinationAddrFromPcode(final String pcodeAsString) throws Exception {
+        return getDestinationAddrFromPcode(pcodeAsString, 0);
+    }
+
+
+    synchronized public String getDestinationAddrFromPcode(
+            final String pcodeAsString,
+            final int indexOffset
+    ) throws Exception {
 
         if (isBlank(pcodeAsString)) return null;
-        return getAddress(pcodeAsString, getPaymentAddress(pcodeAsString));
+        return getAddress(pcodeAsString, getPaymentAddress(pcodeAsString, indexOffset));
     }
 
     private static String getAddress(final String pcodeAsString,
@@ -226,13 +236,15 @@ public class BIP47Util extends BIP47UtilGeneric {
         }
     }
 
-    private PaymentAddress getPaymentAddress(final String pcodeAsString)
-            throws NotSecp256k1Exception {
+    private PaymentAddress getPaymentAddress(
+            final String pcodeAsString,
+            final int indexOffset
+    ) throws NotSecp256k1Exception {
 
         return getInstance(context)
                 .getSendAddress(
                         new PaymentCode(pcodeAsString),
-                        BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString));
+                        indexOffset + BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString));
     }
 
     public int updateOutgoingStatusForNewPayNymConnections() {

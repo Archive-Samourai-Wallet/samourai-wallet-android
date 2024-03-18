@@ -9,7 +9,6 @@ import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.bip47.BIP47Meta
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.util.func.BatchSendUtil
-import com.samourai.wallet.whirlpool.WhirlpoolConst
 import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 
 class BatchSpendViewModel() : ViewModel() {
@@ -22,7 +21,7 @@ class BatchSpendViewModel() : ViewModel() {
     }
 
     init {
-        BatchSendUtil.getInstance().sends?.let {
+        BatchSendUtil.getInstance().copyOfBatchSends?.let {
             if (it.size != 0) {
                 batchList.postValue(ArrayList(it))
             }
@@ -95,15 +94,10 @@ class BatchSpendViewModel() : ViewModel() {
         list.sortByDescending { it.UUID }
 
         list.let {
-            BatchSendUtil.getInstance().sends.clear()
-            BatchSendUtil.getInstance().sends.addAll(list)
+            BatchSendUtil.getInstance().clear()
+            BatchSendUtil.getInstance().addAll(list)
             batchList.postValue(list)
         }
-    }
-
-    fun addAll(newItemsToAdd: List<BatchSendUtil.BatchSend>) {
-        val existingItems = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
-        mergeAll(newItemsToAdd, existingItems)
     }
 
     fun setAll(newItemsToAdd: List<BatchSendUtil.BatchSend>) {
@@ -125,8 +119,8 @@ class BatchSpendViewModel() : ViewModel() {
         list.sortByDescending { it.UUID }
 
         list.let {
-            BatchSendUtil.getInstance().sends.clear()
-            BatchSendUtil.getInstance().sends.addAll(list)
+            BatchSendUtil.getInstance().clear()
+            BatchSendUtil.getInstance().addAll(list)
             batchList.postValue(list)
         }
     }
@@ -134,8 +128,8 @@ class BatchSpendViewModel() : ViewModel() {
     fun remove(it: BatchSendUtil.BatchSend) {
         val list = ArrayList<BatchSendUtil.BatchSend>().apply { batchList.value?.let { addAll(it) } }
         list.remove(it)
-        BatchSendUtil.getInstance().sends.clear()
-        BatchSendUtil.getInstance().sends.addAll(list)
+        BatchSendUtil.getInstance().clear()
+        BatchSendUtil.getInstance().addAll(list)
         batchList.postValue(list)
     }
 
@@ -157,7 +151,7 @@ class BatchSpendViewModel() : ViewModel() {
     }
 
     fun clearBatch() {
-        BatchSendUtil.getInstance().sends.clear()
+        BatchSendUtil.getInstance().clear()
         batchList.postValue(arrayListOf())
     }
 }

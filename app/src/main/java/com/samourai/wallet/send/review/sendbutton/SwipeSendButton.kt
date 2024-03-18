@@ -137,7 +137,7 @@ private fun TapAndHoldInfoComponent(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(bottom = 14.dp, top = 9.dp, start = 16.dp, end = 16.dp),
+                    .padding(bottom = 12.dp, top = 8.dp, start = 14.dp, end = 14.dp),
             ) {
                 androidx.compose.material.Text(
                     text = if (visible.value) "Tap and hold" else StringUtils.EMPTY,
@@ -200,14 +200,14 @@ private fun SwipeSendButtonComponent(
     Box (
         modifier = if (isOnSwipeValidation.value)
             Modifier
-                .padding(bottom = 9.dp, top = 9.dp)
+                .padding(bottom = 7.dp, top = 7.dp)
                 .background(windowBackground, RoundedCornerShape(20.dp))
                 .onSizeChanged { newSize ->
                     componentSize = Size(newSize.width.toFloat(), newSize.height.toFloat())
                     swipeButtonThresold = (componentSize.width / 2f - swipeButtonPx / 2f).toInt()
                 } else
             Modifier
-                .padding(bottom = 9.dp, top = 9.dp)
+                .padding(bottom = 7.dp, top = 7.dp)
                 .onSizeChanged { newSize ->
                     componentSize = Size(newSize.width.toFloat(), newSize.height.toFloat())
                     swipeButtonThresold = (componentSize.width / 2f - swipeButtonPx / 2f).toInt()
@@ -321,6 +321,7 @@ private fun SwipeSendButtonComponent(
                                                                 delay(250L)
                                                                 isOnSwipeValidation.value = false
                                                                 isFullSwiped = false
+                                                                listener?.onStateChange(IS_SWIPING_DISABLED)
                                                             }
                                                         }
                                                     }

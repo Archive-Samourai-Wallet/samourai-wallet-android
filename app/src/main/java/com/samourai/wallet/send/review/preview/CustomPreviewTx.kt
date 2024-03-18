@@ -91,16 +91,18 @@ fun CustomPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
                 modifier = Modifier.fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column (modifier = Modifier.weight(0.6f, false)) {
+                Column (modifier = Modifier.weight(0.5f, false)) {
                     CustomPreviewTxInput(model = model)
                 }
-                Column (modifier = Modifier.weight(0.3f, false)) {
+                Column (modifier = Modifier.weight(0.15f, false)) {
                     CustomPreviewTxInputTotal(model = model, activity = activity)
                 }
-                Column (modifier = Modifier.weight(0.5f, false)) {
-                    if (impliedSendType!!.isBatchSpend) {
+                if (impliedSendType!!.isBatchSpend) {
+                    Column (modifier = Modifier.weight(0.5f, false)) {
                         BatchPreviewTxOutput(model = model, activity = activity)
-                    } else {
+                    }
+                } else {
+                    Column (modifier = Modifier.weight(0.35f, false)) {
                         SimplePreviewTxOutput(model = model, activity = activity)
                     }
                 }
