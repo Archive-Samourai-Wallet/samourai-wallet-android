@@ -11,7 +11,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 199
-        versionName "0.99.98i+"
+        versionName "0.99.98i++"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -44,16 +44,16 @@ android {
         production {
             applicationId 'com.samourai.wallet'
             versionCode 199
-            versionName "0.99.98i+"
+            versionName "0.99.98i++"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98i+"
+            resValue "string", "version_name", "0.99.98i++"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
             versionCode 199
-            versionName "0.99.98i+"
+            versionName "0.99.98i++"
             resValue "string", "app_name", "Samourai Staging"
-            resValue "string", "version_name", "0.99.98i+"
+            resValue "string", "version_name", "0.99.98i++"
         }
     }
 
@@ -137,7 +137,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation ('io.samourai.code.whirlpool:whirlpool-client:1.0.0-beta22') {
+    implementation ('io.samourai.code.whirlpool:whirlpool-client:1.0.1') {
         exclude group:'org.hibernate', module:'hibernate-validator'
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
@@ -149,7 +149,7 @@ dependencies {
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:1.0.0-beta10') {
+    implementation ('io.samourai.code.wallet:extlibj:1.0.1') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
