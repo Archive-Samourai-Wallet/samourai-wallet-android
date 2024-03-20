@@ -7,7 +7,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.util.FormatsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
- import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
@@ -216,8 +216,7 @@ public class UTXOFactory {
                 utxos = new ArrayList<>();
                 //Filtering out do not spends
                 for (UTXO item : postmix) {
-                    UTXO u = new UTXO();
-                    u.setPath(item.getPath());
+                    UTXO u = new UTXO(item.getPath(), item.getXpub());
                     for (MyTransactionOutPoint out : item.getOutpoints()) {
                         if (!BlockedUTXO.getInstance().contains(out.getTxHash().toString(), out.getTxOutputN())) {
                             u.getOutpoints().add(out);

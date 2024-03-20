@@ -24,15 +24,17 @@ public class WhirlpoolTx0 {
 
     private long pool = 0L;
     private List<MyTransactionOutPoint> outpoints = null;
+    private String xpub;
     private long feeSatB = 0L;
     private int premixRequested = 0;
     private Transaction tx0 = null;
 
     private WhirlpoolTx0()  { ; }
 
-    public WhirlpoolTx0(long pool, List<MyTransactionOutPoint> outpoints, long feeSatB, int premixRequested)   {
+    public WhirlpoolTx0(long pool, List<MyTransactionOutPoint> outpoints, String xpub, long feeSatB, int premixRequested)   {
         this.pool = pool;
         this.outpoints = outpoints;
+        this.xpub = xpub;
         this.feeSatB = feeSatB;
         this.premixRequested = premixRequested;
     }
@@ -44,6 +46,7 @@ public class WhirlpoolTx0 {
         this.outpoints = new ArrayList<>();
         for(UTXOCoin coin : coins)   {
             outpoints.add(coin.getOutPoint());
+            xpub = coin.xpub;
         }
     }
 
@@ -57,6 +60,10 @@ public class WhirlpoolTx0 {
 
     public List<MyTransactionOutPoint> getOutpoints() {
         return outpoints;
+    }
+
+    public String getXpub() {
+        return xpub;
     }
 
     public long getFeeSatB() {

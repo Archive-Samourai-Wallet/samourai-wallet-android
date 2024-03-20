@@ -3,15 +3,15 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 33
-    buildToolsVersion "30.0.3"
+    buildToolsVersion "34.0.0"
     useLibrary 'org.apache.http.legacy'
     flavorDimensions "versionCode"
     defaultConfig {
         applicationId 'com.samourai.wallet'
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 198
-        versionName "0.99.98i"
+        versionCode 199
+        versionName "0.99.98i++"
         // Enabling multidex support.
         multiDexEnabled true
         vectorDrawables {
@@ -43,17 +43,17 @@ android {
     productFlavors {
         production {
             applicationId 'com.samourai.wallet'
-            versionCode 198
-            versionName "0.99.98i"
+            versionCode 199
+            versionName "0.99.98i++"
             resValue "string", "app_name", "Samourai"
-            resValue "string", "version_name", "0.99.98i"
+            resValue "string", "version_name", "0.99.98i++"
         }
         staging {
             applicationId 'com.samourai.wallet.staging'
-            versionCode 198
-            versionName "0.99.98i"
+            versionCode 199
+            versionName "0.99.98i++"
             resValue "string", "app_name", "Samourai Staging"
-            resValue "string", "version_name", "0.99.98i"
+            resValue "string", "version_name", "0.99.98i++"
         }
     }
 
@@ -127,43 +127,41 @@ dependencies {
 
     implementation 'commons-io:commons-io:2.5'
     implementation 'commons-codec:commons-codec:1.4'
-    implementation 'org.apache.commons:commons-lang3:3.3'
     implementation 'com.google.guava:guava:27.0.1-android'
     implementation 'com.squareup.picasso:picasso:2.8'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.55'
-    implementation 'com.madgag.spongycastle:prov:1.54.0.0'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
+    implementation 'com.madgag.spongycastle:prov:1.58.0.0'
     implementation 'com.lambdaworks:scrypt:1.4.0'
     implementation 'com.google.android.material:material:1.7.0-alpha02'
     implementation 'org.hibernate:hibernate-validator:5.4.3.Final'
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation ('io.samourai.code.whirlpool:whirlpool-client:0.24.3') {
+    implementation ('io.samourai.code.whirlpool:whirlpool-client:1.0.1') {
         exclude group:'org.hibernate', module:'hibernate-validator'
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
         exclude group:'com.squareup.okhttp', module:'okhttp'
+        exclude group:'com.google.guava', module:'guava'
         //
-        exclude group:'org.apache.commons', module:'commons-lang3'
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
-    implementation ('io.samourai.code.wallet:extlibj:0.0.47') {
+    implementation ('io.samourai.code.wallet:extlibj:1.0.1') {
         exclude group:'com.google.code.findbugs', module:'jsr305'
         exclude group:'com.google.protobuf', module:'protobuf-java'
         exclude group:'net.jcip', module:'jcip-annotations'
         exclude group:'com.squareup.okhttp', module:'okhttp'
+        exclude group:'com.google.guava', module:'guava'
         //
-        exclude group:'org.apache.commons', module:'commons-lang3'
         exclude group:'org.json', module:'json'
     }
 
-    implementation ('io.samourai.code.wallet:boltzmann-java:1.0.4') {
+    implementation ('io.samourai.code.wallet:boltzmann-java:1.0.6') {
         exclude group: 'it.unimi.dsi', module: 'fastutil'
     }
     // temporary fix for building boltzmann-java dependency
     implementation 'it.unimi.dsi:fastutil:7.2.1'
-    implementation 'com.github.NaikSoftware:StompProtocolAndroid:1.6.4'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation 'com.auth0.android:jwtdecode:1.1.1'
     implementation 'net.sourceforge.streamsupport:streamsupport:1.6.0'

@@ -1,23 +1,24 @@
 package com.samourai.wallet.send;
 
-import static com.samourai.wallet.util.LogUtil.debug;
-
 import android.content.Context;
 
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.IPushTx;
-import com.samourai.wallet.api.backend.beans.HttpException;
+import com.samourai.wallet.httpClient.HttpResponseException;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.WebUtil;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+
+import static com.samourai.wallet.util.LogUtil.debug;
 
 public class PushTx implements IPushTx {
 
@@ -73,7 +74,7 @@ public class PushTx implements IPushTx {
             }
             return response;
         }
-        catch(HttpException e) {
+        catch(HttpResponseException e) {
             try{
                 JSONObject object = new JSONObject(e.getResponseBody());
                 if(object.has("error")){
@@ -94,11 +95,16 @@ public class PushTx implements IPushTx {
 
     @Override
     public String pushTx(String hexTx) throws Exception {
+        return pushTx(hexTx, null);
+    }
 
+    @Override
+    public String pushTx(String hexTx, Collection<Integer> strictModeVoutsOrNull) throws Exception {
         String txid = null;
 
         if(DO_SPEND)    {
-            String response = PushTx.getInstance(context).samourai(hexTx, null);
+            List<Integer> listVouts = strictModeVoutsOrNull!=null ? new LinkedList<>(strictModeVoutsOrNull) : null;
+            String response = PushTx.getInstance(context).samourai(hexTx, listVouts);
             if(response == null) {
                 throw new Exception(context.getString(R.string.pushtx_returns_null));
             }
@@ -114,7 +120,5 @@ public class PushTx implements IPushTx {
             debug("PushTx", hexTx);
         }
         return txid;
-
     }
-
 }

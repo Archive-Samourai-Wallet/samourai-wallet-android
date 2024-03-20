@@ -3,8 +3,8 @@ package com.samourai.whirlpool.client.wallet;
 import android.content.Context;
 
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
+import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.wallet.hd.HD_Wallet;
-import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.util.LogUtil;
@@ -12,7 +12,6 @@ import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.whirlpool.client.exception.NotifiableException;
 import com.samourai.whirlpool.client.utils.ClientUtils;
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxoStatus;
 
@@ -112,7 +111,7 @@ public class WhirlpoolUtils {
             if (whirlpoolUtxo != null && whirlpoolUtxo.getUtxo() != null ) {
 
                 try {
-                    if(WhirlpoolAccount.POSTMIX.equals(whirlpoolUtxo.getAccount()) && whirlpoolUtxo.getUtxo().getPath() != null && whirlpoolUtxo.getUtxo().getPath().contains("M/1/")){
+                    if(SamouraiAccount.POSTMIX.equals(whirlpoolUtxo.getAccount()) && whirlpoolUtxo.getUtxo().getPath() != null && whirlpoolUtxo.getUtxo().getPath().contains("M/1/")){
                         return tags;
                     }
                 } catch (Exception e) {
@@ -120,7 +119,7 @@ public class WhirlpoolUtils {
                     return tags;
                 }
                 // tag only premix & postmix utxos
-                if (WhirlpoolAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || WhirlpoolAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
+                if (SamouraiAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || SamouraiAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
                     // show whirlpool tag
                     if(whirlpoolUtxo.getUtxo().value > BlockedUTXO.BLOCKED_UTXO_THRESHOLD){
                         tags.add(whirlpoolUtxo.getMixsDone() + " MIXED");
@@ -171,13 +170,13 @@ public class WhirlpoolUtils {
     public Collection<UnspentOutput> toUnspentOutputsCoins(Collection<UTXOCoin> coins) {
         Collection<UnspentOutput> unspentOutputs = new ArrayList<>();
         for (UTXOCoin coin : coins) {
-            UnspentOutput unspentOutput = toUnspentOutput(coin.getOutPoint());
+            UnspentOutput unspentOutput = toUnspentOutput(coin.getOutPoint(), coin.path, coin.xpub);
             unspentOutputs.add(unspentOutput);
         }
         return unspentOutputs;
     }
 
-    public UnspentOutput toUnspentOutput(MyTransactionOutPoint outPoint) {
+    public UnspentOutput toUnspentOutput(MyTransactionOutPoint outPoint, String path, String xpub) {
         UnspentOutput unspentOutput = new UnspentOutput();
         unspentOutput.addr = outPoint.getAddress();
         unspentOutput.script = Hex.toHexString(outPoint.getScriptBytes());
@@ -186,14 +185,16 @@ public class WhirlpoolUtils {
         unspentOutput.tx_output_n = outPoint.getTxOutputN();
         unspentOutput.value = outPoint.getValue().getValue();
         unspentOutput.xpub = new UnspentOutput.Xpub();
-        unspentOutput.xpub.path = "M/0/0";
+        unspentOutput.xpub.path = path;
+        unspentOutput.xpub.m = xpub;
         return unspentOutput;
     }
 
-    public Collection<UnspentOutput> toUnspentOutputs(Collection<MyTransactionOutPoint> outPoints) {
+    public Collection<UnspentOutput> toUnspentOutputs(Collection<MyTransactionOutPoint> outPoints, String xpub) {
         Collection<UnspentOutput> unspentOutputs = new ArrayList<>();
         for (MyTransactionOutPoint outPoint : outPoints) {
-            UnspentOutput unspentOutput = toUnspentOutput(outPoint);
+            String path = "M/0/0"; // TODO
+            UnspentOutput unspentOutput = toUnspentOutput(outPoint, path, xpub);
             unspentOutputs.add(unspentOutput);
         }
         return unspentOutputs;

@@ -104,7 +104,7 @@ import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.wallet.widgets.popUpMenu.popupMenu
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import io.matthewnelson.topl_service.TorServiceController

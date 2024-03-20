@@ -1,8 +1,5 @@
 package com.samourai.wallet;
 
-import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.createDecimalFormat;
-import static java.lang.Long.parseLong;
-
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,20 +31,13 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.FileProvider;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.transition.AutoTransition;
-import androidx.transition.TransitionManager;
-
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.android.Contents;
 import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.explorer.ExplorerActivity;
-import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.tor.TorManager;
 import com.samourai.wallet.util.AddressFactory;
 import com.samourai.wallet.util.AppUtil;
@@ -71,6 +61,16 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Locale;
 import java.util.Objects;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.FileProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.transition.AutoTransition;
+import androidx.transition.TransitionManager;
+
+import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.createDecimalFormat;
+import static java.lang.Long.parseLong;
 
 public class ReceiveActivity extends SamouraiActivity {
     private static int imgWidth = 0;

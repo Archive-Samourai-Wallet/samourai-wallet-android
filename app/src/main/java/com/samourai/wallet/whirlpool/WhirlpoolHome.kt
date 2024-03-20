@@ -1,9 +1,12 @@
 package com.samourai.wallet.whirlpool
 
 import android.app.Activity
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
@@ -21,6 +24,7 @@ import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
+import com.samourai.wallet.constants.SamouraiAccount
 import com.samourai.wallet.databinding.ActivityWhirlpoolHomeBinding
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
 import com.samourai.wallet.home.BalanceActivity
@@ -41,7 +45,6 @@ import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
 import com.samourai.wallet.whirlpool.newPool.WhirlpoolDialog
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -112,8 +115,8 @@ class WhirlpoolHome : SamouraiActivity() {
                 if (AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.isPresent) {
                     hasMixUtxos =
                         AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet.get().utxoSupplier.findUtxos(
-                            WhirlpoolAccount.PREMIX,
-                            WhirlpoolAccount.POSTMIX
+                            SamouraiAccount.PREMIX,
+                            SamouraiAccount.POSTMIX
                         ).isEmpty()
                 }
                 withContext(Dispatchers.Main) {

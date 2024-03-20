@@ -6,20 +6,20 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.samourai.soroban.cahoots.CahootsContext;
-import com.samourai.soroban.cahoots.ManualCahootsMessage;
-import com.samourai.soroban.cahoots.ManualCahootsService;
-import com.samourai.soroban.cahoots.TxBroadcastInteraction;
 import com.samourai.wallet.R;
 import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
+import com.samourai.wallet.cahoots.CahootsContext;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.CahootsWallet;
+import com.samourai.wallet.cahoots.TxBroadcastInteraction;
+import com.samourai.wallet.cahoots.manual.ManualCahootsMessage;
+import com.samourai.wallet.cahoots.manual.ManualCahootsService;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.widgets.CahootsCircleProgress;
 import com.samourai.wallet.widgets.ViewPager;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import java.util.ArrayList;
 import java.util.function.Function;

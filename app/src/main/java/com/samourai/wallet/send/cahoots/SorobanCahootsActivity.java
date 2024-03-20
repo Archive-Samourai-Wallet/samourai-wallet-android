@@ -5,22 +5,33 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import com.samourai.soroban.client.cahoots.OnlineCahootsMessage;
+import com.samourai.soroban.client.wallet.SorobanWallet;
+import com.samourai.soroban.client.wallet.counterparty.SorobanWalletCounterparty;
+import com.samourai.soroban.client.wallet.sender.CahootsSorobanInitiatorListener;
+import com.samourai.soroban.client.wallet.sender.SorobanWalletInitiator;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
+import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
 import com.samourai.wallet.cahoots.Cahoots;
+import com.samourai.wallet.cahoots.CahootsContext;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
+import com.samourai.wallet.cahoots.CahootsWallet;
 import com.samourai.wallet.cahoots.multi.MultiCahoots;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.AppUtil;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.concurrent.Callable;
+
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class SorobanCahootsActivity extends SamouraiActivity {
@@ -32,6 +43,7 @@ public class SorobanCahootsActivity extends SamouraiActivity {
     private PaymentCode paymentCode;
 
     private Disposable sorobanDisposable;
+    private SorobanWallet sorobanWallet;
 
     public static Intent createIntentSender(Context ctx, int account, CahootsType type, long sendAmount, long fees, String address, String pcode, String destinationPcode) {
         Intent intent = ManualCahootsUi.createIntent(ctx, SorobanCahootsActivity.class, account, type, CahootsTypeUser.SENDER);
@@ -102,23 +114,51 @@ public class SorobanCahootsActivity extends SamouraiActivity {
             throw new Exception("Invalid sendAmount");
         }
         String sendAddress = getIntent().getStringExtra("sendAddress");
-        String paynymDestination = null;
-        if(getIntent().hasExtra("destPcode")){
-            paynymDestination = getIntent().getStringExtra("destPcode");
-        }
+        String paynymDestination = getIntent().hasExtra("destPcode") ?
+                getIntent().getStringExtra("destPcode") : null;
         // send cahoots
-        subscribeCahoots(cahootsUi.meetAndInitiate(account, feePerB, sendAmount, sendAddress, paynymDestination, paymentCode));
+        subscribeCahoots(() -> doStartInitiator(feePerB, sendAmount, sendAddress, paynymDestination));
+    }
+
+    private Cahoots doStartInitiator(long feePerB, long sendAmount, String sendAddress, String paynymDestination) throws Exception {
+        // context
+        CahootsContext cahootsContext = cahootsUi.computeCahootsContextInitiator(account, feePerB, sendAmount, sendAddress, paynymDestination);
+        cahootsUi.checkCahootsContext(cahootsContext);
+
+        // start initiator
+        CahootsSorobanInitiatorListener listener = cahootsUi.computeInitiatorListener();
+        sorobanWallet = cahootsUi.sorobanWalletService.getSorobanWalletInitiator();
+        return ((SorobanWalletInitiator)sorobanWallet).meetAndInitiate(cahootsContext, paymentCode, listener);
     }
 
     private void startReceiver() throws Exception {
-        subscribeCahoots(cahootsUi.startCounterparty(account, paymentCode));
+        subscribeCahoots(() -> doStartReceiver());
         Toast.makeText(this, "Waiting for online Cahoots", Toast.LENGTH_SHORT).show();
     }
 
-    private void subscribeCahoots(Single<Cahoots> onCahoots) {
-        sorobanDisposable = onCahoots.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(cahoots -> onCahootsSuccess(cahoots), e -> onCahootsError(e));
+    public Cahoots doStartReceiver() throws Exception {
+        AndroidSorobanWalletService sorobanWalletService = cahootsUi.sorobanWalletService;
+        CahootsWallet cahootsWallet = sorobanWalletService.getCahootsWallet();
+
+        // context
+        CahootsContext cahootsContext = CahootsContext.newCounterparty(cahootsWallet, cahootsUi.cahootsType, account);
+        cahootsUi.checkCahootsContext(cahootsContext);
+
+        // start counterparty
+        Consumer<OnlineCahootsMessage> onProgress = cahootsMessage -> cahootsUi.setCahootsMessage(cahootsMessage);
+        sorobanWallet = sorobanWalletService.getSorobanWalletCounterparty();
+        return ((SorobanWalletCounterparty)sorobanWallet).counterparty(cahootsContext, paymentCode, onProgress);
+    }
+
+    private void subscribeCahoots(Callable<Cahoots> runCahoots) {
+        try {
+            sorobanDisposable = Single.fromCallable(runCahoots)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(cahoots -> onCahootsSuccess(cahoots), e -> onCahootsError(e));
+        } catch (Exception e) {
+            onCahootsError(e);
+        }
     }
 
     private void onCahootsSuccess(Cahoots cahoots) {
@@ -146,6 +186,9 @@ public class SorobanCahootsActivity extends SamouraiActivity {
         if (sorobanDisposable != null && !sorobanDisposable.isDisposed()) {
             sorobanDisposable.dispose();
             sorobanDisposable = null;
+        }
+        if (sorobanWallet != null) {
+            sorobanWallet.exit();
         }
     }
 

@@ -2,7 +2,7 @@ package com.samourai.wallet.util;
 
 import android.content.Context;
 
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 
 import org.json.JSONException;
 import org.json.JSONObject;

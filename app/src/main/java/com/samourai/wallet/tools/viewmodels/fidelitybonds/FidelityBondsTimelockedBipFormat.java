@@ -31,7 +31,7 @@ public class FidelityBondsTimelockedBipFormat extends BipFormatImpl {
     }
 
     @Override
-    public String getPub(final HD_Account hdAccount) {
+    public String getBipPub(final HD_Account hdAccount) {
         // FB uses purpose 84 on public key derivation
         return hdAccount.zpubstr();
     }

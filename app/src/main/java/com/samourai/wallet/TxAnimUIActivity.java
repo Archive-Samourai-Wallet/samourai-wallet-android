@@ -23,7 +23,7 @@ import androidx.core.app.TaskStackBuilder;
 
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.PushTx;
