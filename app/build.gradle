@@ -127,7 +127,6 @@ dependencies {
 
     implementation 'commons-io:commons-io:2.5'
     implementation 'commons-codec:commons-codec:1.4'
-    implementation 'org.apache.commons:commons-lang3:3.3'
     implementation 'com.google.guava:guava:27.0.1-android'
     implementation 'com.squareup.picasso:picasso:2.8'
     implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
@@ -145,7 +144,6 @@ dependencies {
         exclude group:'com.squareup.okhttp', module:'okhttp'
         exclude group:'com.google.guava', module:'guava'
         //
-        exclude group:'org.apache.commons', module:'commons-lang3'
         exclude group:'org.json', module:'json'
         exclude group:'io.samourai.code.wallet', module:'extlibj'
     }
@@ -156,7 +154,6 @@ dependencies {
         exclude group:'com.squareup.okhttp', module:'okhttp'
         exclude group:'com.google.guava', module:'guava'
         //
-        exclude group:'org.apache.commons', module:'commons-lang3'
         exclude group:'org.json', module:'json'
     }
 
