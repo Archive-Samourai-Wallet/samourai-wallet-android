@@ -6,8 +6,10 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
@@ -20,8 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class BatchSendUtil {
+
+    public static final String TAG = "BatchSendUtil";
 
     public class BatchSend {
 
@@ -37,6 +42,10 @@ public class BatchSendUtil {
         public BatchSend setRawAddr(final String addr) {
             this.addr = addr;
             return this;
+        }
+
+        public boolean isPayNym() {
+            return nonNull(paynymCode) || nonNull(pcode);
         }
 
         public String getAddr(final Context context) throws Exception {
@@ -114,8 +123,41 @@ public class BatchSendUtil {
         return ImmutableList.copyOf(batchSends);
     }
 
-    public BatchSend getBatchSend() {
-        return new BatchSend();
+    public Map<String, BatchSend> mapAddresses(
+            final Set<String> addresses,
+            final Context context) {
+
+        final Map<String, BatchSend> batchSendByAddress = getBatchSendByAddress(context);
+
+        final Map<String, BatchSend> map = Maps.newLinkedHashMap();
+        for (final String addr : addresses) {
+            final BatchSend batchSend = batchSendByAddress.get(addr);
+            if (nonNull(batchSend)) {
+                map.put(addr, batchSend);
+            }
+        }
+        return map;
+    }
+
+    public Map<String, BatchSend> getBatchSendByAddress(final Context context) {
+
+        final Map<String, BatchSend> map = Maps.newHashMap();
+        for (final BatchSend batchSend : batchSends) {
+            try {
+                map.put(batchSend.getAddr(context), batchSend);
+            } catch (final Exception e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }
+        return map;
+    }
+
+    public List<String> getAddresses(final Context context) throws Exception {
+        final List<String> addresses = Lists.newArrayList();
+        for (final BatchSend batchSend : getCopyOfBatchSends()) {
+            addresses.add(batchSend.getAddr(context));
+        }
+        return addresses;
     }
 
     public JSONArray toJSON() {

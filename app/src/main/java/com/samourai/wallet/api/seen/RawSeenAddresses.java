@@ -21,12 +21,12 @@ public class RawSeenAddresses {
         return new RawSeenAddresses(seenAddressesMap);
     }
 
-    public Map<String, Boolean> getSeenAddresses() {
-        return seenAddresses;
-    }
-
     public boolean isAddressSeen(final String address) {
         return Objects.equals(seenAddresses.get(address), true);
+    }
+
+    public Map<String, Boolean> getContent() {
+        return seenAddresses;
     }
 
     public Set<String> filterSeenAddresses(final Collection<String> addresses) {

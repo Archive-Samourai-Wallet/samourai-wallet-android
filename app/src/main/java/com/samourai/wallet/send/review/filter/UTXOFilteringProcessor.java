@@ -1,46 +1,31 @@
 package com.samourai.wallet.send.review.filter;
 
-import android.content.Context;
+import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
+import static java.util.Objects.nonNull;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.util.func.EnumAddressType;
-import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
-import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-
-import static com.samourai.wallet.constants.SamouraiAccountIndex.DEPOSIT;
-import static com.samourai.wallet.constants.SamouraiAccountIndex.POSTMIX;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
 public class UTXOFilteringProcessor {
 
     public static List<UTXO> applyUtxoFilter(
             final Collection<UTXO> utxosToFilter,
             final UTXOFilterModel filteringModel,
-            final boolean postmixAccount,
-            final Context context) {
+            final boolean postmixAccount) {
 
         if (filteringModel.isAllChecked(postmixAccount)) {
             return Lists.newArrayList(CollectionUtils.emptyIfNull(utxosToFilter));
         }
 
         final List<UTXO> result = Lists.newArrayList();
-
-        final int account = postmixAccount ? POSTMIX : DEPOSIT;
-
-        final Map<EnumAddressType, Map<String, Integer>> cacheOfChangeAddress = Maps.newHashMap();
 
         for (final UTXO utxo : CollectionUtils.emptyIfNull(utxosToFilter)) {
 
@@ -99,23 +84,4 @@ public class UTXOFilteringProcessor {
         return nonNull(BIP47Meta.getInstance().getIdx4Addr(outPoint.getAddress()));
     }
 
-    public static boolean isMixedOutputs(final MyTransactionOutPoint outPoint) {
-
-        final WhirlpoolWallet whirlpoolWallet = AndroidWhirlpoolWalletService.getInstance()
-                .whirlpoolWallet();
-
-        if (nonNull(whirlpoolWallet)) {
-
-            final WhirlpoolUtxo whirlpoolUtxo = whirlpoolWallet.getUtxoSupplier()
-                    .findUtxo(outPoint.getTxHash().toString(), outPoint.getTxOutputN());
-
-            if (nonNull(whirlpoolUtxo) && nonNull(whirlpoolUtxo.getUtxo())) {
-                if (SamouraiAccount.POSTMIX == whirlpoolUtxo.getAccount()) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 }

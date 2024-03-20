@@ -1,5 +1,11 @@
 package com.samourai.wallet.send.review;
 
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.util.Objects.nonNull;
+
 import android.content.Context;
 
 import com.google.common.collect.ImmutableList;
@@ -7,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.samourai.wallet.constants.WALLET_INDEX;
+import com.samourai.wallet.ricochet.RicochetTransactionInfo;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.util.func.AddressFactory;
@@ -18,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 public class TxData {
 
     private int idxBIP44Internal = 0;
@@ -32,6 +35,7 @@ public class TxData {
     private final List<UTXO> selectedUTXO = Lists.newArrayList();
     private final Map<String, BigInteger> receivers = Maps.newLinkedHashMap();
     private long change = 0L;
+    private RicochetTransactionInfo ricochetTransactionInfo;
 
     private TxData() {}
 
@@ -54,6 +58,7 @@ public class TxData {
         txData.selectedUTXO.addAll(source.selectedUTXO);
         txData.receivers.putAll(source.receivers);
         txData.change = source.change;
+        txData.ricochetTransactionInfo = source.ricochetTransactionInfo;
         return txData;
     }
 
@@ -77,6 +82,9 @@ public class TxData {
     }
 
     public List<UTXO> getSelectedUTXO() {
+        if (nonNull(ricochetTransactionInfo)) {
+            return ImmutableList.copyOf(toUtxos(ricochetTransactionInfo.getSelectedUTXOPoints()));
+        }
         return ImmutableList.copyOf(selectedUTXO);
     }
 
@@ -91,6 +99,9 @@ public class TxData {
     }
 
     public List<MyTransactionOutPoint> getSelectedUTXOPoints() {
+        if (nonNull(ricochetTransactionInfo)) {
+            return ricochetTransactionInfo.getSelectedUTXOPoints();
+        }
         return toTxOutPoints(selectedUTXO);
     }
 
@@ -136,7 +147,18 @@ public class TxData {
         return amount;
     }
 
+    public RicochetTransactionInfo getRicochetTransactionInfo() {
+        return ricochetTransactionInfo;
+    }
+
+    public void setRicochetTransactionInfo(final RicochetTransactionInfo ricochetTransactionInfo) {
+        this.ricochetTransactionInfo = ricochetTransactionInfo;
+    }
+
     public long getChange() {
+        if (nonNull(ricochetTransactionInfo)) {
+            return ricochetTransactionInfo.getChange();
+        }
         return change;
     }
 

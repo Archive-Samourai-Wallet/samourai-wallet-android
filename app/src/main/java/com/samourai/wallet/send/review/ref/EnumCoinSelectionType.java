@@ -7,6 +7,8 @@ public enum EnumCoinSelectionType {
     CUSTOM("Custom", "Manually select inputs", true),
     BATCH_SPEND("Batch spend", "Lowest miner fees", false),
     CUSTOM_BATCH_SPEND("Custom batch spend", "Manually select inputs", true),
+    RICOCHET("Ricochet", "Lowest miner fees", false),
+    RICOCHET_CUSTOM("Custom ricochet", "Manually select inputs", true),
     ;
 
     private final String caption;

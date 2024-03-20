@@ -64,6 +64,7 @@ import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
 import com.samourai.wallet.ricochet.RicochetActivity;
 import com.samourai.wallet.ricochet.RicochetMeta;
+import com.samourai.wallet.ricochet.RicochetTransactionInfo;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.batch.BatchSpendActivity;
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity;
@@ -1169,7 +1170,7 @@ public class SendActivity extends SamouraiActivity {
                 if (BIP47Meta.getInstance().getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM) {
                     samouraiFeeViaBIP47 = true;
                 }
-                ricochetJsonObj = RicochetMeta.getInstance(SendActivity.this)
+                final RicochetTransactionInfo ricochetTransactionInfo = RicochetMeta.getInstance(SendActivity.this)
                         .script(amount,
                                 FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(),
                                 address,
@@ -1178,6 +1179,7 @@ public class SendActivity extends SamouraiActivity {
                                 samouraiFeeViaBIP47,
                                 isEnabledRicochetStaggered(),
                                 account);
+                ricochetJsonObj = ricochetTransactionInfo.getRicochetScriptAsJson();
                 if (ricochetJsonObj != null) {
 
                     try {

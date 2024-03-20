@@ -14,6 +14,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.ricochet.RicochetActivity;
 import com.samourai.wallet.ricochet.RicochetMeta;
+import com.samourai.wallet.ricochet.RicochetTransactionInfo;
 import com.samourai.wallet.send.review.ReviewTxModel;
 import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.activity.ActivityHelper;
@@ -55,7 +56,8 @@ public class SpendRicochetTxBroadcaster {
     }
 
     private void ricochetSpend() {
-        RicochetMeta.getInstance(activity).add(model.getRicochetJsonObj());
+        final RicochetTransactionInfo transactionInfo = model.getTxData().getValue().getRicochetTransactionInfo();
+        RicochetMeta.getInstance(activity).add(transactionInfo.getRicochetScriptAsJson());
         final Intent intent = new Intent(activity, RicochetActivity.class);
         intent.putExtra("tx_note", defaultString(model.getTxNote().getValue()));
         intent.putExtra("_account", model.getAccount());
@@ -67,9 +69,10 @@ public class SpendRicochetTxBroadcaster {
 
             final StringBuilder txHash = new StringBuilder();
 
-            if (model.getRicochetJsonObj().has("hops")) {
+            final RicochetTransactionInfo transactionInfo = model.getTxData().getValue().getRicochetTransactionInfo();
+            if (transactionInfo.getRicochetScriptAsJson().has("hops")) {
 
-                final JSONArray hops = model.getRicochetJsonObj().getJSONArray("hops");
+                final JSONArray hops = transactionInfo.getRicochetScriptAsJson().getJSONArray("hops");
 
                 if (hops.getJSONObject(0).has("nTimeLock")) {
 
