@@ -54,6 +54,7 @@ import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import com.samourai.wallet.collaborate.CollaborateActivity
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.databinding.ActivityBalanceBinding
@@ -76,8 +77,9 @@ import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.SendActivity.isPSBT
 import com.samourai.wallet.send.batch.BatchSpendActivity
-import com.samourai.wallet.send.batch.InputBatchSpendHelper.*
+import com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.settings.SettingsActivity
@@ -104,7 +106,6 @@ import com.samourai.wallet.whirlpool.WhirlpoolMeta
 import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.wallet.widgets.popUpMenu.popupMenu
-import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import io.matthewnelson.topl_service.TorServiceController
@@ -987,7 +988,7 @@ open class BalanceActivity : SamouraiActivity() {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, code.trim { it <= ' ' })
                         startActivity(cahootIntent)
                     }
-                    FormatsUtil.getInstance().isPSBT(code.trim { it <= ' ' }) -> {
+                    isPSBT(code.trim { it <= ' ' }) -> {
                         ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.PSBT,
                             bundle = Bundle().apply {
                                 putString("KEY", code)
