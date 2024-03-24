@@ -49,6 +49,7 @@ import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
+import com.samourai.wallet.send.SendActivity.isPSBT
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
@@ -661,7 +662,7 @@ class BatchSpendActivity : SamouraiActivity() {
             }
             return
         }
-        if (FormatsUtil.getInstance().isPSBT(data.trim { it <= ' ' })) {
+        if (isPSBT(data.trim { it <= ' ' })) {
             try {
                 PSBTUtil.getInstance(this).doPSBT(data.trim { it <= ' ' })
             } catch (e: Exception) {

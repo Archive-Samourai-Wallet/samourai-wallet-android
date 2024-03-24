@@ -813,7 +813,7 @@ open class BalanceActivity : SamouraiActivity() {
                     } else if (Cahoots.isCahoots(strResult!!.trim { it <= ' ' })) {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, strResult.trim { it <= ' ' })
                         startActivity(cahootIntent)
-                    } else if (FormatsUtil.getInstance().isPSBT(strResult.trim { it <= ' ' })) {
+                    } else if (isPSBT(strResult.trim { it <= ' ' })) {
                         PSBTUtil.getInstance(this@BalanceActivity).doPSBT(strResult.trim { it <= ' ' })
                     } else if (DojoUtil.getInstance(this@BalanceActivity).isValidPairingPayload(strResult.trim { it <= ' ' })) {
                         val intent = Intent(this@BalanceActivity, NetworkDashboard::class.java)
@@ -1033,7 +1033,7 @@ open class BalanceActivity : SamouraiActivity() {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, code.trim { it <= ' ' })
                         startActivity(cahootIntent)
                     }
-                    FormatsUtil.getInstance().isPSBT(code.trim { it <= ' ' }) -> {
+                    isPSBT(code.trim { it <= ' ' }) -> {
                         PSBTUtil.getInstance(this@BalanceActivity).doPSBT(code.trim { it <= ' ' })
                     }
                     DojoUtil.getInstance(this@BalanceActivity).isValidPairingPayload(code.trim { it <= ' ' }) -> {
