@@ -1,5 +1,13 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend;
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
+import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
+import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getSatValue;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static java.lang.Math.max;
+
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -29,6 +37,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -119,11 +133,6 @@ import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -131,14 +140,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-
-import static com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend;
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
-import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getBtcValue;
-import static com.samourai.wallet.util.SatoshiBitcoinUnitHelper.getSatValue;
-import static java.lang.Math.max;
-import static org.apache.commons.lang3.StringUtils.trim;
 
 
 public class SendActivity extends SamouraiActivity {
@@ -2205,13 +2206,18 @@ public class SendActivity extends SamouraiActivity {
             }
             return;
         }
-        if (FormatsUtil.getInstance().isPSBT(trim(data))) {
-            try {
-                PSBTUtil.getInstance(SendActivity.this).doPSBT(trim(data));
-            } catch (Exception e) {
-                ;
+        try {
+
+            if (FormatsUtil.getInstance().isPSBT(trim(data))) {
+                try {
+                    PSBTUtil.getInstance(SendActivity.this).doPSBT(trim(data));
+                } catch (Exception e) {
+                    Log.d(TAG, "cannot PSBT with this data");
+                }
+                return;
             }
-            return;
+        } catch(final Exception e2) {
+            Log.d(TAG, "data is not PSBT");
         }
 
         if (FormatsUtil.getInstance().isValidPaymentCode(data)) {
