@@ -8,12 +8,11 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.bipFormat.BIP_FORMAT;
 import com.samourai.wallet.bipFormat.BipFormat;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.hd.HD_Address;
-import com.samourai.wallet.hd.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
@@ -558,8 +557,7 @@ public class SendFactory extends SendFactoryGeneric	{
                 String pcode = BIP47Meta.getInstance().getPCode4Addr(address);
                 debug("SendFactory", "pcode:" + pcode);
                 int idx = BIP47Meta.getInstance().getIdx4Addr(address);
-                PaymentAddress addr = BIP47Util.getInstance(context).getReceiveAddress(new PaymentCode(pcode), idx);
-                ecKey = addr.getReceiveECKey();
+                ecKey = BIP47Util.getInstance(context).getReceiveAddress(new PaymentCode(pcode), idx).getECKey();
             }
         } catch (Exception e) {
             e.printStackTrace();

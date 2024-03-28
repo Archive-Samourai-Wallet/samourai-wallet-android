@@ -15,10 +15,13 @@ import com.samourai.wallet.cahoots.AndroidSorobanWalletService
 import com.samourai.wallet.paynym.api.PayNymApiService
 import com.samourai.wallet.paynym.models.NymResponse
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 class CollaborateViewModel : ViewModel() {
@@ -152,19 +155,14 @@ class CollaborateViewModel : ViewModel() {
         runTimer()
         sorobanListenJob = viewModelScope.launch {
             withContext(Dispatchers.Default) {
-                sorobanWalletCounterparty!!.receiveMeetingRequest()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({ cahootsRequest: SorobanRequestMessage ->
-                        timer?.cancel()
-                        sorobanRequest.postValue(cahootsRequest)
-                    }, {
-                        setError(it.message ?: "Unable to listen cahoot request")
-                        timer?.cancel();
-                    })
-                    .apply {
-                        compositeDisposable.add(this)
-                    }
+                try {
+                    var cahootsRequest = sorobanWalletCounterparty!!.receiveMeetingRequest()
+                    timer?.cancel()
+                    sorobanRequest.postValue(cahootsRequest)
+                } catch (e: Exception) {
+                    setError(e.message ?: "Unable to listen cahoot request")
+                    timer?.cancel();
+                }
             }
         }
     }
@@ -209,7 +207,7 @@ class CollaborateViewModel : ViewModel() {
                 if (meetingAccount.value == null) {
                     return@subscribe
                 }
-                val intent = SorobanCahootsActivity.createIntentCounterparty(context, meetingAccount.value!!, request.type, request.sender)
+                val intent = SorobanCahootsActivity.createIntentCounterparty(context, meetingAccount.value!!, request.type, request.sender.toString())
                 context.startActivity(intent)
             }, {
                 setError(it.message ?: "Unable to accept cahoots")

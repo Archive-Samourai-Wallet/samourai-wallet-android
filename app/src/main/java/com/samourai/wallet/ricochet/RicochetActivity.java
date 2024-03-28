@@ -1,12 +1,8 @@
 package com.samourai.wallet.ricochet;
 
-import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,16 +19,12 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
-import com.samourai.wallet.bip47.rpc.PaymentCode;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.hd.HD_WalletFactory;
-import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.activity.ActivityHelper;
 import com.samourai.wallet.utxos.UTXOUtil;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Transaction;
@@ -42,6 +34,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+
+import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class RicochetActivity extends SamouraiActivity {
 
@@ -247,9 +242,7 @@ public class RicochetActivity extends SamouraiActivity {
                                         //
                                         if(samouraiFeeViaBIP47)    {
                                             for(int j = 0; j < 4; j++)   {
-                                                PaymentCode pcode = new PaymentCode(BIP47Meta.strSamouraiDonationPCode);
-                                                PaymentAddress paymentAddress = BIP47Util.getInstance(RicochetActivity.this).getSendAddress(pcode, BIP47Meta.getInstance().getOutgoingIdx(BIP47Meta.strSamouraiDonationPCode));
-                                                String strAddress = paymentAddress.getSendECKey().toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
+                                                String strAddress = BIP47Util.getInstance(RicochetActivity.this).getSendAddressString(BIP47Meta.strSamouraiDonationPCode);
                                                 BIP47Meta.getInstance().getPCode4AddrLookup().put(strAddress, BIP47Meta.strSamouraiDonationPCode);
                                                 BIP47Meta.getInstance().incOutgoingIdx(BIP47Meta.strSamouraiDonationPCode);
                                             }

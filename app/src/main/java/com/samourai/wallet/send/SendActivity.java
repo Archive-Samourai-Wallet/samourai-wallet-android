@@ -1,15 +1,5 @@
 package com.samourai.wallet.send;
 
-import static com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend;
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
-import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
-import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getSatValue;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.trim;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -43,12 +33,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
-
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.slider.Slider;
@@ -56,7 +40,6 @@ import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.base.Splitter;
 import com.samourai.http.client.AndroidHttpClient;
-import com.samourai.http.client.IHttpClient;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.SamouraiWallet;
@@ -70,10 +53,12 @@ import com.samourai.wallet.cahoots.Cahoots;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.psbt.PSBTUtil;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.explorer.ExplorerActivity;
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet;
 import com.samourai.wallet.fragments.PaynymSelectModalFragment;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.httpClient.IHttpClient;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity;
@@ -104,8 +89,7 @@ import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolConst;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.wallet.widgets.SendTransactionDetailsView;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
-import com.samourai.xmanager.client.XManagerClient;
+import com.samourai.wallet.xmanagerClient.XManagerClient;
 import com.samourai.xmanager.protocol.XManagerService;
 
 import org.apache.commons.lang3.SerializationUtils;
@@ -137,6 +121,11 @@ import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -144,6 +133,16 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+
+import static com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend;
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getSatValue;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 
 public class SendActivity extends SamouraiActivity {

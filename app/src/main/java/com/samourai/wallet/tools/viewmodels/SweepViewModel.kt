@@ -15,7 +15,7 @@ import com.samourai.wallet.api.backend.beans.UnspentOutput
 import com.samourai.wallet.bipFormat.BIP_FORMAT
 import com.samourai.wallet.bipFormat.BipFormat
 import com.samourai.wallet.bipFormat.BipFormatSupplier
-import com.samourai.wallet.hd.WALLET_INDEX
+import com.samourai.wallet.constants.WALLET_INDEX
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.PushTx

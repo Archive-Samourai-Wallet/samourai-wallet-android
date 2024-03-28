@@ -69,6 +69,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.common.collect.ImmutableList
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.home.TestApplication
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.review.ReviewTxActivity.Companion.TAG
@@ -94,7 +95,6 @@ import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.tech.ColorHelper.Companion.getAttributeColor
 import com.samourai.wallet.util.tech.ColorHelper.Companion.lightenColor
 import com.samourai.wallet.util.view.rememberImeState
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -1,13 +1,13 @@
 package com.samourai.wallet.whirlpool.newPool;
 
-import static android.graphics.Typeface.BOLD;
-
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -15,22 +15,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
+import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
 import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.tech.LogUtil;
+import com.samourai.wallet.util.view.CustomProgressIndicatorFragment;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.UTXOUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
@@ -44,12 +40,13 @@ import com.samourai.wallet.whirlpool.service.WhirlpoolNotificationService;
 import com.samourai.wallet.widgets.ViewPager;
 import com.samourai.whirlpool.client.tx0.Tx0;
 import com.samourai.whirlpool.client.tx0.Tx0Config;
+import com.samourai.whirlpool.client.tx0.Tx0Info;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.beans.Tx0FeeTarget;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.ArrayList;
@@ -57,8 +54,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
-
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -66,9 +69,13 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
 
+import static android.graphics.Typeface.BOLD;
+
 public class NewPoolActivity extends SamouraiActivity {
 
     private static final String TAG = "NewPoolActivity";
+    public static final String CONNECTION_ERROR_TAP_TO_TRY_AGAIN = "Connection Error.\nTap to try again";
+    private static final int TX0_LOADING_DURATION_UNIT = 9000;
 
     private WhirlpoolTx0 tx0 = null;
     private boolean blockChangeOutput = false;
@@ -85,8 +92,25 @@ public class NewPoolActivity extends SamouraiActivity {
     private CompositeDisposable disposables = new CompositeDisposable();
     private  NewPoolViewModel newPoolViewModel;
     private List<UTXOCoin> selectedCoins = new ArrayList<>();
-    private ArrayList<Long> fees = new ArrayList<Long>();
     private LinearLayout tx0Progress;
+
+    private Float tx0LoadingProgess = 0f;
+    private MutableLiveData<Float> liveTx0LoadingProgess = new MutableLiveData<>(tx0LoadingProgess);
+    private MutableLiveData<Boolean> liveTx0LoadingViewVisible = new MutableLiveData<>(false);
+
+    private Handler handler = new Handler();
+    private Runnable incrementProgressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            handler.removeCallbacks(this);
+            tx0LoadingProgess += 0.1f;
+            liveTx0LoadingProgess.postValue(tx0LoadingProgess);
+            if (tx0LoadingProgess < 1.0f) {
+                handler.postDelayed(this, TX0_LOADING_DURATION_UNIT);
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,6 +152,12 @@ public class NewPoolActivity extends SamouraiActivity {
 
         enableConfirmButton(false);
 
+        // fetch tx0Info only once  (it should be refreshed after each TX0)
+        // disable confirmButton until tx0Info is not loaded
+        //confirmButton.setText(getString(R.string.loading));
+
+        loadTx0InfoAsync();
+
         //Disable selection from fragment since post mix utxo's are populated by the activity
         if (account != WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix())
             chooseUTXOsFragment.setOnUTXOSelectionListener(this::onUTXOSelected);
@@ -160,6 +190,10 @@ public class NewPoolActivity extends SamouraiActivity {
         });
 
         confirmButton.setOnClickListener(view -> {
+            if (StringUtils.equals(confirmButton.getText(), CONNECTION_ERROR_TAP_TO_TRY_AGAIN)) {
+                loadTx0InfoAsync();
+                return;
+            }
             switch (newPoolViewPager.getCurrentItem()) {
                 case 0: {
                     newPoolViewPager.setCurrentItem(1);
@@ -218,6 +252,42 @@ public class NewPoolActivity extends SamouraiActivity {
             }
         }
 
+        final FragmentManager fragManager = getSupportFragmentManager();
+        final FragmentTransaction fragTx = fragManager.beginTransaction();
+        fragTx.replace(R.id.loading_indicator, new CustomProgressIndicatorFragment(
+                liveTx0LoadingProgess,
+                liveTx0LoadingViewVisible,
+                "LOADING")
+        );
+        fragTx.commit();
+    }
+
+    private void loadTx0InfoAsync() {
+        confirmButton.setVisibility(View.GONE);
+        liveTx0LoadingViewVisible.postValue(true);
+        tx0LoadingProgess = 0f;
+        liveTx0LoadingProgess.postValue(tx0LoadingProgess);
+        Completable.fromRunnable(() -> newPoolViewModel.loadTx0Info())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(() -> {
+                // enable confirmButton once tx0Info is loaded
+                Log.v(TAG, "loadTx0Info success");
+                confirmButton.setVisibility(View.VISIBLE);
+                confirmButton.setText(getString(R.string.next));
+                enableConfirmButton(true);
+                liveTx0LoadingViewVisible.postValue(false);
+            }, e -> {
+                // keep confirmButton disabled on tx0Info loading error
+                confirmButton.setVisibility(View.VISIBLE);
+                confirmButton.setText(CONNECTION_ERROR_TAP_TO_TRY_AGAIN);
+                Toast.makeText(NewPoolActivity.this, "Error fetching Tx0 details", Toast.LENGTH_SHORT).show();
+                confirmButton.setEnabled(true);
+                confirmButton.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.blue_ui_2));
+                liveTx0LoadingViewVisible.postValue(false);
+                Log.e(TAG, "loadTx0Info() failed", e);
+        });
+        handler.postDelayed(incrementProgressRunnable, TX0_LOADING_DURATION_UNIT);
     }
 
     void onUTXOSelected(List<UTXOCoin> coins) {
@@ -269,7 +339,7 @@ public class NewPoolActivity extends SamouraiActivity {
                 confirmButton.setEnabled(false);
                 Disposable tx0Disposable = beginTx0(selectedCoins)
                         .delay(500, TimeUnit.MILLISECONDS)
-                        .andThen(AndroidWhirlpoolWalletService.getInstance().getWhirlpoolWallet().get().refreshUtxosAsync())
+                        .andThen(AndroidWhirlpoolWalletService.getInstance().whirlpoolWallet().refreshUtxosAsync())
                         .delay(100,TimeUnit.MILLISECONDS)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -312,16 +382,17 @@ public class NewPoolActivity extends SamouraiActivity {
             } else if (newPoolViewModel.getGetTx0PoolPriority().getValue() == PoolCyclePriority.LOW) {
                 mixFeeTarget = Tx0FeeTarget.BLOCKS_24;
             }
-            Tx0Config tx0Config = whirlpoolWallet.getTx0Config(mixFeeTarget, mixFeeTarget);
+            Tx0Info tx0Info = newPoolViewModel.getTx0Info();
+            Tx0Config tx0Config = tx0Info.getTx0Config(mixFeeTarget, mixFeeTarget);
             if (account == WhirlpoolMeta.getInstance(getApplicationContext()).getWhirlpoolPostmix()) {
-                tx0Config.setChangeWallet(WhirlpoolAccount.POSTMIX);
+                tx0Config.setChangeWallet(SamouraiAccount.POSTMIX);
             } else {
-                tx0Config.setChangeWallet(WhirlpoolAccount.DEPOSIT);
+                tx0Config.setChangeWallet(SamouraiAccount.DEPOSIT);
             }
             try {
                 com.samourai.whirlpool.client.whirlpool.beans.Pool pool = whirlpoolWallet.getPoolSupplier().findPoolById(newPoolViewModel.getGetPool().getValue().getPoolId());
 
-                Tx0 tx0 = whirlpoolWallet.tx0(spendFroms, tx0Config, pool);
+                Tx0 tx0 = tx0Info.tx0(whirlpoolWallet.getWalletSupplier(), whirlpoolWallet.getUtxoSupplier(), spendFroms, tx0Config, pool);
                 final String txHash = tx0.getTx().getHashAsString();
                 // tx0 success
                 if (tx0.getChangeOutputs() != null && !tx0.getChangeOutputs().isEmpty()) {
@@ -472,14 +543,16 @@ public class NewPoolActivity extends SamouraiActivity {
 
 
     private void enableConfirmButton(boolean enable) {
-        if (enable) {
+        // require tx0Info to be loaded before continuation
+        boolean tx0InfoLoaded = newPoolViewModel.getTx0Info()!=null;
+        if (enable && tx0InfoLoaded) {
             confirmButton.setEnabled(true);
             confirmButton.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.blue_ui_2));
-
+            Log.v(TAG, "enableConfirmButton=true");
         } else {
             confirmButton.setEnabled(false);
             confirmButton.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.disabled_grey));
-
+            Log.v(TAG, "enableConfirmButton=false, tx0InfoLoaded="+tx0InfoLoaded);
         }
     }
 
@@ -592,6 +665,7 @@ public class NewPoolActivity extends SamouraiActivity {
     @Override
     protected void onDestroy() {
         disposables.dispose();
+        handler.removeCallbacks(incrementProgressRunnable);
         super.onDestroy();
     }
 

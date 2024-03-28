@@ -21,15 +21,14 @@ import com.google.zxing.client.android.Contents;
 import com.google.zxing.client.android.encode.QRCodeEncoder;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.util.tech.AppUtil;
 
+import org.bitcoinj.core.ECKey;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.bitcoinj.core.ECKey;
 
 public class PayNymCalcActivity extends SamouraiActivity {
 
@@ -131,10 +130,8 @@ public class PayNymCalcActivity extends SamouraiActivity {
                     final ECKey receiveECKey;
                     final SegwitAddress receiveSegwit;
 
-                    PaymentAddress receiveAddress = BIP47Util.getInstance(PayNymCalcActivity.this).getReceiveAddress(new PaymentCode(strPayNym), index);
-                    PaymentAddress sendAddress = BIP47Util.getInstance(PayNymCalcActivity.this).getSendAddress(new PaymentCode(strPayNym), index);
-                    receiveECKey = receiveAddress.getReceiveECKey();
-                    ECKey sendECKey = sendAddress.getSendECKey();
+                    receiveECKey = BIP47Util.getInstance(PayNymCalcActivity.this).getReceiveAddress(new PaymentCode(strPayNym), index).getECKey();
+                    ECKey sendECKey = BIP47Util.getInstance(PayNymCalcActivity.this).getSendAddress(new PaymentCode(strPayNym), index).getECKey();
 
                     receiveSegwit = new SegwitAddress(receiveECKey, SamouraiWallet.getInstance().getCurrentNetworkParams());
                     SegwitAddress sendSegwit = new SegwitAddress(sendECKey, SamouraiWallet.getInstance().getCurrentNetworkParams());

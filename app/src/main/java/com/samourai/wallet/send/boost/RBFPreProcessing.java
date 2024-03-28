@@ -1,13 +1,7 @@
 package com.samourai.wallet.send.boost;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
@@ -15,6 +9,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip69.BIP69OutputComparator;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
@@ -29,7 +24,6 @@ import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.FormatsUtil;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
@@ -51,9 +45,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+
+import androidx.annotation.Nullable;
+
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 public class RBFPreProcessing implements Callable<String> {
 

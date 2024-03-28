@@ -18,7 +18,7 @@ import com.samourai.wallet.crypto.AESUtil;
 import com.samourai.wallet.crypto.DecryptionException;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
 import com.samourai.wallet.segwit.BIP49Util;

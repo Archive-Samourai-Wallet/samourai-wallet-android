@@ -1,21 +1,17 @@
 package com.samourai.wallet.send.boost;
 
-import static java.util.Objects.nonNull;
-
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.core.app.TaskStackBuilder;
-
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.bipFormat.BIP_FORMAT;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.home.BalanceActivity;
 import com.samourai.wallet.segwit.BIP49Util;
@@ -30,7 +26,6 @@ import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.tech.SimpleCallback;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -51,10 +46,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import androidx.core.app.TaskStackBuilder;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+
+import static java.util.Objects.nonNull;
 
 public class RBFProcessing {
 
@@ -360,8 +358,8 @@ public class RBFProcessing {
             ecKey = hd_addr.getECKey();
         } else if (keyParts.length == 2) {
             try {
-                final PaymentAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(keyParts[0]), Integer.parseInt(keyParts[1]));
-                ecKey = address.getReceiveECKey();
+                final SegwitAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(keyParts[0]), Integer.parseInt(keyParts[1]));
+                ecKey = address.getECKey();
             } catch (Exception e) {
                 ;
             }
@@ -390,8 +388,8 @@ public class RBFProcessing {
             ecKey = pk.getKey();
         } else if (keyParts.length == 2) {
             try {
-                final PaymentAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(keyParts[0]), Integer.parseInt(keyParts[1]));
-                ecKey = address.getReceiveECKey();
+                final SegwitAddress address = BIP47Util.getInstance(activity).getReceiveAddress(new PaymentCode(keyParts[0]), Integer.parseInt(keyParts[1]));
+                ecKey = address.getECKey();
             } catch (Exception e) {
                 ;
             }

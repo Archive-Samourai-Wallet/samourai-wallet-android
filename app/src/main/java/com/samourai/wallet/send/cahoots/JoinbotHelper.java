@@ -122,8 +122,7 @@ public class JoinbotHelper {
 
         for(final UTXO utxo : utxoList) {
 
-            final UTXO u = new UTXO();
-            u.setPath(utxo.getPath());
+            final UTXO u = new UTXO(utxo.getPath(), utxo.getXpub());
 
             for(final MyTransactionOutPoint out : utxo.getOutpoints()) {
                 final String hash = out.getTxHash().toString();

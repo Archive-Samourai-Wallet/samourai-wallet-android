@@ -2,6 +2,7 @@ package com.samourai.xmanager.client;
 
 import android.content.Context;
 
+import com.samourai.wallet.xmanagerClient.XManagerClient;
 import com.samourai.xmanager.protocol.XManagerService;
 
 public class XManagerExample {

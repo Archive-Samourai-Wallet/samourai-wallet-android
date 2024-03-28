@@ -136,7 +136,7 @@ public class WhirlpoolNotificationService extends Service {
                         .subscribeOn(Schedulers.io())
                         .subscribe(this::listenService, er -> {
                             // start failed
-                            Log.e(TAG, "onStartCommand: ".concat(er.getMessage()));
+                            Log.e(TAG, "onStartCommand: ".concat(er.getMessage()),er);
                             Toast.makeText(getApplicationContext(), er.getMessage(), Toast.LENGTH_LONG).show();
                             stopWhirlPoolService();
                         });

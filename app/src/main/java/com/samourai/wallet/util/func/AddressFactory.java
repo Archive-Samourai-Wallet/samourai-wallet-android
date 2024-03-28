@@ -6,7 +6,7 @@ import android.util.Log;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.util.AddressFactoryGeneric;

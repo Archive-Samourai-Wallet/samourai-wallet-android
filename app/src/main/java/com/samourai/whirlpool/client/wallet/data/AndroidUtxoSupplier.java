@@ -5,17 +5,14 @@ import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.api.backend.beans.WalletResponse;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.bipFormat.BipFormatSupplier;
 import com.samourai.wallet.bipWallet.BipWallet;
 import com.samourai.wallet.bipWallet.WalletSupplier;
-import com.samourai.wallet.chain.ChainSupplier;
-import com.samourai.wallet.hd.BIP_WALLET;
+import com.samourai.wallet.constants.BIP_WALLET;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
-import com.samourai.whirlpool.client.wallet.data.pool.PoolSupplier;
+import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceConfig;
 import com.samourai.whirlpool.client.wallet.data.utxo.BasicUtxoSupplier;
 import com.samourai.whirlpool.client.wallet.data.utxo.UtxoData;
 import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
@@ -26,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     private Logger log = LoggerFactory.getLogger(AndroidUtxoSupplier.class);
@@ -35,15 +33,11 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     private BIP47Meta bip47Meta;
     private long lastUpdate;
 
-    public AndroidUtxoSupplier(WalletSupplier walletSupplier,
-                               UtxoConfigSupplier utxoConfigSupplier,
-                               ChainSupplier chainSupplier,
-                               PoolSupplier poolSupplier,
-                               BipFormatSupplier bipFormatSupplier,
+    public AndroidUtxoSupplier(WalletSupplier walletSupplier, UtxoConfigSupplier utxoConfigSupplier, DataSourceConfig dataSourceConfig,
                                APIFactory apiFactory,
                                BIP47Util bip47Util,
-                               BIP47Meta bip47Meta) throws Exception {
-        super(walletSupplier, utxoConfigSupplier, chainSupplier, poolSupplier, bipFormatSupplier);
+                               BIP47Meta bip47Meta) {
+        super(walletSupplier, utxoConfigSupplier, dataSourceConfig);
         this.apiFactory = apiFactory;
         this.bip47Util = bip47Util;
         this.bip47Meta = bip47Meta;
@@ -97,9 +91,8 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
             log.error("Wallet not found for "+bip_wallet.name());
             return unspentOutputs;
         }
-        String xpub = bipWallet.getPub();
         for (UTXO utxo : utxos) {
-            Collection<UnspentOutput> unspents = utxo.toUnspentOutputs(xpub);
+            Collection<UnspentOutput> unspents = utxo.toUnspentOutputs();
             unspentOutputs.addAll(unspents);
         }
         if (log.isDebugEnabled()) {
@@ -116,7 +109,6 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
         if (log.isDebugEnabled()) {
             log.debug("_getPrivKeyBip47: pcode="+pcode+", idx="+idx);
         }
-        PaymentAddress addr = bip47Util.getReceiveAddress(new PaymentCode(pcode), idx);
-        return addr.getReceiveECKey().getPrivKeyBytes();
+        return bip47Util.getReceiveAddress(new PaymentCode(pcode), idx).getECKey().getPrivKeyBytes();
     }
 }

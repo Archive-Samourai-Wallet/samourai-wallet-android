@@ -11,7 +11,7 @@ import com.samourai.wallet.bip47.SendNotifTxFactory;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.segwit.bech32.Bech32Segwit;
@@ -383,12 +383,11 @@ public class RicochetMeta {
                     //
                     try {
                         PaymentCode pcode = new PaymentCode(BIP47Meta.strSamouraiDonationPCode);
-                        PaymentAddress paymentAddress = BIP47Util.getInstance(context).getSendAddress(pcode, _outgoingIdx + i);
+                        SegwitAddress segwitAddress = BIP47Util.getInstance(context).getSendAddress(pcode, _outgoingIdx + i);
 //                        String strAddress = paymentAddress.getSendECKey().toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString();
                         //
                         // derive as bech32
                         //
-                        SegwitAddress segwitAddress = new SegwitAddress(paymentAddress.getSendECKey().getPubKey(), SamouraiWallet.getInstance().getCurrentNetworkParams());
                         String strAddress = segwitAddress.getBech32AsString();
 
                         samouraiFees.add(Pair.of(strAddress, feeVal));

@@ -1,21 +1,16 @@
 package com.samourai.wallet.send.review.filter;
 
-import static com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex.DEPOSIT;
-import static com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex.POSTMIX;
-import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
-import static java.util.Objects.nonNull;
-
 import android.content.Context;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.util.func.EnumAddressType;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -23,6 +18,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import static com.samourai.wallet.constants.SamouraiAccountIndex.DEPOSIT;
+import static com.samourai.wallet.constants.SamouraiAccountIndex.POSTMIX;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
 public class UTXOFilteringProcessor {
 
@@ -110,7 +110,7 @@ public class UTXOFilteringProcessor {
                     .findUtxo(outPoint.getTxHash().toString(), outPoint.getTxOutputN());
 
             if (nonNull(whirlpoolUtxo) && nonNull(whirlpoolUtxo.getUtxo())) {
-                if (WhirlpoolAccount.POSTMIX == whirlpoolUtxo.getAccount()) {
+                if (SamouraiAccount.POSTMIX == whirlpoolUtxo.getAccount()) {
                     return true;
                 }
             }

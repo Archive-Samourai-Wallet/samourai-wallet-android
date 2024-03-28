@@ -4,11 +4,11 @@ import android.content.Context;
 
 import com.samourai.http.client.AndroidHttpClient;
 import com.samourai.http.client.AndroidHttpClientService;
-import com.samourai.http.client.HttpUsage;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.backend.BackendApi;
 import com.samourai.wallet.api.backend.BackendServer;
+import com.samourai.wallet.httpClient.HttpUsage;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.network.WebUtil;

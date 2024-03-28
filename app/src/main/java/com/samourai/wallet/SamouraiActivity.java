@@ -10,18 +10,17 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.samourai.wallet.access.AccessFactory;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.payload.ExternalBackupManager;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.util.TimeOutUtil;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
