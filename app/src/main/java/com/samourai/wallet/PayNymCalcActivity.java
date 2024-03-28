@@ -132,6 +132,7 @@ public class PayNymCalcActivity extends SamouraiActivity {
 
                     receiveECKey = BIP47Util.getInstance(PayNymCalcActivity.this).getReceiveAddress(new PaymentCode(strPayNym), index).getECKey();
                     ECKey sendECKey = BIP47Util.getInstance(PayNymCalcActivity.this).getSendAddress(new PaymentCode(strPayNym), index).getECKey();
+                    SegwitAddress receiveSegwitAddressWithDexwpBug = BIP47Util.getInstance(PayNymCalcActivity.this).getReceiveAddressFromDexwpBug(new PaymentCode(strPayNym), index);
 
                     receiveSegwit = new SegwitAddress(receiveECKey, SamouraiWallet.getInstance().getCurrentNetworkParams());
                     SegwitAddress sendSegwit = new SegwitAddress(sendECKey, SamouraiWallet.getInstance().getCurrentNetworkParams());
@@ -155,6 +156,10 @@ public class PayNymCalcActivity extends SamouraiActivity {
                     message += sendSegwit.getAddressAsString();
                     message += "\n";
                     message += sendSegwit.getBech32AsString();
+                    message += "\n";
+                    message += "Receive address from dexwp bug:";
+                    message += "\n";
+                    message += receiveSegwitAddressWithDexwpBug.getBech32AsString();
                     message += "\n";
 
                     final TextView tvText = new TextView(getApplicationContext());

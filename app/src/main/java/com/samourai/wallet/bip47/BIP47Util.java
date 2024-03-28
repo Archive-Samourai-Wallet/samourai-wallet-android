@@ -111,6 +111,13 @@ public class BIP47Util extends BIP47UtilGeneric {
         return super.getReceiveAddress(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
 
+    // receive funds from bogous dexwpbug addresses
+    public SegwitAddress getReceiveAddressFromDexwpBug(PaymentCode pcode, int idx) throws Exception {
+        HD_Address address = wallet.getAccount(0).addressAt(idx);
+        // dexwp bug
+        return this.getPaymentAddress(pcode, idx, (HD_Address)address, getNetworkParams()).getSegwitAddressReceive();
+    }
+
     public String getReceivePubKey(PaymentCode pcode, int idx) throws Exception {
         return super.getReceivePubKey(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
@@ -166,6 +173,12 @@ public class BIP47Util extends BIP47UtilGeneric {
         if (isBlank(pcodeAsString)) return null;
         return getAddress(pcodeAsString, getPaymentAddressSend(pcodeAsString));
     }
+    // dexwp bug sent funds to these bogous addresses
+    synchronized public String getDestinationAddrFromPcodeWithDexwpBug(final String pcodeAsString) throws Exception {
+
+        if (isBlank(pcodeAsString)) return null;
+        return getAddress(pcodeAsString, getPaymentAddressSendWithDexwpBug(pcodeAsString));
+    }
 
     private static String getAddress(final String pcodeAsString,
                                      final PaymentAddress paymentAddress)
@@ -185,7 +198,7 @@ public class BIP47Util extends BIP47UtilGeneric {
     private PaymentAddress getPaymentAddressSend(final String pcodeAsString)
             throws Exception {
         int idx = BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString);
-        HD_Address address = wallet.getAccount(0).addressAt(idx);
+        HD_Address address = wallet.getAccount(0).getNotificationAddress();
         return getPaymentAddress(
                         new PaymentCode(pcodeAsString),
                         idx,
@@ -193,8 +206,31 @@ public class BIP47Util extends BIP47UtilGeneric {
                 getNetworkParams());
     }
 
+    // dexwp bug sent funds to these bogous addresses
+    private PaymentAddress getPaymentAddressSendWithDexwpBug(final String pcodeAsString)
+            throws Exception {
+        int idx = BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString);
+        HD_Address address = wallet.getAccount(0).addressAt(idx); // dexwp bug
+        return getPaymentAddress(
+                new PaymentCode(pcodeAsString),
+                idx,
+                address,
+                getNetworkParams());
+    }
+
     public String getSendAddressString(final String pcode) throws Exception {
         PaymentAddress paymentAddress = getPaymentAddressSend(pcode);
+        if (BIP47Meta.getInstance().getSegwit(pcode)) {
+            return new SegwitAddress(paymentAddress.getSendECKey(), getNetworkParams())
+                    .getBech32AsString();
+        } else {
+            return paymentAddress.getSendECKey().toAddress(getNetworkParams()).toString();
+        }
+    }
+
+    // dexwp bug sent funds to these bogous addresses
+    public String getSendAddressStringWithDexwpBug(final String pcode) throws Exception {
+        PaymentAddress paymentAddress = getPaymentAddressSendWithDexwpBug(pcode);
         if (BIP47Meta.getInstance().getSegwit(pcode)) {
             return new SegwitAddress(paymentAddress.getSendECKey(), getNetworkParams())
                     .getBech32AsString();
