@@ -19,6 +19,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.samourai.wallet.R
 import com.samourai.wallet.api.Tx
+import com.samourai.wallet.constants.SamouraiAccount
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.databinding.WhirlpoolIntroViewBinding
 import com.samourai.wallet.home.BalanceActivity
 import com.samourai.wallet.tx.TxDetailsActivity
@@ -27,8 +29,6 @@ import com.samourai.wallet.whirlpool.WhirlPoolHomeViewModel
 import com.samourai.wallet.whirlpool.WhirlpoolHome.Companion.NEWPOOL_REQ_CODE
 import com.samourai.wallet.whirlpool.adapters.MixTxAdapter
 import com.samourai.wallet.whirlpool.newPool.NewPoolActivity
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 
 class TransactionsFragment : Fragment() {
 
@@ -82,15 +82,15 @@ class TransactionsFragment : Fragment() {
                 whirlPoolHomeViewModel.mixTransactionsList.observe(viewLifecycleOwner, { mix ->
                     val postMix = mutableListOf<Tx>()
                     val preMix = mutableListOf<Tx>()
-                    if(mix.containsKey(WhirlpoolAccount.POSTMIX)){
+                    if(mix.containsKey(SamouraiAccount.POSTMIX)){
                         postMix.clear()
-                        mix[WhirlpoolAccount.POSTMIX]?.let {
+                        mix[SamouraiAccount.POSTMIX]?.let {
                             postMix.addAll(it)
                         }
                     }
-                    if(mix.containsKey(WhirlpoolAccount.PREMIX)){
+                    if(mix.containsKey(SamouraiAccount.PREMIX)){
                         preMix.clear()
-                        mix[WhirlpoolAccount.PREMIX]?.let {
+                        mix[SamouraiAccount.PREMIX]?.let {
                             // Filter duplicates
                             val filteredPremix=  it.filter { tx->
                                 postMix.find { tx2-> tx2.hash==tx.hash } ==null

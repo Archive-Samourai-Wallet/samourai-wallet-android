@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.batch.BatchSpendActivity
 import com.samourai.wallet.theme.samouraiPostmixSpendBlueButton
@@ -54,7 +55,6 @@ import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.BalanceUtil
 import com.samourai.wallet.util.func.FormatsUtil.formatBTC
 import com.samourai.wallet.util.tech.AppUtil
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import org.apache.commons.lang3.StringUtils
 import java.util.Objects.nonNull
 

@@ -1,6 +1,6 @@
 package com.samourai.wallet.swaps;
 
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 
 public class SwapsConst {
     public final static int SWAPS_MAIN_ACCOUNT = SamouraiAccountIndex.SWAPS_DEPOSIT;

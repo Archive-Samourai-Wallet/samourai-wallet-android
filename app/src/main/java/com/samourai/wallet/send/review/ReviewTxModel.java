@@ -1,26 +1,8 @@
 package com.samourai.wallet.send.review;
 
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
-import static com.samourai.wallet.send.review.filter.UTXOFilteringProcessor.applyUtxoFilter;
-import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_BOLTZMANN;
-import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_SIMPLE;
-import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
-import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxoPoints;
-import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
-import static com.samourai.wallet.util.tech.ThreadHelper.pauseMillis;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
-import static java.lang.Math.max;
-import static java.lang.Math.round;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-
 import android.app.Application;
 import android.util.Log;
 import android.widget.Toast;
-
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +19,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.fee.EnumFeeRepresentation;
 import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
@@ -64,7 +47,6 @@ import com.samourai.wallet.util.tech.SimpleCallback;
 import com.samourai.wallet.util.tech.SimpleTaskRunner;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -90,12 +72,29 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
+import static com.samourai.wallet.send.review.filter.UTXOFilteringProcessor.applyUtxoFilter;
+import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_BOLTZMANN;
+import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_SIMPLE;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxoPoints;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
+import static com.samourai.wallet.util.tech.ThreadHelper.pauseMillis;
+import static java.lang.Math.max;
+import static java.lang.Math.round;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 public class ReviewTxModel extends AndroidViewModel {
 

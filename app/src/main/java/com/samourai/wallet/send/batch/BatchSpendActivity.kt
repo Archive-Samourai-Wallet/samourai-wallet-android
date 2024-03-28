@@ -36,6 +36,7 @@ import com.samourai.wallet.bip47.BIP47Util
 import com.samourai.wallet.bip47.rpc.PaymentCode
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.databinding.ActivityBatchSpendBinding
 import com.samourai.wallet.explorer.ExplorerActivity
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
@@ -44,15 +45,21 @@ import com.samourai.wallet.fragments.PaynymSelectModalFragment.Companion.newInst
 import com.samourai.wallet.paynym.paynymDetails.PayNymDetailsActivity
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.bech32.Bech32Util
-import com.samourai.wallet.send.*
 import com.samourai.wallet.send.FeeUtil
+import com.samourai.wallet.send.MyTransactionOutPoint
+import com.samourai.wallet.send.RBFSpend
+import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.SendFactory
+import com.samourai.wallet.send.SendParams
+import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.send.review.ReviewTxActivity
 import com.samourai.wallet.send.review.ref.EnumSendType
 import com.samourai.wallet.tor.SamouraiTorManager
-import com.samourai.wallet.util.*
+import com.samourai.wallet.util.FormatsUtilGeneric
+import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.activity.ActivityHelper
 import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.func.BatchSendUtil
@@ -61,11 +68,13 @@ import com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper
 import com.samourai.wallet.util.tech.DecimalDigitsInputFilter
 import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.wallet.utxos.UTXOSActivity
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import okhttp3.internal.toImmutableList
 import org.apache.commons.lang3.StringUtils
 import org.bitcoinj.core.Transaction
@@ -77,9 +86,11 @@ import java.net.URLDecoder
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.ParseException
-import java.util.*
+import java.util.Collections
+import java.util.Locale
 import java.util.Objects.isNull
 import java.util.Objects.nonNull
+import java.util.Vector
 
 
 class BatchSpendActivity : SamouraiActivity() {

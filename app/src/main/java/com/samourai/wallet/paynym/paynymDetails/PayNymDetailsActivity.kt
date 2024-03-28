@@ -24,7 +24,6 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.samourai.http.client.AndroidHttpClient
-import com.samourai.http.client.IHttpClient
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
@@ -41,6 +40,7 @@ import com.samourai.wallet.bip47.rpc.SecretPoint
 import com.samourai.wallet.crypto.DecryptionException
 import com.samourai.wallet.databinding.ActivityPaynymDetailsBinding
 import com.samourai.wallet.hd.HD_WalletFactory
+import com.samourai.wallet.httpClient.IHttpClient
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.paynym.PayNymViewModel
 import com.samourai.wallet.paynym.fragments.EditPaynymBottomSheet
@@ -69,7 +69,7 @@ import com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndR
 import com.samourai.wallet.util.func.SentToFromBIP47Util
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
-import com.samourai.xmanager.client.XManagerClient
+import com.samourai.wallet.xmanagerClient.XManagerClient
 import com.samourai.xmanager.protocol.XManagerService
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso

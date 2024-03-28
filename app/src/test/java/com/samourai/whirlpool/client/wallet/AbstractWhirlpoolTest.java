@@ -2,7 +2,6 @@ package com.samourai.whirlpool.client.wallet;
 
 import android.content.Context;
 
-import com.samourai.stomp.client.AndroidStompClient;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.backend.beans.UnspentOutput;
 import com.samourai.wallet.bip47.BIP47Util;
@@ -28,7 +27,7 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public abstract class AbstractWhirlpoolTest {
-    private Logger log = LoggerFactory.getLogger(AndroidStompClient.class);
+    private Logger log = LoggerFactory.getLogger(AbstractWhirlpoolTest.class);
 
     protected Context context = null; //new MockContext(); // TODO sdk>=29 required
     protected BIP47Util bip47Util = BIP47Util.getInstance(context);
@@ -41,7 +40,7 @@ public abstract class AbstractWhirlpoolTest {
     public void setUp(NetworkParameters networkParameters) throws Exception {
         this.networkParameters = networkParameters;
 
-        ClientUtils.setLogLevel(Level.TRACE, Level.TRACE);
+        ClientUtils.setLogLevel(Level.TRACE.toString());
 
         // mock main thread
         RxAndroidPlugins.setInitMainThreadSchedulerHandler(new Function<Callable<Scheduler>, Scheduler>() {

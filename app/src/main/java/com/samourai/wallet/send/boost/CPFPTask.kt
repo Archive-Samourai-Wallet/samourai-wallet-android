@@ -6,25 +6,30 @@ import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.api.APIFactory
+import com.samourai.wallet.constants.SamouraiAccountIndex
+import com.samourai.wallet.constants.WALLET_INDEX
 import com.samourai.wallet.hd.HD_WalletFactory
-import com.samourai.wallet.hd.WALLET_INDEX
 import com.samourai.wallet.segwit.BIP49Util
 import com.samourai.wallet.segwit.BIP84Util
 import com.samourai.wallet.segwit.bech32.Bech32Util
-import com.samourai.wallet.send.*
+import com.samourai.wallet.send.FeeUtil
+import com.samourai.wallet.send.MyTransactionOutPoint
+import com.samourai.wallet.send.PushTx
+import com.samourai.wallet.send.SendFactory
+import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.service.WebSocketService
+import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.func.AddressFactory
 import com.samourai.wallet.util.func.FormatsUtil
-import com.samourai.wallet.util.PrefsUtil
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.Coin
 import org.bitcoinj.script.Script
 import org.bouncycastle.util.encoders.Hex
 import org.json.JSONException
 import java.math.BigInteger
-import java.util.*
+import java.util.Collections
+import java.util.Vector
 
 /**
  * samourai-wallet-android

@@ -4,25 +4,32 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Pair
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.api.Tx
+import com.samourai.wallet.constants.SamouraiAccount
 import com.samourai.wallet.home.BalanceActivity
 import com.samourai.wallet.payload.PayloadUtil
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.util.tech.LogUtil
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
-import java.util.*
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService.ConnectionStates as Connection
 
 /**
@@ -37,7 +44,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
     private val wallet = AndroidWhirlpoolWalletService.getInstance();
 
     private val mixing = MutableLiveData(listOf<WhirlpoolUtxo>())
-    private val mixTransactions = MutableLiveData<Map<WhirlpoolAccount,List<Tx>>>(
+    private val mixTransactions = MutableLiveData<Map<SamouraiAccount,List<Tx>>>(
               mapOf()
     )
     private val remixing = MutableLiveData(listOf<WhirlpoolUtxo>())
@@ -52,7 +59,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
     val displaySatsLive: LiveData<Boolean> get() = displaySats
     val remixBalance: LiveData<Long> get() = remixBalanceLive
     val mixingBalance: LiveData<Long> get() = mixingBalanceLive
-    val mixTransactionsList: LiveData<Map<WhirlpoolAccount,List<Tx>>> get() = mixTransactions
+    val mixTransactionsList: LiveData<Map<SamouraiAccount,List<Tx>>> get() = mixTransactions
     val totalBalance: LiveData<Long> get() = totalBalanceLive
     val onboardStatus: LiveData<Boolean> get() = whirlpoolOnboarded
     val listRefreshStatus: LiveData<Boolean> get() = refreshStatus
@@ -121,9 +128,9 @@ class WhirlPoolHomeViewModel : ViewModel() {
 
         if (wallet.whirlpoolWallet.isPresent) {
             val postMix =
-                wallet.whirlpoolWallet.get().utxoSupplier.findUtxos(WhirlpoolAccount.POSTMIX)
+                wallet.whirlpoolWallet.get().utxoSupplier.findUtxos(SamouraiAccount.POSTMIX)
             val preMix =
-                wallet.whirlpoolWallet.get().utxoSupplier.findUtxos(WhirlpoolAccount.PREMIX)
+                wallet.whirlpoolWallet.get().utxoSupplier.findUtxos(SamouraiAccount.PREMIX)
 
             val premixBalance =  preMix
                     .filter { it.utxoState.mixableStatus == MixableStatus.MIXABLE }
@@ -132,7 +139,7 @@ class WhirlPoolHomeViewModel : ViewModel() {
                     ?.reduce { acc, l -> acc + l } ?: 0L
 
             val balance =
-                (premixBalance  + wallet.whirlpoolWallet.get().utxoSupplier.getBalance(WhirlpoolAccount.POSTMIX))
+                (premixBalance  + wallet.whirlpoolWallet.get().utxoSupplier.getBalance(SamouraiAccount.POSTMIX))
             try {
                 //Filter non-mixable utxo's from postmix account
                 val remixBalance = postMix
@@ -157,11 +164,11 @@ class WhirlPoolHomeViewModel : ViewModel() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ mixingState ->
                     val utxoPremix: List<WhirlpoolUtxo> = ArrayList(
-                        whirlpoolWallet.utxoSupplier.findUtxos(WhirlpoolAccount.PREMIX)
+                        whirlpoolWallet.utxoSupplier.findUtxos(SamouraiAccount.PREMIX)
                     )
                     loadBalances()
                     val remixingUtxoState: List<WhirlpoolUtxo> = ArrayList(
-                        whirlpoolWallet.utxoSupplier.findUtxos(WhirlpoolAccount.POSTMIX)
+                        whirlpoolWallet.utxoSupplier.findUtxos(SamouraiAccount.POSTMIX)
                     )
 
                     val remixingUtxo = mutableListOf<WhirlpoolUtxo>()
@@ -260,8 +267,8 @@ class WhirlPoolHomeViewModel : ViewModel() {
 
     fun setTx(postMixList: List<Tx>, premixList: List<Tx>) {
         mixTransactions.postValue(mapOf(
-            WhirlpoolAccount.POSTMIX to postMixList,
-            WhirlpoolAccount.PREMIX to premixList
+            SamouraiAccount.POSTMIX to postMixList,
+            SamouraiAccount.PREMIX to premixList
         ))
     }
 

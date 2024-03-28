@@ -1,7 +1,7 @@
 package com.samourai.whirlpool.client.wallet.data;
 
 import com.samourai.wallet.client.indexHandler.AbstractIndexHandler;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.util.func.AddressFactory;
 
 import org.slf4j.Logger;

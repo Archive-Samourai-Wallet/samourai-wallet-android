@@ -14,8 +14,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityOptionsCompat;
-
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -26,6 +24,7 @@ import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.paynym.WebUtil;
+import com.samourai.wallet.constants.SamouraiAccount;
 import com.samourai.wallet.crypto.DecryptionException;
 import com.samourai.wallet.explorer.ExplorerActivity;
 import com.samourai.wallet.payload.PayloadUtil;
@@ -38,17 +37,16 @@ import com.samourai.wallet.send.SendFactory;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.CharSequenceX;
-import com.samourai.wallet.util.func.FormatsUtil;
-import com.samourai.wallet.util.tech.LogUtil;
-import com.samourai.wallet.util.func.MessageSignUtil;
 import com.samourai.wallet.util.QRBottomSheetDialog;
+import com.samourai.wallet.util.func.FormatsUtil;
+import com.samourai.wallet.util.func.MessageSignUtil;
+import com.samourai.wallet.util.tech.LogUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
 import com.samourai.wallet.whirlpool.WhirlpoolHome;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService;
 import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.beans.MixableStatus;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolAccount;
 import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 import com.squareup.picasso.Picasso;
 
@@ -66,6 +64,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import androidx.core.app.ActivityOptionsCompat;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -463,7 +462,7 @@ public class UTXODetailsActivity extends SamouraiActivity {
         WhirlpoolUtxo whirlpoolUtxo = whirlpoolWallet.getUtxoSupplier().findUtxo(hash, idx);
         if (whirlpoolUtxo != null) {
             // premix/postmix?
-            if (WhirlpoolAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || WhirlpoolAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
+            if (SamouraiAccount.PREMIX.equals(whirlpoolUtxo.getAccount()) || SamouraiAccount.POSTMIX.equals(whirlpoolUtxo.getAccount())) {
                 // ready to mix?
                 if (MixableStatus.MIXABLE.equals(whirlpoolUtxo.getUtxoState().getMixableStatus())) {
                     return whirlpoolUtxo;

@@ -7,9 +7,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.samourai.wallet.api.APIFactory
 import com.samourai.wallet.bip47.BIP47Meta
+import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.hd.HD_WalletFactory
 import com.samourai.wallet.util.func.BatchSendUtil
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex
 
 class BatchSpendViewModel() : ViewModel() {
 

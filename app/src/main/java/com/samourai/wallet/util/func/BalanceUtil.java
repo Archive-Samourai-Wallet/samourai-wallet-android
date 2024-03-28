@@ -1,15 +1,15 @@
 package com.samourai.wallet.util.func;
 
-import static java.util.Objects.isNull;
-
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.utxos.PreSelectUtil;
 import com.samourai.wallet.utxos.models.UTXOCoin;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import java.util.List;
+
+import static java.util.Objects.isNull;
 
 public class BalanceUtil {
 

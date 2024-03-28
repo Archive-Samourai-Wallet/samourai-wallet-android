@@ -1,23 +1,15 @@
 package com.samourai.wallet.bip47;
 
-import static com.samourai.wallet.bip47.BIP47Meta.STATUS_SENT_CFM;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.Toast;
-
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.paynym.WebUtil;
 import com.samourai.wallet.bip47.rpc.AndroidSecretPointFactory;
 import com.samourai.wallet.bip47.rpc.BIP47Wallet;
-import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception;
 import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
 import com.samourai.wallet.hd.HD_Address;
@@ -35,17 +27,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
 
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static com.samourai.wallet.bip47.BIP47Meta.STATUS_SENT_CFM;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class BIP47Util extends BIP47UtilGeneric {
 
@@ -104,71 +98,36 @@ public class BIP47Util extends BIP47UtilGeneric {
     }
 
     public HD_Address getNotificationAddress() {
-        return super.getNotificationAddress(wallet);
-    }
-
-    public HD_Address getNotificationAddress(int account) {
-        return super.getNotificationAddress(wallet, account);
+        return wallet.getAccount(0).getNotificationAddress();
     }
 
     public PaymentCode getPaymentCode() throws AddressFormatException {
-        return super.getPaymentCode(wallet);
-    }
-
-    public PaymentCode getPaymentCode(int account) throws AddressFormatException {
-        return super.getPaymentCode(wallet, account);
+        return wallet.getAccount(0).getPaymentCode();
     }
 
     public PaymentCode getFeaturePaymentCode() throws AddressFormatException {
-        return super.getFeaturePaymentCode(wallet);
+        PaymentCode payment_code = getPaymentCode();
+        return new com.samourai.wallet.bip47.rpc.PaymentCode(payment_code.makePaymentCodeSamourai());
     }
 
-    public PaymentCode getFeaturePaymentCode(int account) throws AddressFormatException {
-        return super.getFeaturePaymentCode(wallet, account);
+    public SegwitAddress getReceiveAddress(PaymentCode pcode, int idx) throws Exception {
+        return super.getReceiveAddress(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
 
-    public PaymentAddress getReceiveAddress(PaymentCode pcode, int idx) throws AddressFormatException, NotSecp256k1Exception {
-        return super.getReceiveAddress(wallet, pcode, idx, getNetworkParams());
+    public String getReceivePubKey(PaymentCode pcode, int idx) throws Exception {
+        return super.getReceivePubKey(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
 
-    public PaymentAddress getReceiveAddress(PaymentCode pcode, int account, int idx) throws AddressFormatException, NotSecp256k1Exception {
-        return super.getReceiveAddress(wallet, account, pcode, idx, getNetworkParams());
+    public SegwitAddress getSendAddress(PaymentCode pcode, int idx) throws Exception {
+        return super.getSendAddress(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
 
-    public String getReceivePubKey(PaymentCode pcode, int idx) throws AddressFormatException, NotSecp256k1Exception, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        return super.getReceivePubKey(wallet, pcode, idx, getNetworkParams());
+    public String getSendPubKey(PaymentCode pcode, int idx) throws Exception {
+        return super.getSendPubKey(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
 
-    public String getReceivePubKey(PaymentCode pcode, int account, int idx) throws AddressFormatException, NotSecp256k1Exception, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        return super.getReceivePubKey(wallet, account, pcode, idx, getNetworkParams());
-    }
-
-    public PaymentAddress getSendAddress(PaymentCode pcode, int idx) throws AddressFormatException, NotSecp256k1Exception {
-        return super.getSendAddress(wallet, pcode, idx, getNetworkParams());
-    }
-
-    public PaymentAddress getSendAddress(PaymentCode pcode, int account, int idx) throws AddressFormatException, NotSecp256k1Exception {
-        return getSendAddress(wallet, account, pcode, idx, getNetworkParams());
-    }
-
-    public String getSendPubKey(PaymentCode pcode, int idx) throws AddressFormatException, NotSecp256k1Exception, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        return super.getSendPubKey(wallet, pcode, idx, getNetworkParams());
-    }
-
-    public String getSendPubKey(PaymentCode pcode, int account, int idx) throws AddressFormatException, NotSecp256k1Exception, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        return super.getSendPubKey(wallet, account, pcode, idx, getNetworkParams());
-    }
-
-    public byte[] getIncomingMask(byte[] pubkey, byte[] outPoint) throws AddressFormatException, Exception {
-        return super.getIncomingMask(wallet, pubkey, outPoint, getNetworkParams());
-    }
-
-    public byte[] getIncomingMask(byte[] pubkey, int account, byte[] outPoint) throws AddressFormatException, Exception {
-        return super.getIncomingMask(wallet, account, pubkey, outPoint, getNetworkParams());
-    }
-
-    public PaymentAddress getPaymentAddress(PaymentCode pcode, int idx, HD_Address address) throws AddressFormatException, NotSecp256k1Exception {
-        return super.getPaymentAddress(pcode, idx, address, getNetworkParams());
+    public byte[] getIncomingMask(byte[] pubkey, byte[] outPoint) throws Exception {
+        return super.getIncomingMask(wallet.getAccount(0), pubkey, outPoint, getNetworkParams());
     }
 
     public void setAvatar(@Nullable Bitmap bitmap) {
@@ -218,7 +177,7 @@ public class BIP47Util extends BIP47UtilGeneric {
     ) throws Exception {
 
         if (isBlank(pcodeAsString)) return null;
-        return getAddress(pcodeAsString, getPaymentAddress(pcodeAsString, indexOffset));
+        return getAddress(pcodeAsString, getPaymentAddressSend(pcodeAsString, indexOffset));
     }
 
     private static String getAddress(final String pcodeAsString,
@@ -236,16 +195,29 @@ public class BIP47Util extends BIP47UtilGeneric {
         }
     }
 
-    private PaymentAddress getPaymentAddress(
-            final String pcodeAsString,
-            final int indexOffset
-    ) throws NotSecp256k1Exception {
-
-        return getInstance(context)
-                .getSendAddress(
+    private PaymentAddress getPaymentAddressSend(final String pcodeAsString,
+                                                 final int indexOffset)
+            throws Exception {
+        final int idx = indexOffset + BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString);
+        final HD_Address address = wallet.getAccount(0).addressAt(idx);
+        return getPaymentAddress(
                         new PaymentCode(pcodeAsString),
-                        indexOffset + BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString));
+                        idx,
+                        address,
+                getNetworkParams());
     }
+
+    public String getSendAddressString(final String pcode) throws Exception {
+        final PaymentAddress paymentAddress = getPaymentAddressSend(pcode, 0);
+        if (BIP47Meta.getInstance().getSegwit(pcode)) {
+            return new SegwitAddress(paymentAddress.getSendECKey(), getNetworkParams())
+                    .getBech32AsString();
+        } else {
+            return paymentAddress.getSendECKey().toAddress(getNetworkParams()).toString();
+        }
+    }
+
+
 
     public int updateOutgoingStatusForNewPayNymConnections() {
 

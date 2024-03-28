@@ -1,19 +1,19 @@
 package com.samourai.wallet.util.func;
 
-import static java.lang.Math.max;
-import static java.util.Objects.isNull;
-
 import android.content.Context;
 
 import com.google.common.collect.Maps;
 import com.samourai.wallet.R;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.tools.AddressCalculatorViewModel;
 import com.samourai.wallet.tools.AddressDetailsModel;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
+
+import static java.lang.Math.max;
+import static java.util.Objects.isNull;
 
 public class AddressHelper {
 

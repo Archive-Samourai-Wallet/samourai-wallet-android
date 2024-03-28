@@ -13,29 +13,29 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.samourai.soroban.cahoots.CahootsContext;
-import com.samourai.soroban.cahoots.ManualCahootsMessage;
-import com.samourai.soroban.cahoots.ManualCahootsService;
-import com.samourai.soroban.cahoots.TxBroadcastInteraction;
-import com.samourai.soroban.client.SorobanReply;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiActivity;
 import com.samourai.wallet.cahoots.AndroidSorobanWalletService;
+import com.samourai.wallet.cahoots.CahootsContext;
 import com.samourai.wallet.cahoots.CahootsMode;
 import com.samourai.wallet.cahoots.CahootsType;
 import com.samourai.wallet.cahoots.CahootsTypeUser;
 import com.samourai.wallet.cahoots.CahootsWallet;
+import com.samourai.wallet.cahoots.TxBroadcastInteraction;
+import com.samourai.wallet.cahoots.manual.ManualCahootsMessage;
+import com.samourai.wallet.cahoots.manual.ManualCahootsService;
 import com.samourai.wallet.cahoots.psbt.PSBT;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.send.FeeUtil;
-import com.samourai.wallet.util.tech.AppUtil;
+import com.samourai.wallet.sorobanClient.SorobanReply;
 import com.samourai.wallet.util.QRBottomSheetDialog;
+import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.widgets.CahootsCircleProgress;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 public class ManualCahootsActivity extends SamouraiActivity {
 

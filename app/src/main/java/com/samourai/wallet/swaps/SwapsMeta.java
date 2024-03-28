@@ -2,11 +2,6 @@ package com.samourai.wallet.swaps;
 
 import android.content.Context;
 
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class SwapsMeta {
 
     private static com.samourai.wallet.swaps.SwapsMeta instance = null;

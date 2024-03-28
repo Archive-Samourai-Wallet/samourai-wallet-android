@@ -1,13 +1,9 @@
 package com.samourai.wallet.send;
 
-import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
-import static com.samourai.wallet.send.SendActivity.SPEND_SIMPLE;
-import static com.samourai.wallet.util.tech.LogUtil.debug;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
-
 import android.content.Context;
 
 import com.samourai.wallet.SamouraiWallet;
+import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_WalletFactory;
 import com.samourai.wallet.segwit.BIP49Util;
@@ -17,7 +13,6 @@ import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.util.func.AddressFactory;
 import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
-import com.samourai.whirlpool.client.wallet.beans.SamouraiAccountIndex;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Address;
@@ -31,6 +26,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.samourai.wallet.send.SendActivity.SPEND_BOLTZMANN;
+import static com.samourai.wallet.send.SendActivity.SPEND_SIMPLE;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 public class SendParams	{
 

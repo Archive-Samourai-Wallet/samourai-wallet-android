@@ -1,13 +1,5 @@
 package com.samourai.wallet;
 
-import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
-import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
-import static com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister;
-import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
-import static com.samourai.wallet.util.tech.LogUtil.debug;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static java.util.Objects.nonNull;
-
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -22,7 +14,7 @@ import android.widget.Toast;
 
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
-import com.samourai.wallet.hd.WALLET_INDEX;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.send.PushTx;
 import com.samourai.wallet.send.RBFSpend;
 import com.samourai.wallet.send.SendActivity;
@@ -58,6 +50,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+
+import static com.samourai.wallet.util.activity.ActivityHelper.gotoBalanceHomeActivity;
+import static com.samourai.wallet.util.activity.ActivityHelper.launchSupportPageInBrowser;
+import static com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
+import static com.samourai.wallet.util.tech.LogUtil.debug;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class TxAnimUIActivity extends SamouraiActivity {
 

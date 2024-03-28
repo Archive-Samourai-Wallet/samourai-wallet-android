@@ -5,6 +5,7 @@ import android.content.Context;
 import com.samourai.http.client.AndroidHttpClient;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.tor.SamouraiTorManager;
+import com.samourai.wallet.xmanagerClient.XManagerClient;
 
 public class AndroidXManagerClient extends XManagerClient {
     private static AndroidXManagerClient instance;
