@@ -48,6 +48,15 @@
         />
 
     <Preference
+        android:title="@string/options_paynym_restore"
+        android:summary="@string/options_paynym_restore2"
+        android:key="prestore"
+        app:iconSpaceReserved="false"
+        app:allowDividerBelow="true"
+        app:allowDividerAbove="true"
+        />
+
+    <Preference
         android:title="Show log"
         android:summary="Show wallet error logs"
         android:key="showlogs"

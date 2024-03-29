@@ -23,6 +23,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.samourai.wallet.AboutActivity
 import com.samourai.wallet.BuildConfig
 import com.samourai.wallet.PayNymCalcActivity
+import com.samourai.wallet.PayNymRestoreActivity
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiWallet
 import com.samourai.wallet.access.AccessFactory
@@ -474,6 +475,12 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
             true
         }
 
+        val paynymRestorePref = findPreference("prestore") as Preference?
+        paynymRestorePref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            doPayNymRestore()
+            true
+        }
+
         val wpStatePref = findPreference("wpstate") as Preference?
         wpStatePref!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             doWhirlpoolState()
@@ -738,6 +745,11 @@ class SettingsDetailsFragment(private val key: String?) : PreferenceFragmentComp
 
     private fun doPayNymCalc() {
         val intent = Intent(requireContext(), PayNymCalcActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun doPayNymRestore() {
+        val intent = Intent(requireContext(), PayNymRestoreActivity::class.java)
         startActivity(intent)
     }
 

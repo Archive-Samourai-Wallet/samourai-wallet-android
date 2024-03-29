@@ -104,7 +104,9 @@
     <string name="options_address_calc">Address calculator</string>
     <string name="options_address_calc2">Calculate addresses derived from your wallet seed.</string>
     <string name="options_paynym_calc">PayNym calculator</string>
+    <string name="options_paynym_restore">PayNym restore</string>
     <string name="options_paynym_calc2">Calculate addresses shared with other PayNyms.</string>
+    <string name="options_paynym_restore2">Calculate addresses for PayNym restore.</string>
     <string name="options_indexes">Wallet indexes</string>
     <string name="options_indexes2">Current index values for this wallet.</string>
     <string name="options_whirlpool_state">Whirlpool info</string>
