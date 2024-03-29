@@ -130,7 +130,7 @@ public class PayNymRestoreActivity extends SamouraiActivity {
                     final ECKey receiveECKey;
                     final SegwitAddress receiveSegwit;
 
-                    receiveECKey = BIP47Util.getInstance(PayNymRestoreActivity.this).getReceiveAddress(new PaymentCode(strPayNym), index).getECKey();
+                    receiveECKey = BIP47Util.getInstance(PayNymRestoreActivity.this).getReceiveAddressFromDexwpBug(new PaymentCode(strPayNym), index).getECKey();
                     ECKey sendECKey = BIP47Util.getInstance(PayNymRestoreActivity.this).getSendAddress(new PaymentCode(strPayNym), index).getECKey();
 
                     receiveSegwit = new SegwitAddress(receiveECKey, SamouraiWallet.getInstance().getCurrentNetworkParams());
