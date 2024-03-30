@@ -114,6 +114,13 @@ public class BIP47Util extends BIP47UtilGeneric {
         return super.getReceiveAddress(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
 
+    // receive funds from bogous dexwpbug addresses
+    public SegwitAddress getReceiveAddressFromDexwpBug(PaymentCode pcode, int idx) throws Exception {
+        HD_Address address = wallet.getAccount(0).addressAt(idx);
+        // dexwp bug
+        return this.getPaymentAddress(pcode, idx, (HD_Address)address, getNetworkParams()).getSegwitAddressReceive();
+    }
+
     public String getReceivePubKey(PaymentCode pcode, int idx) throws Exception {
         return super.getReceivePubKey(wallet.getAccount(0), pcode, idx, getNetworkParams());
     }
@@ -199,11 +206,11 @@ public class BIP47Util extends BIP47UtilGeneric {
                                                  final int indexOffset)
             throws Exception {
         final int idx = indexOffset + BIP47Meta.getInstance().getOutgoingIdx(pcodeAsString);
-        final HD_Address address = wallet.getAccount(0).addressAt(idx);
+        final HD_Address address = wallet.getAccount(0).getNotificationAddress();
         return getPaymentAddress(
-                        new PaymentCode(pcodeAsString),
-                        idx,
-                        address,
+                new PaymentCode(pcodeAsString),
+                idx,
+                address,
                 getNetworkParams());
     }
 

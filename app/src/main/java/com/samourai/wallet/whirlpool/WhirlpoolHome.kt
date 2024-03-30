@@ -32,6 +32,7 @@ import com.samourai.wallet.network.NetworkDashboard
 import com.samourai.wallet.network.dojo.DojoUtil
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.SendActivity.isPSBT
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.util.PrefsUtil
@@ -325,7 +326,7 @@ class WhirlpoolHome : SamouraiActivity() {
                             WhirlpoolMeta.getInstance(application).whirlpoolPostmix,
                             code.trim { it <= ' ' })
                         startActivity(cahootIntent)
-                    } else if (FormatsUtil.getInstance().isPSBT(code.trim { it <= ' ' })) {
+                    } else if (isPSBT(code.trim { it <= ' ' })) {
                         PSBTUtil.getInstance(application).doPSBT(code.trim { it <= ' ' })
                     } else if (DojoUtil.getInstance(application)
                             .isValidPairingPayload(code.trim { it <= ' ' })
