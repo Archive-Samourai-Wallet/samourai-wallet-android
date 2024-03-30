@@ -54,7 +54,6 @@ import com.samourai.wallet.bip47.paynym.WebUtil
 import com.samourai.wallet.cahoots.Cahoots
 import com.samourai.wallet.cahoots.psbt.PSBTUtil
 import com.samourai.wallet.collaborate.CollaborateActivity
-import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.constants.SamouraiAccountIndex.POSTMIX
 import com.samourai.wallet.crypto.AESUtil
 import com.samourai.wallet.crypto.DecryptionException
@@ -79,6 +78,9 @@ import com.samourai.wallet.segwit.bech32.Bech32Util
 import com.samourai.wallet.send.BlockedUTXO
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.SendActivity.isPSBT
+import com.samourai.wallet.send.batch.BatchSpendActivity
+import com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.service.WalletRefreshWorker
@@ -745,7 +747,7 @@ open class BalanceActivity : SamouraiActivity() {
         }
         if (id == R.id.action_postmix_balance) {
             startActivity(Intent(this, BalanceActivity::class.java).apply {
-                putExtra("_account", SamouraiAccountIndex.POSTMIX)
+                putExtra("_account", POSTMIX)
             })
             return super.onOptionsItemSelected(item)
         }
@@ -835,7 +837,7 @@ open class BalanceActivity : SamouraiActivity() {
                     } else if (Cahoots.isCahoots(strResult!!.trim { it <= ' ' })) {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, strResult.trim { it <= ' ' })
                         startActivity(cahootIntent)
-                    } else if (FormatsUtil.getInstance().isPSBT(strResult.trim { it <= ' ' })) {
+                    } else if (isPSBT(strResult.trim { it <= ' ' })) {
                         PSBTUtil.getInstance(this@BalanceActivity).doPSBT(strResult.trim { it <= ' ' })
                     } else if (DojoUtil.getInstance(this@BalanceActivity).isValidPairingPayload(strResult.trim { it <= ' ' })) {
                         val intent = Intent(this@BalanceActivity, NetworkDashboard::class.java)
@@ -1046,7 +1048,7 @@ open class BalanceActivity : SamouraiActivity() {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, code.trim { it <= ' ' })
                         startActivity(cahootIntent)
                     }
-                    FormatsUtil.getInstance().isPSBT(code.trim { it <= ' ' }) -> {
+                    isPSBT(code.trim { it <= ' ' }) -> {
                         ToolsBottomSheet.showTools(supportFragmentManager, ToolsBottomSheet.ToolType.PSBT,
                             bundle = Bundle().apply {
                                 putString("KEY", code)
@@ -1100,7 +1102,7 @@ open class BalanceActivity : SamouraiActivity() {
                         val cahootIntent = ManualCahootsActivity.createIntentResume(this, account, code.trim { it <= ' ' })
                         startActivity(cahootIntent)
                     }
-                    FormatsUtil.getInstance().isPSBT(code.trim { it <= ' ' }) -> {
+                    isPSBT(code.trim { it <= ' ' }) -> {
                         PSBTUtil.getInstance(this@BalanceActivity).doPSBT(code.trim { it <= ' ' })
                     }
                     DojoUtil.getInstance(this@BalanceActivity).isValidPairingPayload(code.trim { it <= ' ' }) -> {

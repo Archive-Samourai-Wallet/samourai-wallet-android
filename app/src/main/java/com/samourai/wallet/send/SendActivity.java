@@ -2068,11 +2068,11 @@ public class SendActivity extends SamouraiActivity {
             }
             return;
         }
-        if (FormatsUtil.getInstance().isPSBT(trim(data))) {
+        if (isPSBT(trim(data))) {
             try {
                 PSBTUtil.getInstance(SendActivity.this).doPSBT(trim(data));
             } catch (Exception e) {
-                ;
+                Log.d(TAG, "cannot PSBT with this data");
             }
             return;
         }
@@ -2146,6 +2146,15 @@ public class SendActivity extends SamouraiActivity {
         }
 
         validateSpend();
+    }
+
+    public static boolean isPSBT(final String data) {
+        try {
+            return FormatsUtil.getInstance().isPSBT(data);
+        } catch (final Exception e) {
+            Log.d(TAG, "data is not PSBT");
+            return false;
+        }
     }
 
 

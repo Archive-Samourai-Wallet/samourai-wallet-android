@@ -52,6 +52,7 @@ import com.samourai.wallet.send.SendActivity
 import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.send.SendParams
 import com.samourai.wallet.send.UTXO
+import com.samourai.wallet.send.SendActivity.isPSBT
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
@@ -694,7 +695,7 @@ class BatchSpendActivity : SamouraiActivity() {
             }
             return
         }
-        if (FormatsUtil.getInstance().isPSBT(data.trim { it <= ' ' })) {
+        if (isPSBT(data.trim { it <= ' ' })) {
             try {
                 PSBTUtil.getInstance(this).doPSBT(data.trim { it <= ' ' })
             } catch (e: Exception) {
