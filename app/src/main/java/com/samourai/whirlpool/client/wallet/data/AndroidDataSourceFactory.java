@@ -11,11 +11,10 @@ import com.samourai.whirlpool.client.wallet.WhirlpoolWallet;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSource;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceConfig;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceFactory;
-import com.samourai.whirlpool.client.wallet.data.utxo.UtxoData;
 import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
 import com.samourai.whirlpool.client.wallet.data.walletState.WalletStateSupplier;
 
-import java.util.function.Consumer;
+import org.bitcoinj.core.NetworkParameters;
 
 public class AndroidDataSourceFactory implements DataSourceFactory {
     private PushTx pushTx;
@@ -38,6 +37,7 @@ public class AndroidDataSourceFactory implements DataSourceFactory {
 
     @Override
     public DataSource createDataSource(WhirlpoolWallet whirlpoolWallet, HD_Wallet bip44w, String passphrase, WalletStateSupplier walletStateSupplier, UtxoConfigSupplier utxoConfigSupplier) throws Exception {
-        return new AndroidDataSource(walletSupplier, utxoConfigSupplier, dataSourceConfig, pushTx, apiFactory, bip47Util, bip47Meta, backendApi);
+        NetworkParameters params = whirlpoolWallet.getConfig().getSamouraiNetwork().getParams();
+        return new AndroidDataSource(walletSupplier, utxoConfigSupplier, dataSourceConfig, pushTx, apiFactory, bip47Util, bip47Meta, backendApi, params);
     }
 }

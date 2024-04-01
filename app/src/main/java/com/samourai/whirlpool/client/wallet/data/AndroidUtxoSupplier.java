@@ -11,19 +11,18 @@ import com.samourai.wallet.bipWallet.WalletSupplier;
 import com.samourai.wallet.constants.BIP_WALLET;
 import com.samourai.wallet.send.UTXO;
 import com.samourai.whirlpool.client.wallet.WhirlpoolUtils;
-import com.samourai.whirlpool.client.wallet.beans.WhirlpoolUtxo;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceConfig;
 import com.samourai.whirlpool.client.wallet.data.utxo.BasicUtxoSupplier;
 import com.samourai.whirlpool.client.wallet.data.utxo.UtxoData;
 import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
 
+import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     private Logger log = LoggerFactory.getLogger(AndroidUtxoSupplier.class);
@@ -36,8 +35,9 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     public AndroidUtxoSupplier(WalletSupplier walletSupplier, UtxoConfigSupplier utxoConfigSupplier, DataSourceConfig dataSourceConfig,
                                APIFactory apiFactory,
                                BIP47Util bip47Util,
-                               BIP47Meta bip47Meta) {
-        super(walletSupplier, utxoConfigSupplier, dataSourceConfig);
+                               BIP47Meta bip47Meta,
+                               NetworkParameters params) {
+        super(walletSupplier, utxoConfigSupplier, dataSourceConfig, params);
         this.apiFactory = apiFactory;
         this.bip47Util = bip47Util;
         this.bip47Meta = bip47Meta;
@@ -80,7 +80,8 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
 
         UnspentOutput[] utxosArray = utxos.toArray(new UnspentOutput[]{});
         WalletResponse.Tx[] txs = new WalletResponse.Tx[]{}; // ignored
-        return new UtxoData(utxosArray, txs);
+        int latestBlockHeight = (int)apiFactory.getLatestBlockHeight();
+        return new UtxoData(utxosArray, txs, latestBlockHeight);
     }
 
     private Collection<UnspentOutput> toUnspentOutputs(Collection<UTXO> utxos, BIP_WALLET bip_wallet) {
@@ -102,8 +103,8 @@ public class AndroidUtxoSupplier extends BasicUtxoSupplier {
     }
 
     @Override
-    public byte[] _getPrivKeyBip47(WhirlpoolUtxo whirlpoolUtxo) throws Exception {
-        String address = whirlpoolUtxo.getUtxo().addr;
+    public byte[] _getPrivKeyBip47(UnspentOutput unspentOutput) throws Exception {
+        String address = unspentOutput.addr;
         String pcode = bip47Meta.getPCode4Addr(address);
         int idx = bip47Meta.getIdx4Addr(address);
         if (log.isDebugEnabled()) {

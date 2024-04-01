@@ -13,11 +13,10 @@ import com.samourai.whirlpool.client.wallet.data.coordinator.CoordinatorSupplier
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSource;
 import com.samourai.whirlpool.client.wallet.data.dataSource.DataSourceConfig;
 import com.samourai.whirlpool.client.wallet.data.paynym.PaynymSupplier;
-import com.samourai.whirlpool.client.wallet.data.utxo.UtxoData;
 import com.samourai.whirlpool.client.wallet.data.utxo.UtxoSupplier;
 import com.samourai.whirlpool.client.wallet.data.utxoConfig.UtxoConfigSupplier;
 
-import java.util.function.Consumer;
+import org.bitcoinj.core.NetworkParameters;
 
 public class AndroidDataSource implements DataSource {
     private PushTx pushTx;
@@ -26,10 +25,10 @@ public class AndroidDataSource implements DataSource {
     private DataSourceConfig dataSourceConfig;
     private BackendApi backendApi;
 
-    public AndroidDataSource(WalletSupplier walletSupplier, UtxoConfigSupplier utxoConfigSupplier, DataSourceConfig dataSourceConfig, PushTx pushTx, APIFactory apiFactory, BIP47Util bip47Util, BIP47Meta bip47Meta, BackendApi backendApi) {
+    public AndroidDataSource(WalletSupplier walletSupplier, UtxoConfigSupplier utxoConfigSupplier, DataSourceConfig dataSourceConfig, PushTx pushTx, APIFactory apiFactory, BIP47Util bip47Util, BIP47Meta bip47Meta, BackendApi backendApi, NetworkParameters params) {
         this.pushTx = pushTx;
         this.walletSupplier = walletSupplier;
-        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, utxoConfigSupplier, dataSourceConfig, apiFactory, bip47Util, bip47Meta);
+        this.utxoSupplier = new AndroidUtxoSupplier(walletSupplier, utxoConfigSupplier, dataSourceConfig, apiFactory, bip47Util, bip47Meta, params);
         this.dataSourceConfig = dataSourceConfig;
         this.backendApi = backendApi;
     }
