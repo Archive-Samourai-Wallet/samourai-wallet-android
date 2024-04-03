@@ -37,6 +37,7 @@ import com.samourai.wallet.send.review.MyModelPreviewProvider
 import com.samourai.wallet.send.review.ReviewTxBottomSheet.ReviewSheetType.MANAGE_FEE
 import com.samourai.wallet.send.review.ReviewTxModel
 import com.samourai.wallet.send.review.ReviewTxModel.MINER
+import com.samourai.wallet.send.review.ReviewTxModel.RICOCHET_FEE
 import com.samourai.wallet.send.review.showBottomSheet
 import com.samourai.wallet.theme.samouraiLightGreyAccent
 import com.samourai.wallet.theme.samouraiTextLightGrey
@@ -49,7 +50,7 @@ import org.apache.commons.lang3.StringUtils.EMPTY
 import java.lang.String.format
 
 @Composable
-fun SimplePreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
+fun RicochetPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
 
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
@@ -81,10 +82,10 @@ fun SimplePreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Column (modifier = Modifier.weight(0.5f, false)) {
-                    SimplePreviewTxInput(model = model, activity = activity)
+                    RicochetPreviewTxInput(model = model, activity = activity)
                 }
                 Column (modifier = Modifier.weight(0.5f, true)) {
-                    SimplePreviewTxOutput(model = model, activity = activity)
+                    RicochetPreviewTxOutput(model = model, activity = activity)
                 }
             }
         }
@@ -92,7 +93,7 @@ fun SimplePreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
 }
 
 @Composable
-fun SimplePreviewTxInput(
+fun RicochetPreviewTxInput(
     model: ReviewTxModel,
     activity: SamouraiActivity?) {
 
@@ -129,7 +130,7 @@ fun SimplePreviewTxInput(
                         enabled = true,
                     ),
             ) {
-                for (utxoPoint in txData!!.selectedUTXOPoints.sortedWith(MyTransactionOutPointAmountComparator(true))) {
+                for (utxoPoint in txData!!.selectedUTXOPoints.sortedWith(MyTransactionOutPointAmountComparator(false))) {
                     DisplayUtxoOutPoint(
                         model = model,
                         activity = activity,
@@ -142,7 +143,7 @@ fun SimplePreviewTxInput(
 }
 
 @Composable
-fun SimplePreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
+fun RicochetPreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
 
     val robotoMediumNormalFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Normal)
@@ -156,7 +157,7 @@ fun SimplePreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
 
     val fees by model.fees.observeAsState()
     val destinationAmount by model.impliedAmount.observeAsState()
-    val txData by model.txData.observeAsState();
+    val txData by model.txData.observeAsState()
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -173,7 +174,7 @@ fun SimplePreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
         ) {
             Column {
                 Text(
-                    text = if (txData!!.change > 0L) "Outputs (2)" else "Output (1)",
+                    text = if (txData!!.change > 0L) "Outputs (3)" else "Output (2)",
                     color = Color.White,
                     fontSize = 14.sp,
                     fontFamily = robotoMediumBoldFont
@@ -204,7 +205,7 @@ fun SimplePreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
                         horizontalAlignment = Alignment.Start,
                     ) {
                         Text(
-                            text = "Spend destination",
+                            text = "Spend destination (at hop ${txData!!.ricochetTransactionInfo?.nbHops()})",
                             maxLines = 1,
                             color = samouraiTextLightGrey,
                             fontSize = 12.sp,
@@ -304,7 +305,50 @@ fun SimplePreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
                             horizontalAlignment = Alignment.End,
                         ) {
                             Text(
-                                text = FormatsUtil.formatBTC(fees!!.get(MINER)),
+                                text = FormatsUtil.formatBTC(fees!!.get(MINER) ?: 0L),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMediumNormalFont
+                            )
+                        }
+                    }
+                }
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row (
+                        modifier = Modifier
+                            .padding(top = 6.dp, bottom = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Column {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_motion),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White
+                            )
+                        }
+                        Column (
+                            modifier = Modifier,
+                            horizontalAlignment = Alignment.Start,
+                        ) {
+                            Text(
+                                text = "Richochet fee",
+                                color = samouraiTextLightGrey,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMonoBoldFont
+                            )
+                        }
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.End,
+                        ) {
+                            Text(
+                                text = FormatsUtil.formatBTC(fees!!.get(RICOCHET_FEE)?:0),
                                 color = Color.White,
                                 fontSize = 12.sp,
                                 fontFamily = robotoMediumNormalFont
@@ -319,10 +363,10 @@ fun SimplePreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) {
 
 @Preview(heightDp = 780, widthDp = 420)
 @Composable
-fun DefaultSimplePreviewTx(
+fun DefaultRicochetPreviewTx(
     @PreviewParameter(MyModelPreviewProvider::class) reviewTxModel: ReviewTxModel
 ) {
     Box(modifier = Modifier.background(samouraiWindow)) {
-        SimplePreviewTx(model = reviewTxModel, activity = null)
+        RicochetPreviewTx(model = reviewTxModel, activity = null)
     }
 }

@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -63,7 +64,7 @@ public class TxAlertReview {
         return this;
     }
 
-    public TxAlertReview addReusedAddresses(final Set<String> addresses) {
+    public TxAlertReview addReusedAddresses(final Collection<String> addresses) {
         reusedAddresses.addAll(addresses);
         return this;
     }

@@ -3,6 +3,8 @@ package com.samourai.wallet.send.review.ref;
 import static com.samourai.wallet.send.review.ref.EnumCoinSelectionType.BATCH_SPEND;
 import static com.samourai.wallet.send.review.ref.EnumCoinSelectionType.CUSTOM;
 import static com.samourai.wallet.send.review.ref.EnumCoinSelectionType.CUSTOM_BATCH_SPEND;
+import static com.samourai.wallet.send.review.ref.EnumCoinSelectionType.RICOCHET;
+import static com.samourai.wallet.send.review.ref.EnumCoinSelectionType.RICOCHET_CUSTOM;
 import static com.samourai.wallet.send.review.ref.EnumCoinSelectionType.SIMPLE;
 import static com.samourai.wallet.send.review.ref.EnumCoinSelectionType.STONEWALL;
 import static java.util.Objects.nonNull;
@@ -69,7 +71,21 @@ public enum EnumSendType {
             return super.buildTx(model.buildBoltzmannTxData());
         }
     },
-    SPEND_RICOCHET(2, "Ricochet", null, null) {
+    SPEND_RICOCHET(2, "Ricochet", RICOCHET, SIMPLE) {
+        @Override
+        public EnumSendType broadcastTx(final ReviewTxModel model, final SamouraiActivity act)
+                throws Exception {
+
+            SpendRicochetTxBroadcaster.create(buildTx(model), act).broadcast();
+            return this;
+        }
+
+        @Override
+        public ReviewTxModel buildTx(final ReviewTxModel model) throws Exception {
+            return super.buildTx(model.buildRicochetTxData());
+        }
+    },
+    SPEND_RICOCHET_CUSTOM(2, "Custom ricochet", RICOCHET_CUSTOM, CUSTOM) {
         @Override
         public EnumSendType broadcastTx(final ReviewTxModel model, final SamouraiActivity act)
                 throws Exception {
@@ -183,6 +199,14 @@ public enum EnumSendType {
         return this == EnumSendType.SPEND_BATCH || this == EnumSendType.SPEND_CUSTOM_BATCH;
     }
 
+    public boolean isJoinbot() {
+        return this == EnumSendType.SPEND_JOINBOT;
+    }
+
+    public boolean isRicochet() {
+        return this == EnumSendType.SPEND_RICOCHET || this == EnumSendType.SPEND_RICOCHET_CUSTOM;
+    }
+
     public EnumCoinSelectionType getCoinSelectionType() {
         return coinSelectionType;
     }
@@ -215,8 +239,6 @@ public enum EnumSendType {
     public EnumSendType toSelection(final EnumCoinSelectionType selectionType) {
         if (isBatchSpend()) {
             switch (selectionType) {
-                case STONEWALL:
-                    return this;
                 case SIMPLE:
                     return EnumSendType.SPEND_BATCH;
                 case CUSTOM:
@@ -225,6 +247,15 @@ public enum EnumSendType {
                     return EnumSendType.SPEND_BATCH;
                 case CUSTOM_BATCH_SPEND:
                     return EnumSendType.SPEND_CUSTOM_BATCH;
+                default:
+                    return this;
+            }
+        } else if (isRicochet()) {
+            switch (selectionType) {
+                case SIMPLE:
+                    return EnumSendType.SPEND_RICOCHET;
+                case CUSTOM:
+                    return EnumSendType.SPEND_RICOCHET_CUSTOM;
                 default:
                     return this;
             }

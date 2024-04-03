@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,6 +75,7 @@ fun SwipeSendButtonContent(
     amountToLeaveWalletColor: Color = Color.White,
     action: Runnable?,
     enable: LiveData<Boolean>,
+    somethingLoading: LiveData<Boolean> = MutableLiveData(false),
     listener: SwipeSendButtonListener?,
     alphaBackground: Float
 ) {
@@ -104,6 +107,7 @@ fun SwipeSendButtonContent(
                 amountColor = amountToLeaveWalletColor,
                 action = action,
                 enable = enable,
+                somethingLoading = somethingLoading,
                 tapAndHoldInfo = showTapAndHoldComponent,
                 isOnSwipeValidation = isOnSwipeValidation,
                 listener = listener)
@@ -157,6 +161,7 @@ private fun SwipeSendButtonComponent(
     amountColor: Color = Color.White,
     action:Runnable?,
     enable: LiveData<Boolean>,
+    somethingLoading: LiveData<Boolean>,
     tapAndHoldInfo: MutableState<Boolean>,
     isOnSwipeValidation: MutableState<Boolean>,
     listener: SwipeSendButtonListener?
@@ -166,13 +171,16 @@ private fun SwipeSendButtonComponent(
     val density = LocalDensity.current
     val buttonSize = 48.dp
 
+    val enable by enable.observeAsState()
+    val somethingLoading by somethingLoading.observeAsState()
+    val active = enable!! && !somethingLoading!!
     var jobHoldInfo by remember { mutableStateOf<Job?>(null) }
     var jobForSwipeValidation by remember { mutableStateOf<Job?>(null) }
     var isFullSwiped by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var isButtonPressed by remember { mutableStateOf(false) }
     var btnAlpha = if (isButtonPressed || isOnSwipeValidation.value) 0.90f else 1f
-    btnAlpha = if (enable.value!!) btnAlpha else btnAlpha - 0.5f
+    btnAlpha = if (active!!) btnAlpha else btnAlpha - 0.5f
 
     val swipeButtonPx = ViewHelper.convertDpToPx(valueInDp = buttonSize, density = density)
     var componentSize by remember { mutableStateOf(Size.Zero) }
@@ -260,7 +268,7 @@ private fun SwipeSendButtonComponent(
                     .size(buttonSize)
                     .offset { dragOffset }
                     .then(
-                        if (enable.value!!) {
+                        if (active!!) {
                             Modifier
                                 .pointerInput(Unit) {
                                     detectDragGesturesAfterLongPress(
@@ -321,7 +329,9 @@ private fun SwipeSendButtonComponent(
                                                                 delay(250L)
                                                                 isOnSwipeValidation.value = false
                                                                 isFullSwiped = false
-                                                                listener?.onStateChange(IS_SWIPING_DISABLED)
+                                                                listener?.onStateChange(
+                                                                    IS_SWIPING_DISABLED
+                                                                )
                                                             }
                                                         }
                                                     }
@@ -374,24 +384,30 @@ private fun SwipeSendButtonComponent(
                     horizontalArrangement = Arrangement.Center
                 ) {
 
-                    IconButton(
-                        onClick = { },
-                        enabled = enable.value!!,
-                        modifier = Modifier
-                            .size(buttonSize)
-                            .background(
-                                darkenColor(samouraiSuccess, 1f - btnAlpha),
-                                CircleShape
-                            )
-                            .clip(CircleShape)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_send),
-                            contentDescription = null,
-                            tint = darkenColor(Color(255, 255, 255, 255), 1f-btnAlpha)
+                    if (somethingLoading!!) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 6.dp
                         )
+                    } else {
+                        IconButton(
+                            onClick = { },
+                            enabled = active!!,
+                            modifier = Modifier
+                                .size(buttonSize)
+                                .background(
+                                    darkenColor(samouraiSuccess, 1f - btnAlpha),
+                                    CircleShape
+                                )
+                                .clip(CircleShape)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_send),
+                                contentDescription = null,
+                                tint = darkenColor(Color(255, 255, 255, 255), 1f-btnAlpha)
+                            )
+                        }
                     }
-
                 }
             }
         }

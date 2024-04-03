@@ -42,6 +42,7 @@ import com.google.common.collect.Lists
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
 import com.samourai.wallet.send.MyTransactionOutPoint
+import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.review.MyModelPreviewProvider
 import com.samourai.wallet.send.review.ReviewTxModel
 import com.samourai.wallet.send.review.TxData
@@ -51,18 +52,15 @@ import com.samourai.wallet.theme.samouraiTextLightGrey
 import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.func.MyTransactionOutPointAmountComparator
+import com.samourai.wallet.util.func.TransactionOutPointHelper.retrievesAggregatedAmount
+import com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints
 import org.apache.commons.collections4.CollectionUtils
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.EMPTY
-import org.apache.commons.lang3.StringUtils.SPACE
-import org.apache.commons.lang3.StringUtils.stripEnd
-import org.apache.commons.lang3.StringUtils.stripStart
-import org.bitcoinj.core.Sha256Hash
-import org.bitcoinj.params.TestNet3Params
 import java.lang.String.format
-import java.math.BigInteger
 
 @Composable
-fun CustomPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
+fun RicochetCustomPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
 
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
@@ -94,19 +92,13 @@ fun CustomPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Column (modifier = Modifier.weight(0.5f, false)) {
-                    CustomPreviewTxInput(model = model, activity = activity)
+                    RicochetCustomPreviewTxInput(model = model, activity = activity)
                 }
-                Column (modifier = Modifier.weight(0.15f, false)) {
-                    CustomPreviewTxInputTotal(model = model, activity = activity)
+                Column (modifier = Modifier.weight(0.2f, false)) {
+                    RicochetCustomPreviewTxInputTotal(model = model)
                 }
-                if (impliedSendType!!.isBatchSpend) {
-                    Column (modifier = Modifier.weight(0.5f, true)) {
-                        BatchPreviewTxOutput(model = model, activity = activity)
-                    }
-                } else {
-                    Column (modifier = Modifier.weight(0.35f, true)) {
-                        SimplePreviewTxOutput(model = model, activity = activity)
-                    }
+                Column (modifier = Modifier.weight(0.35f, true)) {
+                    RicochetPreviewTxOutput(model = model, activity = activity)
                 }
             }
         }
@@ -114,7 +106,7 @@ fun CustomPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
 }
 
 @Composable
-fun CustomPreviewTxInput(
+fun RicochetCustomPreviewTxInput(
     model: ReviewTxModel,
     activity: SamouraiActivity?
 ) {
@@ -132,7 +124,7 @@ fun CustomPreviewTxInput(
     val allTxOutPoints by model.allSpendableUtxos.observeAsState()
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
     if (model.isPostmixAccount && CollectionUtils.size(customSelectionUtxos) > 1) {
-        model.autoLoadCustomSelectionUtxos(0L)
+        model.autoLoadCustomSelectionUtxos(1_000_000L)
         model.refreshModel()
     }
 
@@ -161,7 +153,7 @@ fun CustomPreviewTxInput(
                     ),
             ) {
                 for (utxoPoint in allTxOutPoints!!.sortedWith(MyTransactionOutPointAmountComparator(true))) {
-                    DisplayUtxoOutPoint(
+                    RicochetCustomDisplayUtxoOutPoint(
                         model = model,
                         activity = activity,
                         utxoOutPoint = utxoPoint,
@@ -174,7 +166,9 @@ fun CustomPreviewTxInput(
 }
 
 @Composable
-fun CustomPreviewTxInputTotal(model: ReviewTxModel, activity: SamouraiActivity?) {
+fun RicochetCustomPreviewTxInputTotal(
+    model: ReviewTxModel
+) {
 
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
@@ -188,10 +182,17 @@ fun CustomPreviewTxInputTotal(model: ReviewTxModel, activity: SamouraiActivity?)
 
     val verticalScroll = rememberScrollState(0)
 
+    val sendType by model.impliedSendType.observeAsState()
+    val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
+    val isSmallSingleUtxoForRicochet = sendType!!.isRicochet &&
+            customSelectionUtxos!!.size == 1 &&
+            retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos)) < 1_000_000L
+
     val txData by model.txData.observeAsState()
     val destinationAmount by model.impliedAmount.observeAsState()
     val feeAggregated by model.feeAggregated.observeAsState()
     val amountToLeaveWallet = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
+    val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
 
     Column (
         modifier = Modifier
@@ -232,7 +233,7 @@ fun CustomPreviewTxInputTotal(model: ReviewTxModel, activity: SamouraiActivity?)
                 ),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            if (amountToLeaveWallet > txData!!.totalAmountInTxInput) {
+            if (isMissingAmount) {
                 Row (
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -258,18 +259,44 @@ fun CustomPreviewTxInputTotal(model: ReviewTxModel, activity: SamouraiActivity?)
                     }
                 }
             }
+            if (isSmallSingleUtxoForRicochet) {
+                Row (
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Can not use a single UTXO < 0.01 BTC",
+                        color = samouraiAlerts,
+                        fontSize = 14.sp,
+                        fontFamily = robotoMediumItalicBoldFont
+                    )
+                    Column(
+                        modifier = Modifier
+                            .weight(0.35f),
+                        horizontalAlignment = Alignment.End,
+                    ) {
+                        Text(
+                            text = FormatsUtil.formatBTC(amountToLeaveWallet - txData!!.totalAmountInTxInput),
+                            maxLines = 1,
+                            color = samouraiAlerts,
+                            fontSize = 12.sp,
+                            fontFamily = robotoMediumItalicBoldFont
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun DisplayUtxoOutPoint(
+fun RicochetCustomDisplayUtxoOutPoint(
     model: ReviewTxModel,
     activity: SamouraiActivity?,
     utxoOutPoint: MyTransactionOutPoint,
     selected: Boolean
 ) {
-    
+
     val robotoMediumNormalFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Normal)
     )
@@ -287,8 +314,15 @@ fun DisplayUtxoOutPoint(
 
     if (displayableTextLength != -1 && textLength > displayableTextLength && textLength > 0) {
         val midIndex = displayableTextLength/2 + (if (displayableTextLength%2 != 0) 1 else 0)
-        val firstPart = stripEnd("${text.substring(0, midIndex.coerceAtLeast(0))}", SPACE)
-        val secondPart = stripStart("${text.substring((textLength-midIndex+1).coerceAtLeast(0).coerceAtMost(text.length))}", SPACE)
+        val firstPart = StringUtils.stripEnd(
+            text.substring(0, midIndex.coerceAtLeast(0)),
+            StringUtils.SPACE
+        )
+        val secondPart = StringUtils.stripStart(
+            text.substring(
+                (textLength - midIndex + 1).coerceAtLeast(0).coerceAtMost(text.length)
+            ), StringUtils.SPACE
+        )
         textState = "${firstPart}…${secondPart}"
     } else {
         textState = text
@@ -309,7 +343,7 @@ fun DisplayUtxoOutPoint(
                     checkedColor = Color.White
                 ),
                 onCheckedChange = {
-                    val utxo = com.samourai.wallet.send.UTXO()
+                    val utxo = UTXO()
                     utxo.outpoints = Lists.newArrayList(utxoOutPoint);
                     if (! selected) {
                         if (!model.isPostmixAccount || customSelectionUtxos!!.isEmpty()) {
@@ -321,7 +355,6 @@ fun DisplayUtxoOutPoint(
                         model.removeCustomSelectionUtxos(Lists.newArrayList(utxo))
                     }
                     model.refreshModel()
-
                 }
             )
         } else {
@@ -365,8 +398,18 @@ fun DisplayUtxoOutPoint(
                                 textLayoutResult.getWordBoundary(textState.length).start
                             val midIndex = displayableTextLength/2 + (if (displayableTextLength%2 != 0) 1 else 0)
 
-                            val firstPart = stripEnd("${textState.substring(0, midIndex.coerceAtLeast(0))}", SPACE)
-                            val secondPart = stripStart("${textState.substring((textLength-midIndex+1).coerceAtLeast(0).coerceAtMost(textState.length))}", SPACE)
+                            val firstPart = StringUtils.stripEnd(
+                                textState.substring(
+                                    0,
+                                    midIndex.coerceAtLeast(0)
+                                ), StringUtils.SPACE
+                            )
+                            val secondPart = StringUtils.stripStart(
+                                textState.substring(
+                                    (textLength - midIndex + 1).coerceAtLeast(0)
+                                        .coerceAtMost(textState.length)
+                                ), StringUtils.SPACE
+                            )
                             textState = "${firstPart}…${secondPart}"
                         }
                     }
@@ -391,32 +434,10 @@ fun DisplayUtxoOutPoint(
 
 @Preview(heightDp = 480, widthDp = 420)
 @Composable
-fun DefaultCustomPreviewTx(
+fun DefaultRicochetCustomPreviewTx(
     @PreviewParameter(MyModelPreviewProvider::class) reviewTxModel: ReviewTxModel
 ) {
     Box(modifier = Modifier.background(samouraiWindow)) {
-        CustomPreviewTx(model = reviewTxModel, activity = null)
-    }
-}
-
-@Preview(heightDp = 100, widthDp = 420)
-@Composable
-fun DisplayUtxoOutPointPreview(
-    @PreviewParameter(MyModelPreviewProvider::class) reviewTxModel: ReviewTxModel
-) {
-    Box(modifier = Modifier.background(samouraiWindow)) {
-        DisplayUtxoOutPoint(
-            model = reviewTxModel,
-            activity = null,
-            utxoOutPoint = MyTransactionOutPoint(
-                TestNet3Params.get(),
-                Sha256Hash.ZERO_HASH,
-                0,
-                BigInteger.valueOf(120000), ByteArray(0),
-                "THIS IS ADDRESS WHICH IS TOO LONG TO DISPLAY IT ENTIERELY",
-                0
-            ),
-            selected = true
-        )
+        RicochetCustomPreviewTx(model = reviewTxModel, activity = null)
     }
 }

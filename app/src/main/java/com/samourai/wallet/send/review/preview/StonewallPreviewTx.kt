@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -77,9 +79,9 @@ fun StonewallPreviewTx(model: ReviewTxModel, activity: SamouraiActivity?) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Column (modifier = Modifier.weight(0.5f, false)) {
-                    SimplePreviewTxInput(model = model)
+                    SimplePreviewTxInput(model = model, activity = activity)
                 }
-                Column (modifier = Modifier.weight(0.6f, false)) {
+                Column (modifier = Modifier.weight(0.6f, true)) {
                     StonewallPreviewTxOutput(model = model, activity = activity)
                 }
             }
@@ -106,6 +108,8 @@ fun StonewallPreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) 
 
     val coroutineScope = rememberCoroutineScope()
 
+    val verticalScroll = rememberScrollState(0)
+
     Box (
         modifier = Modifier
             .background(samouraiLightGreyAccent, RoundedCornerShape(6.dp))
@@ -123,73 +127,33 @@ fun StonewallPreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) 
                     fontFamily = robotoMediumBoldFont
                 )
             }
-            Row (
+            Column (
                 modifier = Modifier
-                    .padding(top = 12.dp, bottom = 6.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .verticalScroll(
+                        state = verticalScroll,
+                        enabled = true,
+                    ),
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_right_top),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = Color.White
-                )
-                Column (
-                    modifier = Modifier
-                        .weight(0.7f),
-                    horizontalAlignment = Alignment.Start,
-                ) {
-                    Text(
-                        text = "Spend destination",
-                        maxLines = 1,
-                        color = samouraiTextLightGrey,
-                        fontSize = 12.sp,
-                        fontFamily = robotoMonoBoldFont
-                    )
-                }
-                Column (
-                    modifier = Modifier
-                        .weight(0.35f),
-                    horizontalAlignment = Alignment.End,
-                ) {
-                    Text(
-                        text = FormatsUtil.formatBTC(destinationAmount),
-                        maxLines = 1,
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontFamily = robotoMediumNormalFont
-                    )
-                }
-            }
-            for (receiverAddressAndAmount in txData!!.receivers) {
-                if (StringUtils.equals(receiverAddressAndAmount.key, model.address)) continue
                 Row (
                     modifier = Modifier
-                        .padding(top = 6.dp, bottom = 6.dp)
+                        .padding(top = 12.dp, bottom = 6.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Box {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_hat),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp).padding(bottom = 7.dp),
-                            tint = Color.White
-                        )
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_left_bottom),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp).padding(top = 4.dp),
-                            tint = Color.White
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_right_top),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.White
+                    )
                     Column (
-                        modifier = Modifier,
+                        modifier = Modifier
+                            .weight(0.7f),
                         horizontalAlignment = Alignment.Start,
                     ) {
                         Text(
-                            text = "Decoy returned to wallet",
+                            text = "Spend destination",
+                            maxLines = 1,
                             color = samouraiTextLightGrey,
                             fontSize = 12.sp,
                             fontFamily = robotoMonoBoldFont
@@ -197,65 +161,117 @@ fun StonewallPreviewTxOutput(model: ReviewTxModel, activity: SamouraiActivity?) 
                     }
                     Column (
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .weight(0.35f),
                         horizontalAlignment = Alignment.End,
                     ) {
                         Text(
-                            text = FormatsUtil.formatBTC(receiverAddressAndAmount.value!!.toLong()),
+                            text = FormatsUtil.formatBTC(destinationAmount),
+                            maxLines = 1,
                             color = Color.White,
                             fontSize = 12.sp,
                             fontFamily = robotoMediumNormalFont
                         )
                     }
                 }
-            }
-
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        coroutineScope.launch(Dispatchers.IO) {
-                            model.refreshFees {}
+                for (receiverAddressAndAmount in txData!!.receivers) {
+                    if (StringUtils.equals(receiverAddressAndAmount.key, model.address)) continue
+                    Row (
+                        modifier = Modifier
+                            .padding(top = 6.dp, bottom = 6.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_hat),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .padding(bottom = 7.dp),
+                                tint = Color.White
+                            )
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_arrow_left_bottom),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .padding(top = 4.dp),
+                                tint = Color.White
+                            )
                         }
-                        showBottomSheet(type = MANAGE_FEE, model = model, activity = activity)
-                    },
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+                        Column (
+                            modifier = Modifier,
+                            horizontalAlignment = Alignment.Start,
+                        ) {
+                            Text(
+                                text = "Decoy returned to wallet",
+                                color = samouraiTextLightGrey,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMonoBoldFont
+                            )
+                        }
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.End,
+                        ) {
+                            Text(
+                                text = FormatsUtil.formatBTC(receiverAddressAndAmount.value!!.toLong()),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMediumNormalFont
+                            )
+                        }
+                    }
+                }
+
                 Row (
                     modifier = Modifier
-                        .padding(top = 6.dp, bottom = 6.dp),
+                        .fillMaxWidth()
+                        .clickable {
+                            coroutineScope.launch(Dispatchers.IO) {
+                                model.refreshFees {}
+                            }
+                            showBottomSheet(type = MANAGE_FEE, model = model, activity = activity)
+                        },
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_motion),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = Color.White
-                        )
-                    }
-                    Column (
-                        modifier = Modifier,
-                        horizontalAlignment = Alignment.Start,
-                    ) {
-                        Text(
-                            text = "Miner fee",
-                            color = samouraiTextLightGrey,
-                            fontSize = 12.sp,
-                            fontFamily = robotoMonoBoldFont
-                        )
-                    }
-                    Column (
+                    Row (
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.End,
+                            .padding(top = 6.dp, bottom = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = FormatsUtil.formatBTC(fees!!.get(MINER)),
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontFamily = robotoMediumNormalFont
-                        )
+                        Column {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_motion),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White
+                            )
+                        }
+                        Column (
+                            modifier = Modifier,
+                            horizontalAlignment = Alignment.Start,
+                        ) {
+                            Text(
+                                text = "Miner fee",
+                                color = samouraiTextLightGrey,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMonoBoldFont
+                            )
+                        }
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.End,
+                        ) {
+                            Text(
+                                text = FormatsUtil.formatBTC(fees!!.get(MINER)),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontFamily = robotoMediumNormalFont
+                            )
+                        }
                     }
                 }
             }

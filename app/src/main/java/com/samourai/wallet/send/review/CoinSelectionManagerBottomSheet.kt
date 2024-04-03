@@ -83,7 +83,11 @@ fun ReviewTxCoinSelectionManagerBody(model: ReviewTxModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         for (selectionType in ImmutableList.of(STONEWALL, SIMPLE, CUSTOM)) {
-            val enable = selectionType != STONEWALL || stonewallPossible!!
+            var enable = selectionType != STONEWALL || stonewallPossible!!
+            if (model.isPostmixAccount && stonewallPossible!! && selectionType == SIMPLE) {
+                enable = false
+            }
+
             Row(
                 modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp),

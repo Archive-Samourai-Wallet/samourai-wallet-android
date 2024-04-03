@@ -1,24 +1,22 @@
 package com.samourai.wallet.send.review.ref;
 
-import static com.samourai.wallet.api.seen.SeenClient.createSeenClient;
 import static com.samourai.wallet.util.func.AddressHelper.sendToMyDepositAddress;
 import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
 import static com.samourai.wallet.util.tech.NumberHelper.numberOfTrailingZeros;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 import android.util.Log;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.seen.RawSeenAddresses;
-import com.samourai.wallet.api.seen.SeenClient;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
@@ -26,7 +24,6 @@ import com.samourai.wallet.send.review.ReviewTxModel;
 import com.samourai.wallet.send.review.TxAlertReview;
 import com.samourai.wallet.send.review.TxData;
 import com.samourai.wallet.util.func.BatchSendUtil;
-import com.samourai.wallet.util.func.BatchSendUtil.BatchSend;
 import com.samourai.wallet.util.func.EnumAddressType;
 import com.samourai.wallet.util.func.MyTransactionOutPointAmountComparator;
 import com.samourai.wallet.util.func.SendAddressUtil;
@@ -39,12 +36,12 @@ import java.util.Set;
 
 public enum EnumTxAlert {
 
-    REUSED_SENDING_ADDRESS {
+    REUSED_SENDING_ADDRESS_LOCAL {
         @Override
         public TxAlertReview createAlert(final ReviewTxModel reviewTxModel) {
             return TxAlertReview.create(
-                    R.string.tx_alert_title_reused_sending_address,
-                    R.string.tx_alert_desc_reused_sending_address,
+                    R.string.tx_alert_title_reused_sending_address_local,
+                    R.string.tx_alert_desc_reused_sending_address_local,
                     null);
         }
 
@@ -59,42 +56,63 @@ public enum EnumTxAlert {
             final TxAlertReview alert = createAlert(reviewTxModel);
 
             if (reviewTxModel.getSendType().isBatchSpend()) {
-
-
-                final Set<String> addresses = Sets.newHashSet();
-                try {
-                    final BatchSendUtil batchSendUtil = BatchSendUtil.getInstance();
-                    for (final BatchSend batchSend : batchSendUtil.getCopyOfBatchSends()) {
-                        addresses.add(batchSend.getAddr(reviewTxModel.getApplication()));
-                    }
-
-                    for (final String addr : addresses) {
-                        if (SendAddressUtil.getInstance().get(addr) == 1) {
-                            alert.addReusedAddress(addr);
+                final BatchSendUtil batchSendUtil = BatchSendUtil.getInstance();
+                for (final BatchSendUtil.BatchSend batchSend : CollectionUtils.emptyIfNull(batchSendUtil.getCopyOfBatchSends())) {
+                    if (!batchSend.isPayNym()) {
+                        try {
+                            final String addr = batchSend.getAddr(reviewTxModel.getApplication());
+                            if (SendAddressUtil.getInstance().get(addr) == 1) {
+                                alert.addReusedAddress(addr);
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
                         }
                     }
-
-                    final SeenClient seenClient = createSeenClient(reviewTxModel.getApplication());
-                    alert.addReusedAddresses(seenClient.getSeenAddresses(addresses).allSeenAddresses());
-                } catch (final Exception e) {
-                    throw new RuntimeException(format("issue on calling seen api on a specific address : %s (%s)", addresses, e.getMessage()), e);
                 }
-
             } else {
                 final String address = reviewTxModel.getAddress();
                 if (SendAddressUtil.getInstance().get(address) == 1) {
                     alert.addReusedAddress(address);
-                } else {
-                    try {
-                        final SeenClient seenClient = createSeenClient(reviewTxModel.getApplication());
-                        final RawSeenAddresses seenAddresses = seenClient.getSeenAddresses(ImmutableList.of(address));
-                        if (seenAddresses.isAddressSeen(address)) {
-                            alert.addReusedAddress(address);
-                        }
-                    } catch (final Exception e) {
-                        throw new RuntimeException(format("issue on calling seen api on a specific address : %s (%s)", address, e.getMessage()), e);
-                    }
+                }
+            }
+            return alert.getReusedAddresses().isEmpty() ? null : alert;
+        }
+    },REUSED_SENDING_ADDRESS_GLOBAL {
+        @Override
+        public TxAlertReview createAlert(final ReviewTxModel reviewTxModel) {
+            return TxAlertReview.create(
+                    R.string.tx_alert_title_reused_sending_address_global,
+                    R.string.tx_alert_desc_reused_sending_address_global,
+                    null);
+        }
 
+        @Override
+        public TxAlertReview checkForAlert(final ReviewTxModel reviewTxModel, final boolean forInit) {
+
+            if (!forInit) {
+                // avoid to call api several times
+                return reviewTxModel.getAlertReviews().getValue().get(this);
+            }
+
+            final TxAlertReview localAlert = REUSED_SENDING_ADDRESS_LOCAL.checkForAlert(reviewTxModel, forInit);
+            final Set<String> localReusedAddresses = nonNull(localAlert)
+                    ? localAlert.getReusedAddresses()
+                    : ImmutableSet.of();
+
+            final RawSeenAddresses seenAddresses = reviewTxModel.getSeenAddresses();
+            if (isNull(seenAddresses)) return null;
+
+            final Set<String> allGlobalSeenAddresses = Sets.newHashSet(seenAddresses.allSeenAddresses());
+            allGlobalSeenAddresses.removeAll(localReusedAddresses);
+
+            final TxAlertReview alert = createAlert(reviewTxModel);
+
+            if (reviewTxModel.getSendType().isBatchSpend()) {
+                alert.addReusedAddresses(allGlobalSeenAddresses);
+            } else {
+                final String address = reviewTxModel.getAddress();
+                if (allGlobalSeenAddresses.contains(address)) {
+                    alert.addReusedAddress(address);
                 }
             }
             return alert.getReusedAddresses().isEmpty() ? null : alert;
@@ -136,7 +154,7 @@ public enum EnumTxAlert {
             final List<MyTransactionOutPoint> selectedUTXOPoints = reviewTxModel.getTxData()
                     .getValue().getSelectedUTXOPoints();
             final List<MyTransactionOutPoint> orderedUTXOPoints = Ordering
-                    .from(new MyTransactionOutPointAmountComparator())
+                    .from(new MyTransactionOutPointAmountComparator(true))
                     .sortedCopy(selectedUTXOPoints);
 
             final List<MyTransactionOutPoint> toRemovePoints = Lists.newArrayList();

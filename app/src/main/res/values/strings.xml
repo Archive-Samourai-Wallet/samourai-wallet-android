@@ -1028,8 +1028,11 @@
 
     <string name="tx_alert_title">Transaction alerts</string>
 
-    <string name="tx_alert_title_reused_sending_address">Reused sending address</string>
-    <string name="tx_alert_desc_reused_sending_address">You have sent bitcoin to this address before. Try to avoid sending to addresses that have already been used to help protect your privacy.</string>
+    <string name="tx_alert_title_reused_sending_address_local">Reused sending address</string>
+    <string name="tx_alert_desc_reused_sending_address_local">You have sent bitcoin to this address before. Try to avoid sending to addresses that have already been used to help protect your privacy.</string>
+
+    <string name="tx_alert_title_reused_sending_address_global">Address seen on blockchain</string>
+    <string name="tx_alert_desc_reused_sending_address_global">This address has already been used to receive bitcoin before. Try to avoid sending to addresses that have already been used to help protect your privacy.</string>
 
     <string name="tx_alert_title_unnecessary_input">Unnecessary inputs</string>
     <string name="tx_alert_desc_unnecessary_input">This transaction includes more inputs than is needed to compose the transaction which is inefficient and may reveal more information than needed on the blockchain.</string>
@@ -1045,5 +1048,8 @@
 
     <string name="tx_alert_title_spend_from_postmix_to_deposit">Spending from Postmix to Deposit account</string>
     <string name="tx_alert_desc_spend_from_postmix_to_deposit">You are attempting to spend from your Postmix to Deposit account</string>
+
+
+    <string name="stonewall_inputs_refreshed">STONEWALL inputs refreshed</string>
 
 </resources>

@@ -67,8 +67,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.MutableLiveData
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.Lists
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
+import com.samourai.wallet.api.seen.SeenClient
 import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.home.TestApplication
 import com.samourai.wallet.send.FeeUtil
@@ -92,9 +94,13 @@ import com.samourai.wallet.theme.samouraiSlateGreyAccent
 import com.samourai.wallet.theme.samouraiTextLightGrey
 import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.func.TransactionOutPointHelper
 import com.samourai.wallet.util.tech.ColorHelper.Companion.getAttributeColor
 import com.samourai.wallet.util.tech.ColorHelper.Companion.lightenColor
 import com.samourai.wallet.util.view.rememberImeState
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -119,6 +125,24 @@ class ReviewTxActivity : SamouraiActivity() {
 
         account = intent.extras!!.getInt("_account")
         val type = intent.getIntExtra("sendType", 0)
+        val sendType = EnumSendType.firstFromType(type)
+
+        val addresses = Lists.newArrayList<String>()
+        if (sendType.isBatchSpend) {
+            addresses.addAll(BatchSendUtil.getInstance().getAddresses(this))
+        } else {
+            addresses.add(intent.getStringExtra("sendAddress"))
+        }
+
+        val disposable = Observable.fromCallable {
+            SeenClient.createSeenClient(this).getSeenAddresses(addresses)
+        }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({reviewTxModel.setSeenAddresses(it)}) {
+                Log.e(TAG, it.message, it)
+            }
+        registerDisposable(disposable)
 
         reviewTxModel
             .setPreselectedUtxo(intent.getStringExtra("preselected"))
@@ -127,12 +151,40 @@ class ReviewTxActivity : SamouraiActivity() {
             .setAddressLabel(intent.getStringExtra("sendAddressLabel"))
             .setAmount(intent.getLongExtra("sendAmount", 0L))
             .setRicochetStaggeredDelivery(intent.getBooleanExtra("ricochetStaggeredDelivery", false))
-            .setType(EnumSendType.firstFromType(type))
+            .setType(sendType)
 
         setupThemes()
 
         setContent {
             ReviewTxActivityContent(model = reviewTxModel, activity = this)
+        }
+    }
+
+    override fun onBackPressed() {
+
+        val txData = reviewTxModel.txData.value
+        val destinationAmount = reviewTxModel.impliedAmount.value
+        val feeAggregated = reviewTxModel.feeAggregated.value
+        val amountToLeaveWallet = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
+        val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
+
+        val sendType = reviewTxModel.impliedSendType.value
+        val customSelectionUtxos = reviewTxModel.customSelectionUtxos.value
+        val isSmallSingleUtxoForRicochet = sendType!!.isRicochet &&
+                customSelectionUtxos!!.size == 1 &&
+                TransactionOutPointHelper.retrievesAggregatedAmount(
+                    TransactionOutPointHelper.toTxOutPoints(
+                        customSelectionUtxos
+                    )
+                ) < 1_000_000L
+
+        if ((! isSmallSingleUtxoForRicochet && !isMissingAmount) || sendType.isJoinbot) {
+            when (reviewTxModel.currentScreen.value) {
+                EnumReviewScreen.TX_INFO -> super.onBackPressed()
+                EnumReviewScreen.TX_ALERT -> reviewTxModel.currentScreen.postValue(EnumReviewScreen.TX_INFO)
+                EnumReviewScreen.TX_PREVIEW -> reviewTxModel.currentScreen.postValue(EnumReviewScreen.TX_INFO)
+                null -> super.onBackPressed()
+            }
         }
     }
 }
@@ -286,6 +338,7 @@ private fun ReviewTxInfo(
                         amountToLeaveWalletColor = amountToLeaveWalletColor,
                         action = sendTx,
                         enable = MutableLiveData(true),
+                        somethingLoading = model.isSyncPayNymInProgress,
                         listener = swipeSendButtonContentListener,
                         alphaBackground = 0f
                     )
@@ -303,7 +356,21 @@ fun ReviewTxActivityContentHeader(
     screen: EnumReviewScreen?
 ) {
 
-    val impliedSendType by model.impliedSendType.observeAsState()
+    val txData by model.txData.observeAsState()
+    val destinationAmount by model.impliedAmount.observeAsState()
+    val feeAggregated by model.feeAggregated.observeAsState()
+    val amountToLeaveWallet = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
+    val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
+
+    val sendType by model.impliedSendType.observeAsState()
+    val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
+    val isSmallSingleUtxoForRicochet = sendType!!.isRicochet &&
+            customSelectionUtxos!!.size == 1 &&
+            TransactionOutPointHelper.retrievesAggregatedAmount(
+                TransactionOutPointHelper.toTxOutPoints(
+                    customSelectionUtxos
+                )
+            ) < 1_000_000L
 
     val account = if (nonNull(activity)) activity!!.getIntent().extras!!.getInt("_account") else 0
     val backgroundColor = if (account == SamouraiAccountIndex.POSTMIX) samouraiPostmixSpendBlueButton else samouraiSlateGreyAccent
@@ -313,32 +380,37 @@ fun ReviewTxActivityContentHeader(
             .background(lightenColor(backgroundColor, whiteAlpha))
     ){
 
-        Column {
-            IconButton(onClick = {
-                when(screen) {
-                    EnumReviewScreen.TX_PREVIEW -> model.currentScreen.postValue(
-                        EnumReviewScreen.TX_INFO)
-                    EnumReviewScreen.TX_ALERT -> model.currentScreen.postValue(
-                        EnumReviewScreen.TX_INFO)
-                    EnumReviewScreen.TX_INFO -> activity!!.onBackPressed()
-                    else -> throw RuntimeException(format("unknown %s value in EnumReviewScreen", screen))
+        if ((! isSmallSingleUtxoForRicochet && !isMissingAmount) || sendType!!.isJoinbot) {
+            Column {
+                IconButton(onClick = {
+                    when(screen) {
+                        EnumReviewScreen.TX_PREVIEW -> model.currentScreen.postValue(
+                            EnumReviewScreen.TX_INFO)
+                        EnumReviewScreen.TX_ALERT -> model.currentScreen.postValue(
+                            EnumReviewScreen.TX_INFO)
+                        EnumReviewScreen.TX_INFO -> activity!!.onBackPressed()
+                        else -> throw RuntimeException(format("unknown %s value in EnumReviewScreen", screen))
+                    }
+                }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
+                        contentDescription = null,
+                        tint = Color.White
+                    )
                 }
-            }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
-                    contentDescription = null,
-                    tint = Color.White
-                )
             }
+        } else {
+            Spacer(modifier = Modifier.size(24.dp))
         }
         Column (
             modifier = Modifier.weight(1f)
         ) {}
         Row {
             if (screen == EnumReviewScreen.TX_PREVIEW) {
-                if (impliedSendType == EnumSendType.SPEND_BOLTZMANN) {
+                if (sendType == EnumSendType.SPEND_BOLTZMANN) {
                     IconButton(onClick = {
                         model.recomposeStonewall()
+                        Toast.makeText(activity, R.string.stonewall_inputs_refreshed, Toast.LENGTH_SHORT).show()
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_refresh),
@@ -346,7 +418,7 @@ fun ReviewTxActivityContentHeader(
                             tint = Color.White
                         )
                     }
-                } else if (impliedSendType!!.isCustomSelection) {
+                } else if (sendType!!.isCustomSelection) {
                     IconButton(onClick = {
                         showBottomSheet(type = FILTER_UTXO, model = model, activity = activity)
                     }) {
@@ -516,7 +588,7 @@ fun TransactionOutput(
     )
 
     val alertReviews = model.alertReviews.observeAsState()
-    val alertReused = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS)
+    val alertReused = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_GLOBAL)
     val isReusedAddr = if (nonNull(alertReused))
         alertReused!!.isReusedAddress(spendInfo.getAddr(model.application))
     else false
@@ -564,9 +636,10 @@ fun DisplayAddress(
         val inlineContentId = address + "inlineIcon"
         val annotatedString = buildAnnotatedString {
             append(address)
-            append(SPACE)
+            append(System.lineSeparator())
             appendInlineContent(inlineContentId, "[icon]")
-            append("Reused sending address")
+            append(SPACE)
+            append("Reused address")
         }
 
         val inlineContent = mapOf(
@@ -595,7 +668,7 @@ fun DisplayAddress(
             fontSize = 12.sp,
             fontFamily = robotoMonoNormalFont,
             softWrap = true,
-            maxLines = 3
+            maxLines = 4
         )
 
     } else {
@@ -605,7 +678,7 @@ fun DisplayAddress(
             fontSize = 12.sp,
             fontFamily = robotoMonoNormalFont,
             softWrap = true,
-            maxLines = 3
+            maxLines = 4
         )
     }
 }
@@ -742,7 +815,7 @@ fun ReviewTxActivityContentFees(model : ReviewTxModel,
                     val allFeeNames: List<String> = ImmutableList.copyOf(fees!!.keys)
                     for (i in 1 until allFeeNames.size) {
                         val name = allFeeNames.get(i)
-                        val values = fees!!.get(name);
+                        val values = fees!!.get(name)
                         Row (
                             modifier = Modifier
                                 .padding(bottom = 14.dp)
@@ -984,8 +1057,8 @@ fun ReviewTxActivityContentTransaction(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = if (nonNull(entropy!!.entropy))
-                                    DecimalFormat("##.#").format(entropy!!.entropy) + " bits" else "? bits",
+                                text = if (nonNull(entropy!!.entropy) && entropy!!.entropy <= 10)
+                                    DecimalFormat("##.##").format(entropy!!.entropy) + " bits" else ">10 bits",
                                 color = samouraiTextLightGrey,
                                 fontSize = 12.sp,
                                 fontFamily = robotoMediumNormalFont
@@ -1011,8 +1084,8 @@ fun ReviewTxActivityContentTransaction(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = if (nonNull(entropy!!.interpretations))
-                                    Objects.toString(entropy!!.interpretations) else "?",
+                                text = if (nonNull(entropy!!.interpretations) && entropy!!.interpretations <= 12)
+                                    Objects.toString(entropy!!.interpretations) else ">12",
                                 color = samouraiTextLightGrey,
                                 fontSize = 12.sp,
                                 fontFamily = robotoMediumNormalFont

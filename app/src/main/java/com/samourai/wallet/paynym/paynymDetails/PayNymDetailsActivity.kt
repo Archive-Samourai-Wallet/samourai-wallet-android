@@ -67,6 +67,7 @@ import com.samourai.wallet.util.func.MonetaryUtil
 import com.samourai.wallet.util.func.RBFFactory.createRBFSpendFromTx
 import com.samourai.wallet.util.func.RBFFactory.updateRBFSpendForBroadcastTxAndRegister
 import com.samourai.wallet.util.func.SentToFromBIP47Util
+import com.samourai.wallet.util.func.synPayNym
 import com.samourai.wallet.utxos.UTXOUtil
 import com.samourai.wallet.widgets.ItemDividerDecorator
 import com.samourai.wallet.xmanagerClient.XManagerClient
@@ -928,50 +929,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
     private fun doSync() {
         binding.progressBar.visibility = View.VISIBLE
         val disposable = Observable.fromCallable {
-            val payment_code = PaymentCode(pcode)
-            var idx = 0
-            var loop = true
-            val addrs = ArrayList<String>()
-            while (loop) {
-                addrs.clear()
-                for (i in idx until (idx + 20)) {
-//                            Log.i("PayNymDetailsActivity", "sync receive from " + i + ":" + BIP47Util.getInstance(PayNymDetailsActivity.this).getReceivePubKey(payment_code, i));
-                    BIP47Meta.getInstance().idx4AddrLookup[BIP47Util.getInstance(this).getReceivePubKey(payment_code, i)] = i
-                    BIP47Meta.getInstance().pCode4AddrLookup[BIP47Util.getInstance(this).getReceivePubKey(payment_code, i)] = payment_code.toString()
-                    addrs.add(BIP47Util.getInstance(this).getReceivePubKey(payment_code, i))
-                    //                            Log.i("PayNymDetailsActivity", "p2pkh " + i + ":" + BIP47Util.getInstance(PayNymDetailsActivity.this).getReceiveAddress(payment_code, i).getReceiveECKey().toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-                }
-                val s = addrs.toTypedArray()
-                val nb = APIFactory.getInstance(this).syncBIP47Incoming(s)
-                //                        Log.i("PayNymDetailsActivity", "sync receive idx:" + idx + ", nb == " + nb);
-                if (nb == 0) {
-                    loop = false
-                }
-                idx += 20
-            }
-            idx = 0
-            loop = true
-            BIP47Meta.getInstance().setOutgoingIdx(pcode, 0)
-            while (loop) {
-                addrs.clear()
-                for (i in idx until (idx + 20)) {
-                    val sendAddress = BIP47Util.getInstance(this).getSendAddress(payment_code, i)
-                    //                            Log.i("PayNymDetailsActivity", "sync send to " + i + ":" + sendAddress.getSendECKey().toAddress(SamouraiWallet.getInstance().getCurrentNetworkParams()).toString());
-//                            BIP47Meta.getInstance().setOutgoingIdx(payment_code.toString(), i);
-                    BIP47Meta.getInstance().idx4AddrLookup[BIP47Util.getInstance(this).getSendPubKey(payment_code, i)] = i
-                    BIP47Meta.getInstance().pCode4AddrLookup[BIP47Util.getInstance(this).getSendPubKey(payment_code, i)] = payment_code.toString()
-                    addrs.add(BIP47Util.getInstance(this).getSendPubKey(payment_code, i))
-                }
-                val s = addrs.toTypedArray()
-                val nb = APIFactory.getInstance(this).syncBIP47Outgoing(s)
-                //                        Log.i("PayNymDetailsActivity", "sync send idx:" + idx + ", nb == " + nb);
-                if (nb == 0) {
-                    loop = false
-                }
-                idx += 20
-            }
-            BIP47Meta.getInstance().pruneIncoming()
-            PayloadUtil.getInstance(this).saveWalletToJSON(CharSequenceX(AccessFactory.getInstance(this).guid + AccessFactory.getInstance(this).pin))
+            synPayNym(pcode, this)
             true
         }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -984,6 +942,8 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 }
         disposables.add(disposable)
     }
+
+
 
     companion object {
         private const val EDIT_PCODE = 2000

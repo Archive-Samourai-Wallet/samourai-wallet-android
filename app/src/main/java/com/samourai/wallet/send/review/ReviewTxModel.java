@@ -1,13 +1,35 @@
 package com.samourai.wallet.send.review;
 
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
+import static com.samourai.wallet.send.review.filter.UTXOFilteringProcessor.applyUtxoFilter;
+import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_BOLTZMANN;
+import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_SIMPLE;
+import static com.samourai.wallet.util.func.PayNymUtilKt.synPayNym;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxoPoints;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
+import static com.samourai.wallet.util.tech.ThreadHelper.pauseMillis;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.lang.Math.max;
+import static java.lang.Math.round;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import android.app.Application;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
@@ -18,10 +40,12 @@ import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.fee.EnumFeeRepresentation;
+import com.samourai.wallet.api.seen.RawSeenAddresses;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
+import com.samourai.wallet.ricochet.RicochetTransactionInfo;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.BlockedUTXO;
 import com.samourai.wallet.send.FeeUtil;
@@ -42,6 +66,7 @@ import com.samourai.wallet.util.PrefsUtil;
 import com.samourai.wallet.util.func.BatchSendUtil;
 import com.samourai.wallet.util.func.BatchSendUtil.BatchSend;
 import com.samourai.wallet.util.func.FormatsUtil;
+import com.samourai.wallet.util.func.MyTransactionOutPointAmountComparator;
 import com.samourai.wallet.util.tech.AppUtil;
 import com.samourai.wallet.util.tech.SimpleCallback;
 import com.samourai.wallet.util.tech.SimpleTaskRunner;
@@ -53,11 +78,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bouncycastle.util.encoders.Hex;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -72,9 +96,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -82,27 +103,13 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
-import static com.samourai.wallet.send.review.filter.UTXOFilteringProcessor.applyUtxoFilter;
-import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_BOLTZMANN;
-import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_SIMPLE;
-import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
-import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxoPoints;
-import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
-import static com.samourai.wallet.util.tech.ThreadHelper.pauseMillis;
-import static java.lang.Math.max;
-import static java.lang.Math.round;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
-
 public class ReviewTxModel extends AndroidViewModel {
 
     private static final String TAG = "ReviewTxModel";
     public static final String MINER = "miner";
 
     public static final String MISSING_ADDRESS = "missing address";
-    public static final String ADDR_LABEL_BATCH_SPEND = "Batch Spend";
+    public static final String RICOCHET_FEE = "Ricochet Fee";
 
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
@@ -112,13 +119,14 @@ public class ReviewTxModel extends AndroidViewModel {
 
     private long amount = 0L;
     private MutableLiveData<Long> _impliedAmount;
+    private RawSeenAddresses seenAddresses;
+
     private List<UTXOCoin> preselectedUTXOs;
     private EnumSendType type = SPEND_BOLTZMANN;
     private EnumSendType sendType;
     private MutableLiveData<EnumSendType> impliedSendType;
     private boolean ricochetStaggeredDelivery;
     private Long _balance = null;
-//    private TxData txData = TxData.create(getApplication());
     private MutableLiveData<TxData> txData = new MutableLiveData<>(TxData.create(getApplication()));
     private SelectCahootsType.type selectedCahootsType = SelectCahootsType.type.NONE;
     private MutableLiveData<EntropyInfo> entropy = null;
@@ -150,6 +158,7 @@ public class ReviewTxModel extends AndroidViewModel {
     private boolean useLikeRequestedAsFixForTx;
 
     private final AtomicBoolean feesRefreshed = new AtomicBoolean();
+    private MutableLiveData<Boolean> syncPayNymInProgress = new MutableLiveData<>(true);
 
     public ReviewTxModel(final Application application) {
         super(application);
@@ -176,15 +185,16 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     public List<MyTransactionOutPoint> allSpendableUtxo() {
+
         final APIFactory apiFactory = APIFactory.getInstance(getApplication());
         final List<UTXO> spendableUtxos = isPostmixAccount()
                 ? apiFactory.getUtxosPostMix(true)
                 : apiFactory.getUtxos(true);
+
         return toTxOutPoints(applyUtxoFilter(
                 spendableUtxos,
                 utxoFilterModel.getValue(),
-                isPostmixAccount(),
-                getApplication()));
+                isPostmixAccount()));
     }
 
     public LiveData<List<MyTransactionOutPoint>> getAllSpendableUtxos() {
@@ -200,6 +210,35 @@ public class ReviewTxModel extends AndroidViewModel {
             compositeDisposable.dispose();
         }
         super.onCleared();
+    }
+
+    public void autoLoadCustomSelectionUtxos(final long minCoinValue) {
+
+        if (isNull(customSelectionUtxoOutPoints)) {
+            customSelectionUtxoOutPoints = Sets.newLinkedHashSet();
+        } else {
+            customSelectionUtxoOutPoints.clear();
+        }
+
+        final List<MyTransactionOutPoint> orderedOutPoints = Ordering
+                .from(new MyTransactionOutPointAmountComparator(false))
+                .sortedCopy(allSpendableUtxo());
+
+        final Long destinationAmount = getImpliedAmount().getValue();
+        final Long feeAggregated = getFeeAggregated().getValue();
+        final Long amountToLeaveWallet = (isNull(destinationAmount) ? 0L : destinationAmount.longValue()) +
+                (isNull(feeAggregated) ? 0L : feeAggregated.longValue());
+
+        for (final MyTransactionOutPoint outPoint : orderedOutPoints) {
+            final Coin coin = outPoint.getValue();
+            if (isNull(coin)) continue;
+            if (minCoinValue > 0L && coin.value < minCoinValue) continue;
+            if (coin.value >= amountToLeaveWallet) {
+                customSelectionUtxoOutPoints.add(outPoint);
+                break;
+            }
+        }
+        customSelectionUtxosLiveData.postValue(ImmutableList.copyOf(toUtxos(customSelectionUtxoOutPoints)));
     }
 
     public LiveData<List<UTXO>> getCustomSelectionUtxos() {
@@ -245,55 +284,118 @@ public class ReviewTxModel extends AndroidViewModel {
         return this;
     }
 
+    public RawSeenAddresses getSeenAddresses() {
+        return seenAddresses;
+    }
+
+    public ReviewTxModel setSeenAddresses(final RawSeenAddresses seenAddresses) {
+
+        if (sendType.isBatchSpend()) {
+
+            final Map<String, BatchSend> batchSpendByAddresses = BatchSendUtil.getInstance()
+                    .mapAddresses(seenAddresses.allSeenAddresses(), getApplication());
+
+            final Set<String> payNymsNeedSync = Sets.newHashSet();
+            final Map<String, Boolean> seenAddressesMap = Maps.newLinkedHashMap();
+
+            for (final Map.Entry<String, BatchSend> batchSpendByAddress : batchSpendByAddresses.entrySet()) {
+                if (! batchSpendByAddress.getValue().isPayNym()) {
+                    seenAddressesMap.put(batchSpendByAddress.getKey(), true);
+                } else {
+                    payNymsNeedSync.add(batchSpendByAddress.getValue().pcode);
+                }
+            }
+            if (payNymsNeedSync.isEmpty()) {
+                syncPayNymInProgress.postValue(false);
+            } else {
+                syncPayNym(payNymsNeedSync);
+            }
+            this.seenAddresses = RawSeenAddresses.create(seenAddressesMap);
+        } else {
+            if (isNotBlank(addressLabel)) {
+                final String pcode = BIP47Meta.getInstance().getPcodeFromLabel(addressLabel);
+                if (isNotBlank(pcode) && seenAddresses.isAddressSeen(address)) {
+                    syncPayNym(ImmutableSet.of(pcode));
+                    final Map<String, Boolean> content = seenAddresses.getContent();
+                    content.remove(address);
+                    this.seenAddresses = RawSeenAddresses.create(content);
+                } else {
+                    this.seenAddresses = seenAddresses;
+                    syncPayNymInProgress.postValue(false);
+                }
+            } else {
+                this.seenAddresses = seenAddresses;
+                syncPayNymInProgress.postValue(false);
+            }
+        }
+        updateAlerts();
+        return this;
+    }
+
+    private void syncPayNym(final Collection<String> pcodeNeedSync) {
+        syncPayNymInProgress.postValue(true);
+        final Disposable disposable = Observable.fromCallable(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        for (final String pcode : pcodeNeedSync) {
+                            synPayNym(pcode, getApplication());
+                        }
+                        return true;
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        i -> {syncPayNymInProgress.postValue(false);},
+                        t -> {
+                            syncPayNymInProgress.postValue(false);
+                            Log.e(TAG, t.getMessage(), t);
+                        });
+        compositeDisposable.add(disposable);
+    }
+
+    public LiveData<Boolean> isSyncPayNymInProgress() {
+        return syncPayNymInProgress;
+    }
+
     public MutableLiveData<Map<EnumTxAlert, TxAlertReview>> getAlertReviews() {
         if (isNull(_alertReviews)) {
-            updateAlertsAsync();
+            updateAlerts();
         }
         return _alertReviews;
     }
 
-    private void updateAlertsAsync() {
+    private void updateAlerts() {
         final boolean forInit = isNull(_alertReviews);
         if (forInit) {
             _alertReviews = new MutableLiveData<>(Maps.newHashMap());
         }
-        final Disposable disposable = retrievesAlerts(forInit)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(alerts -> {
-                    if (isNull(_alertReviews)) {
-                        _alertReviews = new MutableLiveData<>(alerts);
-                    } else {
-                        _alertReviews.postValue(alerts);
-                    }
-                }, error -> {
-                    Log.e(TAG, error.getMessage(), error);
-                });
+        try {
+            retrievesAlerts(forInit);
+        } catch (final Exception e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
+    }
 
-        compositeDisposable.add(disposable);
+    private void retrievesAlerts(final boolean forInit) {
+        final Map<EnumTxAlert, TxAlertReview> alerts = Maps.newLinkedHashMap();
+
+        for (final EnumTxAlert alert : EnumTxAlert.values()) {
+            final TxAlertReview alertReview = alert.checkForAlert(this, forInit);
+            if (nonNull(alertReview)) {
+                alerts.put(alert, alertReview);
+            }
+        }
+
+        if (isNull(_alertReviews)) {
+            _alertReviews = new MutableLiveData<>(alerts);
+        } else {
+            _alertReviews.postValue(alerts);
+        }
     }
 
     public MutableLiveData<EnumReviewScreen> getCurrentScreen() {
         return currentScreen;
-    }
-
-    private Observable<Map<EnumTxAlert, TxAlertReview>> retrievesAlerts(final boolean forInit) {
-        return Observable.fromCallable(() -> {
-            final Map<EnumTxAlert, TxAlertReview> alerts = Maps.newLinkedHashMap();
-
-            for (final EnumTxAlert alert : EnumTxAlert.values()) {
-                final TxAlertReview alertReview = alert.checkForAlert(this, forInit);
-                if (nonNull(alertReview)) {
-                    alerts.put(alert, alertReview);
-                }
-            }
-
-            return alerts;
-        });
-    }
-
-    private TxAlertReview checkAddressReused(final String address) {
-        return null;
     }
 
     public boolean refreshFees(final Runnable postRefresh) {
@@ -344,9 +446,14 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     private void computeEntropyAsync() {
+        if (isNull(entropy)) {
+            entropy = new MutableLiveData<>(EntropyInfo.create());
+        }
         try {
-            buildBoltzmannTxData();
-            final Disposable entropyDisposable = reactiveCalculateEntropy(txData.getValue().getSelectedUTXO(), txData.getValue().getReceivers())
+            final Disposable entropyDisposable = reactiveCalculateEntropy(
+                    ImmutableList.copyOf(txData.getValue().getSelectedUTXO()),
+                    ImmutableMap.copyOf(txData.getValue().getReceivers())
+            )
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.computation())
                     .doOnSuccess(txProcessorResult -> {
@@ -428,15 +535,15 @@ public class ReviewTxModel extends AndroidViewModel {
         txData.getValue().restoreChangeIndexes(getApplication());
         _pair = null;
         recomputeFees();
-        if (getSendType() == SPEND_BOLTZMANN) {
-            computeEntropyAsync();
-        }
         try {
             getSendType().buildTx(this);
         } catch (Exception e) {
             Log.e(TAG, "issue on buildTx");
         }
-        updateAlertsAsync();
+        updateAlerts();
+        if (getSendType() == SPEND_BOLTZMANN) {
+            computeEntropyAsync();
+        }
     }
 
     private void setMinerFeeRates(final long value) {
@@ -538,6 +645,7 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     public ReviewTxModel buildRicochetTxData() {
+        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
         return this;
     }
 
@@ -868,6 +976,7 @@ public class ReviewTxModel extends AndroidViewModel {
             case SPEND_BOLTZMANN:
                 return getBoltzmannFees();
             case SPEND_RICOCHET:
+            case SPEND_RICOCHET_CUSTOM:
                 return getRicochetFees();
             case SPEND_JOINBOT:
                 final Map<String, Long> simpleFees = getSimpleFees();
@@ -1007,8 +1116,6 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     public boolean canDoBoltzmann() {
-
-        final boolean isStonewallPossible = stonewallPossible.getValue();
 
         if (CollectionUtils.isNotEmpty(preselectedUTXOs)) {
             stonewallPossible.postValue(false);
@@ -1285,7 +1392,7 @@ public class ReviewTxModel extends AndroidViewModel {
         return Maps.newLinkedHashMap(ImmutableMap.of(MINER, 0L));
     }
 
-    public JSONObject getRicochetJsonObj() {
+    private RicochetTransactionInfo computeRicochetTransactionInfo() {
 
         boolean samouraiFeeViaBIP47 = false;
         if (BIP47Meta.getInstance().getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM) {
@@ -1294,7 +1401,7 @@ public class ReviewTxModel extends AndroidViewModel {
 
         final String strPCode = BIP47Meta.getInstance().getPcodeFromLabel(addressLabel);
 
-        final JSONObject ricochetJson = RicochetMeta.getInstance(getApplication())
+        final RicochetTransactionInfo transactionInfo = RicochetMeta.getInstance(getApplication())
                 .script(
                         amount,
                         FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue(),
@@ -1303,50 +1410,33 @@ public class ReviewTxModel extends AndroidViewModel {
                         strPCode,
                         samouraiFeeViaBIP47,
                         isEnabledRicochetStaggered(),
-                        account);
-        return ricochetJson;
-    }
+                        account,
+                        getAllUtxo(),
+                        getSendType().isCustomSelection());
 
-    public String getRicochetMessage() {
-        final JSONObject ricochetJsonObj = getRicochetJsonObj();
-        if (nonNull(ricochetJsonObj)) {
-            try {
-                final long totalAmount = ricochetJsonObj.getLong("total_spend");
-                return getApplication().getText(R.string.ricochet_spend1) + " " +
-                        address + " " + getApplication().getText(R.string.ricochet_spend2) + " " +
-                        FormatsUtil.formatBTC(totalAmount) + " " +
-                        getApplication().getText(R.string.ricochet_spend3);
-            } catch (final Exception e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-        }
-        return null;
+        txData.getValue().setRicochetTransactionInfo(transactionInfo);
+        return transactionInfo;
     }
 
     private Map<String, Long> getRicochetFees() {
 
-        final JSONObject ricochetJsonObj = getRicochetJsonObj();
+        final RicochetTransactionInfo transactionInfo = computeRicochetTransactionInfo();
 
-        if (nonNull(ricochetJsonObj)) {
-            try {
+        final long hop0Fee = transactionInfo.getHop0Fee();
+        final long perHopFee = transactionInfo.getPerHopFee();
+        final long ricochetFee = transactionInfo.getRicochetFee();
 
-                final long hop0Fee = ricochetJsonObj.getJSONArray("hops")
-                        .getJSONObject(0).getLong("fee");
-                final long perHopFee = ricochetJsonObj.getJSONArray("hops")
-                        .getJSONObject(0).getLong("fee_per_hop");
-                final long ricochetFee = ricochetJsonObj.getLong("samourai_fee");
+        if (hop0Fee != Long.MIN_VALUE &&
+                perHopFee != Long.MIN_VALUE &&
+                ricochetFee != Long.MIN_VALUE) {
 
-                return Maps.newLinkedHashMap(ImmutableMap.of(
-                        MINER, hop0Fee + RicochetMeta.defaultNbHops * perHopFee,
-                        "Ricochet Fee", ricochetFee
-                ));
-
-            } catch (final JSONException je) {
-                Log.e(TAG, "JSONException on Json");
-            }
+            return Maps.newLinkedHashMap(ImmutableMap.of(
+                    MINER, hop0Fee + RicochetMeta.defaultNbHops * perHopFee,
+                    RICOCHET_FEE, ricochetFee
+            ));
+        } else {
+            return Maps.newLinkedHashMap();
         }
-
-        return Maps.newLinkedHashMap();
     }
 
     public boolean isPostmixAccount() {
@@ -1598,6 +1688,10 @@ public class ReviewTxModel extends AndroidViewModel {
                 TxosLinkerOptionEnum.PRECHECK,
                 TxosLinkerOptionEnum.LINKABILITY,
                 TxosLinkerOptionEnum.MERGE_INPUTS);
+        Log.d(TAG, "inputs:" + inputs);
+        Log.d(TAG, "outputs:" + outputs);
+        Log.d(TAG, "result:" + result.getEntropy());
+        Log.d(TAG, "*********************************************");
         return result;
     }
 

@@ -1,5 +1,7 @@
 package com.samourai.wallet.util.func;
 
+import static java.util.Objects.nonNull;
+
 import com.google.common.collect.Lists;
 import com.samourai.wallet.send.MyTransactionOutPoint;
 import com.samourai.wallet.send.UTXO;
@@ -36,5 +38,15 @@ public class TransactionOutPointHelper {
             utxoList.add(toUtxo(outpoint));
         }
         return utxoList;
+    }
+
+    public static long retrievesAggregatedAmount(final Collection<MyTransactionOutPoint> points) {
+        long amount = 0L;
+        for (final MyTransactionOutPoint point : CollectionUtils.emptyIfNull(points)) {
+            if (nonNull(point.getValue())) {
+                amount += point.getValue().value;
+            }
+        }
+        return amount;
     }
 }
