@@ -875,7 +875,8 @@ public class SendActivity extends SamouraiActivity {
                     btcEditText.addTextChangedListener(BTCWatcher);
                     return;
                 }
-                String cleared_space = editable.toString().replace(" ", "");
+                String cleared_space = editable.toString().replace(" ", "")
+                        .replace(" ", "").replace(String.valueOf(new DecimalFormatSymbols(Locale.getDefault()).getGroupingSeparator()), "");
 
                 Double sats = Double.parseDouble(cleared_space);
                 Double btc = getBtcValue(sats);
