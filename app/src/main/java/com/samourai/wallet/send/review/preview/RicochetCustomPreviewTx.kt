@@ -184,9 +184,9 @@ fun RicochetCustomPreviewTxInputTotal(
 
     val sendType by model.impliedSendType.observeAsState()
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
-    val isSmallSingleUtxoForRicochet = sendType!!.isRicochet &&
-            customSelectionUtxos!!.size == 1 &&
-            retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos)) < 1_000_000L
+    val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
+    val isSmallSelectionAmountForRicochet = sendType!!.isRicochet &&
+            customSelectionAggrAmount < 1_000_000L
 
     val txData by model.txData.observeAsState()
     val destinationAmount by model.impliedAmount.observeAsState()
@@ -259,13 +259,13 @@ fun RicochetCustomPreviewTxInputTotal(
                     }
                 }
             }
-            if (isSmallSingleUtxoForRicochet) {
+            if (isSmallSelectionAmountForRicochet) {
                 Row (
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Can not use a single UTXO < 0.01 BTC",
+                        text = "Sum of inputs must be greater than 0.01 BTC",
                         color = samouraiAlerts,
                         fontSize = 14.sp,
                         fontFamily = robotoMediumItalicBoldFont

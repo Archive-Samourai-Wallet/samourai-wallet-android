@@ -11,10 +11,9 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.SendNotifTxFactory;
-import com.samourai.wallet.bip47.rpc.PaymentAddress;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
-import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.constants.WALLET_INDEX;
+import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.SegwitAddress;
 import com.samourai.wallet.segwit.bech32.Bech32Segwit;
@@ -367,7 +366,7 @@ public class RicochetMeta {
             outPoints.addAll(txHop0Pair.getMiddle());
             final Transaction txHop0 = txHop0Pair.getLeft();
             if (txHop0 == null) {
-                return null;
+                return RicochetTransactionInfo.createEmpty();
             }
 
 //            Log.d("RicochetMeta", "searching for:" + getDestinationAddress(index));
@@ -496,7 +495,7 @@ public class RicochetMeta {
                 }
 
                 if (txHop == null) {
-                    return null;
+                    return RicochetTransactionInfo.createEmpty();
                 }
 
                 jHop = new JSONObject();
@@ -543,7 +542,7 @@ public class RicochetMeta {
             jObj.put("total_spend", totalAmount.longValue());
 
         } catch (JSONException je) {
-            return null;
+            return RicochetTransactionInfo.createEmpty();
         }
 
         System.out.println("RicochetMeta:" + jObj.toString());

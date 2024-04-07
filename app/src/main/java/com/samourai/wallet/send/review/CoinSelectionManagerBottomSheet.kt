@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.RadioButton
 import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Text
@@ -17,6 +18,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -90,7 +92,18 @@ fun ReviewTxCoinSelectionManagerBody(model: ReviewTxModel) {
 
             Row(
                 modifier = Modifier
-                    .padding(start = 8.dp, end = 8.dp),
+                    .padding(start = 8.dp, end = 8.dp)
+                    .selectable(
+                        selected = selectionType == currentSendType!!.coinSelectionTypeView,
+                        enabled = enable,
+                        onClick = {
+                            val sendType = currentSendType!!.toSelection(selectionType)
+                            if (nonNull(sendType)) {
+                                model.setType(sendType)
+                            }
+                        },
+                        role = Role.RadioButton
+                    ),
             ) {
                 Column (
                     modifier = Modifier
@@ -127,12 +140,8 @@ fun ReviewTxCoinSelectionManagerBody(model: ReviewTxModel) {
                         colors = RadioButtonDefaults.colors(
                             disabledColor = ColorHelper.darkenColor(Color.LightGray, if (enable) 0f else 0.4f),
                         ),
-                        onClick = {
-                            val sendType = currentSendType!!.toSelection(selectionType)
-                            if (nonNull(sendType)) {
-                                model.setType(sendType)
-                            }
-                        })
+                        onClick = null
+                    )
                 }
             }
         }

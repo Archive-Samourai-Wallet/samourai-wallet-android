@@ -17,6 +17,10 @@ public class RawSeenAddresses {
         this.seenAddresses = ImmutableMap.copyOf(seenAddressesMap);
     }
 
+    public static RawSeenAddresses createEmpty() {
+        return new RawSeenAddresses(ImmutableMap.of());
+    }
+
     public static RawSeenAddresses create(final Map<String, Boolean> seenAddressesMap) {
         return new RawSeenAddresses(seenAddressesMap);
     }

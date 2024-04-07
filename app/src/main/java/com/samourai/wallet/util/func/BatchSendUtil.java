@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +33,6 @@ public class BatchSendUtil {
 
         public String pcode = null;
         public String paynymCode = null;
-        public int paynymIndexOffset;
         private String addr = null;
         public long amount = 0L;
         public long UUID = 0L;
@@ -51,7 +51,7 @@ public class BatchSendUtil {
         public String getAddr(final Context context) throws Exception {
             if (isNull(addr) && hasPcode()) {
                 addr = BIP47Util.getInstance(context)
-                        .getDestinationAddrFromPcode(pcode, paynymIndexOffset);
+                        .getDestinationAddrFromPcode(pcode);
             }
             return addr;
         }
@@ -72,14 +72,27 @@ public class BatchSendUtil {
         }
     }
 
-    synchronized private int getIndexOffset(final String pcode) {
-        return pcodeIndexOffsets.containsKey(pcode) ? pcodeIndexOffsets.get(pcode) : -1;
+    public void invalidatePayNymsAddresses(final Collection<String> pcodes) {
+
+        final Map<String, BatchSend> batchSendByPcode = getBatchSendByPcode();
+        for (final String pcode : CollectionUtils.emptyIfNull(pcodes)) {
+            batchSendByPcode.get(pcode).setRawAddr(null);
+        }
+    }
+
+    private Map<String, BatchSend> getBatchSendByPcode() {
+        final Map<String, BatchSend> batchSendByPcode = Maps.newHashMap();
+        for (final BatchSend batchSend : batchSends) {
+            if (batchSend.hasPcode()) {
+                batchSendByPcode.put(batchSend.pcode, batchSend);
+            }
+        }
+        return batchSendByPcode;
     }
 
     private static BatchSendUtil instance = null;
 
     private final List<BatchSend> batchSends;
-    private final Map<String, Integer> pcodeIndexOffsets;
 
     public BatchSend createBatchSend() {
         return new BatchSend();
@@ -87,7 +100,6 @@ public class BatchSendUtil {
 
     private BatchSendUtil() {
         batchSends = new ArrayList<>();
-        pcodeIndexOffsets = Maps.newHashMap();
     }
 
     public static BatchSendUtil getInstance() {
@@ -99,11 +111,6 @@ public class BatchSendUtil {
 
     synchronized public BatchSendUtil add(final BatchSend send) {
         batchSends.add(send);
-        if (send.hasPcode()) {
-            final int offset = 1 + getIndexOffset(send.pcode);
-            pcodeIndexOffsets.put(send.pcode, offset);
-            send.paynymIndexOffset = offset;
-        }
         return this;
     }
 
@@ -116,7 +123,6 @@ public class BatchSendUtil {
 
     synchronized public void clear() {
         batchSends.clear();
-        pcodeIndexOffsets.clear();
     }
 
     public List<BatchSend> getCopyOfBatchSends() {

@@ -1,5 +1,7 @@
 package com.samourai.wallet.util.network;
 
+import static com.samourai.wallet.util.tech.LogUtil.info;
+
 import android.content.Context;
 
 import com.google.common.collect.Maps;
@@ -39,10 +41,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 
-import static com.samourai.wallet.util.tech.LogUtil.info;
-
-//import android.util.Log;
-
 public class WebUtil {
 
     public static final String SAMOURAI_API = "https://api.samouraiwallet.com/";
@@ -52,14 +50,13 @@ public class WebUtil {
 
     public static final String SAMOURAI_API2_TOR_DIST = "http://d2oagweysnavqgcfsfawqwql2rwxend7xxpriq676lzsmtfwbt75qbqd.onion/v2/";
     public static final String SAMOURAI_API2_TESTNET_TOR_DIST = "http://d2oagweysnavqgcfsfawqwql2rwxend7xxpriq676lzsmtfwbt75qbqd.onion/test/v2/";
-
-    public static String SAMOURAI_API2_TOR = SAMOURAI_API2_TOR_DIST;
-    public static String SAMOURAI_API2_TESTNET_TOR = SAMOURAI_API2_TESTNET_TOR_DIST;
+    public static String SAMOURAI_API2_TOR = SAMOURAI_API2_TOR_DIST; // mutable following Dojo node
+    public static String SAMOURAI_API2_TESTNET_TOR = SAMOURAI_API2_TESTNET_TOR_DIST; // mutable following Dojo node
 
     public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
 
     private static final int DefaultRequestRetry = 2;
-    private static final int DefaultRequestTimeout = 60000;
+    private static final int DefaultRequestTimeout = 45_000;
 
 
     private static WebUtil instance = null;
@@ -229,11 +226,23 @@ public class WebUtil {
         throw new HttpResponseException(responseBody, responseCode); // required by Whirlpool
     }
 
-    public String getURL(final String URL) throws Exception {
-        return getURL(URL, null);
+    public String getURL(final String url) throws Exception {
+        return getURL(url, null);
     }
 
-    public String getURL(final String URL, final Map<String, String> inputHeaders) throws HttpException {
+    public String getURL(
+            final String url,
+            final Map<String, String> inputHeaders
+    ) throws HttpException {
+        return getURL(url, inputHeaders, DefaultRequestTimeout);
+    }
+
+    public String getURL(
+            final String url,
+            final Map<String, String> inputHeaders,
+            final int timeout
+    ) throws HttpException {
+
         final Map<String, String> headers = Maps.newHashMap(MapUtils.emptyIfNull(inputHeaders));
         if (!headers.containsKey("charset")) {
             headers.put("charset", "utf-8");
@@ -243,24 +252,27 @@ public class WebUtil {
         }
 
         if (context == null) {
-            return _getURL(URL, headers);
+            return _getURL(url, headers, timeout);
         } else {
             //if(TorUtil.getInstance(context).orbotIsRunning())    {
             //Log.v("WebUtil", "Tor required status:" + SamouraiTorManager.INSTANCE.isRequired());
             if (SamouraiTorManager.INSTANCE.isRequired()) {
-                return tor_getURL(URL, headers);
+                return tor_getURL(url, headers, timeout);
             } else {
-                return _getURL(URL, headers);
+                return _getURL(url, headers, timeout);
             }
         }
     }
 
-    public String _getURL(final String URL, final Map<String,String> inputHeaders)
-            throws HttpException {
+    private String _getURL(
+            final String urlAsString,
+            final Map<String,String> inputHeaders,
+            final int timeout
+    ) throws HttpException {
 
         final URL url;
         try {
-            url = new URL(URL);
+            url = new URL(urlAsString);
         } catch (Exception e) {
             throw new HttpSystemException(e);
         }
@@ -282,8 +294,8 @@ public class WebUtil {
                     connection.setRequestProperty(e.getKey(), e.getValue());
                 }
 
-                connection.setConnectTimeout(DefaultRequestTimeout);
-                connection.setReadTimeout(DefaultRequestTimeout);
+                connection.setConnectTimeout(timeout);
+                connection.setReadTimeout(timeout);
 
                 connection.setInstanceFollowRedirects(false);
 
@@ -307,11 +319,16 @@ public class WebUtil {
         throw new HttpResponseException(responseBody, responseCode); // required by Whirlpool
     }
 
-    private String tor_getURL(String URL, Map<String,String> headers) throws HttpException {
+    private String tor_getURL(
+            final String url,
+            Map<String,String> headers,
+            final long timeout
+    ) throws HttpException {
 
-        OkHttpClient.Builder builder = WebUtil.getInstance(context).httpClientBuilder(URL);
+        final OkHttpClient.Builder builder = WebUtil.getInstance(context)
+                .httpClientBuilder(url, timeout);
 
-        Request.Builder rb = new Request.Builder().url(URL);
+        Request.Builder rb = new Request.Builder().url(url);
 
         // set headers
         if (headers == null) {
@@ -488,8 +505,13 @@ public class WebUtil {
         }
     }
 
-    public OkHttpClient.Builder httpClientBuilder(String url) throws HttpException {
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+    public OkHttpClient.Builder httpClientBuilder(final String url) throws HttpException {
+        return httpClientBuilder(url, DefaultRequestTimeout);
+    }
+
+    public OkHttpClient.Builder httpClientBuilder(final String url, final long timeout) throws HttpException {
+
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
         try {
             if (new URL(url).getHost().contains(".onion")) {
@@ -499,19 +521,23 @@ public class WebUtil {
             throw new HttpSystemException(e);
         }
 
-        builder.connectTimeout(45, TimeUnit.SECONDS)
-                .readTimeout(45, TimeUnit.SECONDS)
-                .callTimeout(45, TimeUnit.SECONDS);
-
         if (SamouraiTorManager.INSTANCE.isRequired()) {
+            final long torTimeout = timeout * 2;
             builder.proxy(SamouraiTorManager.INSTANCE.getProxy());
-            builder.connectTimeout(90, TimeUnit.SECONDS)
-                    .readTimeout(90, TimeUnit.SECONDS)
-                    .callTimeout(90, TimeUnit.SECONDS);
+            builder.connectTimeout(torTimeout, TimeUnit.MILLISECONDS)
+                    .readTimeout(torTimeout, TimeUnit.MILLISECONDS)
+                    .callTimeout(torTimeout, TimeUnit.MILLISECONDS);
+        } else {
+            builder.connectTimeout(timeout, TimeUnit.MILLISECONDS)
+                    .readTimeout(timeout, TimeUnit.MILLISECONDS)
+                    .callTimeout(timeout, TimeUnit.MILLISECONDS);
         }
+
         if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC));
+            builder.addInterceptor(new HttpLoggingInterceptor()
+                    .setLevel(HttpLoggingInterceptor.Level.BASIC));
         }
+
         return builder;
     }
 

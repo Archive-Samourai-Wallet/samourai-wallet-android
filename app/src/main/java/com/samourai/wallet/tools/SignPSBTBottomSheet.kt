@@ -3,14 +3,37 @@ package com.samourai.wallet.tools
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.TopAppBar
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -43,12 +66,17 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.invertedx.hummingbird.URQRView
 import com.samourai.wallet.R
 import com.samourai.wallet.fragments.ScanFragment
-import com.samourai.wallet.theme.*
+import com.samourai.wallet.theme.SamouraiWalletTheme
+import com.samourai.wallet.theme.samouraiAccent
+import com.samourai.wallet.theme.samouraiBottomSheetBackground
+import com.samourai.wallet.theme.samouraiSuccess
+import com.samourai.wallet.theme.samouraiTextFieldBg
 import com.samourai.wallet.tools.viewmodels.SignPSBTViewModel
 import com.samourai.wallet.util.tech.AppUtil
 import com.sparrowwallet.hummingbird.UR
 import com.sparrowwallet.hummingbird.registry.RegistryType
 import org.bouncycastle.util.encoders.Hex
+import java.util.Objects.nonNull
 
 
 @Composable
@@ -120,8 +148,9 @@ fun SignSuccess() {
                         modifier = Modifier
                             .alpha(if (loading) 0f else 1f),
                         onClick = {
-                            if (!loading) {
-                                clipboardManager.setText(AnnotatedString(String(Hex.encode(transaction?.bitcoinSerialize()))))
+                            val data = transaction?.bitcoinSerialize()
+                            if (!loading && nonNull(data)) {
+                                clipboardManager.setText(AnnotatedString(String(Hex.encode(data))))
                                 Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                             }
                     }) {
@@ -222,12 +251,15 @@ fun SignSuccess() {
                                 factory = { context ->
                                     URQRView(context)
                                 }) { view ->
-                                view.setContent(
-                                    UR.fromBytes(
-                                        RegistryType.BYTES.type,
-                                        Hex.decode(String(Hex.encode(transaction?.bitcoinSerialize())))
+                                val data = transaction?.bitcoinSerialize()
+                                if (nonNull(data)) {
+                                    view.setContent(
+                                        UR.fromBytes(
+                                            RegistryType.BYTES.type,
+                                            Hex.decode(String(Hex.encode(transaction?.bitcoinSerialize())))
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                         Text(

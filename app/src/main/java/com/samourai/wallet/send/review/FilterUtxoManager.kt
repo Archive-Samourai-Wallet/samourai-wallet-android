@@ -63,7 +63,7 @@ fun FilterUtxoManager(model: ReviewTxModel) {
 fun FilterUtxoManagerBody(model: ReviewTxModel) {
     Column (
         modifier = Modifier.padding(all = 26.dp),
-        verticalArrangement = Arrangement.spacedBy(36.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         FilterUtxoManagerByAddressType(model = model)
         if (model.isPostmixAccount) {
@@ -84,18 +84,18 @@ fun FilterUtxoManagerByAddressType(model: ReviewTxModel) {
     val utxoFilterModel by model.utxoFilterModel.observeAsState()
 
     Column (
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
         Text(
             text = "Address Type",
             color = Color.White,
-            fontSize = 16.sp,
+            fontSize = 14.sp,
             fontFamily = robotoMediumNormalFont
         )
 
         Column (
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row (
                 verticalAlignment = Alignment.CenterVertically
@@ -114,7 +114,7 @@ fun FilterUtxoManagerByAddressType(model: ReviewTxModel) {
                 Text(
                     text = "Segwit native",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontFamily = robotoMediumNormalFont
                 )
             }
@@ -135,7 +135,7 @@ fun FilterUtxoManagerByAddressType(model: ReviewTxModel) {
                 Text(
                     text = "Segwit compatibility",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontFamily = robotoMediumNormalFont
                 )
             }
@@ -156,7 +156,7 @@ fun FilterUtxoManagerByAddressType(model: ReviewTxModel) {
                 Text(
                     text = "Legacy",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontFamily = robotoMediumNormalFont
                 )
             }
@@ -174,18 +174,18 @@ fun FilterUtxoManagerByStatusForDepositAccount(model: ReviewTxModel) {
     val utxoFilterModel by model.utxoFilterModel.observeAsState()
 
     Column (
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
         Text(
             text = "Status",
             color = Color.White,
-            fontSize = 16.sp,
+            fontSize = 14.sp,
             fontFamily = robotoMediumNormalFont
         )
 
         Column (
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row (
                 verticalAlignment = Alignment.CenterVertically
@@ -204,7 +204,7 @@ fun FilterUtxoManagerByStatusForDepositAccount(model: ReviewTxModel) {
                 Text(
                     text = "PayNym outputs",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontFamily = robotoMediumNormalFont
                 )
             }
@@ -225,7 +225,28 @@ fun FilterUtxoManagerByStatusForDepositAccount(model: ReviewTxModel) {
                 Text(
                     text = "Unmixed toxic change",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
+                    fontFamily = robotoMediumNormalFont
+                )
+            }
+            Row (
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = utxoFilterModel!!.isUnconfirmed,
+                    colors = CheckboxDefaults.colors(
+                        checkmarkColor = Color.Black,
+                        uncheckedColor = samouraiCheckboxBlue,
+                        checkedColor = samouraiCheckboxBlue
+                    ),
+                    onCheckedChange = {
+                        model.updateUtxoFilterModel(utxoFilterModel!!.setUnconfirmed(it))
+                    }
+                )
+                Text(
+                    text = "Unconfirmed",
+                    color = Color.White,
+                    fontSize = 14.sp,
                     fontFamily = robotoMediumNormalFont
                 )
             }
@@ -243,18 +264,18 @@ fun FilterUtxoManagerByStatusForPostmixAccount(model: ReviewTxModel) {
     val utxoFilterModel by model.utxoFilterModel.observeAsState()
 
     Column (
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
         Text(
             text = "Status",
             color = Color.White,
-            fontSize = 16.sp,
+            fontSize = 14.sp,
             fontFamily = robotoMediumNormalFont
         )
 
         Column (
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row (
                 verticalAlignment = Alignment.CenterVertically
@@ -273,7 +294,7 @@ fun FilterUtxoManagerByStatusForPostmixAccount(model: ReviewTxModel) {
                 Text(
                     text = "Mixed output",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontFamily = robotoMediumNormalFont
                 )
             }
@@ -294,7 +315,28 @@ fun FilterUtxoManagerByStatusForPostmixAccount(model: ReviewTxModel) {
                 Text(
                     text = "Postmix transaction change",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
+                    fontFamily = robotoMediumNormalFont
+                )
+            }
+            Row (
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = utxoFilterModel!!.isUnconfirmed,
+                    colors = CheckboxDefaults.colors(
+                        checkmarkColor = Color.Black,
+                        uncheckedColor = samouraiCheckboxBlue,
+                        checkedColor = samouraiCheckboxBlue
+                    ),
+                    onCheckedChange = {
+                        model.updateUtxoFilterModel(utxoFilterModel!!.setUnconfirmed(it))
+                    }
+                )
+                Text(
+                    text = "Unconfirmed",
+                    color = Color.White,
+                    fontSize = 14.sp,
                     fontFamily = robotoMediumNormalFont
                 )
             }
