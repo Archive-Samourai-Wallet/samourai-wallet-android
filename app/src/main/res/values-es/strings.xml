@@ -284,7 +284,8 @@
     <string name="please_wait_sending">Enviando transacción, espere por favor.</string>
     <string name="please_wait_ricochet">Procesando la lista de espera Ricochet, espere por favor.</string>
 
-    <string name="change_is_dust">El vuelto de esta transacción es ínfimo y será agregado a la comisión para el minero.</string>
+    <string name="change_is_dust">El vuelto de esta transacción es ínfimo. Inténtelo de nuevo modificando el importe o gastando todo el saldo.</string>
+    <string name="insufficient_amount_for_fee">Balance insuficiente para la comisión seleccionada. Inténtelo de nuevo o reduzca la cantidad a gastar.</string>
 
     <string name="tor_routing_on">Samourai esta enrutando mediante Tor.</string>
     <string name="tor_routing_off">Samourai no esta enrutando mediante Tor. Presiona para activar.</string>
