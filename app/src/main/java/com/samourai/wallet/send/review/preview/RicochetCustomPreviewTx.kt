@@ -186,6 +186,7 @@ fun RicochetCustomPreviewTxInputTotal(
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
     val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
     val isSmallSelectionAmountForRicochet = sendType!!.isRicochet &&
+            sendType!!.isCustomSelection &&
             customSelectionAggrAmount < 1_000_000L
 
     val txData by model.txData.observeAsState()
