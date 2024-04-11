@@ -89,11 +89,6 @@ public enum EnumTxAlert {
         @Override
         public TxAlertReview checkForAlert(final ReviewTxModel reviewTxModel, final boolean forInit) {
 
-            if (!forInit) {
-                // avoid to call api several times
-                return reviewTxModel.getAlertReviews().getValue().get(this);
-            }
-
             final TxAlertReview localAlert = REUSED_SENDING_ADDRESS_LOCAL.checkForAlert(reviewTxModel, forInit);
             final Set<String> localReusedAddresses = nonNull(localAlert)
                     ? localAlert.getReusedAddresses()

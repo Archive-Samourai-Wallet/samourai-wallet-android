@@ -1,5 +1,8 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.util.tech.LogUtil.debug;
+import static java.util.Objects.isNull;
+
 import android.content.Context;
 import android.widget.Toast;
 
@@ -18,12 +21,13 @@ import com.samourai.wallet.segwit.BIP49Util;
 import com.samourai.wallet.segwit.BIP84Util;
 import com.samourai.wallet.segwit.bech32.Bech32Util;
 import com.samourai.wallet.send.exceptions.SignTxException;
-import com.samourai.wallet.util.func.AddressFactory;
-import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.util.FormatsUtilGeneric;
 import com.samourai.wallet.util.PrefsUtil;
+import com.samourai.wallet.util.func.AddressFactory;
+import com.samourai.wallet.util.func.FormatsUtil;
 import com.samourai.wallet.whirlpool.WhirlpoolMeta;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bitcoinj.core.Address;
@@ -46,8 +50,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-
-import static com.samourai.wallet.util.tech.LogUtil.debug;
 
 //import android.util.Log;
 
@@ -89,9 +91,11 @@ public class SendFactory extends SendFactoryGeneric	{
 
     public Transaction signTransaction(Transaction unsignedTx, int account)  {
 
-        HashMap<String,ECKey> keyBag = new HashMap<>();
+        if (isNull(unsignedTx)) return null;
 
-        for (TransactionInput input : unsignedTx.getInputs()) {
+        final Map<String,ECKey> keyBag = new HashMap<>();
+
+        for (TransactionInput input : CollectionUtils.emptyIfNull(unsignedTx.getInputs())) {
 
             try {
                 byte[] scriptBytes = input.getOutpoint().getConnectedPubKeyScript();

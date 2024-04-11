@@ -2,8 +2,8 @@ package com.samourai.wallet.api.fee;
 
 import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2;
 import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TESTNET;
-import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TESTNET_TOR_DIST;
-import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TOR_DIST;
+import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TESTNET_TOR;
+import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TOR;
 import static java.util.Objects.nonNull;
 
 import android.content.Context;
@@ -81,7 +81,7 @@ public class FeeClient {
         if (nonNull(context)) {
             final String accessToken = APIFactory.getInstance(context).getAccessToken();
             if (SamouraiTorManager.INSTANCE.isRequired()) {
-                final String url = testMode ? SAMOURAI_API2_TESTNET_TOR_DIST : SAMOURAI_API2_TOR_DIST;
+                final String url = testMode ? SAMOURAI_API2_TESTNET_TOR : SAMOURAI_API2_TOR;
                 return WebUtil.getInstance(null).getURL(
                         url + FEES_ESTIMATOR_PATH,
                         ImmutableMap.of("Authorization", "Bearer " + accessToken));

@@ -5,6 +5,7 @@ import static com.samourai.wallet.send.review.filter.UTXOFilteringProcessor.appl
 import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_BOLTZMANN;
 import static com.samourai.wallet.send.review.ref.EnumSendType.SPEND_SIMPLE;
 import static com.samourai.wallet.util.func.PayNymUtilKt.synPayNym;
+import static com.samourai.wallet.util.func.TransactionOutPointHelper.retrievesAggregatedAmount;
 import static com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints;
 import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxoPoints;
 import static com.samourai.wallet.util.func.TransactionOutPointHelper.toUtxos;
@@ -42,6 +43,7 @@ import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.api.fee.EnumFeeRepresentation;
 import com.samourai.wallet.api.seen.RawSeenAddresses;
 import com.samourai.wallet.bip47.BIP47Meta;
+import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.constants.SamouraiAccountIndex;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
@@ -158,7 +160,7 @@ public class ReviewTxModel extends AndroidViewModel {
     private boolean useLikeRequestedAsFixForTx;
 
     private final AtomicBoolean feesRefreshed = new AtomicBoolean();
-    private MutableLiveData<Boolean> syncPayNymInProgress = new MutableLiveData<>(true);
+    private MutableLiveData<Boolean> syncInProgress = new MutableLiveData<>(true);
 
     public ReviewTxModel(final Application application) {
         super(application);
@@ -263,7 +265,7 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     private boolean isCustomComputation() {
-        return sendType.isCustomSelection() && nonNull(customSelectionUtxoOutPoints);
+        return sendType.isCustomSelection();
     }
 
     public LiveData<EnumTransactionPriority> getTransactionPriorityRequested() {
@@ -306,14 +308,15 @@ public class ReviewTxModel extends AndroidViewModel {
                 }
             }
             if (payNymsNeedSync.isEmpty()) {
-                syncPayNymInProgress.postValue(false);
+                syncInProgress.postValue(false);
             } else {
                 syncPayNym(payNymsNeedSync);
             }
             this.seenAddresses = RawSeenAddresses.create(seenAddressesMap);
         } else {
             if (isNotBlank(addressLabel)) {
-                final String pcode = BIP47Meta.getInstance().getPcodeFromLabel(addressLabel);
+                String pcode = BIP47Meta.getInstance().getPcodeFromLabel(addressLabel);
+                pcode = nonNull(pcode) ? pcode : addressLabel;
                 if (isNotBlank(pcode) && seenAddresses.isAddressSeen(address)) {
                     syncPayNym(ImmutableSet.of(pcode));
                     final Map<String, Boolean> content = seenAddresses.getContent();
@@ -321,11 +324,11 @@ public class ReviewTxModel extends AndroidViewModel {
                     this.seenAddresses = RawSeenAddresses.create(content);
                 } else {
                     this.seenAddresses = seenAddresses;
-                    syncPayNymInProgress.postValue(false);
+                    syncInProgress.postValue(false);
                 }
             } else {
                 this.seenAddresses = seenAddresses;
-                syncPayNymInProgress.postValue(false);
+                syncInProgress.postValue(false);
             }
         }
         updateAlerts();
@@ -333,7 +336,7 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     private void syncPayNym(final Collection<String> pcodeNeedSync) {
-        syncPayNymInProgress.postValue(true);
+        syncInProgress.postValue(true);
         final Disposable disposable = Observable.fromCallable(new Callable<Object>() {
                     @Override
                     public Object call() throws Exception {
@@ -346,16 +349,30 @@ public class ReviewTxModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        i -> {syncPayNymInProgress.postValue(false);},
+                        i -> {
+                            syncInProgress.postValue(false);
+                            if (sendType.isBatchSpend()) {
+                                BatchSendUtil.getInstance().invalidatePayNymsAddresses(pcodeNeedSync);
+                            } else {
+                                for (final String pcode : pcodeNeedSync) {
+                                    setAddress(BIP47Util.getInstance(getApplication()).getDestinationAddrFromPcode(pcode));
+                                }
+                            }
+                            },
                         t -> {
-                            syncPayNymInProgress.postValue(false);
+                            syncInProgress.postValue(false);
                             Log.e(TAG, t.getMessage(), t);
                         });
         compositeDisposable.add(disposable);
     }
 
-    public LiveData<Boolean> isSyncPayNymInProgress() {
-        return syncPayNymInProgress;
+    public LiveData<Boolean> isSyncInProgress() {
+        return syncInProgress;
+    }
+
+    public ReviewTxModel setSyncInProgress(final boolean inProgress) {
+        syncInProgress.postValue(inProgress);
+        return this;
     }
 
     public MutableLiveData<Map<EnumTxAlert, TxAlertReview>> getAlertReviews() {
@@ -645,7 +662,6 @@ public class ReviewTxModel extends AndroidViewModel {
     }
 
     public ReviewTxModel buildRicochetTxData() {
-        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
         return this;
     }
 
@@ -1083,17 +1099,14 @@ public class ReviewTxModel extends AndroidViewModel {
 
         final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = getStonewallPair();
 
-        long inputAmount = 0L;
-        for (final MyTransactionOutPoint outpoint : pair.getLeft()) {
-            inputAmount += outpoint.getValue().value;
-        }
-
         long outputAmount = 0L;
         for (final TransactionOutput output : pair.getRight()) {
             outputAmount += output.getValue().longValue();
         }
 
-        return Maps.newLinkedHashMap(ImmutableMap.of(MINER, inputAmount - outputAmount));
+        return Maps.newLinkedHashMap(ImmutableMap.of(
+                MINER,
+                retrievesAggregatedAmount(pair.getLeft()) - outputAmount));
     }
 
     public LiveData<Long> getFeeAggregated() {
@@ -1126,6 +1139,13 @@ public class ReviewTxModel extends AndroidViewModel {
             return false;
         }
 
+        final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> stonewallPair = getStonewallPair();
+        if (isNull(stonewallPair)) {
+            txData.getValue().restoreChangeIndexes(getApplication());
+            stonewallPossible.postValue(false);
+            return false;
+        }
+
         final Pair<List<UTXO>, List<UTXO>> utxo1AndUtxo2 = getUtxo1AndUtxo2();
         final List<UTXO> _utxos1 = utxo1AndUtxo2.getLeft();
         final List<UTXO> _utxos2 = utxo1AndUtxo2.getRight();
@@ -1134,19 +1154,9 @@ public class ReviewTxModel extends AndroidViewModel {
             stonewallPossible.postValue(false);
             return false;
         } else {
-
             Log.d("SendActivity", "boltzmann spend");
-
-            final Pair<List<MyTransactionOutPoint>, List<TransactionOutput>> pair = getStonewallPair();
-
-            if (isNull(pair)) {
-                txData.getValue().restoreChangeIndexes(getApplication());
-                stonewallPossible.postValue(false);
-                return false;
-            } else {
-                stonewallPossible.postValue(true);
-                return true;
-            }
+            stonewallPossible.postValue(true);
+            return true;
         }
     }
 
@@ -1805,5 +1815,7 @@ public class ReviewTxModel extends AndroidViewModel {
         shuffledUtxosP2PKH = null;
         shuffledUtxosP2WPKH = null;
         shuffledUtxosP2SH_P2WPKH = null;
+        _pair = null;
+        txData.getValue().restoreChangeIndexes(getApplication());
     }
 }

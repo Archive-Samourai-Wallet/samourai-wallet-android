@@ -9,6 +9,7 @@ public class UTXOFilterModel {
     private boolean unmixedToxicChange = true;
     private boolean mixedOutputs = true;
     private boolean postmixTransactionChange = true;
+    private boolean unconfirmed = true;
 
     private UTXOFilterModel() {}
 
@@ -28,6 +29,7 @@ public class UTXOFilterModel {
                 .setUnmixedToxicChange(model.isUnmixedToxicChange())
                 .setMixedOutputs(model.isMixedOutputs())
                 .setPostmixTransactionChange(model.isPostmixTransactionChange())
+                .setUnconfirmed(model.isUnconfirmed())
                 ;
     }
 
@@ -66,6 +68,11 @@ public class UTXOFilterModel {
         return this;
     }
 
+    public UTXOFilterModel setUnconfirmed(boolean unconfirmed) {
+        this.unconfirmed = unconfirmed;
+        return this;
+    }
+
     public boolean isSegwitNative() {
         return segwitNative;
     }
@@ -94,19 +101,25 @@ public class UTXOFilterModel {
         return postmixTransactionChange;
     }
 
+    public boolean isUnconfirmed() {
+        return unconfirmed;
+    }
+
     public boolean isAllChecked(final boolean postmixAccount) {
         if (postmixAccount) {
             return segwitNative &&
                     segwitCompatible &&
                     legacy &&
                     mixedOutputs &&
-                    postmixTransactionChange;
+                    postmixTransactionChange &&
+                    unconfirmed;
         } else {
             return segwitNative &&
                     segwitCompatible &&
                     legacy &&
                     payNymOutputs &&
-                    unmixedToxicChange;
+                    unmixedToxicChange &&
+                    unconfirmed;
         }
     }
 }

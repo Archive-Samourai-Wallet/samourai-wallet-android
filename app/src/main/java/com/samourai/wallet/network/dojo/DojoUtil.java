@@ -106,8 +106,6 @@ public class DojoUtil {
         }
 
         APIFactory.getInstance(context).setAppToken(null);
-
-
     }
 
     public String getDojoVersion()  {
@@ -231,6 +229,31 @@ public class DojoUtil {
                 return true;
             }
             else if(s.length >= 2 && Integer.parseInt(s[0]) == 1 && Integer.parseInt(s[1]) >= 23){
+                return true;
+            }
+            else    {
+                return false;
+            }
+        }
+        catch(NumberFormatException nfe)    {
+            return false;
+        }
+
+    }
+
+    public boolean isSeenApi()  {
+
+        if(dojoParams == null || dojoVersion == null)      {
+            return  false;
+        }
+
+        // version 1.22.x and above
+        String[] s = dojoVersion.split("\\.");
+        try {
+            if(s.length >= 1 && Integer.parseInt(s[0]) > 1)    {
+                return true;
+            }
+            else if(s.length >= 2 && Integer.parseInt(s[0]) == 1 && Integer.parseInt(s[1]) >= 22){
                 return true;
             }
             else    {

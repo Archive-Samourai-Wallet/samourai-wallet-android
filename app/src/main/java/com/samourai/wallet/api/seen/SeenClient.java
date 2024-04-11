@@ -2,8 +2,8 @@ package com.samourai.wallet.api.seen;
 
 import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2;
 import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TESTNET;
-import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TESTNET_TOR_DIST;
-import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TOR_DIST;
+import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TESTNET_TOR;
+import static com.samourai.wallet.util.network.WebUtil.SAMOURAI_API2_TOR;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static java.util.Objects.nonNull;
 
@@ -16,6 +16,7 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
 import com.samourai.wallet.tor.SamouraiTorManager;
 import com.samourai.wallet.util.network.WebUtil;
+import com.samourai.wallet.util.tech.AppUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -27,6 +28,7 @@ public class SeenClient {
     private static final String SEEN_PATH = "seen";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final int TIMEOUT = 15_000;
 
     private final Context context;
     private final boolean testMode;
@@ -65,25 +67,34 @@ public class SeenClient {
     }
 
     public RawSeenAddresses getSeenAddresses(final Collection<String> addresses) throws Exception {
-        final String resultAsPlainText = getSeenAsPlainText(addresses);
-        final Map<String, Boolean> seenAddressesMap = objectMapper.readValue(
-                resultAsPlainText,
-                new TypeReference<Map<String, Boolean>>() {});
-        return RawSeenAddresses.create(seenAddressesMap);
+
+        if (! AppUtil.getInstance(context).isOfflineMode()) {
+
+            final String resultAsPlainText = getSeenAsPlainText(addresses);
+            final Map<String, Boolean> seenAddressesMap = objectMapper.readValue(
+                    resultAsPlainText,
+                    new TypeReference<Map<String, Boolean>>() {});
+            return RawSeenAddresses.create(seenAddressesMap);
+
+        } else {
+            return RawSeenAddresses.createEmpty();
+        }
     }
 
     private String getSeenAsPlainText(final Collection<String> addresses) throws Exception {
         final String accessToken = getApiToken();
         if (SamouraiTorManager.INSTANCE.isRequired()) {
-            final String url = testMode ? SAMOURAI_API2_TESTNET_TOR_DIST : SAMOURAI_API2_TOR_DIST;
+            final String url = testMode ? SAMOURAI_API2_TESTNET_TOR : SAMOURAI_API2_TOR;
             return WebUtil.getInstance(null).getURL(
                     url + SEEN_PATH + "?addresses=" + buildAddressesRequestParam(addresses),
-                    ImmutableMap.of("Authorization", "Bearer " + accessToken));
+                    ImmutableMap.of("Authorization", "Bearer " + accessToken),
+                    TIMEOUT);
         } else {
             final String url = testMode ? SAMOURAI_API2_TESTNET : SAMOURAI_API2;
             return WebUtil.getInstance(null).getURL(
                     url + SEEN_PATH + "?addresses=" + buildAddressesRequestParam(addresses),
-                    ImmutableMap.of("Authorization", "Bearer " + accessToken));
+                    ImmutableMap.of("Authorization", "Bearer " + accessToken),
+                    TIMEOUT);
         }
     }
 

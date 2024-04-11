@@ -34,7 +34,7 @@ public class TransactionOutPointHelper {
 
     public static List<UTXO> toUtxos(final Collection<MyTransactionOutPoint> transactionOutPoints) {
         final List<UTXO> utxoList = Lists.newArrayList();
-        for (final MyTransactionOutPoint outpoint : transactionOutPoints) {
+        for (final MyTransactionOutPoint outpoint : CollectionUtils.emptyIfNull(transactionOutPoints)) {
             utxoList.add(toUtxo(outpoint));
         }
         return utxoList;

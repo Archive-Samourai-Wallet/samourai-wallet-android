@@ -29,12 +29,11 @@ import com.samourai.wallet.api.fee.FeeClient;
 import com.samourai.wallet.api.fee.RawFees;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
-import com.samourai.wallet.bip47.rpc.NotSecp256k1Exception;
 import com.samourai.wallet.bip47.rpc.PaymentCode;
+import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.hd.HD_Address;
 import com.samourai.wallet.hd.HD_Wallet;
 import com.samourai.wallet.hd.HD_WalletFactory;
-import com.samourai.wallet.constants.WALLET_INDEX;
 import com.samourai.wallet.network.dojo.DojoUtil;
 import com.samourai.wallet.payload.PayloadUtil;
 import com.samourai.wallet.ricochet.RicochetMeta;
@@ -74,10 +73,6 @@ import org.json.JSONObject;
 
 import java.math.BigInteger;
 import java.net.URLEncoder;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1434,7 +1429,11 @@ public class APIFactory {
                 return parse1DollarFeesEstimator(new JSONObject(multiAddr.toString()));
             }
         } else if(BuildConfig.FLAVOR.equals("staging") && SamouraiWallet.MOCK_FEE) {
-            final RawFees fees = FeeClient.createFeeClient(context, false).getFees();
+            RawFees fees = FeeClient.createFeeClient(context, false).getFees();
+            if (isNull(fees) || ! fees.hasFee()) {
+                Log.w(TAG, "will load hard coded 1$fees values because no get fees from mock 1$fee estimator");
+                fees = putMock1DollarFeesEstimator();
+            }
             FeeUtil.getInstance().putRawFees(fees);
             return fees;
         } else {

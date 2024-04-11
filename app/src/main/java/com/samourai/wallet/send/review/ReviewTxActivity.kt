@@ -94,7 +94,8 @@ import com.samourai.wallet.theme.samouraiSlateGreyAccent
 import com.samourai.wallet.theme.samouraiTextLightGrey
 import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.util.func.FormatsUtil
-import com.samourai.wallet.util.func.TransactionOutPointHelper
+import com.samourai.wallet.util.func.TransactionOutPointHelper.retrievesAggregatedAmount
+import com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints
 import com.samourai.wallet.util.tech.ColorHelper.Companion.getAttributeColor
 import com.samourai.wallet.util.tech.ColorHelper.Companion.lightenColor
 import com.samourai.wallet.util.view.rememberImeState
@@ -139,7 +140,10 @@ class ReviewTxActivity : SamouraiActivity() {
         }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({reviewTxModel.setSeenAddresses(it)}) {
+            .subscribe({
+                reviewTxModel.setSeenAddresses(it)
+            }) {
+                reviewTxModel.setSyncInProgress(false)
                 Log.e(TAG, it.message, it)
             }
         registerDisposable(disposable)
@@ -172,8 +176,8 @@ class ReviewTxActivity : SamouraiActivity() {
         val customSelectionUtxos = reviewTxModel.customSelectionUtxos.value
         val isSmallSingleUtxoForRicochet = sendType!!.isRicochet &&
                 customSelectionUtxos!!.size == 1 &&
-                TransactionOutPointHelper.retrievesAggregatedAmount(
-                    TransactionOutPointHelper.toTxOutPoints(
+                retrievesAggregatedAmount(
+                    toTxOutPoints(
                         customSelectionUtxos
                     )
                 ) < 1_000_000L
@@ -338,7 +342,7 @@ private fun ReviewTxInfo(
                         amountToLeaveWalletColor = amountToLeaveWalletColor,
                         action = sendTx,
                         enable = MutableLiveData(true),
-                        somethingLoading = model.isSyncPayNymInProgress,
+                        somethingLoading = model.isSyncInProgress,
                         listener = swipeSendButtonContentListener,
                         alphaBackground = 0f
                     )
@@ -364,13 +368,9 @@ fun ReviewTxActivityContentHeader(
 
     val sendType by model.impliedSendType.observeAsState()
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
-    val isSmallSingleUtxoForRicochet = sendType!!.isRicochet &&
-            customSelectionUtxos!!.size == 1 &&
-            TransactionOutPointHelper.retrievesAggregatedAmount(
-                TransactionOutPointHelper.toTxOutPoints(
-                    customSelectionUtxos
-                )
-            ) < 1_000_000L
+    val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
+    val isSmallSelectionAmountForRicochet = sendType!!.isRicochet &&
+            customSelectionAggrAmount < 1_000_000L
 
     val account = if (nonNull(activity)) activity!!.getIntent().extras!!.getInt("_account") else 0
     val backgroundColor = if (account == SamouraiAccountIndex.POSTMIX) samouraiPostmixSpendBlueButton else samouraiSlateGreyAccent
@@ -380,7 +380,7 @@ fun ReviewTxActivityContentHeader(
             .background(lightenColor(backgroundColor, whiteAlpha))
     ){
 
-        if ((! isSmallSingleUtxoForRicochet && !isMissingAmount) || sendType!!.isJoinbot) {
+        if ((! isSmallSelectionAmountForRicochet && !isMissingAmount) || sendType!!.isJoinbot) {
             Column {
                 IconButton(onClick = {
                     when(screen) {
@@ -451,6 +451,7 @@ fun ReviewTxActivityContentDestination(
 ) {
 
     val destinationAmount by model.impliedAmount.observeAsState()
+    val alertReviews = model.alertReviews.observeAsState()
 
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
@@ -563,12 +564,23 @@ fun ReviewTxActivityContentDestination(
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
+
+                        val alertReusedGlobal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_GLOBAL)
+                        val isReusedAddrGlobal = if (nonNull(alertReusedGlobal))
+                            alertReusedGlobal!!.isReusedAddress(model.address)
+                        else false
+
+                        val alertReusedLocal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_LOCAL)
+                        val isReusedAddrLocal = if (nonNull(alertReusedLocal))
+                            alertReusedLocal!!.isReusedAddress(model.address)
+                        else false
+
+                        val isReusedAddr = isReusedAddrGlobal || isReusedAddrLocal
+
                         Column {
-                            Text(
-                                text = model.addressLabel,
-                                color = samouraiTextLightGrey,
-                                fontSize = 14.sp,
-                                fontFamily = robotoMonoNormalFont
+                            DisplayAddress(
+                                address = model.addressLabel,
+                                addressReused = isReusedAddr
                             )
                         }
                     }
@@ -588,10 +600,18 @@ fun TransactionOutput(
     )
 
     val alertReviews = model.alertReviews.observeAsState()
-    val alertReused = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_GLOBAL)
-    val isReusedAddr = if (nonNull(alertReused))
-        alertReused!!.isReusedAddress(spendInfo.getAddr(model.application))
+
+    val alertReusedGlobal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_GLOBAL)
+    val isReusedAddrGlobal = if (nonNull(alertReusedGlobal))
+        alertReusedGlobal!!.isReusedAddress(spendInfo.getAddr(model.application))
     else false
+
+    val alertReusedLocal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_LOCAL)
+    val isReusedAddrLocal = if (nonNull(alertReusedLocal))
+        alertReusedLocal!!.isReusedAddress(spendInfo.getAddr(model.application))
+    else false
+
+    val isReusedAddr = isReusedAddrGlobal || isReusedAddrLocal
 
     Row (
         modifier = Modifier

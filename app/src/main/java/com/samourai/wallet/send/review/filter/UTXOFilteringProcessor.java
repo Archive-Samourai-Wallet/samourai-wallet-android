@@ -46,6 +46,10 @@ public class UTXOFilteringProcessor {
                     continue;
                 }
 
+                if (!filteringModel.isUnconfirmed() && outPoint.getConfirmations() < 1) {
+                    continue;
+                }
+
                 if (postmixAccount) {
 
                     if (! filteringModel.isPostmixTransactionChange() &&
