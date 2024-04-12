@@ -517,7 +517,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
         scope.launch(Dispatchers.IO) {
             val httpClient: IHttpClient = AndroidHttpClient(com.samourai.wallet.util.network.WebUtil.getInstance(applicationContext))
             val xManagerClient = XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet, SamouraiTorManager.isConnected())
-            val address = xManagerClient.getAddressOrDefault(XManagerService.BIP47)
+            val address = xManagerClient.getAddressOrDefault(XManagerService.XM005)
             SendNotifTxFactory.getInstance().setAddress(address)
             //
             // get wallet balance

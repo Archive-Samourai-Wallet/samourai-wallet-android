@@ -632,14 +632,14 @@ public class SendActivity extends SamouraiActivity {
         XManagerClient xManagerClient = new XManagerClient(httpClient, SamouraiWallet.getInstance().isTestNet(), SamouraiTorManager.INSTANCE.isConnected());
         if (PrefsUtil.getInstance(this).getValue(PrefsUtil.USE_RICOCHET, false)) {
             Completable completable = Completable.fromCallable(() -> {
-                String feeAddress = xManagerClient.getAddressOrDefault(XManagerService.RICOCHET);
+                String feeAddress = xManagerClient.getAddressOrDefault(XManagerService.XM004);
                 RicochetMeta.getInstance(getApplicationContext()).setRicochetFeeAddress(feeAddress);
                 return true;
             });
             //Set BIP47 Fee address if the tx is
             if (strPCode != null) {
                 Completable pcode = Completable.fromCallable(() -> {
-                    String address = xManagerClient.getAddressOrDefault(XManagerService.BIP47);
+                    String address = xManagerClient.getAddressOrDefault(XManagerService.XM005);
                     SendNotifTxFactory.getInstance().setAddress(address);
                     return true;
                 });
