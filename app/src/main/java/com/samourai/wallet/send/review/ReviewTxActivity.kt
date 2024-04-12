@@ -174,15 +174,12 @@ class ReviewTxActivity : SamouraiActivity() {
 
         val sendType = reviewTxModel.impliedSendType.value
         val customSelectionUtxos = reviewTxModel.customSelectionUtxos.value
-        val isSmallSingleUtxoForRicochet = sendType!!.isRicochet &&
-                customSelectionUtxos!!.size == 1 &&
-                retrievesAggregatedAmount(
-                    toTxOutPoints(
-                        customSelectionUtxos
-                    )
-                ) < 1_000_000L
+        val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
+        val isSmallSingleUtxoForCustomRicochet = sendType!!.isRicochet &&
+                sendType!!.isCustomSelection &&
+                customSelectionAggrAmount < 1_000_000L
 
-        if ((! isSmallSingleUtxoForRicochet && !isMissingAmount) || sendType.isJoinbot) {
+        if ((! isSmallSingleUtxoForCustomRicochet && !isMissingAmount) || sendType.isJoinbot) {
             when (reviewTxModel.currentScreen.value) {
                 EnumReviewScreen.TX_INFO -> super.onBackPressed()
                 EnumReviewScreen.TX_ALERT -> reviewTxModel.currentScreen.postValue(EnumReviewScreen.TX_INFO)
@@ -370,6 +367,7 @@ fun ReviewTxActivityContentHeader(
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
     val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
     val isSmallSelectionAmountForRicochet = sendType!!.isRicochet &&
+            sendType!!.isCustomSelection &&
             customSelectionAggrAmount < 1_000_000L
 
     val account = if (nonNull(activity)) activity!!.getIntent().extras!!.getInt("_account") else 0
