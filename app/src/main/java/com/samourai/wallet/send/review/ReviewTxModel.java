@@ -749,7 +749,7 @@ public class ReviewTxModel extends AndroidViewModel {
                 txData.getValue().getReceivers().size() - countP2WSH_P2TR + 1, countP2WSH_P2TR
         );
 
-        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
+        //addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
 
         if (amount + fee.longValue() > getBalance()) {
             Toast.makeText(getApplication(), R.string.insufficient_funds, Toast.LENGTH_SHORT);
@@ -1360,7 +1360,7 @@ public class ReviewTxModel extends AndroidViewModel {
             }
         }
 
-        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
+        //addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
 
         if (txData.getValue().getSelectedUTXO().size() > 0) {
 

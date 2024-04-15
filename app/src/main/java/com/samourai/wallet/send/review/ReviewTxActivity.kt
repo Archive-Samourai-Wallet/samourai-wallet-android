@@ -454,9 +454,6 @@ fun ReviewTxActivityContentDestination(
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
     )
-    val robotoMonoNormalFont = FontFamily(
-        Font(R.font.roboto_mono, FontWeight.Normal)
-    )
     val robotoMonoBoldFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Bold)
     )
@@ -562,24 +559,8 @@ fun ReviewTxActivityContentDestination(
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-
-                        val alertReusedGlobal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_GLOBAL)
-                        val isReusedAddrGlobal = if (nonNull(alertReusedGlobal))
-                            alertReusedGlobal!!.isReusedAddress(model.address)
-                        else false
-
-                        val alertReusedLocal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_LOCAL)
-                        val isReusedAddrLocal = if (nonNull(alertReusedLocal))
-                            alertReusedLocal!!.isReusedAddress(model.address)
-                        else false
-
-                        val isReusedAddr = isReusedAddrGlobal || isReusedAddrLocal
-
                         Column {
-                            DisplayAddress(
-                                address = model.addressLabel,
-                                addressReused = isReusedAddr
-                            )
+                            DisplayAddress(address = model.addressLabel)
                         }
                     }
                 }
@@ -643,7 +624,7 @@ fun TransactionOutput(
 @Composable
 fun DisplayAddress(
     address: String,
-    addressReused: Boolean) {
+    addressReused: Boolean = false) {
 
     val robotoMonoNormalFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Normal)
