@@ -399,7 +399,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                     if (BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_NOT_SENT) {
                         followPaynym()
                     } else {
-                        Snackbar.make(binding.historyLayout.rootView, "Follow transaction is still pending", Snackbar.LENGTH_SHORT).show()
+                        Snackbar.make(findViewById(android.R.id.content), "Follow transaction is still pending", Snackbar.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -459,9 +459,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
     private fun updatePaynym(label: String?, pcode: String?) {
         if (pcode == null || pcode.isEmpty() || !FormatsUtil.getInstance().isValidPaymentCode(pcode)) {
-            Snackbar.make(binding.userAvatar.rootView, R.string.invalid_payment_code, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_payment_code, Snackbar.LENGTH_SHORT).show()
         } else if (label == null || label.isEmpty()) {
-            Snackbar.make(binding.userAvatar.rootView, R.string.bip47_no_label_error, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(findViewById(android.R.id.content), R.string.bip47_no_label_error, Snackbar.LENGTH_SHORT).show()
         } else {
             BIP47Meta.getInstance().setLabel(pcode, label)
             Thread {
