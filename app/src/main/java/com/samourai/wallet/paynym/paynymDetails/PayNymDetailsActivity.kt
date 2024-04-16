@@ -613,9 +613,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
                         }
                     }
 
-                    fee = FeeUtil.getInstance().estimatedFee(selected, 7)
+                    fee = FeeUtil.getInstance().estimatedFee(selected, 4)
                 } else {
-                    fee = FeeUtil.getInstance().estimatedFee(1, 7)
+                    fee = FeeUtil.getInstance().estimatedFee(1, 4)
                 }
             } catch(e : Exception) {
                 return@launch
