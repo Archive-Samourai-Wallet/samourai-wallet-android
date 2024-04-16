@@ -271,19 +271,6 @@ fun RicochetCustomPreviewTxInputTotal(
                         fontSize = 14.sp,
                         fontFamily = robotoMediumItalicBoldFont
                     )
-                    Column(
-                        modifier = Modifier
-                            .weight(0.35f),
-                        horizontalAlignment = Alignment.End,
-                    ) {
-                        Text(
-                            text = FormatsUtil.formatBTC(amountToLeaveWallet - txData!!.totalAmountInTxInput),
-                            maxLines = 1,
-                            color = samouraiAlerts,
-                            fontSize = 12.sp,
-                            fontFamily = robotoMediumItalicBoldFont
-                        )
-                    }
                 }
             }
         }
@@ -347,7 +334,7 @@ fun RicochetCustomDisplayUtxoOutPoint(
                     val utxo = UTXO()
                     utxo.outpoints = Lists.newArrayList(utxoOutPoint);
                     if (! selected) {
-                        if (!model.isPostmixAccount || customSelectionUtxos!!.isEmpty()) {
+                        if (!model.isPostmixAccount || CollectionUtils.isEmpty(customSelectionUtxos)) {
                             model.addCustomSelectionUtxos(Lists.newArrayList(utxo))
                         } else {
                             Toast.makeText(activity, "Only 1 input is allowed from Postmix account", Toast.LENGTH_SHORT).show()
