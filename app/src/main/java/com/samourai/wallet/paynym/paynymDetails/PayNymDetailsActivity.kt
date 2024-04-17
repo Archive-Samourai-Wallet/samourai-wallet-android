@@ -574,6 +574,10 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 }
             }
 
+            val outputCountForFeeEstimation =
+                if (FeeUtil.getInstance().feeRepresentation === EnumFeeRepresentation.BLOCK_COUNT) 7
+                else 4
+
             val keepCurrentSuggestedFee = FeeUtil.getInstance().suggestedFee
             try {
                 if (FeeUtil.getInstance().feeRepresentation === EnumFeeRepresentation.NEXT_BLOCK_RATE) {
@@ -593,8 +597,6 @@ class PayNymDetailsActivity : SamouraiActivity() {
                         FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().normalFee
                     }
                 }
-
-
                 if (selectedUTXO.size == 0) {
                     // sort in descending order by value
                     Collections.sort(_utxos, UTXOComparator())
@@ -613,9 +615,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
                         }
                     }
 
-                    fee = FeeUtil.getInstance().estimatedFee(selected, 7)
+                    fee = FeeUtil.getInstance().estimatedFee(selected, outputCountForFeeEstimation)
                 } else {
-                    fee = FeeUtil.getInstance().estimatedFee(1, 7)
+                    fee = FeeUtil.getInstance().estimatedFee(1, outputCountForFeeEstimation)
                 }
             } catch(e : Exception) {
                 return@launch
@@ -630,7 +632,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 scope.launch(Dispatchers.Main) {
                     binding.progressBar.visibility = View.INVISIBLE
                     var message: String? = getText(R.string.bip47_notif_tx_insufficient_funds_1).toString() + " "
-                    val biAmount = SendNotifTxFactory._bSWFee.add(SendNotifTxFactory._bNotifTxValue.add(FeeUtil.getInstance().estimatedFee(1, 4, FeeUtil.getInstance().lowFee.defaultPerKB)))
+                    val biAmount = SendNotifTxFactory._bSWFee
+                        .add(SendNotifTxFactory._bNotifTxValue)
+                        .add(BigInteger.valueOf(fee!!.toLong()))
                     val strAmount = FormatsUtil.formatBTC(biAmount.toLong());
                     message += strAmount
                     message += " " + getText(R.string.bip47_notif_tx_insufficient_funds_2)

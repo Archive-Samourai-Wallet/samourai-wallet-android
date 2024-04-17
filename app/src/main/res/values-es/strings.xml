@@ -590,7 +590,7 @@
     <string name="title_activity_empty_whirl_pool">" "</string>
     <string name="cycling_bitcoin">Mezclar bitcoins a través de \n whirlpool reducirá el rastro que tus \n transacciones dejan detrás</string>
     <string name="metadata_cleaner">Limpiador de metadatos</string>
-    <string name="end_to_end_trustless">confianza no requerida, de punto-a-punto</string
+    <string name="end_to_end_trustless">confianza no requerida, de punto-a-punto</string>
     <string name="your_private_keys"> Tus claves privadas no abandonan\n tu dispositivo en ninún punto\n de la mezcla Whirlpool</string>
     <string name="different_cycles_for">mezclas diferentes para distintas necesidades</string>
     <string name="complete_a_slow_cycle">Paga una pequeña comisión para un mezclado rápido o \n gana una pequeña recompensa en BTC\n cuando completes una mezcla lenta</string>
@@ -844,7 +844,7 @@
     <string name="confirm_import_batch_list">La importación sobrescribirá las entradas del Listado existente. ¿Deseas continuar?</string>
     <string name="break_free">Libérese de la custodia de terceros. Manténga control total de su billetera en todo momento.</string>
     <string name="perfect_toolbox">La caja de herramientas perfecta para administrar su Bitcoin de forma privada</string>
-    <string name="offline_mode_allows">Modo sin conexión le permite interactuar con su Bitcoin incluso sin datos</string
+    <string name="offline_mode_allows">Modo sin conexión le permite interactuar con su Bitcoin incluso sin datos</string>
     <string name="connect_your_wallet_to_your_own">Conecte su billetera a su propio nodo completo de Bitcoin con un solo escaneo de código QR</string>
     <string name="get_started">Empezar</string>
     <string name="restore_an_existing_wallet">Restaurar una billetera existente</string>
