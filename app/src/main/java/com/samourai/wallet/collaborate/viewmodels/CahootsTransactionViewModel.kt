@@ -15,6 +15,7 @@ import com.samourai.wallet.constants.SamouraiAccountIndex
 import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
 import com.samourai.wallet.send.cahoots.SorobanCahootsActivity
+import com.samourai.wallet.send.review.ReviewTxModel.findTransactionPriority
 import com.samourai.wallet.util.func.FormatsUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -217,39 +218,58 @@ class CahootsTransactionViewModel : ViewModel() {
         calculateFees(it)
     }
 
+    fun getFeeRange() : LiveData<Float> {
+        return feeRange
+    }
+
     private fun calculateFees(it: Float) {
+
+        FeeUtil.getInstance().normalize()
+
         feeLow = FeeUtil.getInstance().lowFee.defaultPerKB.toLong()
         feeMed = FeeUtil.getInstance().suggestedFee.defaultPerKB.toLong()
         feeHigh = FeeUtil.getInstance().highFee.defaultPerKB.toLong()
-        if (feeHigh == 1000L && feeLow == 1000L) {
-            feeHigh = 3000L
-        }
+
+
         //If the custom fee is not null the value will be taken as fee
         val fees = if (customFee.value != null) customFee.value!!.times(1000).toFloat() else MathUtils.lerp(feeLow.toFloat(), feeHigh.toFloat(), it).coerceAtLeast(1f)
         val feesPerByteValue = decimalFormatSatPerByte.format(fees / 1000);
         feesPerByte.postValue(feesPerByteValue)
 
-        //Calculate Block confirm estimation
-        val pct: Double
-        var nbBlocks = 6
-        if (fees <= feeLow.toDouble()) {
-            pct = feeLow.toDouble() / fees
-            nbBlocks = ceil(pct * 24.0).toInt()
-        } else if (fees >= feeHigh.toDouble()) {
-            pct = feeHigh.toDouble() / fees
-            nbBlocks = ceil(pct * 2.0).toInt()
-            if (nbBlocks < 1) {
-                nbBlocks = 1
-            }
+        if (FeeUtil.getInstance().feeRepresentation.is1DolFeeEstimator) {
+
+            var transactionPriority = findTransactionPriority(fees.toLong(), feeHigh, feeLow)
+            var priorityDesc = transactionPriority!!.getDescription(
+                FeeUtil.getInstance().feeRepresentation,
+                fees.toLong(),
+                feeLow,
+                feeMed,
+                feeHigh
+            )
+            estBlocks.postValue(priorityDesc)
         } else {
-            pct = feeMed.toDouble() / fees
-            nbBlocks = ceil(pct * 6.0).toInt()
+            //Calculate Block confirm estimation
+            val pct: Double
+            var nbBlocks = 6
+            if (fees <= feeLow.toDouble()) {
+                pct = feeLow.toDouble() / fees
+                nbBlocks = ceil(pct * 24.0).toInt()
+            } else if (fees >= feeHigh.toDouble()) {
+                pct = feeHigh.toDouble() / fees
+                nbBlocks = ceil(pct * 2.0).toInt()
+                if (nbBlocks < 1) {
+                    nbBlocks = 1
+                }
+            } else {
+                pct = feeMed.toDouble() / fees
+                nbBlocks = ceil(pct * 6.0).toInt()
+            }
+            var strBlocks = "$nbBlocks blocks"
+            if (nbBlocks > 50) {
+                strBlocks = "50+ blocks"
+            }
+            estBlocks.postValue(strBlocks)
         }
-        var strBlocks = "$nbBlocks blocks"
-        if (nbBlocks > 50) {
-            strBlocks = "50+ blocks"
-        }
-        estBlocks.postValue(strBlocks)
     }
 
     fun setAddress(addressEdit: String) {

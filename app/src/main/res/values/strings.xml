@@ -945,6 +945,7 @@
     <string name="auth_using_paynym">Authenticate using PayNym</string>
     <string name="authenticate">Authenticate</string>
     <string name="estimated_wait_time">Estimated wait time</string>
+    <string name="estimated_confirmation_time">Est confirmation time</string>
     <string name="enter_a_private_key_and">Enter a private key and sweep any funds to\nyour next bitcoin address</string>
     <string name="sign_messages_using_your">Sign messages using your wallet private key</string>
     <string name="wallet_address_calc">Wallet address calculator</string>
