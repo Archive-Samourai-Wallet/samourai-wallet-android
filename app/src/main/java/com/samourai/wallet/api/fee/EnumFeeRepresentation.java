@@ -36,20 +36,20 @@ public enum EnumFeeRepresentation {
                 suggestedFees.add(suggestedFee);
             }
 
-            final Integer feeForNextBlockAt20 = nonNull(rawFees.getFee(EnumFeeRate.RATE_200))
-                    ? rawFees.getFee(EnumFeeRate.RATE_200)
+            final Integer feeForNextBlockAt10 = nonNull(rawFees.getFee(EnumFeeRate.RATE_100))
+                    ? rawFees.getFee(EnumFeeRate.RATE_100)
                     : feeForNextBlockAt50;
 
-            if (nonNull(feeForNextBlockAt20)) {
+            if (nonNull(feeForNextBlockAt10)) {
                 final SuggestedFee suggestedFee = new SuggestedFee();
-                suggestedFee.setDefaultPerKB(BigInteger.valueOf(feeForNextBlockAt20 * 1000L));
+                suggestedFee.setDefaultPerKB(BigInteger.valueOf(feeForNextBlockAt10 * 1000L));
                 suggestedFee.setStressed(false);
                 suggestedFee.setOK(true);
                 suggestedFees.add(suggestedFee);
             }
 
-            if (isNull(rawFees.getFee(EnumFeeRate.RATE_200))) {
-                rawFees.putFee(EnumFeeRate.RATE_200.getRateAsString(), feeForNextBlockAt20);
+            if (isNull(rawFees.getFee(EnumFeeRate.RATE_100))) {
+                rawFees.putFee(EnumFeeRate.RATE_100.getRateAsString(), feeForNextBlockAt10);
             }
 
             return suggestedFees;
@@ -107,4 +107,12 @@ public enum EnumFeeRepresentation {
     ;
 
     abstract public List<SuggestedFee> createSuggestedFeeList(final RawFees rawFees);
+
+    public boolean is1DolFeeEstimator() {
+        return this == NEXT_BLOCK_RATE;
+    }
+
+    public boolean isBitcoindFeeEstimator() {
+        return this == BLOCK_COUNT;
+    }
 }

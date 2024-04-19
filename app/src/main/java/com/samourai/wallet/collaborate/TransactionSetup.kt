@@ -1,20 +1,58 @@
 package com.samourai.wallet.collaborate
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.ListItem
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Slider
+import androidx.compose.material.SliderDefaults
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -30,7 +68,12 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,7 +89,14 @@ import com.samourai.wallet.cahoots.CahootsMode
 import com.samourai.wallet.cahoots.CahootsType
 import com.samourai.wallet.collaborate.viewmodels.CahootsTransactionViewModel
 import com.samourai.wallet.fragments.CameraFragmentBottomSheet
-import com.samourai.wallet.theme.*
+import com.samourai.wallet.theme.samouraiAccent
+import com.samourai.wallet.theme.samouraiBottomSheetBackground
+import com.samourai.wallet.theme.samouraiError
+import com.samourai.wallet.theme.samouraiSurface
+import com.samourai.wallet.theme.samouraiTextFieldBg
+import com.samourai.wallet.theme.samouraiTextPrimary
+import com.samourai.wallet.theme.samouraiTextSecondary
+import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.getSupportFragmentManger
 import com.samourai.wallet.util.func.FormatsUtil
@@ -55,7 +105,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 import kotlin.math.roundToLong
 
 
@@ -206,7 +256,7 @@ fun EstimatedBlockConfirm() {
         )
     ) {
         Text(
-            text = stringResource(id = R.string.estimated_wait_time),
+            text = stringResource(id = R.string.estimated_confirmation_time),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             color = samouraiTextSecondary
@@ -713,7 +763,10 @@ fun ComposeCahootsTransactionPreview() {
 @Composable
 fun SliderSegment() {
     val vm = viewModel<CahootsTransactionViewModel>()
-    val feeSliderValue by vm.feeSliderValue.observeAsState(0.5f)
+    val feeRange by vm.getFeeRange().observeAsState()
+    vm.setFeeRange(feeRange!!)
+    val feeSliderValue by vm.feeSliderValue.observeAsState(feeRange!!)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
@@ -789,7 +842,7 @@ fun SatsPerByte() {
                                 imeAction = ImeAction.Done
                             ),
                             trailingIcon = {
-                                Text(text = "sat/b ")
+                                Text(text = "sat/vB ")
                             },
                             maxLines = 1,
                             )
@@ -818,7 +871,7 @@ fun SatsPerByte() {
     }
 
     Text(
-        text = "$satsPerByte sat/b",
+        text = "$satsPerByte sat/vB",
         fontSize = 13.sp,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
