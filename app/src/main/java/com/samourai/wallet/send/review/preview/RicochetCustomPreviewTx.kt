@@ -41,6 +41,10 @@ import androidx.compose.ui.unit.sp
 import com.google.common.collect.Lists
 import com.samourai.wallet.R
 import com.samourai.wallet.SamouraiActivity
+import com.samourai.wallet.SamouraiWallet
+import com.samourai.wallet.ricochet.RicochetMeta
+import com.samourai.wallet.ricochet.RicochetMeta.computeHopFee
+import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.UTXO
 import com.samourai.wallet.send.review.MyModelPreviewProvider
@@ -52,8 +56,6 @@ import com.samourai.wallet.theme.samouraiTextLightGrey
 import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.func.MyTransactionOutPointAmountComparator
-import com.samourai.wallet.util.func.TransactionOutPointHelper.retrievesAggregatedAmount
-import com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.EMPTY
@@ -122,11 +124,6 @@ fun RicochetCustomPreviewTxInput(
     val selectedUtxoPointAddresses = txData!!.selectedUTXOPointAddresses
 
     val allTxOutPoints by model.allSpendableUtxos.observeAsState()
-    val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
-    if (model.isPostmixAccount && CollectionUtils.size(customSelectionUtxos) > 1) {
-        model.autoLoadCustomSelectionUtxos(1_000_000L)
-        model.refreshModel()
-    }
 
     Box {
         Column (
@@ -182,18 +179,23 @@ fun RicochetCustomPreviewTxInputTotal(
 
     val verticalScroll = rememberScrollState(0)
 
-    val sendType by model.impliedSendType.observeAsState()
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
-    val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
-    val isSmallSelectionAmountForRicochet = sendType!!.isRicochet &&
-            sendType!!.isCustomSelection &&
-            customSelectionAggrAmount < 1_000_000L
 
     val txData by model.txData.observeAsState()
     val destinationAmount by model.impliedAmount.observeAsState()
     val feeAggregated by model.feeAggregated.observeAsState()
     val amountToLeaveWallet = (destinationAmount ?: 0L) + (feeAggregated ?: 0L)
-    val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
+
+    val necessaryAmount =
+    if (CollectionUtils.isEmpty(customSelectionUtxos)) {
+        destinationAmount!! + SamouraiWallet.bDust.toLong() +
+                RicochetMeta.samouraiFeeAmountV1.toLong() + computeHopFee() +
+                FeeUtil.getInstance().estimatedFee(1, 3).toLong()
+    } else {
+        amountToLeaveWallet + SamouraiWallet.bDust.toLong()
+    }
+
+    val isMissingAmount = necessaryAmount > txData!!.totalAmountInTxInput
 
     Column (
         modifier = Modifier
@@ -251,26 +253,13 @@ fun RicochetCustomPreviewTxInputTotal(
                         horizontalAlignment = Alignment.End,
                     ) {
                         Text(
-                            text = FormatsUtil.formatBTC(amountToLeaveWallet - txData!!.totalAmountInTxInput),
+                            text = FormatsUtil.formatBTC(necessaryAmount - txData!!.totalAmountInTxInput),
                             maxLines = 1,
                             color = samouraiAlerts,
                             fontSize = 12.sp,
                             fontFamily = robotoMediumItalicBoldFont
                         )
                     }
-                }
-            }
-            if (isSmallSelectionAmountForRicochet) {
-                Row (
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Sum of inputs must be greater than 0.01 BTC",
-                        color = samouraiAlerts,
-                        fontSize = 14.sp,
-                        fontFamily = robotoMediumItalicBoldFont
-                    )
                 }
             }
         }
