@@ -63,6 +63,10 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
     }
 
     public RawFees getRawFees() {
+        return getRawFees(feeRepresentation);
+    }
+
+    public RawFees getRawFees(final EnumFeeRepresentation feeRepresentation) {
         return rawFeesMap.get(feeRepresentation);
     }
 
@@ -218,36 +222,45 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
         long feeMed = FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue();
         long feeHigh = FeeUtil.getInstance().getHighFee().getDefaultPerKB().longValue();
 
-        if (feeLow == feeMed && feeMed == feeHigh) {
-            // offset of low and high
-            feeLow = max(1, feeMed * 85L / 100L);
-            feeHigh = feeMed * 115L / 100L;
-            final SuggestedFee lo_sf = new SuggestedFee();
-            lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow / 1000L * 1000L));
-            FeeUtil.getInstance().setLowFee(lo_sf);
-            final SuggestedFee hi_sf = new SuggestedFee();
-            hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh / 1000L * 1000L));
-            FeeUtil.getInstance().setHighFee(hi_sf);
-        } else if (feeLow == feeMed || feeMed == feeHigh) {
-            if (FeeUtil.getInstance().getFeeRepresentation() == EnumFeeRepresentation.BLOCK_COUNT) {
-                // offset of mid
-                feeMed = (feeLow + feeHigh) / 2L;
-                final SuggestedFee mi_sf = new SuggestedFee();
-                mi_sf.setDefaultPerKB(BigInteger.valueOf(feeMed / 1000L * 1000L));
-                FeeUtil.getInstance().setNormalFee(mi_sf);
-            } else if (feeLow == feeMed) {
+        /**
+         * Finally we don't want to adjust the fees from 1$fee estimator.
+         * So this condition is added to avoid that.
+         */
+        if (!FeeUtil.getInstance().getFeeRepresentation().is1DolFeeEstimator()) {
+            if (feeLow == feeMed && feeMed == feeHigh) {
+                // offset of low and high
                 feeLow = max(1, feeMed * 85L / 100L);
+                feeHigh = feeMed * 115L / 100L;
                 final SuggestedFee lo_sf = new SuggestedFee();
                 lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow / 1000L * 1000L));
                 FeeUtil.getInstance().setLowFee(lo_sf);
-            } else {
-                feeHigh = feeMed * 115L / 100L;
                 final SuggestedFee hi_sf = new SuggestedFee();
                 hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh / 1000L * 1000L));
                 FeeUtil.getInstance().setHighFee(hi_sf);
+            } else if (feeLow == feeMed || feeMed == feeHigh) {
+                if (FeeUtil.getInstance().getFeeRepresentation().isBitcoindFeeEstimator()) {
+                    // offset of mid
+                    feeMed = (feeLow + feeHigh) / 2L;
+                    final SuggestedFee mi_sf = new SuggestedFee();
+                    mi_sf.setDefaultPerKB(BigInteger.valueOf(feeMed / 1000L * 1000L));
+                    FeeUtil.getInstance().setNormalFee(mi_sf);
+                } else if (feeLow == feeMed) {
+                    feeLow = max(1, feeMed * 85L / 100L);
+                    final SuggestedFee lo_sf = new SuggestedFee();
+                    lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow / 1000L * 1000L));
+                    FeeUtil.getInstance().setLowFee(lo_sf);
+                } else {
+                    feeHigh = feeMed * 115L / 100L;
+                    final SuggestedFee hi_sf = new SuggestedFee();
+                    hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh / 1000L * 1000L));
+                    FeeUtil.getInstance().setHighFee(hi_sf);
+                }
             }
         }
 
+        /**
+         * just for security, avoid inconsistent value
+         */
         if (feeLow < 1000L) {
             feeLow = 1000L;
             final SuggestedFee lo_sf = new SuggestedFee();

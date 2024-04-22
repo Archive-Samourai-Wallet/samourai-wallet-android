@@ -49,10 +49,10 @@ import com.samourai.wallet.send.FeeUtil
 import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.RBFSpend
 import com.samourai.wallet.send.SendActivity
+import com.samourai.wallet.send.SendActivity.isPSBT
 import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.send.SendParams
 import com.samourai.wallet.send.UTXO
-import com.samourai.wallet.send.SendActivity.isPSBT
 import com.samourai.wallet.send.UTXO.UTXOComparator
 import com.samourai.wallet.send.batch.InputBatchSpendHelper.loadInputBatchSpend
 import com.samourai.wallet.send.cahoots.ManualCahootsActivity
@@ -634,24 +634,7 @@ class BatchSpendActivity : SamouraiActivity() {
 
 
     private fun doFees() {
-        val highFee = FeeUtil.getInstance().highFee
-        val normalFee = FeeUtil.getInstance().normalFee
-        val lowFee = FeeUtil.getInstance().lowFee
-        var message = getText(R.string.current_fee_selection).toString() + " " + FeeUtil.getInstance().suggestedFee.defaultPerKB.toLong() / 1000L + " " + getText(R.string.slash_sat)
-        message += "\n"
-        message += getText(R.string.current_hi_fee_value).toString() + " " + highFee.defaultPerKB.toLong() / 1000L + " " + getText(R.string.slash_sat)
-        message += "\n"
-        message += getText(R.string.current_mid_fee_value).toString() + " " + normalFee.defaultPerKB.toLong() / 1000L + " " + getText(R.string.slash_sat)
-        message += "\n"
-        message += getText(R.string.current_lo_fee_value).toString() + " " + lowFee.defaultPerKB.toLong() / 1000L + " " + getText(R.string.slash_sat)
-        val dlg = MaterialAlertDialogBuilder(this@BatchSpendActivity)
-            .setTitle(R.string.app_name)
-            .setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton(R.string.ok) { _, _ -> }
-        if (!isFinishing) {
-            dlg.show()
-        }
+        SendActivity.doFees(this@BatchSpendActivity)
     }
 
     private fun doScan() {

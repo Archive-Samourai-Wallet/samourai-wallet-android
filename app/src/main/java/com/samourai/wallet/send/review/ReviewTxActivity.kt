@@ -94,8 +94,6 @@ import com.samourai.wallet.theme.samouraiSlateGreyAccent
 import com.samourai.wallet.theme.samouraiTextLightGrey
 import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.util.func.FormatsUtil
-import com.samourai.wallet.util.func.TransactionOutPointHelper.retrievesAggregatedAmount
-import com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints
 import com.samourai.wallet.util.tech.ColorHelper.Companion.getAttributeColor
 import com.samourai.wallet.util.tech.ColorHelper.Companion.lightenColor
 import com.samourai.wallet.util.view.rememberImeState
@@ -173,13 +171,8 @@ class ReviewTxActivity : SamouraiActivity() {
         val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
 
         val sendType = reviewTxModel.impliedSendType.value
-        val customSelectionUtxos = reviewTxModel.customSelectionUtxos.value
-        val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
-        val isSmallSingleUtxoForCustomRicochet = sendType!!.isRicochet &&
-                sendType!!.isCustomSelection &&
-                customSelectionAggrAmount < 1_000_000L
 
-        if ((! isSmallSingleUtxoForCustomRicochet && !isMissingAmount) || sendType.isJoinbot) {
+        if (!isMissingAmount || sendType!!.isJoinbot) {
             when (reviewTxModel.currentScreen.value) {
                 EnumReviewScreen.TX_INFO -> super.onBackPressed()
                 EnumReviewScreen.TX_ALERT -> reviewTxModel.currentScreen.postValue(EnumReviewScreen.TX_INFO)
@@ -364,11 +357,6 @@ fun ReviewTxActivityContentHeader(
     val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
 
     val sendType by model.impliedSendType.observeAsState()
-    val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
-    val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
-    val isSmallSelectionAmountForRicochet = sendType!!.isRicochet &&
-            sendType!!.isCustomSelection &&
-            customSelectionAggrAmount < 1_000_000L
 
     val account = if (nonNull(activity)) activity!!.getIntent().extras!!.getInt("_account") else 0
     val backgroundColor = if (account == SamouraiAccountIndex.POSTMIX) samouraiPostmixSpendBlueButton else samouraiSlateGreyAccent
@@ -378,7 +366,7 @@ fun ReviewTxActivityContentHeader(
             .background(lightenColor(backgroundColor, whiteAlpha))
     ){
 
-        if ((! isSmallSelectionAmountForRicochet && !isMissingAmount) || sendType!!.isJoinbot) {
+        if (!isMissingAmount || sendType!!.isJoinbot) {
             Column {
                 IconButton(onClick = {
                     when(screen) {
