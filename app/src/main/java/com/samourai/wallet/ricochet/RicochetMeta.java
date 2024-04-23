@@ -584,7 +584,6 @@ public class RicochetMeta {
 
         // sort in ascending order by value
         Collections.sort(utxos, new UTXO.UTXOComparator());
-        Collections.reverse(utxos);
 
         for (final UTXO u : utxos) {
             selectedUTXO.add(u);
