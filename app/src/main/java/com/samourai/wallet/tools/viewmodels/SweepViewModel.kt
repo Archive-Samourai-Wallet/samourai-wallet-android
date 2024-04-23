@@ -21,15 +21,16 @@ import com.samourai.wallet.send.MyTransactionOutPoint
 import com.samourai.wallet.send.PushTx
 import com.samourai.wallet.send.SendFactory
 import com.samourai.wallet.send.beans.SweepPreview
+import com.samourai.wallet.send.review.ReviewTxModel
 import com.samourai.wallet.service.WalletRefreshWorker
 import com.samourai.wallet.tools.viewmodels.fidelitybonds.FidelityBondsTimelockedBipFormat
 import com.samourai.wallet.tools.viewmodels.fidelitybonds.FidelityBondsTimelockedBipFormatSupplier
-import com.samourai.wallet.util.func.AddressFactory
-import com.samourai.wallet.util.tech.AppUtil
-import com.samourai.wallet.util.network.BackendApiAndroid
 import com.samourai.wallet.util.PrefsUtil
 import com.samourai.wallet.util.PrivKeyReader
 import com.samourai.wallet.util.TxUtil
+import com.samourai.wallet.util.func.AddressFactory
+import com.samourai.wallet.util.network.BackendApiAndroid
+import com.samourai.wallet.util.tech.AppUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -312,26 +313,45 @@ class SweepViewModel : ViewModel() {
                     val feeForBlocks = if (getFeeSatsValueLive().value?.isEmpty() == true)
                         0.0 else decimalFormatSatPerByte.parse(getFeeSatsValueLive().value)?.toDouble()?.times(1000.0)
 
-                    if (feeForBlocks != null) {
-                        if (feeForBlocks <= feeLow.toDouble()) {
-                            pct = feeLow.toDouble() / feeForBlocks
-                            nbBlocks = ceil(pct * 24.0).toInt()
-                        } else if (feeForBlocks >= feeHigh.toDouble()) {
-                            pct = feeHigh.toDouble() / feeForBlocks
-                            nbBlocks = ceil(pct * 2.0).toInt()
-                            if (nbBlocks < 1) {
-                                nbBlocks = 1
+                    if (FeeUtil.getInstance().feeRepresentation.is1DolFeeEstimator) {
+
+                        var transactionPriority =
+                            ReviewTxModel.findTransactionPriority(
+                                feeForBlocks!!.toLong(),
+                                FeeUtil.getInstance().highFee.defaultPerKB.toLong(),
+                                FeeUtil.getInstance().lowFee.defaultPerKB.toLong())
+
+                        var priorityDesc = transactionPriority!!.getDescription(
+                            FeeUtil.getInstance().feeRepresentation,
+                            feeForBlocks!!.toLong(),
+                            FeeUtil.getInstance().lowFee.defaultPerKB.toLong(),
+                            FeeUtil.getInstance().normalFee.defaultPerKB.toLong(),
+                            FeeUtil.getInstance().highFee.defaultPerKB.toLong()
+                        )
+                        blocks.postValue(priorityDesc)
+                    } else {
+                        if (feeForBlocks != null) {
+                            if (feeForBlocks <= feeLow.toDouble()) {
+                                pct = feeLow.toDouble() / feeForBlocks
+                                nbBlocks = ceil(pct * 24.0).toInt()
+                            } else if (feeForBlocks >= feeHigh.toDouble()) {
+                                pct = feeHigh.toDouble() / feeForBlocks
+                                nbBlocks = ceil(pct * 2.0).toInt()
+                                if (nbBlocks < 1) {
+                                    nbBlocks = 1
+                                }
+                            } else {
+                                pct = feeMed.toDouble() / feeForBlocks
+                                nbBlocks = ceil(pct * 6.0).toInt()
                             }
-                        } else {
-                            pct = feeMed.toDouble() / feeForBlocks
-                            nbBlocks = ceil(pct * 6.0).toInt()
                         }
+                        var strBlocks = "$nbBlocks blocks"
+                        if (nbBlocks > 50) {
+                            strBlocks = "50+ blocks"
+                        }
+                        blocks.postValue(strBlocks)
                     }
-                    var strBlocks = "$nbBlocks blocks"
-                    if (nbBlocks > 50) {
-                        strBlocks = "50+ blocks"
-                    }
-                    blocks.postValue(strBlocks)
+
                     loading.postValue(false)
                     setPage(1)
                 }
