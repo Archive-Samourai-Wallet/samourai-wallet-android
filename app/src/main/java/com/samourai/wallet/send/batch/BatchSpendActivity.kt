@@ -85,6 +85,7 @@ import java.lang.String.format
 import java.math.BigInteger
 import java.net.URLDecoder
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.text.ParseException
 import java.util.Collections
@@ -381,7 +382,14 @@ class BatchSpendActivity : SamouraiActivity() {
                     btcEditText.addTextChangedListener(btcWatcher)
                     return
                 }
+
                 val spaceRemoved = editable.toString().replace(" ", "")
+                    .replace(
+                        java.lang.String.valueOf(DecimalFormatSymbols(Locale.getDefault()).getGroupingSeparator()),
+                        ""
+                    )
+
+
                 val sats = spaceRemoved.toDouble()
                 val btc: Double = getBtcValue(sats)
                 val formatted: String? = formattedSatValue(sats)
