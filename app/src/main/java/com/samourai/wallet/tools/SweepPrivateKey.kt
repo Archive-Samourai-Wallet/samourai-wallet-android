@@ -92,10 +92,10 @@ import com.samourai.wallet.theme.samouraiWarning
 import com.samourai.wallet.theme.samouraiWindow
 import com.samourai.wallet.tools.WrapToolsPageAnimation
 import com.samourai.wallet.tools.viewmodels.SweepViewModel
-import com.samourai.wallet.util.func.AddressFactory
-import com.samourai.wallet.util.tech.AppUtil
-import com.samourai.wallet.util.func.FormatsUtil
 import com.samourai.wallet.util.PrivKeyReader
+import com.samourai.wallet.util.func.AddressFactory
+import com.samourai.wallet.util.func.FormatsUtil
+import com.samourai.wallet.util.tech.AppUtil
 import org.bitcoinj.core.Coin
 import java.util.Calendar
 import java.util.GregorianCalendar
@@ -709,7 +709,7 @@ fun SweepEstimatedBlockConfirm() {
     val vm = viewModel<SweepViewModel>()
     val nbBlocks by vm.getBlockWaitTime().observeAsState()
     ListItem(
-        title = stringResource(id = R.string.estimated_wait_time),
+        title = stringResource(id = R.string.estimated_confirmation_time),
         value = nbBlocks.toString()
     )
 }
@@ -751,7 +751,7 @@ fun SliderSegment() {
                     .weight(.3f)
             ) {
                 Text(
-                    text = if (validFees) "$satsPerByte sats/b" else "_.__",
+                    text = if (validFees) "$satsPerByte sats/vB" else "_.__",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     overflow = TextOverflow.Ellipsis,
@@ -870,7 +870,8 @@ fun ListItem(title: String, value: String, modifier: Modifier = Modifier) {
         )
     ) {
         Text(
-            text = title, fontSize = 13.sp,
+            text = title,
+            fontSize = 13.sp,
             color = samouraiTextSecondary,
             style = MaterialTheme.typography.subtitle2
         )
