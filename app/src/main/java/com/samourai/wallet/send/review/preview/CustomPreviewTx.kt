@@ -132,6 +132,7 @@ fun CustomPreviewTxInput(
     val allTxOutPoints by model.allSpendableUtxos.observeAsState()
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
     if (model.isPostmixAccount && CollectionUtils.size(customSelectionUtxos) > 1) {
+        // security to ensure max 1 utxo for custom postmix, should be never used
         model.autoLoadCustomSelectionUtxos(0L)
         model.refreshModel()
     }
