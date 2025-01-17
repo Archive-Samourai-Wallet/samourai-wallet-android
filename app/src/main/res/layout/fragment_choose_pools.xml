@@ -70,10 +70,12 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/feeLowBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="110dp"
         android:layout_height="54dp"
         android:layout_marginTop="16dp"
         android:text="LOW"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
         android:textAllCaps="true"
         android:textColor="@color/txt_grey"
         app:backgroundTint="@color/windowDark"
@@ -88,9 +90,11 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/feeNormalBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="110dp"
         android:layout_height="54dp"
         android:text="NORMAL"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
         android:textColor="@color/white"
         app:backgroundTint="@color/blue_ui_2"
         app:cornerRadius="4dp"
@@ -104,9 +108,11 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/feeHighBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="110dp"
         android:layout_height="54dp"
-        android:text="High"
+        android:text="Next Block"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
         android:textColor="@color/white"
         app:backgroundTint="@color/windowDark"
         app:cornerRadius="4dp"

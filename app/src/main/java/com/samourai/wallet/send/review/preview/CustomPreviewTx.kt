@@ -132,6 +132,7 @@ fun CustomPreviewTxInput(
     val allTxOutPoints by model.allSpendableUtxos.observeAsState()
     val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
     if (model.isPostmixAccount && CollectionUtils.size(customSelectionUtxos) > 1) {
+        // security to ensure max 1 utxo for custom postmix, should be never used
         model.autoLoadCustomSelectionUtxos(0L)
         model.refreshModel()
     }
@@ -312,7 +313,7 @@ fun DisplayUtxoOutPoint(
                     val utxo = com.samourai.wallet.send.UTXO()
                     utxo.outpoints = Lists.newArrayList(utxoOutPoint);
                     if (! selected) {
-                        if (!model.isPostmixAccount || customSelectionUtxos!!.isEmpty()) {
+                        if (!model.isPostmixAccount || CollectionUtils.isEmpty(customSelectionUtxos)) {
                             model.addCustomSelectionUtxos(Lists.newArrayList(utxo))
                         } else {
                             Toast.makeText(activity, "Only 1 input is allowed from Postmix account", Toast.LENGTH_SHORT).show()

@@ -559,7 +559,7 @@ public class RicochetMeta {
         return address;
     }
 
-    private Pair<List<UTXO>, BigInteger> getHop0UTXO(
+    public static Pair<List<UTXO>, BigInteger> getHop0UTXO(
             final long spendAmount,
             final int nbHops,
             final long feePerHop,
@@ -584,7 +584,6 @@ public class RicochetMeta {
 
         // sort in ascending order by value
         Collections.sort(utxos, new UTXO.UTXOComparator());
-        Collections.reverse(utxos);
 
         for (final UTXO u : utxos) {
             selectedUTXO.add(u);
@@ -728,6 +727,28 @@ public class RicochetMeta {
         tx.verify();
 
         return tx;
+    }
+
+    public static long getFeesFor1Inputs() {
+        return SamouraiWallet.bDust.longValue() +
+                RicochetMeta.samouraiFeeAmountV1.longValue() + computeHopFee() +
+                FeeUtil.getInstance().estimatedFee(1, 3).longValue();
+    }
+
+    public static long computeHopFee() {
+        return computeFeePerHop() * defaultNbHops;
+    }
+
+    public static long computeFeePerHop() {
+        final boolean samouraiFeeViaBIP47 = BIP47Meta.getInstance()
+                .getOutgoingStatus(BIP47Meta.strSamouraiDonationPCode) == BIP47Meta.STATUS_SENT_CFM;
+        final int hopSz  = samouraiFeeViaBIP47
+                ? FeeUtil.getInstance().estimatedSize(1, 2)
+                : FeeUtil.getInstance().estimatedSize(1, 1);
+
+        final long biFeePerKB = FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue();
+        final BigInteger biFeePerHop = FeeUtil.getInstance().calculateFee(hopSz, BigInteger.valueOf(biFeePerKB));
+        return biFeePerHop.longValue();
     }
 
 }

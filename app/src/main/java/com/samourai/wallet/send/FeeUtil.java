@@ -1,5 +1,6 @@
 package com.samourai.wallet.send;
 
+import static java.lang.Math.max;
 import static java.util.Objects.isNull;
 
 import android.util.Log;
@@ -59,6 +60,14 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
 
     public EnumFeeRepresentation getFeeRepresentation() {
         return feeRepresentation;
+    }
+
+    public RawFees getRawFees() {
+        return getRawFees(feeRepresentation);
+    }
+
+    public RawFees getRawFees(final EnumFeeRepresentation feeRepresentation) {
+        return rawFeesMap.get(feeRepresentation);
     }
 
     public String retrievesNearFeeIdentifier(final int fee) {
@@ -205,5 +214,70 @@ public class FeeUtil extends com.samourai.wallet.util.FeeUtil {
     public Triple<Integer, Integer, Integer> getOutpointCount(Vector<MyTransactionOutPoint> outpoints) {
         NetworkParameters params = SamouraiWallet.getInstance().getCurrentNetworkParams();
         return super.getOutpointCount(outpoints, params);
+    }
+
+    public void normalize() {
+
+        long feeLow = FeeUtil.getInstance().getLowFee().getDefaultPerKB().longValue();
+        long feeMed = FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue();
+        long feeHigh = FeeUtil.getInstance().getHighFee().getDefaultPerKB().longValue();
+
+        /**
+         * Finally we don't want to adjust the fees from 1$fee estimator.
+         * So this condition is added to avoid that.
+         */
+        if (!FeeUtil.getInstance().getFeeRepresentation().is1DolFeeEstimator()) {
+            if (feeLow == feeMed && feeMed == feeHigh) {
+                // offset of low and high
+                feeLow = max(1, feeMed * 85L / 100L);
+                feeHigh = feeMed * 115L / 100L;
+                final SuggestedFee lo_sf = new SuggestedFee();
+                lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow / 1000L * 1000L));
+                FeeUtil.getInstance().setLowFee(lo_sf);
+                final SuggestedFee hi_sf = new SuggestedFee();
+                hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh / 1000L * 1000L));
+                FeeUtil.getInstance().setHighFee(hi_sf);
+            } else if (feeLow == feeMed || feeMed == feeHigh) {
+                if (FeeUtil.getInstance().getFeeRepresentation().isBitcoindFeeEstimator()) {
+                    // offset of mid
+                    feeMed = (feeLow + feeHigh) / 2L;
+                    final SuggestedFee mi_sf = new SuggestedFee();
+                    mi_sf.setDefaultPerKB(BigInteger.valueOf(feeMed / 1000L * 1000L));
+                    FeeUtil.getInstance().setNormalFee(mi_sf);
+                } else if (feeLow == feeMed) {
+                    feeLow = max(1, feeMed * 85L / 100L);
+                    final SuggestedFee lo_sf = new SuggestedFee();
+                    lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow / 1000L * 1000L));
+                    FeeUtil.getInstance().setLowFee(lo_sf);
+                } else {
+                    feeHigh = feeMed * 115L / 100L;
+                    final SuggestedFee hi_sf = new SuggestedFee();
+                    hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh / 1000L * 1000L));
+                    FeeUtil.getInstance().setHighFee(hi_sf);
+                }
+            }
+        }
+
+        /**
+         * just for security, avoid inconsistent value
+         */
+        if (feeLow < 1000L) {
+            feeLow = 1000L;
+            final SuggestedFee lo_sf = new SuggestedFee();
+            lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow));
+            FeeUtil.getInstance().setLowFee(lo_sf);
+        }
+        if (feeMed < 1000L) {
+            feeMed = 1000L;
+            final SuggestedFee mi_sf = new SuggestedFee();
+            mi_sf.setDefaultPerKB(BigInteger.valueOf(feeMed));
+            FeeUtil.getInstance().setNormalFee(mi_sf);
+        }
+        if (feeHigh < 1000L) {
+            feeHigh = 1000L;
+            final SuggestedFee hi_sf = new SuggestedFee();
+            hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh));
+            FeeUtil.getInstance().setHighFee(hi_sf);
+        }
     }
 }

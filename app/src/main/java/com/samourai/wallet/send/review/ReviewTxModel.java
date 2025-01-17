@@ -40,7 +40,6 @@ import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.wallet.R;
 import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.api.APIFactory;
-import com.samourai.wallet.api.fee.EnumFeeRepresentation;
 import com.samourai.wallet.api.seen.RawSeenAddresses;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
@@ -583,13 +582,24 @@ public class ReviewTxModel extends AndroidViewModel {
                     feeUtil.getFeeRepresentation());
             transactionPriority.postValue(priority);
         } else {
-            if (feeRates >= getFeeHighRate().getValue()) {
-                transactionPriority.postValue(EnumTransactionPriority.NEXT_BLOCK);
-            } else if (feeRates <= getFeeLowRate().getValue()) {
-                transactionPriority.postValue(EnumTransactionPriority.LOW);
-            } else {
-                transactionPriority.postValue(EnumTransactionPriority.NORMAL);
-            }
+            transactionPriority.postValue(findTransactionPriority(
+                    feeRates,
+                    getFeeHighRate().getValue(),
+                    getFeeLowRate().getValue()));
+        }
+    }
+
+    public static EnumTransactionPriority findTransactionPriority(
+            final long feeRates,
+            final long feeRatesHigh,
+            final long feeRatesLow
+    ) {
+        if (feeRates >= feeRatesHigh) {
+            return EnumTransactionPriority.NEXT_BLOCK;
+        } else if (feeRates <= feeRatesLow) {
+            return EnumTransactionPriority.VERY_LOW;
+        } else {
+            return EnumTransactionPriority.NORMAL;
         }
     }
 
@@ -749,7 +759,7 @@ public class ReviewTxModel extends AndroidViewModel {
                 txData.getValue().getReceivers().size() - countP2WSH_P2TR + 1, countP2WSH_P2TR
         );
 
-        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
+        //addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
 
         if (amount + fee.longValue() > getBalance()) {
             Toast.makeText(getApplication(), R.string.insufficient_funds, Toast.LENGTH_SHORT);
@@ -1360,7 +1370,7 @@ public class ReviewTxModel extends AndroidViewModel {
             }
         }
 
-        addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
+        //addCustomSelectionUtxos(txData.getValue().getSelectedUTXO());
 
         if (txData.getValue().getSelectedUTXO().size() > 0) {
 
@@ -1715,58 +1725,11 @@ public class ReviewTxModel extends AndroidViewModel {
      */
     private long computeFeeRate() {
 
+        FeeUtil.getInstance().normalize();
+
         long feeLow = FeeUtil.getInstance().getLowFee().getDefaultPerKB().longValue();
         long feeMed = FeeUtil.getInstance().getNormalFee().getDefaultPerKB().longValue();
         long feeHigh = FeeUtil.getInstance().getHighFee().getDefaultPerKB().longValue();
-
-        if (feeLow == feeMed && feeMed == feeHigh) {
-            // offset of low and high
-            feeLow = max(1, feeMed * 85L / 100L);
-            feeHigh = feeMed * 115L / 100L;
-            final SuggestedFee lo_sf = new SuggestedFee();
-            lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow / 1000L * 1000L));
-            FeeUtil.getInstance().setLowFee(lo_sf);
-            final SuggestedFee hi_sf = new SuggestedFee();
-            hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh / 1000L * 1000L));
-            FeeUtil.getInstance().setHighFee(hi_sf);
-        } else if (feeLow == feeMed || feeMed == feeHigh) {
-            if (FeeUtil.getInstance().getFeeRepresentation() == EnumFeeRepresentation.BLOCK_COUNT) {
-                // offset of mid
-                feeMed = (feeLow + feeHigh) / 2L;
-                final SuggestedFee mi_sf = new SuggestedFee();
-                mi_sf.setDefaultPerKB(BigInteger.valueOf(feeMed / 1000L * 1000L));
-                FeeUtil.getInstance().setNormalFee(mi_sf);
-            } else if (feeLow == feeMed) {
-                feeLow = max(1, feeMed * 85L / 100L);
-                final SuggestedFee lo_sf = new SuggestedFee();
-                lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow / 1000L * 1000L));
-                FeeUtil.getInstance().setLowFee(lo_sf);
-            } else {
-                feeHigh = feeMed * 115L / 100L;
-                final SuggestedFee hi_sf = new SuggestedFee();
-                hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh / 1000L * 1000L));
-                FeeUtil.getInstance().setHighFee(hi_sf);
-            }
-        }
-
-        if (feeLow < 1000L) {
-            feeLow = 1000L;
-            final SuggestedFee lo_sf = new SuggestedFee();
-            lo_sf.setDefaultPerKB(BigInteger.valueOf(feeLow));
-            FeeUtil.getInstance().setLowFee(lo_sf);
-        }
-        if (feeMed < 1000L) {
-            feeMed = 1000L;
-            final SuggestedFee mi_sf = new SuggestedFee();
-            mi_sf.setDefaultPerKB(BigInteger.valueOf(feeMed));
-            FeeUtil.getInstance().setNormalFee(mi_sf);
-        }
-        if (feeHigh < 1000L) {
-            feeHigh = 1000L;
-            final SuggestedFee hi_sf = new SuggestedFee();
-            hi_sf.setDefaultPerKB(BigInteger.valueOf(feeHigh));
-            FeeUtil.getInstance().setHighFee(hi_sf);
-        }
 
         if (isNull(_feeLowRate)) {
             _feeLowRate = new MutableLiveData<>(feeLow / 1000L);

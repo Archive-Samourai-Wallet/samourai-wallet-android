@@ -399,7 +399,7 @@ class PayNymDetailsActivity : SamouraiActivity() {
                     if (BIP47Meta.getInstance().getOutgoingStatus(pcode) == BIP47Meta.STATUS_NOT_SENT) {
                         followPaynym()
                     } else {
-                        Snackbar.make(binding.historyLayout.rootView, "Follow transaction is still pending", Snackbar.LENGTH_SHORT).show()
+                        Snackbar.make(findViewById(android.R.id.content), "Follow transaction is still pending", Snackbar.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -459,9 +459,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
 
     private fun updatePaynym(label: String?, pcode: String?) {
         if (pcode == null || pcode.isEmpty() || !FormatsUtil.getInstance().isValidPaymentCode(pcode)) {
-            Snackbar.make(binding.userAvatar.rootView, R.string.invalid_payment_code, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_payment_code, Snackbar.LENGTH_SHORT).show()
         } else if (label == null || label.isEmpty()) {
-            Snackbar.make(binding.userAvatar.rootView, R.string.bip47_no_label_error, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(findViewById(android.R.id.content), R.string.bip47_no_label_error, Snackbar.LENGTH_SHORT).show()
         } else {
             BIP47Meta.getInstance().setLabel(pcode, label)
             Thread {
@@ -574,6 +574,10 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 }
             }
 
+            val outputCountForFeeEstimation =
+                if (FeeUtil.getInstance().feeRepresentation === EnumFeeRepresentation.BLOCK_COUNT) 7
+                else 4
+
             val keepCurrentSuggestedFee = FeeUtil.getInstance().suggestedFee
             try {
                 if (FeeUtil.getInstance().feeRepresentation === EnumFeeRepresentation.NEXT_BLOCK_RATE) {
@@ -593,8 +597,6 @@ class PayNymDetailsActivity : SamouraiActivity() {
                         FeeUtil.getInstance().suggestedFee = FeeUtil.getInstance().normalFee
                     }
                 }
-
-
                 if (selectedUTXO.size == 0) {
                     // sort in descending order by value
                     Collections.sort(_utxos, UTXOComparator())
@@ -613,9 +615,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
                         }
                     }
 
-                    fee = FeeUtil.getInstance().estimatedFee(selected, 7)
+                    fee = FeeUtil.getInstance().estimatedFee(selected, outputCountForFeeEstimation)
                 } else {
-                    fee = FeeUtil.getInstance().estimatedFee(1, 7)
+                    fee = FeeUtil.getInstance().estimatedFee(1, outputCountForFeeEstimation)
                 }
             } catch(e : Exception) {
                 return@launch
@@ -630,7 +632,9 @@ class PayNymDetailsActivity : SamouraiActivity() {
                 scope.launch(Dispatchers.Main) {
                     binding.progressBar.visibility = View.INVISIBLE
                     var message: String? = getText(R.string.bip47_notif_tx_insufficient_funds_1).toString() + " "
-                    val biAmount = SendNotifTxFactory._bSWFee.add(SendNotifTxFactory._bNotifTxValue.add(FeeUtil.getInstance().estimatedFee(1, 4, FeeUtil.getInstance().lowFee.defaultPerKB)))
+                    val biAmount = SendNotifTxFactory._bSWFee
+                        .add(SendNotifTxFactory._bNotifTxValue)
+                        .add(BigInteger.valueOf(fee!!.toLong()))
                     val strAmount = FormatsUtil.formatBTC(biAmount.toLong());
                     message += strAmount
                     message += " " + getText(R.string.bip47_notif_tx_insufficient_funds_2)

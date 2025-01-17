@@ -5,34 +5,32 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
-import androidx.recyclerview.widget.RecyclerView
-import com.samourai.wallet.whirlpool.adapters.PoolsAdapter
-import com.samourai.wallet.whirlpool.models.PoolViewModel
-import com.google.android.material.button.MaterialButton
-import com.samourai.wallet.whirlpool.models.PoolCyclePriority
-import io.reactivex.disposables.CompositeDisposable
-import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel
-import com.samourai.wallet.utxos.models.UTXOCoin
 import android.os.Bundle
-import android.util.Log
-import com.samourai.wallet.R
-import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
+import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
-import androidx.recyclerview.widget.RecyclerView.ItemDecoration
-import android.util.TypedValue
-import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.google.android.material.snackbar.Snackbar
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ItemDecoration
+import com.google.android.material.button.MaterialButton
+import com.samourai.wallet.R
 import com.samourai.wallet.api.backend.MinerFeeTarget
 import com.samourai.wallet.databinding.FragmentChoosePoolsBinding
+import com.samourai.wallet.send.FeeUtil
+import com.samourai.wallet.utxos.models.UTXOCoin
+import com.samourai.wallet.whirlpool.adapters.PoolsAdapter
+import com.samourai.wallet.whirlpool.models.PoolCyclePriority
+import com.samourai.wallet.whirlpool.models.PoolViewModel
+import com.samourai.wallet.whirlpool.newPool.NewPoolViewModel
 import com.samourai.whirlpool.client.wallet.AndroidWhirlpoolWalletService
-import java.util.ArrayList
+import io.reactivex.disposables.CompositeDisposable
 
 class SelectPoolFragment : Fragment() {
     private lateinit var poolsAdapter: PoolsAdapter
@@ -74,6 +72,12 @@ class SelectPoolFragment : Fragment() {
             fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_24).toLong())
             fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_6).toLong())
             fees.add(wallet.minerFeeSupplier.getFee(MinerFeeTarget.BLOCKS_2).toLong())
+        }
+
+        if (FeeUtil.getInstance().feeRepresentation.is1DolFeeEstimator) {
+            binding.feeHighBtn.setText("Next Block")
+        } else {
+            binding.feeHighBtn.setText("HIGH")
         }
 
         if (fees.size >= 2) {

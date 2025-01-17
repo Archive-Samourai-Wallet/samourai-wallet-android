@@ -119,7 +119,7 @@ public enum EnumTransactionPriority {
         switch (feeRepresentation) {
             case NEXT_BLOCK_RATE:
                 switch (this) {
-                    case LOW:
+                    case VERY_LOW:
                         if (minerFeeRate < lowFeeRate) return "<" + nextBlockDescription;
                         return nextBlockDescription;
                     case NORMAL:

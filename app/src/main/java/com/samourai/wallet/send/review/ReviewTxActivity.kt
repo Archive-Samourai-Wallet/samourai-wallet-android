@@ -94,8 +94,6 @@ import com.samourai.wallet.theme.samouraiSlateGreyAccent
 import com.samourai.wallet.theme.samouraiTextLightGrey
 import com.samourai.wallet.util.func.BatchSendUtil
 import com.samourai.wallet.util.func.FormatsUtil
-import com.samourai.wallet.util.func.TransactionOutPointHelper.retrievesAggregatedAmount
-import com.samourai.wallet.util.func.TransactionOutPointHelper.toTxOutPoints
 import com.samourai.wallet.util.tech.ColorHelper.Companion.getAttributeColor
 import com.samourai.wallet.util.tech.ColorHelper.Companion.lightenColor
 import com.samourai.wallet.util.view.rememberImeState
@@ -173,13 +171,8 @@ class ReviewTxActivity : SamouraiActivity() {
         val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
 
         val sendType = reviewTxModel.impliedSendType.value
-        val customSelectionUtxos = reviewTxModel.customSelectionUtxos.value
-        val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
-        val isSmallSingleUtxoForCustomRicochet = sendType!!.isRicochet &&
-                sendType!!.isCustomSelection &&
-                customSelectionAggrAmount < 1_000_000L
 
-        if ((! isSmallSingleUtxoForCustomRicochet && !isMissingAmount) || sendType.isJoinbot) {
+        if (!isMissingAmount || sendType!!.isJoinbot) {
             when (reviewTxModel.currentScreen.value) {
                 EnumReviewScreen.TX_INFO -> super.onBackPressed()
                 EnumReviewScreen.TX_ALERT -> reviewTxModel.currentScreen.postValue(EnumReviewScreen.TX_INFO)
@@ -364,11 +357,6 @@ fun ReviewTxActivityContentHeader(
     val isMissingAmount = amountToLeaveWallet > txData!!.totalAmountInTxInput
 
     val sendType by model.impliedSendType.observeAsState()
-    val customSelectionUtxos by model.customSelectionUtxos.observeAsState()
-    val customSelectionAggrAmount = retrievesAggregatedAmount(toTxOutPoints(customSelectionUtxos))
-    val isSmallSelectionAmountForRicochet = sendType!!.isRicochet &&
-            sendType!!.isCustomSelection &&
-            customSelectionAggrAmount < 1_000_000L
 
     val account = if (nonNull(activity)) activity!!.getIntent().extras!!.getInt("_account") else 0
     val backgroundColor = if (account == SamouraiAccountIndex.POSTMIX) samouraiPostmixSpendBlueButton else samouraiSlateGreyAccent
@@ -378,7 +366,7 @@ fun ReviewTxActivityContentHeader(
             .background(lightenColor(backgroundColor, whiteAlpha))
     ){
 
-        if ((! isSmallSelectionAmountForRicochet && !isMissingAmount) || sendType!!.isJoinbot) {
+        if (!isMissingAmount || sendType!!.isJoinbot) {
             Column {
                 IconButton(onClick = {
                     when(screen) {
@@ -453,9 +441,6 @@ fun ReviewTxActivityContentDestination(
 
     val robotoMediumBoldFont = FontFamily(
         Font(R.font.roboto_medium, FontWeight.Bold)
-    )
-    val robotoMonoNormalFont = FontFamily(
-        Font(R.font.roboto_mono, FontWeight.Normal)
     )
     val robotoMonoBoldFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Bold)
@@ -562,24 +547,8 @@ fun ReviewTxActivityContentDestination(
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-
-                        val alertReusedGlobal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_GLOBAL)
-                        val isReusedAddrGlobal = if (nonNull(alertReusedGlobal))
-                            alertReusedGlobal!!.isReusedAddress(model.address)
-                        else false
-
-                        val alertReusedLocal = alertReviews.value!!.get(EnumTxAlert.REUSED_SENDING_ADDRESS_LOCAL)
-                        val isReusedAddrLocal = if (nonNull(alertReusedLocal))
-                            alertReusedLocal!!.isReusedAddress(model.address)
-                        else false
-
-                        val isReusedAddr = isReusedAddrGlobal || isReusedAddrLocal
-
                         Column {
-                            DisplayAddress(
-                                address = model.addressLabel,
-                                addressReused = isReusedAddr
-                            )
+                            DisplayAddress(address = model.addressLabel)
                         }
                     }
                 }
@@ -643,7 +612,7 @@ fun TransactionOutput(
 @Composable
 fun DisplayAddress(
     address: String,
-    addressReused: Boolean) {
+    addressReused: Boolean = false) {
 
     val robotoMonoNormalFont = FontFamily(
         Font(R.font.roboto_mono, FontWeight.Normal)

@@ -1,5 +1,16 @@
 package com.samourai.wallet.send;
 
+import static com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend;
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
+import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
+import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getSatValue;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static java.lang.Math.max;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -33,6 +44,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.slider.Slider;
@@ -46,6 +63,10 @@ import com.samourai.wallet.SamouraiWallet;
 import com.samourai.wallet.TxAnimUIActivity;
 import com.samourai.wallet.access.AccessFactory;
 import com.samourai.wallet.api.APIFactory;
+import com.samourai.wallet.api.fee.EnumFeeBlockCount;
+import com.samourai.wallet.api.fee.EnumFeeRate;
+import com.samourai.wallet.api.fee.EnumFeeRepresentation;
+import com.samourai.wallet.api.fee.RawFees;
 import com.samourai.wallet.bip47.BIP47Meta;
 import com.samourai.wallet.bip47.BIP47Util;
 import com.samourai.wallet.bip47.SendNotifTxFactory;
@@ -93,6 +114,7 @@ import com.samourai.wallet.widgets.SendTransactionDetailsView;
 import com.samourai.wallet.xmanagerClient.XManagerClient;
 import com.samourai.xmanager.protocol.XManagerService;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
@@ -122,11 +144,6 @@ import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -134,16 +151,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-
-import static com.samourai.wallet.send.batch.InputBatchSpendHelper.canParseAsBatchSpend;
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.UTXO_COMPARATOR_BY_VALUE;
-import static com.samourai.wallet.send.cahoots.JoinbotHelper.isJoinbotPossibleWithCurrentUserUTXOs;
-import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getBtcValue;
-import static com.samourai.wallet.util.func.SatoshiBitcoinUnitHelper.getSatValue;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.trim;
 
 
 public class SendActivity extends SamouraiActivity {
@@ -371,7 +378,7 @@ public class SendActivity extends SamouraiActivity {
         boolean premiumAddonsRicochetVisible = true;
         boolean premiumAddonsJoinbotVisible = true;
 
-        if (preselectedUTXOs != null && preselectedUTXOs.size() > 0 && balance < 1_000_000l) {
+        if (CollectionUtils.isNotEmpty(preselectedUTXOs) && balance < 1_000_000l) {
             premiumAddonsRicochetVisible = false;
         }
         if (! isJoinbotPossibleWithCurrentUserUTXOs(
@@ -463,13 +470,14 @@ public class SendActivity extends SamouraiActivity {
 
     private void checkRicochetPossibility() {
         amount = getSatValue(getBtcAmountFromWidget());
-        if (amount < (balance - (RicochetMeta.samouraiFeeAmountV2.add(BigInteger.valueOf(50000L))).longValue())) {
+        if (amount < max(0, balance - (RicochetMeta.samouraiFeeAmountV2.add(BigInteger.valueOf(50000L))).longValue()))  {
             ricochetDesc.setAlpha(1f);
             ricochetTitle.setAlpha(1f);
             ricochetHopsSwitch.setAlpha(1f);
             ricochetHopsSwitch.setEnabled(true);
             if (isEnabledRicochet()) {
                 ricochetStaggeredOptionGroup.setVisibility(View.VISIBLE);
+                SPEND_TYPE = SPEND_RICOCHET;
             }
         } else {
             ricochetStaggeredOptionGroup.setVisibility(View.GONE);
@@ -477,6 +485,7 @@ public class SendActivity extends SamouraiActivity {
             ricochetTitle.setAlpha(.6f);
             ricochetHopsSwitch.setAlpha(.6f);
             ricochetHopsSwitch.setEnabled(false);
+            SPEND_TYPE = sendTransactionDetailsView.getStoneWallSwitch().isChecked() ? SPEND_BOLTZMANN : SPEND_SIMPLE;
         }
     }
 
@@ -932,6 +941,11 @@ public class SendActivity extends SamouraiActivity {
     }
 
     private void launchReviewTxActivity() {
+
+        if (amount == balance) {
+            SPEND_TYPE = SPEND_SIMPLE;
+        }
+
         final Intent intent = new Intent(SendActivity.this, ReviewTxActivity.class);
         intent.putExtra("_account", account);
         intent.putExtra("sendAmount", getSatValue(getBtcAmountFromWidget()));
@@ -2346,7 +2360,7 @@ public class SendActivity extends SamouraiActivity {
         } else if (id == R.id.action_utxo) {
             doUTXO();
         } else if (id == R.id.action_fees) {
-            doFees();
+            doFees(SendActivity.this);
         } else if (id == R.id.action_batch) {
             launchBatchSpend();
         } else if (id == R.id.action_support) {
@@ -2421,26 +2435,57 @@ public class SendActivity extends SamouraiActivity {
         startActivity(intent);
     }
 
-    private void doFees() {
+    public static void doFees(final SamouraiActivity activity) {
 
-        final SuggestedFee highFee = FeeUtil.getInstance().getHighFee();
-        final SuggestedFee normalFee = FeeUtil.getInstance().getNormalFee();
-        final SuggestedFee lowFee = FeeUtil.getInstance().getLowFee();
+        final StringBuilder sb = new StringBuilder();
 
-        String message = getText(R.string.current_fee_selection) + " " + (FeeUtil.getInstance().getSuggestedFee().getDefaultPerKB().longValue() / 1000L) + " " + getText(R.string.slash_sat);
-        message += "\n";
-        message += getText(R.string.current_hi_fee_value) + " " + (highFee.getDefaultPerKB().longValue() / 1000L) + " " + getText(R.string.slash_sat);
-        message += "\n";
-        message += getText(R.string.current_mid_fee_value) + " " + (normalFee.getDefaultPerKB().longValue() / 1000L) + " " + getText(R.string.slash_sat);
-        message += "\n";
-        message += getText(R.string.current_lo_fee_value) + " " + (lowFee.getDefaultPerKB().longValue() / 1000L) + " " + getText(R.string.slash_sat);
+        for (final EnumFeeRepresentation feeRepresentation : EnumFeeRepresentation.values()) {
+            sb.append(feeRepresentation.name());
+            sb.append(":");
+            sb.append(System.lineSeparator());
+            final RawFees rawFees = FeeUtil.getInstance().getRawFees(feeRepresentation);
+            if (isNull(rawFees) || ! rawFees.hasFee()) {
+                sb.append("none");
+                sb.append(System.lineSeparator());
+            } else {
+                switch (feeRepresentation) {
+                    case NEXT_BLOCK_RATE:
+                        for (final EnumFeeRate feeRateType : EnumFeeRate.values()) {
+                            final Integer fee = rawFees.getFee(feeRateType);
+                            if (nonNull(fee)) {
+                                sb.append(feeRateType.getRateAsString());
+                                sb.append(": ");
+                                sb.append(fee);
+                                sb.append(" sat/vB");
+                                sb.append(System.lineSeparator());
+                            }
+                        }
+                        break;
+                    case BLOCK_COUNT:
+                        for (final EnumFeeBlockCount blockCount : EnumFeeBlockCount.values()) {
+                            final Integer fee = rawFees.getFee(blockCount);
+                            if (nonNull(fee)) {
+                                sb.append(blockCount.getBlockCount());
+                                sb.append(": ");
+                                sb.append(fee);
+                                sb.append(" sat/vB");
+                                sb.append(System.lineSeparator());
+                            }
+                        }
+                        break;
+                }
 
-        final MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(SendActivity.this)
+            }
+            sb.append(System.lineSeparator());
+        }
+
+        final MaterialAlertDialogBuilder dlg = new MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.app_name)
-                .setMessage(message)
+                .setMessage(sb.toString())
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok, (dialog, whichButton) -> dialog.dismiss());
-        if (!isFinishing()) {
+
+        if (!activity.isFinishing()) {
             dlg.show();
         }
 

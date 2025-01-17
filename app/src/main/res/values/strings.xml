@@ -945,6 +945,7 @@
     <string name="auth_using_paynym">Authenticate using PayNym</string>
     <string name="authenticate">Authenticate</string>
     <string name="estimated_wait_time">Estimated wait time</string>
+    <string name="estimated_confirmation_time">Est confirmation time</string>
     <string name="enter_a_private_key_and">Enter a private key and sweep any funds to\nyour next bitcoin address</string>
     <string name="sign_messages_using_your">Sign messages using your wallet private key</string>
     <string name="wallet_address_calc">Wallet address calculator</string>
@@ -1047,7 +1048,7 @@
     <string name="tx_alert_desc_spend_dust_output">This transaction includes one or more inputs that are considered "dust". Unless you specifically meant for this transaction to include these small outputs it may indicate a serious privacy issue. Your Samourai Wallet can solve this privacy by marking these dust outputs as unspendable.</string>
 
     <string name="tx_alert_title_spend_from_postmix_to_deposit">Spending from Postmix to Deposit account</string>
-    <string name="tx_alert_desc_spend_from_postmix_to_deposit">You are attempting to spend from your Postmix to Deposit account</string>
+    <string name="tx_alert_desc_spend_from_postmix_to_deposit">You are attempting to spend from your Postmix to Deposit account. Consideration should be given for future transactions made from your Deposit account as merging these funds with other unspent outputs could degrade your privacy</string>
 
 
     <string name="stonewall_inputs_refreshed">STONEWALL inputs refreshed</string>

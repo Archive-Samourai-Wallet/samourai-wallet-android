@@ -130,7 +130,7 @@ fun RicochetPreviewTxInput(
                         enabled = true,
                     ),
             ) {
-                for (utxoPoint in txData!!.selectedUTXOPoints.sortedWith(MyTransactionOutPointAmountComparator(false))) {
+                for (utxoPoint in txData!!.selectedUTXOPoints.sortedWith(MyTransactionOutPointAmountComparator(true))) {
                     DisplayUtxoOutPoint(
                         model = model,
                         activity = activity,
